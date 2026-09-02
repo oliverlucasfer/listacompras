@@ -38,6 +38,8 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+      - name: Inicia stack local (excluindo serviços desnecessários)
+        run: supabase start -x studio -x mailpit -x logflare -x vector -x imgproxy -x storage-api -x edge-runtime
       - name: Aplica migrations (db reset)
         run: supabase db reset
       - name: Testes RLS de negação e positivos (02 §5)
