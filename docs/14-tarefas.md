@@ -16,10 +16,10 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [x] **F1-T02** — Migration `0001_init.sql`: enum de unidades
   Dep: F1-T01 · Docs: [01 §3](01-banco-de-dados.md)
   CP: `select unnest(enum_range(null::unidade_item));` retorna os 9 valores.
-- [ ] **F1-T03** — Migration `0001_init.sql`: tabelas `listas`, `lista_membros`, `itens_lista` com constraints e índices
+- [x] **F1-T03** — Migration `0001_init.sql`: tabelas `listas`, `lista_membros`, `itens_lista` com constraints e índices
   Dep: F1-T02 · Docs: [01 §4](01-banco-de-dados.md)
   CP: unique parcial deduplica item ativo; `quantidade <= 0` rejeita; `unidade='quilos'` rejeita.
-- [ ] **F1-T04** — Triggers: `touch_updated_at_lww` e `sync_dono`
+- [x] **F1-T04** — Triggers: `touch_updated_at_lww` e `sync_dono`
   Dep: F1-T03 · Docs: [01 §5–6](01-banco-de-dados.md)
   CP: UPDATE reflete `updated_at`; 2º dono na lista falha; remover/rebaixar dono falha.
 - [ ] **F1-T05** — Migration `0002_rls_policies.sql`: `is_member`, `papel_na_lista`, enable/force RLS, policies completas
@@ -144,12 +144,12 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 
 | Fase | Tarefas | Concluídas |
 | :--- | :--- | :--- |
-| F1 Infra & BD | 8 | 2 |
+| F1 Infra & BD | 8 | 4 |
 | F2 IA | 5 | 0 |
 | F3 App Core | 9 | 0 |
 | F4 IA + Sync | 9 | 0 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **2** |
+| **Total** | **37** | **4** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

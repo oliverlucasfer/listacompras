@@ -229,22 +229,21 @@ begin
       raise exception 'Lista já possui um dono';
     end if;
 
-    -- Atualiza a denormalização
-    update public.listas
-    set dono_id = new.user_id
-    where id = new.lista_id;
+    -- Atualiza a denormalização SOMENTE quando o registro é do dono
+    -- (insert/update de editor/leitor não pode alterar dono_id).
+    if new.papel = 'dono' then
+      update public.listas
+      set dono_id = new.user_id
+      where id = new.lista_id;
+    end if;
   end if;
 
-  -- Impede remoção/downgrade do dono (transferência é processo explícito, Fase 6)
-  if tg_op = 'DELETE' or (tg_op = 'UPDATE' and new.papel <> 'dono') then
-    if exists (
-      select 1 from public.lista_membros
-      where lista_id = coalesce(old.lista_id, new.lista_id)
-        and user_id = old.user_id
-        and papel = 'dono'
-    ) then
-      raise exception 'Transferência de dono deve ser processo explícito';
-    end if;
+  -- Impede remoção/downgrade do dono (transferência é processo explícito, Fase 6).
+  -- Usa old.papel (snapshot do trigger) — consultar a tabela num trigger AFTER
+  -- veria a linha já alterada/apagada e nunca bloquearia.
+  if (tg_op = 'DELETE' and old.papel = 'dono')
+     or (tg_op = 'UPDATE' and old.papel = 'dono' and new.papel <> 'dono') then
+    raise exception 'Transferência de dono deve ser processo explícito';
   end if;
 
   return coalesce(new, old);
