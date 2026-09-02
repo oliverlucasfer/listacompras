@@ -32,7 +32,7 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [x] **F1-T07** — Migration `0003_realtime.sql`: publication das tabelas
   Dep: F1-T05 · Docs: [01 §7](01-banco-de-dados.md)
   CP: Eventos chegam a usuário membro e NÃO chegam a não-membro (teste com 2 contas).
-- [ ] **F1-T08** — CI GitHub Actions (analyze + format + test + db reset + RLS)
+- [x] **F1-T08** — CI GitHub Actions (analyze + format + test + db reset + RLS)
   Dep: F1-T06 · Docs: [07 §3](07-qualidade-ci.md)
   CP: Pipeline verde em PR; branch protection exige CI.
 
@@ -145,12 +145,12 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 
 | Fase | Tarefas | Concluídas |
 | :--- | :--- | :--- |
-| F1 Infra & BD | 8 | 7 |
+| F1 Infra & BD | 8 | 8 |
 | F2 IA | 5 | 0 |
 | F3 App Core | 9 | 0 |
 | F4 IA + Sync | 9 | 0 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **7** |
+| **Total** | **37** | **8** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

@@ -88,7 +88,7 @@ Aplicação multiplataforma para criação, organização e execução de compra
 - [x] Projeto Supabase criado; URL e anon key anotados. (ref: `smshgctdwxkqbvbdlhud`, região definida na criação)
 - [ ] API Key do Gemini criada e configurada via `supabase secrets set GEMINI_API_KEY=...` (nunca no repositório). *(Fase 2)*
 - [x] `supabase init` + `supabase link` no projeto local.
-- [ ] GitHub Actions habilitado (ver [07 Qualidade & CI](07-qualidade-ci.md)). *(F1-T08)*
+- [x] GitHub Actions habilitado (ver [07 Qualidade & CI](07-qualidade-ci.md)). *(pipeline verde em PR + branch protection em `main` exigindo `flutter` e `supabase`)*
 
 ### 3.4. Variáveis e segredos
 | Segredo | Onde vive | Nunca em |
