@@ -38,7 +38,7 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 
 ## Fase 2 — Serviço de IA (Edge Function)
 
-- [ ] **F2-T01** — Migration tabela `ia_rate_limit` + função de janela
+- [x] **F2-T01** — Migration tabela `ia_rate_limit` + função de janela
   Dep: F1-T08 · Docs: [04 §4](04-ia-edge-function.md)
   CP: 11ª requisição na mesma janela retorna 429.
 - [ ] **F2-T02** — Estrutura da função `parse-lista` + `prompt.md` versionado
@@ -146,11 +146,11 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | Fase | Tarefas | Concluídas |
 | :--- | :--- | :--- |
 | F1 Infra & BD | 8 | 8 |
-| F2 IA | 5 | 0 |
+| F2 IA | 5 | 1 |
 | F3 App Core | 9 | 0 |
 | F4 IA + Sync | 9 | 0 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **8** |
+| **Total** | **37** | **9** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

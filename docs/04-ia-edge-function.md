@@ -91,11 +91,38 @@ create table public.ia_rate_limit (
 );
 
 -- invocada pela Edge Function (service role):
--- upsert com incremento; se count > 10 na janela corrente → 429
+create or replace function public.registrar_requisicao_ia(p_user_id uuid)
+returns boolean          -- true = usuário EXCEDEU o limite (→ 429 rate_limit)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  janela_atual timestamptz := date_trunc('minute', now());
+  cnt int;
+begin
+  delete from public.ia_rate_limit
+  where janela < now() - interval '10 minutes';
+
+  insert into public.ia_rate_limit (user_id, janela, count)
+  values (p_user_id, janela_atual, 1)
+  on conflict (user_id, janela)
+  do update set count = public.ia_rate_limit.count + 1
+  returning count into cnt;
+
+  return cnt > 10;
+end;
+$$;
+
+-- Executável apenas pela service_role:
+revoke execute on function public.registrar_requisicao_ia(uuid) from public;
+revoke execute on function public.registrar_requisicao_ia(uuid) from anon;
+revoke execute on function public.registrar_requisicao_ia(uuid) from authenticated;
 ```
 
-* A Edge Function usa a `service_role key` (disponível nativamente no runtime) para acessar essa tabela — RLS não se aplica.
-* Limpeza: janelas com mais de 10 minutos são apagadas na própria função (DELETE barato).
+* A função de janela é atômica (upsert com incremento + checagem + limpeza em uma chamada). Janela fixa por minuto (`date_trunc('minute', now())`).
+* A tabela tem RLS `enable` + `force` **sem policies** (deny-all): só a `service_role` acessa — RLS não se aplica a ela.
+* `execute` na função é revogado de `public`, `anon` e `authenticated`; apenas a `service_role` invoca.
 
 ## 5. Prompt de sistema
 
