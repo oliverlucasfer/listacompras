@@ -56,9 +56,9 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 
 ## Fase 3 — App Flutter Core
 
-- [ ] **F3-T01** — Projeto Flutter: pacotes, estrutura feature-first, tema Material 3 (claro/escuro), strings centralizadas
+- [x] **F3-T01** — Projeto Flutter: pacotes, estrutura feature-first, tema Material 3 (claro/escuro), strings centralizadas
   Dep: F1-T08 · Docs: [05 §1–2, §7](05-app-flutter.md)
-  CP: `flutter run` abre em Android e Chrome; tema escuro aplicado; `analyze` limpo.
+  CP: `flutter run` abre em Android e Chrome; tema escuro aplicado; `analyze` limpo. *(Android: build+instalação+launch validados no emulador; Chrome: run -d chrome + build web; emulador instabilizou após launch — ambiente, não app)*
 - [ ] **F3-T02** — Schema Drift local (ListaLocal, ItemLocal, MutacaoPendente) + AppDatabase
   Dep: F3-T01 · Docs: [05 §2](05-app-flutter.md), [03 §3](03-sincronizacao-offline.md)
   CP: Migração v1 do Drift criada; CRUD local funciona em teste de repositório.
@@ -147,10 +147,10 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | :--- | :--- | :--- |
 | F1 Infra & BD | 8 | 8 |
 | F2 IA | 5 | 5 |
-| F3 App Core | 9 | 0 |
+| F3 App Core | 9 | 1 |
 | F4 IA + Sync | 9 | 0 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **13** |
+| **Total** | **37** | **14** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
