@@ -9,16 +9,27 @@ on:
 
 jobs:
   flutter:
-    # Projeto Flutter nasce na F3-T01 (docs/14); job ativa quando existir pubspec.yaml
-    if: ${{ hashFiles('pubspec.yaml') != '' }}
+    # Projeto Flutter nasce na F3-T01 (docs/14); etapas ativas quando existir pubspec.yaml
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with: { channel: stable }
-      - run: dart format --set-exit-if-changed .
-      - run: flutter analyze
-      - run: flutter test
+      - id: check
+        run: |
+          if [ -f pubspec.yaml ]; then
+            echo "flutter=enabled" >> "$GITHUB_OUTPUT"
+          else
+            echo "flutter=skipped" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.check.outputs.flutter == 'enabled'
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - if: steps.check.outputs.flutter == 'enabled'
+        run: dart format --set-exit-if-changed .
+      - if: steps.check.outputs.flutter == 'enabled'
+        run: flutter analyze
+      - if: steps.check.outputs.flutter == 'enabled'
+        run: flutter test
 
   supabase:
     runs-on: ubuntu-latest
@@ -30,7 +41,5 @@ jobs:
       - name: Aplica migrations (db reset)
         run: supabase db reset
       - name: Testes RLS de negação e positivos (02 §5)
-        run: >
-          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
-          -v ON_ERROR_STOP=1 -f supabase/tests/rls_tests.sql
+        run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/rls_tests.sql
       # Fase 2: deno test supabase/functions
