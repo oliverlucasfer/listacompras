@@ -4,8 +4,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { chamarGemini, GeminiQuotaError, GeminiTimeoutError } from "./gemini.ts";
 import { excedeuRateLimit } from "./rate-limit.ts";
 import { validarSchema } from "./schema.ts";
-
-const PROMPT = await Deno.readTextFile(new URL("./prompt.md", import.meta.url));
+import { PROMPT } from "./prompt.ts";
 
 const MAX_CHARS = 2000;
 const TIMEOUT_MS = 15_000;

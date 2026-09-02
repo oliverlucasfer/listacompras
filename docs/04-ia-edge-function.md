@@ -13,7 +13,7 @@ App Flutter ──POST /functions/v1/parse-lista──► Edge Function (Deno/TS
                                                   │ 1. valida JWT + rate limit + tamanho
                                                   │ 2. monta prompt + responseSchema
                                                   ▼
-                                              Gemini API (gemini-2.0-flash, JSON mode)
+                                              Gemini API (gemini-3.5-flash-lite, JSON mode)
                                                   │
 App Flutter ◄──200 { itens: [...] }──────────────┘
 ```
@@ -71,7 +71,7 @@ Content-Type: application/json
 
 | Parâmetro | Valor | Motivo |
 | :--- | :--- | :--- |
-| Modelo | `gemini-2.0-flash` | Free tier, rápido, structured output |
+| Modelo | `gemini-3.5-flash-lite` | Free tier, rápido (≈1–2s), structured output. *(Original: `gemini-2.0-flash`, aposentado pela API para novos usuários — migrado em F2-T03. `gemini-3.6-flash`/`2.5-flash` também indisponíveis/inservíveis: pensam por padrão e estouram o timeout de 15s)* |
 | Timeout da chamada ao Gemini | 15s | UX; falha vira erro `timeout_ia` |
 | Entrada máxima | 2.000 caracteres | Custo/latência; evita abuso |
 | Rate limit | 10 req/min por usuário | Protege o teto do free tier (R-02 em [00](00-visao-geral.md)) |

@@ -38,8 +38,10 @@ const RESPONSE_SCHEMA = {
   required: ["itens", "aviso"],
 };
 
+// doc 04 §3: gemini-3.5-flash-lite — extração simples não precisa de thinking;
+// 3.6-flash pensa por padrão (18–30s) e estoura o timeout de 15s do contrato.
 const GEMINI_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent";
 
 export async function chamarGemini(
   prompt: string,
@@ -56,7 +58,7 @@ export async function chamarGemini(
       signal: controller.signal,
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: prompt }] },
-        contents: [{ role: "user", parts: [{ text }] }],
+        contents: [{ role: "user", parts: [{ text: texto }] }],
         generationConfig: {
           temperature: 0.1,
           maxOutputTokens: 1024,
