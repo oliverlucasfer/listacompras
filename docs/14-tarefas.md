@@ -22,7 +22,7 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [x] **F1-T04** — Triggers: `touch_updated_at_lww` e `sync_dono`
   Dep: F1-T03 · Docs: [01 §5–6](01-banco-de-dados.md)
   CP: UPDATE reflete `updated_at`; 2º dono na lista falha; remover/rebaixar dono falha.
-- [ ] **F1-T05** — Migration `0002_rls_policies.sql`: `is_member`, `papel_na_lista`, enable/force RLS, policies completas
+- [x] **F1-T05** — Migration `0002_rls_policies.sql`: `is_member`, `papel_na_lista`, enable/force RLS, policies completas
   Dep: F1-T04 · Docs: [02 §1–4](02-seguranca-rls.md)
   CP: Policies criadas para as 3 tabelas; `force row level security` aplicado.
 - [ ] **F1-T06** — Testes de negação e positivos RLS (N-01…N-10, P-01…P-05)
@@ -144,12 +144,12 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 
 | Fase | Tarefas | Concluídas |
 | :--- | :--- | :--- |
-| F1 Infra & BD | 8 | 4 |
+| F1 Infra & BD | 8 | 5 |
 | F2 IA | 5 | 0 |
 | F3 App Core | 9 | 0 |
 | F4 IA + Sync | 9 | 0 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **4** |
+| **Total** | **37** | **5** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
