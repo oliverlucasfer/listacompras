@@ -1,0 +1,36 @@
+# CI — doc dono: docs/07-qualidade-ci.md §3
+# Pipeline único em PR e push em main; PR só mergea com CI verde.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  flutter:
+    # Projeto Flutter nasce na F3-T01 (docs/14); job ativa quando existir pubspec.yaml
+    if: ${{ hashFiles('pubspec.yaml') != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable }
+      - run: dart format --set-exit-if-changed .
+      - run: flutter analyze
+      - run: flutter test
+
+  supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Aplica migrations (db reset)
+        run: supabase db reset
+      - name: Testes RLS de negação e positivos (02 §5)
+        run: >
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+          -v ON_ERROR_STOP=1 -f supabase/tests/rls_tests.sql
+      # Fase 2: deno test supabase/functions
