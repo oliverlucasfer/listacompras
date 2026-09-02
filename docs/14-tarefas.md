@@ -29,7 +29,7 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
   Dep: F1-T05 · Docs: [02 §5](02-seguranca-rls.md)
   CP: Todos os 15 casos passam em Supabase local; script versionado.
   Nota: N-01…N-10 e P-01…P-04 em `supabase/tests/rls_tests.sql`; P-05 (Realtime com 2 contas) é validado na F1-T07, que testa exatamente esse cenário.
-- [ ] **F1-T07** — Migration `0003_realtime.sql`: publication das tabelas
+- [x] **F1-T07** — Migration `0003_realtime.sql`: publication das tabelas
   Dep: F1-T05 · Docs: [01 §7](01-banco-de-dados.md)
   CP: Eventos chegam a usuário membro e NÃO chegam a não-membro (teste com 2 contas).
 - [ ] **F1-T08** — CI GitHub Actions (analyze + format + test + db reset + RLS)
@@ -145,12 +145,12 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 
 | Fase | Tarefas | Concluídas |
 | :--- | :--- | :--- |
-| F1 Infra & BD | 8 | 6 |
+| F1 Infra & BD | 8 | 7 |
 | F2 IA | 5 | 0 |
 | F3 App Core | 9 | 0 |
 | F4 IA + Sync | 9 | 0 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **6** |
+| **Total** | **37** | **7** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
