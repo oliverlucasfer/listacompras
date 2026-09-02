@@ -32,6 +32,24 @@ as $$
     and lm.user_id = auth.uid()
 $$;
 
+-- Checa dono sem aplicar RLS ao usuário invocante: indispensable no
+-- self-insert do dono em lista_membros logo após criar a lista (a subquery
+-- direta sobre listas roda sob as policies de SELECT — is_member — e não
+-- vê a lista da qual o dono ainda não é membro).
+create or replace function public.is_dono_de(lista uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1 from public.listas l
+    where l.id = lista
+      and l.dono_id = auth.uid()
+  );
+$$;
+
 -- ============================================================================
 -- 02 §2 — Habilitar e forçar RLS
 -- force: policies valem também para o dono da tabela (exceto role superuser)
@@ -57,7 +75,14 @@ create policy "listas_insert_dono"
 create policy "listas_update_editores"
   on public.listas for update
   using (public.papel_na_lista(id) in ('dono', 'editor'))
-  with check (public.papel_na_lista(id) in ('dono', 'editor'));
+  with check (
+    public.papel_na_lista(id) in ('dono', 'editor')
+    -- dono_id é imutável via UPDATE (transferência é processo explícito, Fase 6);
+    -- a subquery lê a snapshot antiga da linha e nega qualquer alteração.
+    and dono_id = (
+      select l.dono_id from public.listas l where l.id = id
+    )
+  );
 
 create policy "listas_delete_dono"
   on public.listas for delete
@@ -101,11 +126,7 @@ create policy "membros_select_membros"
 create policy "membros_insert_dono"
   on public.lista_membros for insert
   with check (
-    exists (
-      select 1 from public.listas l
-      where l.id = lista_id
-        and l.dono_id = auth.uid()
-    )
+    public.is_dono_de(lista_id)
     -- o dono se insere com papel 'dono'; ninguém insere terceiros como 'dono'
     and papel in ('editor', 'leitor', 'dono')
   );
@@ -113,11 +134,7 @@ create policy "membros_insert_dono"
 create policy "membros_delete_dono"
   on public.lista_membros for delete
   using (
-    exists (
-      select 1 from public.listas l
-      where l.id = lista_id
-        and l.dono_id = auth.uid()
-    )
+    public.is_dono_de(lista_id)
     -- dono não remove a si mesmo por aqui (evita lista sem dono)
     and user_id <> auth.uid()
   );

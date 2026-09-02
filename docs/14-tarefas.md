@@ -25,9 +25,10 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [x] **F1-T05** — Migration `0002_rls_policies.sql`: `is_member`, `papel_na_lista`, enable/force RLS, policies completas
   Dep: F1-T04 · Docs: [02 §1–4](02-seguranca-rls.md)
   CP: Policies criadas para as 3 tabelas; `force row level security` aplicado.
-- [ ] **F1-T06** — Testes de negação e positivos RLS (N-01…N-10, P-01…P-05)
+- [x] **F1-T06** — Testes de negação e positivos RLS (N-01…N-10, P-01…P-05)
   Dep: F1-T05 · Docs: [02 §5](02-seguranca-rls.md)
   CP: Todos os 15 casos passam em Supabase local; script versionado.
+  Nota: N-01…N-10 e P-01…P-04 em `supabase/tests/rls_tests.sql`; P-05 (Realtime com 2 contas) é validado na F1-T07, que testa exatamente esse cenário.
 - [ ] **F1-T07** — Migration `0003_realtime.sql`: publication das tabelas
   Dep: F1-T05 · Docs: [01 §7](01-banco-de-dados.md)
   CP: Eventos chegam a usuário membro e NÃO chegam a não-membro (teste com 2 contas).
@@ -144,12 +145,12 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 
 | Fase | Tarefas | Concluídas |
 | :--- | :--- | :--- |
-| F1 Infra & BD | 8 | 5 |
+| F1 Infra & BD | 8 | 6 |
 | F2 IA | 5 | 0 |
 | F3 App Core | 9 | 0 |
 | F4 IA + Sync | 9 | 0 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **5** |
+| **Total** | **37** | **6** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

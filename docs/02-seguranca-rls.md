@@ -45,6 +45,26 @@ as $$
 $$;
 ```
 
+### Função auxiliar de dono (para policies de `lista_membros`)
+
+```sql
+create or replace function public.is_dono_de(lista uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1 from public.listas l
+    where l.id = lista
+      and l.dono_id = auth.uid()
+  );
+$$;
+```
+
+> **Por que não um `EXISTS` direto sobre `listas`?** Subqueries dentro de policies são avaliadas com as policies do usuário invocante. No self-insert do dono em `lista_membros` logo após criar a lista, ele **ainda não é membro** — `is_member` é falso e o `EXISTS` não veria a própria lista, tornando o fluxo de criação (doc [02 §4.3](#43-lista_membros)) impossível. A função `SECURITY DEFINER` contorna o RLS do invocante.
+
 ---
 
 ## 2. Habilitar RLS
@@ -99,7 +119,16 @@ create policy "listas_insert_dono"
 create policy "listas_update_editores"
   on public.listas for update
   using (public.papel_na_lista(id) in ('dono', 'editor'))
-  with check (public.papel_na_lista(id) in ('dono', 'editor'));
+  with check (
+    public.papel_na_lista(id) in ('dono', 'editor')
+    -- dono_id é imutável via UPDATE (transferência é processo explícito, Fase 6);
+    -- a subquery lê a snapshot antiga da linha e nega qualquer alteração.
+    -- Sem isto, um editor poderia se autoprometer a dono contornando o
+    -- trigger sync_dono ([01 §6](01-banco-de-dados.md)), que só reage a lista_membros.
+    and dono_id = (
+      select l.dono_id from public.listas l where l.id = id
+    )
+  );
 
 create policy "listas_delete_dono"
   on public.listas for delete
@@ -145,11 +174,7 @@ create policy "membros_select_membros"
 create policy "membros_insert_dono"
   on public.lista_membros for insert
   with check (
-    exists (
-      select 1 from public.listas l
-      where l.id = lista_id
-        and l.dono_id = auth.uid()
-    )
+    public.is_dono_de(lista_id)
     -- o dono se insere com papel 'dono'; ninguém insere terceiros como 'dono'
     and papel in ('editor', 'leitor', 'dono')
   );
@@ -157,11 +182,7 @@ create policy "membros_insert_dono"
 create policy "membros_delete_dono"
   on public.lista_membros for delete
   using (
-    exists (
-      select 1 from public.listas l
-      where l.id = lista_id
-        and l.dono_id = auth.uid()
-    )
+    public.is_dono_de(lista_id)
     -- dono não remove a si mesmo por aqui (evita lista sem dono)
     and user_id <> auth.uid()
   );
