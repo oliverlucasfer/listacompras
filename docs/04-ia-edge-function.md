@@ -13,7 +13,7 @@ App Flutter ──POST /functions/v1/parse-lista──► Edge Function (Deno/TS
                                                   │ 1. valida JWT + rate limit + tamanho
                                                   │ 2. monta prompt + responseSchema
                                                   ▼
-                                              Gemini API (gemini-2.0-flash, JSON mode)
+                                              Gemini API (gemini-3.5-flash-lite, JSON mode)
                                                   │
 App Flutter ◄──200 { itens: [...] }──────────────┘
 ```
@@ -54,6 +54,8 @@ Content-Type: application/json
 
 ### Erros (mensagem amigável exibida no app)
 
+Corpo de erro: `{ "code": "...", "message": "..." }` — `message` traz a string amigável pronta (mesma da tabela abaixo); o app usa `code` para lógica e pode exibir `message` diretamente.
+
 | Código HTTP | `code` | Quando | Mensagem ao usuário |
 | :--- | :--- | :--- | :--- |
 | 401 | `unauthorized` | JWT ausente/inválido | "Sessão expirada. Faça login novamente." |
@@ -65,13 +67,15 @@ Content-Type: application/json
 | 504 | `timeout_ia` | > 15s na chamada | "A IA demorou demais. Tente novamente." |
 | 500 | `erro_interno` | falha inesperada (logado no Sentry) | "Erro inesperado. Tente novamente." |
 
+> **CORS:** a Web SPA consome a função de outra origem. A função responde `OPTIONS` (preflight) e inclui `Access-Control-Allow-Origin: *` nas respostas — seguro pois a autenticação usa header `Authorization` (JWT), nunca cookies. Um JWT **malformado** pode ser rejeitado pelo gateway antes da função (401 com corpo do gateway); JWT **ausente** chega à função e recebe o contrato acima.
+
 ---
 
 ## 3. Parâmetros operacionais
 
 | Parâmetro | Valor | Motivo |
 | :--- | :--- | :--- |
-| Modelo | `gemini-2.0-flash` | Free tier, rápido, structured output |
+| Modelo | `gemini-3.5-flash-lite` | Free tier, rápido (≈1–2s), structured output. *(Original: `gemini-2.0-flash`, aposentado pela API para novos usuários — migrado em F2-T03. `gemini-3.6-flash`/`2.5-flash` também indisponíveis/inservíveis: pensam por padrão e estouram o timeout de 15s)* |
 | Timeout da chamada ao Gemini | 15s | UX; falha vira erro `timeout_ia` |
 | Entrada máxima | 2.000 caracteres | Custo/latência; evita abuso |
 | Rate limit | 10 req/min por usuário | Protege o teto do free tier (R-02 em [00](00-visao-geral.md)) |
@@ -91,15 +95,42 @@ create table public.ia_rate_limit (
 );
 
 -- invocada pela Edge Function (service role):
--- upsert com incremento; se count > 10 na janela corrente → 429
+create or replace function public.registrar_requisicao_ia(p_user_id uuid)
+returns boolean          -- true = usuário EXCEDEU o limite (→ 429 rate_limit)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  janela_atual timestamptz := date_trunc('minute', now());
+  cnt int;
+begin
+  delete from public.ia_rate_limit
+  where janela < now() - interval '10 minutes';
+
+  insert into public.ia_rate_limit (user_id, janela, count)
+  values (p_user_id, janela_atual, 1)
+  on conflict (user_id, janela)
+  do update set count = public.ia_rate_limit.count + 1
+  returning count into cnt;
+
+  return cnt > 10;
+end;
+$$;
+
+-- Executável apenas pela service_role:
+revoke execute on function public.registrar_requisicao_ia(uuid) from public;
+revoke execute on function public.registrar_requisicao_ia(uuid) from anon;
+revoke execute on function public.registrar_requisicao_ia(uuid) from authenticated;
 ```
 
-* A Edge Function usa a `service_role key` (disponível nativamente no runtime) para acessar essa tabela — RLS não se aplica.
-* Limpeza: janelas com mais de 10 minutos são apagadas na própria função (DELETE barato).
+* A função de janela é atômica (upsert com incremento + checagem + limpeza em uma chamada). Janela fixa por minuto (`date_trunc('minute', now())`).
+* A tabela tem RLS `enable` + `force` **sem policies** (deny-all): só a `service_role` acessa — RLS não se aplica a ela.
+* `execute` na função é revogado de `public`, `anon` e `authenticated`; apenas a `service_role` invoca.
 
 ## 5. Prompt de sistema
 
-> Versionado em arquivo próprio na pasta da função: `supabase/functions/parse-lista/prompt.md` (não embutido como string mágica). Rascunho inicial:
+> Versionado em arquivo próprio na pasta da função: `supabase/functions/parse-lista/prompt.ts` (não embutido como string mágica no handler — o edge runtime só empacota imports, arquivos estáticos como `.md` não são suportados). Rascunho inicial:
 
 ```text
 Você é um extrator de itens de lista de compras. Receberá um texto livre
@@ -223,8 +254,12 @@ supabase/
         ├── gemini.ts           # chamada + schema + timeout
         ├── rate-limit.ts       # janela por usuário
         ├── schema.ts           # validação zod do contrato
-        └── prompt.md           # prompt de sistema versionado
+        ├── prompt.ts           # prompt de sistema versionado
+        ├── gemini_test.ts      # unit: erros do Gemini (fetch fake)
+        └── schema_test.ts      # unit: validação do contrato (422)
 ```
+
+Testes: `deno test supabase/functions/parse-lista/` (unit) e `node supabase/tests/parse_lista_e2e.mjs` (e2e contra stack local; `--sem-gemini` roda só os cenários sem IA, usados no CI).
 
 ## 9. Checklist de validação (Fase 2)
 

@@ -19,6 +19,7 @@ flutter_*.png
 supabase/.branches/
 supabase/.temp/
 supabase/.env
+supabase/functions/.env
 supabase/tests/node_modules/
 
 # Sistema operacional
