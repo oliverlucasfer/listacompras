@@ -10,10 +10,10 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 
 ## Fase 1 — Infraestrutura & Banco de Dados
 
-- [ ] **F1-T01** — Setup do projeto Supabase local e remoto
+- [x] **F1-T01** — Setup do projeto Supabase local e remoto
   Dep: — · Docs: [00 §3](00-visao-geral.md)
   CP: `supabase init` + `link` feitos; `supabase db reset` roda vazio; checklist 00 §3.3 completo.
-- [ ] **F1-T02** — Migration `0001_init.sql`: enum de unidades
+- [x] **F1-T02** — Migration `0001_init.sql`: enum de unidades
   Dep: F1-T01 · Docs: [01 §3](01-banco-de-dados.md)
   CP: `select unnest(enum_range(null::unidade_item));` retorna os 9 valores.
 - [ ] **F1-T03** — Migration `0001_init.sql`: tabelas `listas`, `lista_membros`, `itens_lista` com constraints e índices
@@ -144,12 +144,12 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 
 | Fase | Tarefas | Concluídas |
 | :--- | :--- | :--- |
-| F1 Infra & BD | 8 | 0 |
+| F1 Infra & BD | 8 | 2 |
 | F2 IA | 5 | 0 |
 | F3 App Core | 9 | 0 |
 | F4 IA + Sync | 9 | 0 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **0** |
+| **Total** | **37** | **2** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

@@ -84,11 +84,11 @@ Aplicação multiplataforma para criação, organização e execução de compra
 | VS Code | latest | Extensões Flutter/Dart, Deno |
 
 ### 3.3. Configuração de ambiente (checklist)
-- [ ] `flutter doctor` sem pendências para android/web.
-- [ ] Projeto Supabase criado; URL e anon key anotados.
-- [ ] API Key do Gemini criada e configurada via `supabase secrets set GEMINI_API_KEY=...` (nunca no repositório).
-- [ ] `supabase init` + `supabase link` no projeto local.
-- [ ] GitHub Actions habilitado (ver [07 Qualidade & CI](07-qualidade-ci.md)).
+- [x] `flutter doctor` sem pendências para android/web. (aviso de licença Android é falso alarme do novo Android CLI — hash de licença presente no SDK)
+- [x] Projeto Supabase criado; URL e anon key anotados. (ref: `smshgctdwxkqbvbdlhud`, região definida na criação)
+- [ ] API Key do Gemini criada e configurada via `supabase secrets set GEMINI_API_KEY=...` (nunca no repositório). *(Fase 2)*
+- [x] `supabase init` + `supabase link` no projeto local.
+- [ ] GitHub Actions habilitado (ver [07 Qualidade & CI](07-qualidade-ci.md)). *(F1-T08)*
 
 ### 3.4. Variáveis e segredos
 | Segredo | Onde vive | Nunca em |
