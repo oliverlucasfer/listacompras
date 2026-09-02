@@ -47,9 +47,9 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [x] **F2-T03** — Integração Gemini (JSON mode + responseSchema + timeout 15s)
   Dep: F2-T02 · Docs: [04 §3, §6](04-ia-edge-function.md)
   CP: Resposta parseada como `{itens[], aviso}`; teste real com 3 exemplos de lista bagunçada. *(modelo migrado para `gemini-3.5-flash-lite` — ver doc 04 §3)*
-- [ ] **F2-T04** — Validação (zod) e códigos de erro do contrato
+- [x] **F2-T04** — Validação (zod) e códigos de erro do contrato
   Dep: F2-T03 · Docs: [04 §2, §7](04-ia-edge-function.md)
-  CP: Todos os 8 códigos do contrato testados (401, 400×2, 422, 429×2, 504, 500).
+  CP: Todos os 8 códigos do contrato testados (401, 400×2, 422, 429×2, 504, 500). *(401/400×2/429 rate_limit/500 em e2e; 422/429 cota_ia/504 em unit deno test com fetch fake)*
 - [ ] **F2-T05** — Testes de integração da função no CI (deno test / supabase local)
   Dep: F2-T04 · Docs: [07 §1](07-qualidade-ci.md)
   CP: Job `supabase` roda os testes da função; pipeline verde.
@@ -146,11 +146,11 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | Fase | Tarefas | Concluídas |
 | :--- | :--- | :--- |
 | F1 Infra & BD | 8 | 8 |
-| F2 IA | 5 | 3 |
+| F2 IA | 5 | 4 |
 | F3 App Core | 9 | 0 |
 | F4 IA + Sync | 9 | 0 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **11** |
+| **Total** | **37** | **12** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
