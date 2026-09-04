@@ -62,9 +62,9 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [x] **F3-T02** — Schema Drift local (ListaLocal, ItemLocal, MutacaoPendente) + AppDatabase
   Dep: F3-T01 · Docs: [05 §2](05-app-flutter.md), [03 §3](03-sincronizacao-offline.md)
   CP: Migração v1 do Drift criada; CRUD local funciona em teste de repositório. *(5 testes de database: CRUD, soft delete, FK cascade, fila)*
-- [ ] **F3-T03** — Auth (Supabase): registro c/ verificação, login, recuperação, guard de rotas
+- [x] **F3-T03** — Auth (Supabase): registro c/ verificação, login, recuperação, guard de rotas
   Dep: F3-T01 · Docs: [05 §4, §6.1](05-app-flutter.md) · RF-01
-  CP: Fluxo completo funcional; deep link de verificação abrindo o app; redirects corretos.
+  CP: Fluxo completo funcional; deep link de verificação abrindo o app; redirects corretos. *(signup c/ emailRedirectTo, login, reset, guard /login↔/listas, intent-filter deep link, Mailpit 303 para scheme)*
 - [ ] **F3-T04** — Tela Login + Registro + Recuperar senha (wireframes 10 §1)
   Dep: F3-T03 · Docs: [05 §6.1](05-app-flutter.md), [10 §1](10-wireframes-telas.md)
   CP: Estados carregando/erro inline; widget tests.
@@ -147,10 +147,10 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | :--- | :--- | :--- |
 | F1 Infra & BD | 8 | 8 |
 | F2 IA | 5 | 5 |
-| F3 App Core | 9 | 2 |
+| F3 App Core | 9 | 3 |
 | F4 IA + Sync | 9 | 0 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **15** |
+| **Total** | **37** | **16** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
