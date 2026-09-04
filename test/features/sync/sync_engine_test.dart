@@ -552,4 +552,91 @@ void main() {
     expect(await mutacoesNaFila(), 0);
     expect(engine.statusAtual, isA<Sincronizado>());
   });
+
+  test('deve_reportar_falha_quando_fila_passa_de_10_mutacoes', () async {
+    // doc 07 §4 evento 1: falha de flush com fila > 10 mutações.
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    for (var i = 0; i < 10; i++) {
+      await repo.adicionarItem(listaId: lista.id, nome: 'Item $i');
+    }
+    expect(await mutacoesNaFila(), 11); // lista + 10 itens
+
+    final reportes = <String>[];
+    final remoto = RemotoFake(falhasRestantes: 1);
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+      reportar: (codigo, contexto) => reportes.add(codigo),
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+    await aguardarSincronizado(engine);
+
+    expect(reportes, contains('sync_falha_fila_grande'));
+    expect(await mutacoesNaFila(), 0);
+  });
+
+  test('deve_reportar_relogio_adiantado_quando_ts_passa_de_24h', () async {
+    // doc 07 §4 evento 2 (03 §5): divergência grosseira de relógio.
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    final futuro = DateTime.now()
+        .toUtc()
+        .add(const Duration(hours: 48))
+        .toIso8601String();
+
+    await db
+        .into(db.mutacaoPendente)
+        .insert(
+          MutacaoPendenteCompanion.insert(
+            tabela: 'itens_lista',
+            operacao: 'UPDATE',
+            registroId: item.id,
+            payload:
+                '{"id":"${item.id}","lista_id":"${lista.id}","nome":"Arroz",'
+                '"quantidade":1,"unidade":"un","concluido":false,"ordem":0,'
+                '"created_at":"$futuro","updated_at":"$futuro","deletado_em":null}',
+            tsLocal: DateTime.now().toUtc(),
+            listaId: lista.id,
+          ),
+        );
+
+    final reportes = <String>[];
+    final remoto = RemotoFake();
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+      reportar: (codigo, contexto) => reportes.add(codigo),
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+    await aguardarSincronizado(engine);
+
+    expect(reportes, contains('sync_relogio_adiantado'));
+    expect(await mutacoesNaFila(), 0);
+  });
+
+  test('deve_reportar_erro_persistente_quando_esgotar_tentativas', () async {
+    // doc 07 §4: syncStatus = Erro persistente é evento monitorado.
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+
+    final reportes = <String>[];
+    final remoto = RemotoFake(falhasRestantes: 100);
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+      maxTentativas: 1,
+      reportar: (codigo, contexto) => reportes.add(codigo),
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+    await engine.status.firstWhere((s) => s is ErroSync);
+
+    expect(engine.statusAtual, isA<ErroSync>());
+    expect(reportes, contains('sync_erro_persistente'));
+  });
 }

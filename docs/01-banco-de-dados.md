@@ -259,6 +259,7 @@ create trigger trg_membros_dono
 1. Ao criar a lista, o dono insere a própria linha em `lista_membros` com `papel = 'dono'` (a policy de INSERT de `listas` exige `dono_id = auth.uid()` — ver [02](02-seguranca-rls.md)).
 2. Não é possível ter 2 donos.
 3. Não é possível remover ou rebaixar o dono sem processo explícito de transferência — **planejado na Fase 6, ver [08 §6](08-compartilhamento-colaborativo.md)** (RPC `transferir_dono` + alteração neste trigger).
+4. **Exceção — exclusão de conta ([06 §3.3.1](06-mvp-entregas.md), migration `0005`):** o RPC `excluir_conta()` marca a transação com `set_config('app.excluindo_conta', 'true')` e o trigger reconhece a marca, permitindo a remoção do dono em cascata — a conta inteira está sendo apagada, junto com suas listas. O `set_config` de namespace customizado só é executável por SQL direto (não via PostgREST), e o RPC é `security definer` — clientes não conseguem forjar a marca.
 
 ---
 
