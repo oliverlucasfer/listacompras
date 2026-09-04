@@ -18,11 +18,35 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  /// Datas como texto ISO-8601 com microssegundos: o armazenamento padrão
+  /// (unix segundos) truncava `updated_at` e criava empates artificiais no
+  /// LWW do sync (doc 03 §5).
+  @override
+  DriftDatabaseOptions get options =>
+      const DriftDatabaseOptions(storeDateTimeAsText: true);
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
+    onUpgrade: (m, de, para) async {
+      if (de < 2) {
+        // v1 → v2: converte unix segundos (inteiro) para texto ISO-8601.
+        for (final tabela in const ['lista_local', 'item_local']) {
+          await customStatement(
+            "UPDATE $tabela SET "
+            "created_at = strftime('%Y-%m-%dT%H:%M:%fZ', created_at, 'unixepoch'), "
+            "updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', updated_at, 'unixepoch'), "
+            "deletado_em = strftime('%Y-%m-%dT%H:%M:%fZ', deletado_em, 'unixepoch')",
+          );
+        }
+        await customStatement(
+          "UPDATE mutacao_pendente SET "
+          "ts_local = strftime('%Y-%m-%dT%H:%M:%fZ', ts_local, 'unixepoch')",
+        );
+      }
+    },
     beforeOpen: (details) async {
       // SQLite não impõe FK por padrão; o Postgres (doc 01) sim — espelhar.
       await customStatement('PRAGMA foreign_keys = ON');

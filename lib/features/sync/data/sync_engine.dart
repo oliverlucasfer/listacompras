@@ -40,7 +40,7 @@ class SyncEngine {
   final int maxTentativas;
 
   bool _online = true;
-  bool _flushing = false;
+  Future<void>? _flushAtual;
   bool _reagendado = false;
   bool _falhou = false;
   bool _disposed = false;
@@ -67,65 +67,78 @@ class SyncEngine {
     _subConectividade = _conectividade?.listen(_aoMudarConectividade);
   }
 
-  /// Drena a fila inteira (pseudo-código do doc 03 §4).
-  Future<void> flush() async {
-    if (_flushing || !_online || _disposed) return;
-    _flushing = true;
-    _falhou = false;
+  /// Drena a fila inteira (pseudo-código do doc 03 §4). Cada chamada é
+  /// encadeada atrás da anterior: chamadas concorrentes não drenam duas
+  /// vezes, quem chama espera o estado real da fila e mutações chegadas
+  /// durante o flush são capturadas. Fila vazia não emite estado (evita
+  /// flapping do indicador).
+  Future<void> flush() {
+    if (_disposed) return Future<void>.value();
+    final anterior = _flushAtual ?? Future<void>.value();
+    final trabalho = () async {
+      try {
+        await anterior;
+      } on Exception {
+        // O erro já foi entregue a quem aguardou o trabalho anterior.
+      }
+      if (_disposed || !_online || !await _temEnviaveis()) return;
+      _falhou = false;
+      await _drenar();
+      if (!_falhou && !_disposed && _online && await _temEnviaveis()) {
+        await flush();
+      }
+    }();
+    _flushAtual = trabalho;
+    return trabalho;
+  }
+
+  Future<void> _drenar() async {
     _definir(const Sincronizando());
     SyncStatus resultado = const Sincronizado();
-    try {
-      while (_online) {
-        final lote = await _proximoLote();
-        if (lote == null) {
-          resultado = (await _contarFila()) == 0
-              ? const Sincronizado()
-              : const ErroSync();
-          break;
-        }
-        try {
-          for (final mutacao in lote) {
-            final resultado = await _remoto.enviar(mutacao);
-            switch (resultado) {
-              case Enviado():
-                await _removerRegistro(mutacao.tabela, mutacao.registroId);
-              case RemotoVenceu(:final registro):
-                // Remoto venceu no LWW: sobrescreve o Drift (inclusive
-                // tombstones) e descarta as mutações do registro — doc 03 §5.
-                await _aplicador.aplicar(mutacao.tabela, registro);
-                await _removerRegistro(mutacao.tabela, mutacao.registroId);
-              case Duplicado(:final registro):
-                // Deduplicação (doc 03 §5, RF-10): a linha local vira
-                // tombstone e o item remoto absorve a quantidade — nunca
-                // há duplicado ativo.
-                await _tumbarLocal(mutacao.tabela, mutacao.registroId);
-                await _aplicador.aplicar(mutacao.tabela, registro);
-                await _removerRegistro(mutacao.tabela, mutacao.registroId);
-            }
-          }
-        } on Exception {
-          _falhou = true;
-          if (!_online) {
-            // Rede caiu no meio do flush: pausa sem queimar tentativas
-            // (doc 03 §6 — reconexão dispara novo flush).
-            resultado = const Offline();
-          } else {
-            await _registrarFalha(lote);
-            resultado = await _statusAposFalha();
-            _agendarRetry();
-          }
-          break;
-        }
+    while (_online) {
+      final lote = await _proximoLote();
+      if (lote == null) {
+        resultado = (await _contarFila()) == 0
+            ? const Sincronizado()
+            : const ErroSync();
+        break;
       }
-      if (!_online) resultado = const Offline();
-      _definir(resultado);
-    } finally {
-      _flushing = false;
-      if (!_falhou && !_disposed && _online && await _temEnviaveis()) {
-        // Captura mutações que chegaram durante o flush.
-        unawaited(flush());
+      try {
+        for (final mutacao in lote) {
+          final resultado = await _remoto.enviar(mutacao);
+          switch (resultado) {
+            case Enviado():
+              await _removerRegistro(mutacao.tabela, mutacao.registroId);
+            case RemotoVenceu(:final registro):
+              // Remoto venceu no LWW: sobrescreve o Drift (inclusive
+              // tombstones) e descarta as mutações do registro — doc 03 §5.
+              await _aplicador.aplicar(mutacao.tabela, registro);
+              await _removerRegistro(mutacao.tabela, mutacao.registroId);
+            case Duplicado(:final registro):
+              // Deduplicação (doc 03 §5, RF-10): a linha local vira
+              // tombstone e o item remoto absorve a quantidade — nunca
+              // há duplicado ativo.
+              await _tumbarLocal(mutacao.tabela, mutacao.registroId);
+              await _aplicador.aplicar(mutacao.tabela, registro);
+              await _removerRegistro(mutacao.tabela, mutacao.registroId);
+          }
+        }
+      } on Exception {
+        _falhou = true;
+        if (!_online) {
+          // Rede caiu no meio do flush: pausa sem queimar tentativas
+          // (doc 03 §6 — reconexão dispara novo flush).
+          resultado = const Offline();
+        } else {
+          await _registrarFalha(lote);
+          resultado = await _statusAposFalha();
+          _agendarRetry();
+        }
+        break;
       }
     }
+    if (!_online) resultado = const Offline();
+    _definir(resultado);
   }
 
   /// Ação "tentar de novo" do estado Erro (doc 03 §3, UI em F4-T07).
@@ -222,11 +235,12 @@ class SyncEngine {
 
   Future<void> _registrarFalha(List<MutacaoSync> lote) async {
     for (final mutacao in lote) {
+      // Sem `updates:` — incrementar tentativas não é mudança de fila e não
+      // deve disparar novo flush (o retry agendado cuida da fila).
       await _db.customUpdate(
         'UPDATE mutacao_pendente SET tentativas = tentativas + 1 '
         'WHERE tabela = ? AND registro_id = ?',
         variables: [Variable(mutacao.tabela), Variable(mutacao.registroId)],
-        updates: {_db.mutacaoPendente},
       );
     }
   }

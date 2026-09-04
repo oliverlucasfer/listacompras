@@ -110,9 +110,9 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [x] **F4-T08** — Deduplicação no sync (unique violada → aumenta quantidade)
   Dep: F4-T04 · Docs: [03 §5](03-sincronizacao-offline.md) · RF-10
   CP: Item duplicado offline vira quantidade somada; testes de sync cobrem. *(SupabaseSyncRemoto consulta itens ativos da lista no INSERT e detecta mesmo nome (case-insensitive, id diferente); `mesclarDuplicado` soma quando unidades coincidem (updated_at = mais recente) e devolve null quando divergem (remoto vence); engine tombstone a linha local, aplica o registro remoto e descarta as mutações; 2 testes da mescla + 1 do engine)*
-- [ ] **F4-T09** — Testes do Sync Engine completos (checklist 03 §8)
+- [x] **F4-T09** — Testes do Sync Engine completos (checklist 03 §8)
   Dep: F4-T03…F4-T08 · Docs: [03 §8](03-sincronizacao-offline.md), [07 §1](07-qualidade-ci.md)
-  CP: Os 8 itens do checklist passam; prioridade máxima de cobertura.
+  CP: Os 8 itens do checklist passam; prioridade máxima de cobertura. *(checklist_sincronizacao_test.dart: 2 dispositivos + servidor fake em memória com LWW/dedup reais; 8 testes 1:1 com o checklist. Correções encontradas ao validar: flush() agora encadeia chamadas concorrentes (não drena duas vezes, quem chama espera a fila real) e incrementar tentativas não dispara novo flush; Drift v2 — datas como texto ISO-8601 com microssegundos (armazenamento em unix segundos truncava updated_at e criava empates artificiais no LWW) com migração v1→v2)*
 
 ## Fase 5 — Polimento e Publicação (MVP)
 
@@ -148,9 +148,9 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | F1 Infra & BD | 8 | 8 |
 | F2 IA | 5 | 5 |
 | F3 App Core | 9 | 9 |
-| F4 IA + Sync | 9 | 8 |
+| F4 IA + Sync | 9 | 9 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **30** |
+| **Total** | **37** | **31** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
