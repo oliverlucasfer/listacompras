@@ -124,4 +124,25 @@ abstract final class AppStrings {
 
   static String syncPendentes(int n) =>
       n == 1 ? '1 alteração pendente' : '$n alterações pendentes';
+
+  // Configurações (doc 06 §3, wireframe 10 §5)
+  static const configuracoes = 'Configurações';
+  static const conta = 'Conta';
+  static const sobre = 'Sobre';
+  static const politicaPrivacidade = 'Política de Privacidade';
+  static const versao = 'Versão';
+  static const excluirMinhaConta = 'Excluir minha conta';
+  static const excluirMinhaContaAviso =
+      'Apaga TODAS as suas listas permanentemente.';
+  static const excluirContaTitulo = 'Excluir minha conta';
+  static const excluirContaSenhaMensagem =
+      'Esta ação é permanente e apaga TODAS as suas listas. '
+      'Digite sua senha para continuar.';
+  static const continuar = 'Continuar';
+  static const excluirContaMensagemFinal =
+      'Esta ação é permanente e apaga todas as suas listas. Tem certeza?';
+  static const excluirConta = 'Excluir conta';
+  static const senhaIncorreta = 'Senha incorreta.';
+  static const reautenticando = 'Verificando...';
+  static const excluindoConta = 'Excluindo conta...';
 }

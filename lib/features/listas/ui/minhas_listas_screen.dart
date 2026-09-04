@@ -21,6 +21,11 @@ class MinhasListasScreen extends ConsumerWidget {
         title: const Text(AppStrings.minhasListas),
         actions: [
           IconButton(
+            tooltip: AppStrings.configuracoes,
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => context.push('/configuracoes'),
+          ),
+          IconButton(
             tooltip: AppStrings.sair,
             icon: const Icon(Icons.logout),
             onPressed: () async {

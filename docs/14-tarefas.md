@@ -116,9 +116,9 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 
 ## Fase 5 — Polimento e Publicação (MVP)
 
-- [ ] **F5-T01** — Tela Configurações (política de privacidade, versão, exclusão de conta)
+- [x] **F5-T01** — Tela Configurações (política de privacidade, versão, exclusão de conta)
   Dep: F4-T09 · Docs: [06 §3](06-mvp-entregas.md), [10 §5](10-wireframes-telas.md) · RF-11
-  CP: Wireframe 5; links corretos.
+  CP: Wireframe 5; links corretos. *(rota /configuracoes protegida + ícone ⚙ no painel; e-mail da conta (emailUsuarioProvider); Política de Privacidade exibida in-app (texto único do 06 §3.3 em core/l10n/politica_privacidade.dart — a URL pública online entra na F5-T06); versão via package_info_plus; botão vermelho Excluir minha conta + aviso, com fluxo placeholder para F5-T02; 3 widget tests)*
 - [ ] **F5-T02** — RPC `excluir_conta()` + fluxo de confirmação dupla
   Dep: F5-T01 · Docs: [06 §3.3.1](06-mvp-entregas.md) · RF-11
   CP: Conta excluída remove todos os dados (cascades verificados); app limpa cache/fila; sessão invalidada.
@@ -149,8 +149,8 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | F2 IA | 5 | 5 |
 | F3 App Core | 9 | 9 |
 | F4 IA + Sync | 9 | 9 |
-| F5 Publicação | 6 | 0 |
-| **Total** | **37** | **31** |
+| F5 Publicação | 6 | 1 |
+| **Total** | **37** | **32** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

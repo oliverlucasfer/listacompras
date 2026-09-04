@@ -22,3 +22,8 @@ final autenticadoProvider = Provider<bool>((ref) {
 final donoAtualIdProvider = Provider<String>((ref) {
   return ref.watch(authRepositoryProvider).sessaoAtual?.user.id ?? '';
 });
+
+/// E-mail da conta autenticada (null sem sessão) — usado nas Configurações.
+final emailUsuarioProvider = Provider<String?>((ref) {
+  return ref.watch(authRepositoryProvider).sessaoAtual?.user.email;
+});

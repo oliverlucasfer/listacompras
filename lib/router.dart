@@ -6,6 +6,7 @@ import 'features/auth/providers/auth_providers.dart';
 import 'features/auth/ui/login_screen.dart';
 import 'features/auth/ui/recuperar_senha_screen.dart';
 import 'features/auth/ui/registro_screen.dart';
+import 'features/configuracoes/ui/configuracoes_screen.dart';
 import 'features/listas/ui/minhas_listas_screen.dart';
 import 'features/listas/ui/tela_lista_screen.dart';
 
@@ -50,6 +51,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/lista/:listaId',
         builder: (context, state) =>
             TelaListaScreen(listaId: state.pathParameters['listaId']!),
+      ),
+      GoRoute(
+        path: '/configuracoes',
+        builder: (context, state) => const ConfiguracoesScreen(),
       ),
     ],
   );
