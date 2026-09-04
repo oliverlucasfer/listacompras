@@ -101,6 +101,8 @@ Uma fase só está "pronta" quando:
 
 **Antes de lançamento público:** revisar R-01 — avaliar upgrade Supabase Pro (gatilho documentado em [00 §4](00-visao-geral.md)).
 
+**Nota do dono do projeto:** a publicação Web + Play (teste interno) está **adiada** — será executada apenas sob solicitação explícita, junto com a F5-T05 ([14-tarefas](14-tarefas.md)). Canal provisório de distribuição de builds de teste: Firebase App Distribution (F5-T05b). Os critérios do DoD (§2) permanecem válidos para o dia do lançamento.
+
 ---
 
 ## 5. Métricas de sucesso (pós-lançamento, opcional)

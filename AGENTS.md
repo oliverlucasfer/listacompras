@@ -9,6 +9,7 @@ Projeto: app de lista de compras inteligente e colaborativa (Flutter + Supabase 
 3. **Leia o doc dono indicado pela tarefa** (`Docs:`) — ele é a autoridade normativa.
 4. Implemente e valide o **critério de pronto (CP)** da tarefa antes de marcá-la `- [x]` em `14-tarefas.md` e atualizar a tabela de progresso.
 5. Mencione o ID da tarefa (ex.: `F4-T03`) e os requisitos ([`docs/12-prd.md`](docs/12-prd.md), ex.: `RF-08`) no commit.
+6. **Respeite o gate do dono:** F5-T05 (usabilidade) e F5-T06 (publicação Web/Play) só executam **sob solicitação explícita do usuário** — não inicie, não proponha nem as trate como bloqueadoras de outras tarefas. Builds de teste seguem a F5-T05b (Firebase App Distribution) até lá.
 
 ## Regras não negociáveis
 
