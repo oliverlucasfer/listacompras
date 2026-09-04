@@ -1,0 +1,12 @@
+# Template — copie para android/key.properties e preencha com os valores reais.
+# Este arquivo é gitignored; o .example é o único versionado (F5-T05b — doc 06 §4).
+#
+# Gere o keystore FORA do repositório (nunca commitado), ex.:
+#   keytool -genkeypair -v -keystore %USERPROFILE%\keys\lista-compras.jks ^
+#     -alias lista -keyalg RSA -keysize 2048 -validity 10000
+#
+# storeFile: caminho absoluto com / (ou \\) — ou relativo a android/app
+storeFile=C:/Users/SEU-USUARIO/keys/lista-compras.jks
+storePassword=TROQUE
+keyAlias=lista
+keyPassword=TROQUE

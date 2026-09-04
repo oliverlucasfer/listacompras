@@ -26,5 +26,10 @@ supabase/tests/node_modules/
 .DS_Store
 Thumbs.db
 
+# Chaves de assinatura Android (F5-T05b — doc 06 §4)
+android/key.properties
+*.jks
+*.keystore
+
 # Diversos
 *.log
