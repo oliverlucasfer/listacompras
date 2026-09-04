@@ -100,7 +100,7 @@ Gravado? [sim/não]
 
 1. Consolidação de todos os logs em tabela única (tarefas × participantes).
 2. Priorizar problemas: **bloqueadores** (falha de tarefa) → **atritos** (hesitação, comentários) → **sugestões**.
-3. Saída da Fase 5: relatório de 1 página com o resultado vs. critério de aprovação (3.1) + lista de ajustes classificada, apensada à publicação ([06 §4](06-mvp-entregas.md)).
+3. Saída da Fase 5: relatório de 1 página com o resultado vs. critério de aprovação (3.1) + lista de ajustes classificada, apensada à publicação ([06 §4](06-mvp-entregas.md)). Modelo pronto para preencher: [relatorio-usabilidade-fase5.md](relatorio-usabilidade-fase5.md).
 
 ---
 

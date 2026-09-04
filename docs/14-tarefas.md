@@ -130,7 +130,7 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
   CP: Erro simulado aparece no Sentry; payload inspecionado sem dados de itens. *(Flutter: SentryFlutter.init com DSN via --dart-define SENTRY_DSN (vazio → desligado), sendDefaultPii=false e beforeSend limpa breadcrumbs; engine reporta os eventos monitorados — sync_erro_persistente, sync_falha_fila_grande (>10), sync_falha_tentativas_altas (>5), sync_relogio_adiantado (>24h) — apenas códigos + contagens, via callback injetado (3 testes); Edge Function: supabase/functions/parse-lista/sentry.ts com SDK @sentry/deno carregado dinamicamente e no-op sem DSN, acoplado aos caminhos 422/500 (3 testes deno, CI com --allow-env). Smoke com DSN real do projeto: instruções em 09 §3 — operação externa (criar projeto Sentry + setar secret/dart-define)*
 - [ ] **F5-T05** — Testes de usabilidade (3–5 participantes)
   Dep: F4-T09, F5-T02 · Docs: [11](11-usabilidade-fase5.md)
-  CP: Critério 11 §3.1: T1–T4 ≥ 80% sem ajuda **e** T3 100%; relatório de 1 página produzido.
+  CP: Critério 11 §3.1: T1–T4 ≥ 80% sem ajuda **e** T3 100%; relatório de 1 página produzido. *(relatório modelo já preparado: [docs/relatorio-usabilidade-fase5.md](relatorio-usabilidade-fase5.md) — executar as 3–5 sessões perante participantes reais e preencher; exige ação humana, fora do escopo do agente)*
 - [ ] **F5-T06** — Publicação Web + Android (teste interno) + política de privacidade online
   Dep: F5-T05 · Docs: [06 §4](06-mvp-entregas.md)
   CP: Checklist 06 §1 100% marcado; URL Web pública; AAB no closed testing.
