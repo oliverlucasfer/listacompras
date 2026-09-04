@@ -3,8 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
+import 'package:lista_compras/features/ia/data/parse_lista_client.dart';
+import 'package:lista_compras/features/ia/providers/ia_providers.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
@@ -297,6 +301,43 @@ void main() {
 
     expect(find.text('Churrasco'), findsOneWidget);
     expect(find.text('Compras da Semana'), findsNothing);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_abrir_modal_importar_ia_quando_tocar_botao', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(
+      titulo: 'Compras da Semana',
+      donoId: 'user-a',
+    );
+    final clienteIa = ParseListaClient(
+      obterToken: () => 'jwt-teste',
+      obterUri: () =>
+          Uri.parse('https://projeto.supabase.co/functions/v1/parse-lista'),
+      httpClient: MockClient(
+        (_) async => http.Response('{"itens": [], "aviso": null}', 200),
+      ),
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          parseListaClientProvider.overrideWithValue(clienteIa),
+        ],
+        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text(AppStrings.importarPorIa));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.iaColeOuDigite), findsOneWidget);
+    expect(find.text(AppStrings.iaExtrairItens), findsOneWidget);
 
     await fechar(tester);
   });

@@ -86,9 +86,9 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 
 ## Fase 4 — IA + Sincronização
 
-- [ ] **F4-T01** — Modal "Importar por IA" (entrada + contador + chamada + erros amigáveis)
+- [x] **F4-T01** — Modal "Importar por IA" (entrada + contador + chamada + erros amigáveis)
   Dep: F2-T05, F3-T09 · Docs: [05 §6.4](05-app-flutter.md), [04 §2](04-ia-edge-function.md), [10 §4.1](10-wireframes-telas.md) · RF-06
-  CP: Todos os códigos de erro exibem mensagem do contrato; contador bloqueia > 2000.
+  CP: Todos os códigos de erro exibem mensagem do contrato; contador bloqueia > 2000. *(cliente HTTP `ParseListaClient` com JWT + timeout 20s; os 8 códigos do contrato mapeados com fallback pt-BR; contador vermelho e botão desabilitado > 2000; sucesso devolve `RespostaParse` para a pré-visualização (F4-T02) — placeholder SnackBar no entretempo; 11 unit + 8 widget + 1 na tela da lista)*
 - [ ] **F4-T02** — Modal de pré-visualização (checkboxes, edição inline, aviso da IA)
   Dep: F4-T01 · Docs: [05 §6.4](05-app-flutter.md), [10 §4.2](10-wireframes-telas.md) · RF-06
   CP: Cancelar não grava; incluir/excluir por item; itens gravados via repositório local.
@@ -148,9 +148,9 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | F1 Infra & BD | 8 | 8 |
 | F2 IA | 5 | 5 |
 | F3 App Core | 9 | 9 |
-| F4 IA + Sync | 9 | 0 |
+| F4 IA + Sync | 9 | 1 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **22** |
+| **Total** | **37** | **23** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

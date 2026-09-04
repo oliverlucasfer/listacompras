@@ -80,6 +80,30 @@ abstract final class AppStrings {
   static const limparConcluidosMensagem =
       'Os itens concluídos serão removidos da lista.';
 
+  // Importação por IA (doc 04 §2, wireframe 10 §4.1)
+  static const fechar = 'Fechar';
+  static const iaColeOuDigite = 'Cole ou digite sua lista:';
+  static const iaExtrairItens = 'Extrair itens';
+  static const iaLendo = 'Lendo...';
+
+  // Mensagens amigáveis do contrato de IA (doc 04 §2) — fallback quando o
+  // servidor não envia `message` (ex.: rejeição do gateway).
+  static const iaSessaoExpirada = 'Sessão expirada. Faça login novamente.';
+  static const iaTextoVazio = 'Digite ou cole um texto com os itens.';
+  static const iaTextoLongo = 'Texto muito longo. Envie até 2.000 caracteres.';
+  static const iaRespostaInvalida =
+      'Não consegui entender a lista. Tente reescrever.';
+  static const iaRateLimit = 'Muitas solicitações. Aguarde um instante.';
+  static const iaCotaIa =
+      'Limite diário de importações atingido. Tente amanhã.';
+  static const iaTimeoutIa = 'A IA demorou demais. Tente novamente.';
+  static const iaErroInterno = 'Erro inesperado. Tente novamente.';
+  static const iaSemConexao =
+      'Sem conexão. Verifique sua internet e tente novamente.';
+
+  static String itensExtraidos(int n) =>
+      n == 1 ? '1 item extraído.' : '$n itens extraídos.';
+
   // Estados transversais
   static const carregando = 'Carregando...';
   static const tentarNovamente = 'Tentar novamente';

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/app_strings.dart';
+import '../../ia/ui/modal_importar_ia.dart';
 import '../domain/item.dart';
 import '../domain/unidade.dart';
 import '../providers/listas_providers.dart';
@@ -107,6 +108,24 @@ class TelaListaScreen extends ConsumerWidget {
     );
   }
 
+  /// Importação por IA (doc 05 §6.3/§6.4, RF-06): abre o modal de entrada;
+  /// o sucesso segue para a pré-visualização (F4-T02) — placeholder atual.
+  Future<void> _importarPorIa(
+    BuildContext context,
+    WidgetRef ref,
+    String idLista,
+  ) async {
+    final resposta = await abrirModalImportarIa(context, ref, idLista);
+    if (resposta == null || !context.mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(AppStrings.itensExtraidos(resposta.itens.length)),
+        ),
+      );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final listaAsync = ref.watch(listaPorIdProvider(listaId));
@@ -159,6 +178,14 @@ class TelaListaScreen extends ConsumerWidget {
             children: [
               _CampoAdicionar(listaId: listaId),
               Expanded(child: _ListaItens(listaId: listaId)),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                child: OutlinedButton.icon(
+                  onPressed: () => _importarPorIa(context, ref, listaId),
+                  icon: const Icon(Icons.smart_toy_outlined),
+                  label: const Text(AppStrings.importarPorIa),
+                ),
+              ),
             ],
           ),
         );
