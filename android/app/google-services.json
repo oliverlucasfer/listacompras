@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "407606670898",
+    "project_id": "lista-compras-34f93",
+    "storage_bucket": "lista-compras-34f93.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:407606670898:android:60df19beadd3de48bbae2b",
+        "android_client_info": {
+          "package_name": "br.com.oliverlucas.listacompras"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEJRMQXpxz9aJ9RD80CHnC2ZHFONJWCow"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
