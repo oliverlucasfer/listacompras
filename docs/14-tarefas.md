@@ -101,9 +101,9 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [x] **F4-T05** — Reordenar itens (drag-and-drop → `ordem`)
   Dep: F3-T07 · Docs: [05 §6.3](05-app-flutter.md) · RF-05
   CP: Reordenação persiste local e sincroniza. *(SliverReorderableList + alça ≡ (ReorderableDragStartListener); reordenarItens grava `ordem` e enfileira UPDATE só das linhas que mudaram; ordenação secundária por id para determinismo; fix: undo do SnackBar captura repo antes do unmount; sync via fila já coberto pelo engine (F4-T03); 1 teste de repo + 1 widget de drag)*
-- [ ] **F4-T06** — Realtime: aplicar remotos no Drift com LWW; bootstrap e re-sync
+- [x] **F4-T06** — Realtime: aplicar remotos no Drift com LWW; bootstrap e re-sync
   Dep: F4-T04 · Docs: [03 §4, §7](03-sincronizacao-offline.md) · RF-07
-  CP: Mudança remota visível < 1s; re-sync completo em gap de conexão; multi-conta isolada.
+  CP: Mudança remota visível < 1s; re-sync completo em gap de conexão; multi-conta isolada. *(SupabaseBootstrap: canal Realtime `postgres_changes` aplica INSERT/UPDATE imediatamente via `aplicarRemoto` com LWW (sem debounce, DELETE físico ignorado); troca de usuário → flush final + limpa cache/fila + bootstrap; último usuário em SharedPreferences para a fila sobreviver ao restart; reconexão → re-sync completo + flush; 6 testes)*
 - [ ] **F4-T07** — Indicador de sync na UI (estados 03 §6 + banner offline)
   Dep: F4-T06 · Docs: [03 §6](03-sincronizacao-offline.md), [10 §3.2](10-wireframes-telas.md) · RF-09
   CP: Todos os 5 estados renderizam conforme wireframe.
@@ -148,9 +148,9 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | F1 Infra & BD | 8 | 8 |
 | F2 IA | 5 | 5 |
 | F3 App Core | 9 | 9 |
-| F4 IA + Sync | 9 | 5 |
+| F4 IA + Sync | 9 | 6 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **27** |
+| **Total** | **37** | **28** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

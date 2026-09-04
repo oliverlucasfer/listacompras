@@ -20,9 +20,10 @@ Future<void> main() async {
       child: const ListaComprasApp(),
     ),
   );
-  // Liga o Sync Engine (doc 03 §4): drena a fila a cada escrita e ao
-  // reconectar; aplica remotos vencedores no LWW (doc 03 §5).
-  container.read(syncEngineProvider);
+  // Liga o Sync Engine + bootstrap/realtime (doc 03 §4/§7): drena a fila a
+  // cada escrita e ao reconectar, aplica remotos vencedores no LWW e
+  // isola o cache por usuário.
+  container.read(syncBootstrapProvider);
 }
 
 class ListaComprasApp extends ConsumerWidget {
