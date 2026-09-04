@@ -94,6 +94,13 @@ class SyncEngine {
                 // tombstones) e descarta as mutações do registro — doc 03 §5.
                 await _aplicador.aplicar(mutacao.tabela, registro);
                 await _removerRegistro(mutacao.tabela, mutacao.registroId);
+              case Duplicado(:final registro):
+                // Deduplicação (doc 03 §5, RF-10): a linha local vira
+                // tombstone e o item remoto absorve a quantidade — nunca
+                // há duplicado ativo.
+                await _tumbarLocal(mutacao.tabela, mutacao.registroId);
+                await _aplicador.aplicar(mutacao.tabela, registro);
+                await _removerRegistro(mutacao.tabela, mutacao.registroId);
             }
           }
         } on Exception {
@@ -188,6 +195,29 @@ class SyncEngine {
           (m) => m.tabela.equals(tabela) & m.registroId.equals(registroId),
         ))
         .go();
+  }
+
+  /// Marca a linha local como removida (tombstone) — usada na deduplicação
+  /// (doc 03 §5), quando o registro local é absorvido pelo remoto.
+  Future<void> _tumbarLocal(String tabela, String registroId) async {
+    final agora = DateTime.now().toUtc();
+    switch (tabela) {
+      case 'listas':
+        await (_db.update(
+          _db.listaLocal,
+        )..where((l) => l.id.equals(registroId))).write(
+          ListaLocalCompanion(
+            deletadoEm: Value(agora),
+            updatedAt: Value(agora),
+          ),
+        );
+      case 'itens_lista':
+        await (_db.update(
+          _db.itemLocal,
+        )..where((i) => i.id.equals(registroId))).write(
+          ItemLocalCompanion(deletadoEm: Value(agora), updatedAt: Value(agora)),
+        );
+    }
   }
 
   Future<void> _registrarFalha(List<MutacaoSync> lote) async {

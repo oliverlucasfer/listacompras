@@ -18,6 +18,16 @@ class RemotoVenceu extends ResultadoEnvio {
   final Map<String, Object?> registro;
 }
 
+/// INSERT duplicado (doc 03 §5, RF-10): já existe item ativo com o mesmo
+/// nome na lista — [registro] é a linha remota (com quantidade somada
+/// quando as unidades coincidem); o Sync Engine tombstone a linha local,
+/// aplica o registro e descarta as mutações do registro local.
+class Duplicado extends ResultadoEnvio {
+  const Duplicado(this.registro);
+
+  final Map<String, Object?> registro;
+}
+
 /// Destino das mutações no servidor (doc 03 §2/§4) com comparação LWW
 /// (doc 03 §5): consulte o registro remoto antes de decidir.
 abstract interface class SyncRemoto {

@@ -49,4 +49,44 @@ void main() {
     expect(remotoVenceNoLww(zulu, offset), isTrue);
     expect(remotoVenceNoLww(offset, zulu), isTrue);
   });
+
+  test('deve_somar_quantidade_quando_unidades_coincidem', () {
+    final remoto = {
+      'id': 'remoto-1',
+      'quantidade': 2,
+      'unidade': 'kg',
+      'updated_at': '2026-09-04T12:00:00.000Z',
+    };
+    final local = {
+      'id': 'local-1',
+      'quantidade': 3.0,
+      'unidade': 'kg',
+      'updated_at': '2026-09-04T13:00:00.000Z',
+    };
+
+    final mesclado = mesclarDuplicado(remoto, local);
+
+    expect(mesclado, isNotNull);
+    expect(mesclado!['id'], 'remoto-1');
+    expect(mesclado['quantidade'], 5.0);
+    // updated_at mesclado = o mais recente dos dois.
+    expect(mesclado['updated_at'], '2026-09-04T13:00:00.000Z');
+  });
+
+  test('deve_retornar_null_quando_unidades_divergem', () {
+    final remoto = {
+      'id': 'remoto-1',
+      'quantidade': 2,
+      'unidade': 'kg',
+      'updated_at': '2026-09-04T12:00:00.000Z',
+    };
+    final local = {
+      'id': 'local-1',
+      'quantidade': 500,
+      'unidade': 'g',
+      'updated_at': '2026-09-04T12:00:00.000Z',
+    };
+
+    expect(mesclarDuplicado(remoto, local), isNull);
+  });
 }

@@ -57,6 +57,24 @@ class RemotoComLwwFake implements SyncRemoto {
   }
 }
 
+/// Servidor fake que detecta duplicado (doc 03 §5, RF-10): todo INSERT de
+/// item vira `Duplicado` com o registro remoto mesclado informado.
+class RemotoDuplicadoFake implements SyncRemoto {
+  RemotoDuplicadoFake(this.registroMesclado);
+
+  final Map<String, Object?> registroMesclado;
+  final enviados = <MutacaoSync>[];
+
+  @override
+  Future<ResultadoEnvio> enviar(MutacaoSync mutacao) async {
+    enviados.add(mutacao);
+    if (mutacao.tabela == 'itens_lista' && mutacao.operacao == 'INSERT') {
+      return Duplicado(registroMesclado);
+    }
+    return const Enviado();
+  }
+}
+
 void main() {
   late AppDatabase db;
   late ListasRepository repo;
@@ -481,5 +499,57 @@ void main() {
     expect(local.nome, 'Arroz do servidor');
     expect(local.quantidade, 5.0);
     expect(await mutacoesNaFila(), 0);
+  });
+
+  test('deve_tumbar_local_e_somar_quantidade_quando_duplicado', () async {
+    // Caso-limite 03 §5 (RF-10): item duplicado offline vira quantidade
+    // somada — a linha local é tombstonada e o remoto absorve a soma.
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      quantidade: 2,
+    );
+
+    // O SupabaseSyncRemoto mescla no servidor (2 + 3 = 5) e devolve a
+    // linha remota mesclada — o fake simula exatamente esse resultado.
+    final remoto = RemotoDuplicadoFake({
+      'id': 'remoto-arroz',
+      'lista_id': lista.id,
+      'nome': 'Arroz',
+      'quantidade': 5,
+      'unidade': 'kg',
+      'concluido': false,
+      'ordem': 0,
+      'created_at': '2026-09-04T12:00:00.000Z',
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+      'deletado_em': null,
+    });
+
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+    await aguardarSincronizado(engine);
+
+    // Linha local tombstonada — some da UI.
+    final localTumbado = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals(item.id))).getSingle();
+    expect(localTumbado.deletadoEm, isNotNull);
+
+    // Linha remota aparece localmente com a quantidade somada.
+    final remotoLocal = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals('remoto-arroz'))).getSingle();
+    expect(remotoLocal.quantidade, 5.0);
+    expect(remotoLocal.deletadoEm, isNull);
+
+    // Fila vazia e sincronizado.
+    expect(await mutacoesNaFila(), 0);
+    expect(engine.statusAtual, isA<Sincronizado>());
   });
 }

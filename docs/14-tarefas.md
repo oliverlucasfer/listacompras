@@ -107,9 +107,9 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [x] **F4-T07** — Indicador de sync na UI (estados 03 §6 + banner offline)
   Dep: F4-T06 · Docs: [03 §6](03-sincronizacao-offline.md), [10 §3.2](10-wireframes-telas.md) · RF-09
   CP: Todos os 5 estados renderizam conforme wireframe. *(IndicadorSync no topo do corpo da lista: check (Sincronizado), spinner (Sincronizando), contagem singular/plural (Pendente), banner nuvem cortada (Offline), banner errorContainer com ação "Tentar novamente" → engine.reiniciarTentativas (Erro); 6 widget tests + integração na tela da lista)*
-- [ ] **F4-T08** — Deduplicação no sync (unique violada → aumenta quantidade)
+- [x] **F4-T08** — Deduplicação no sync (unique violada → aumenta quantidade)
   Dep: F4-T04 · Docs: [03 §5](03-sincronizacao-offline.md) · RF-10
-  CP: Item duplicado offline vira quantidade somada; testes de sync cobrem.
+  CP: Item duplicado offline vira quantidade somada; testes de sync cobrem. *(SupabaseSyncRemoto consulta itens ativos da lista no INSERT e detecta mesmo nome (case-insensitive, id diferente); `mesclarDuplicado` soma quando unidades coincidem (updated_at = mais recente) e devolve null quando divergem (remoto vence); engine tombstone a linha local, aplica o registro remoto e descarta as mutações; 2 testes da mescla + 1 do engine)*
 - [ ] **F4-T09** — Testes do Sync Engine completos (checklist 03 §8)
   Dep: F4-T03…F4-T08 · Docs: [03 §8](03-sincronizacao-offline.md), [07 §1](07-qualidade-ci.md)
   CP: Os 8 itens do checklist passam; prioridade máxima de cobertura.
@@ -148,9 +148,9 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | F1 Infra & BD | 8 | 8 |
 | F2 IA | 5 | 5 |
 | F3 App Core | 9 | 9 |
-| F4 IA + Sync | 9 | 7 |
+| F4 IA + Sync | 9 | 8 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **29** |
+| **Total** | **37** | **30** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
