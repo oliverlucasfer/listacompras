@@ -49,6 +49,20 @@ abstract final class AppStrings {
   static const importarPorIa = 'Importar por IA';
   static const itensConcluidos = 'Itens concluídos';
 
+  // Painel Minhas Listas (wireframe 10 §2)
+  static const nenhumaLista = 'Nenhuma lista por aqui';
+  static const criePrimeiraLista =
+      'Crie sua primeira lista ou importe por texto com IA.';
+  static const criarPrimeiraLista = 'Criar primeira lista';
+  static const nomeDaLista = 'Nome da lista';
+  static const criarLista = 'Criar lista';
+  static const renomearLista = 'Renomear lista';
+  static const excluirLista = 'Excluir lista';
+  static const excluirListaMensagem =
+      'Excluir esta lista? Esta ação não pode ser desfeita.';
+  static const atualizada = 'atualizada';
+  static const erroNomeVazio = 'Informe um nome.';
+
   // Estados transversais
   static const carregando = 'Carregando...';
   static const tentarNovamente = 'Tentar novamente';

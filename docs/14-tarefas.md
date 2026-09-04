@@ -68,9 +68,9 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [x] **F3-T04** — Tela Login + Registro + Recuperar senha (wireframes 10 §1)
   Dep: F3-T03 · Docs: [05 §6.1](05-app-flutter.md), [10 §1](10-wireframes-telas.md)
   CP: Estados carregando/erro inline; widget tests. *(16 widget tests de auth com FakeAuthRepository: validação, spinner, erro inline, toggle senha, verificação de e-mail; string "já cadastrado" centralizada)*
-- [ ] **F3-T05** — Painel Minhas Listas (vazio e preenchido, sheet nova lista)
+- [x] **F3-T05** — Painel Minhas Listas (vazio e preenchido, sheet nova lista)
   Dep: F3-T02 · Docs: [05 §6.2](05-app-flutter.md), [10 §2](10-wireframes-telas.md) · RF-02
-  CP: Cards com contagem; criar/renomear/excluir locais; estado vazio conforme wireframe.
+  CP: Cards com contagem; criar/renomear/excluir locais; estado vazio conforme wireframe. *(cards com contagem via JOIN (11 §2.1), tempo relativo, FAB + sheet nova lista, long-press renomear/excluir com confirmação destrutiva; rota /lista/:id com placeholder p/ F3-T07)*
 - [x] **F3-T06** — Repositório Listas/Itens (escrita local + enfileiramento)
   Dep: F3-T02 · Docs: [03 §3](03-sincronizacao-offline.md), [05 §3](05-app-flutter.md)
   CP: Toda escrita aplica no Drift e registra mutação com ts_local; testes de repositório. *(11 testes: criar/renomear/excluir lista, adicionar/editar/remover item, ordem sequencial, UUID v4, enum de unidades, quantidade>0, payload completo snake_case)*
@@ -147,10 +147,10 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | :--- | :--- | :--- |
 | F1 Infra & BD | 8 | 8 |
 | F2 IA | 5 | 5 |
-| F3 App Core | 9 | 5 |
+| F3 App Core | 9 | 6 |
 | F4 IA + Sync | 9 | 0 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **18** |
+| **Total** | **37** | **19** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

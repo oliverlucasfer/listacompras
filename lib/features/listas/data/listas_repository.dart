@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../drift/database.dart';
 import '../domain/item.dart';
 import '../domain/lista.dart';
+import '../domain/lista_com_contagem.dart';
 import '../domain/unidade.dart';
 
 /// Repositório de listas/itens (doc 03 §2, RF-02/RF-03/RF-04): toda
@@ -34,6 +35,41 @@ class ListasRepository {
           ..orderBy([(i) => OrderingTerm.asc(i.ordem)]))
         .watch()
         .map((rows) => rows.map(Item.fromLocal).toList());
+  }
+
+  Stream<List<ListaComContagem>> watchListasComContagem() {
+    return _db
+        .customSelect(
+          '''
+    SELECT l.id, l.titulo, l.dono_id, l.created_at, l.updated_at,
+           COUNT(i.id) AS total_itens,
+           COUNT(CASE WHEN i.concluido = 1 THEN 1 END) AS itens_concluidos
+    FROM lista_local l
+    LEFT JOIN item_local i ON i.lista_id = l.id AND i.deletado_em IS NULL
+    WHERE l.deletado_em IS NULL
+    GROUP BY l.id
+    ORDER BY l.updated_at DESC
+  ''',
+          readsFrom: {_db.listaLocal, _db.itemLocal},
+        )
+        .watch()
+        .map(
+          (rows) => rows
+              .map(
+                (row) => ListaComContagem(
+                  lista: Lista(
+                    id: row.read<String>('id'),
+                    titulo: row.read<String>('titulo'),
+                    donoId: row.read<String>('dono_id'),
+                    criadoEm: row.read<DateTime>('created_at'),
+                    atualizadoEm: row.read<DateTime>('updated_at'),
+                  ),
+                  totalItens: row.read<int>('total_itens'),
+                  concluidos: row.read<int>('itens_concluidos'),
+                ),
+              )
+              .toList(),
+        );
   }
 
   // ---- Escritas: local primeiro + fila (doc 03 §1/§3) ----

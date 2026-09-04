@@ -17,3 +17,8 @@ final autenticadoProvider = Provider<bool>((ref) {
   return ref.watch(authStateProvider).value?.session != null ||
       ref.watch(authRepositoryProvider).sessaoAtual != null;
 });
+
+/// ID do usuário autenticado — dono de listas criadas no cliente (ADR-006).
+final donoAtualIdProvider = Provider<String>((ref) {
+  return ref.watch(authRepositoryProvider).sessaoAtual?.user.id ?? '';
+});

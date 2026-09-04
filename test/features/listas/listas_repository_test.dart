@@ -118,6 +118,23 @@ void main() {
     expect(listas.single.titulo, 'Reativa');
   });
 
+  test('deve_contar_itens_ativos_e_concluidos_quando_watch_contagem', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    final arroz = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await repo.adicionarItem(listaId: lista.id, nome: 'Feijão');
+    await repo.editarItem(arroz.id, concluido: true);
+    final leite = await repo.adicionarItem(listaId: lista.id, nome: 'Leite');
+    await repo.removerItem(leite.id);
+
+    final contagens = await repo.watchListasComContagem().first.timeout(
+      const Duration(seconds: 2),
+    );
+    expect(contagens, hasLength(1));
+    expect(contagens.single.totalItens, 2);
+    expect(contagens.single.concluidos, 1);
+    expect(contagens.single.contagem, '1/2 itens concluídos');
+  });
+
   test('deve_adicionar_ordem_sequencial_quando_adicionar_tres_itens', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
 
