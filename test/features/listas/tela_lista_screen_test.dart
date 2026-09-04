@@ -2,10 +2,12 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
+import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
 import 'package:lista_compras/features/listas/domain/unidade.dart';
 import 'package:lista_compras/features/listas/ui/tela_lista_screen.dart';
 
@@ -184,6 +186,117 @@ void main() {
 
     expect(find.text('3 kg'), findsOneWidget);
     expect(find.text(AppStrings.editarItem), findsNothing);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_desmarcar_todos_quando_menu', (tester) async {
+    await listaComItens(tester);
+    final repo = ListasRepository(db);
+    final itens = (await (db.select(
+      db.itemLocal,
+    )).get()).where((i) => !i.concluido).toList();
+    await repo.editarItem(itens.first.id, concluido: true);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.desmarcarTodos));
+    await tester.pumpAndSettle();
+
+    expect(find.text('${AppStrings.itens} (2)'), findsOneWidget);
+    expect(find.byType(ExpansionTile), findsNothing);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_limpar_concluidos_quando_confirmar_dialogo', (
+    tester,
+  ) async {
+    await listaComItens(tester, comConcluido: true);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.limparConcluidos));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.limparConcluidosMensagem), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.limpar));
+    await tester.pumpAndSettle();
+
+    expect(find.text('${AppStrings.itens} (2)'), findsOneWidget);
+    expect(find.byType(ExpansionTile), findsNothing);
+    expect(find.text('Detergente'), findsNothing);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_excluir_lista_e_voltar_ao_painel_quando_confirmar', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(
+      titulo: 'Compras da Semana',
+      donoId: 'user-a',
+    );
+    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+
+    final router = GoRouter(
+      initialLocation: '/lista/${lista.id}',
+      routes: [
+        GoRoute(
+          path: '/lista/:listaId',
+          builder: (_, state) =>
+              TelaListaScreen(listaId: state.pathParameters['listaId']!),
+        ),
+        GoRoute(path: '/listas', builder: (_, _) => const MinhasListasScreen()),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.excluirLista));
+    await tester.pumpAndSettle();
+    expect(find.text('Excluir "Compras da Semana"?'), findsOneWidget);
+    expect(find.text('O item será removido.'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.excluir));
+    await tester.pumpAndSettle();
+
+    final local = await (db.select(
+      db.listaLocal,
+    )..where((l) => l.id.equals(lista.id))).getSingle();
+    expect(local.deletadoEm, isNotNull);
+    expect(find.text(AppStrings.minhasListas), findsOneWidget);
+    expect(find.text(AppStrings.nenhumaLista), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_renomear_lista_quando_menu', (tester) async {
+    await listaComItens(tester);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.renomearLista));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.nomeDaLista),
+      'Churrasco',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Churrasco'), findsOneWidget);
+    expect(find.text('Compras da Semana'), findsNothing);
 
     await fechar(tester);
   });

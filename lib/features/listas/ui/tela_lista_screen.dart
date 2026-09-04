@@ -1,17 +1,111 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/app_strings.dart';
 import '../domain/item.dart';
 import '../domain/unidade.dart';
 import '../providers/listas_providers.dart';
+import 'sheet_titulo_lista.dart';
 
 /// Tela da Lista de Compras (doc 05 §6.3, wireframe 10 §3.1, RF-03/RF-04).
-/// Menu (⋮), indicador de sync, IA e drag-and-drop chegam em F3-T08/F4.
+/// Indicador de sync (F4-T07), IA (F4-T01) e drag-and-drop (F4-T05) chegam depois.
 class TelaListaScreen extends ConsumerWidget {
   const TelaListaScreen({super.key, required this.listaId});
 
   final String listaId;
+
+  void _acaoMenu(
+    BuildContext context,
+    WidgetRef ref,
+    String idLista,
+    String acao,
+  ) {
+    final repo = ref.read(listasRepositoryProvider);
+    switch (acao) {
+      case 'desmarcar':
+        repo.desmarcarTodos(idLista);
+      case 'limpar':
+        _confirmarLimparConcluidos(context, ref, idLista);
+      case 'renomear':
+        abrirSheetTitulo(
+          context,
+          titulo: AppStrings.renomearLista,
+          rotuloBotao: AppStrings.salvar,
+          onSalvar: (nome) => repo.renomearLista(id: idLista, titulo: nome),
+        );
+      case 'excluir':
+        _confirmarExcluirLista(context, ref, listaId);
+    }
+  }
+
+  void _confirmarLimparConcluidos(
+    BuildContext context,
+    WidgetRef ref,
+    String idLista,
+  ) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text(AppStrings.limparConcluidos),
+        content: const Text(AppStrings.limparConcluidosMensagem),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text(AppStrings.cancelar),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              ref.read(listasRepositoryProvider).limparConcluidos(idLista);
+            },
+            child: const Text(AppStrings.limpar),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmarExcluirLista(
+    BuildContext context,
+    WidgetRef ref,
+    String idLista,
+  ) {
+    final titulo = ref.read(listaPorIdProvider(idLista)).value?.titulo ?? '';
+    final nItens = ref.read(itensDaListaProvider(idLista)).value?.length ?? 0;
+    final mensagem = nItens == 1
+        ? 'O item será removido.'
+        : 'Os $nItens itens serão removidos.';
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('Excluir "$titulo"?'),
+          content: Text(mensagem),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text(AppStrings.cancelar),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                await ref.read(listasRepositoryProvider).excluirLista(idLista);
+                if (context.mounted) context.go('/listas');
+              },
+              child: const Text(AppStrings.excluir),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,7 +125,36 @@ class TelaListaScreen extends ConsumerWidget {
           );
         }
         return Scaffold(
-          appBar: AppBar(title: Text(lista.titulo)),
+          appBar: AppBar(
+            title: Text(lista.titulo),
+            actions: [
+              PopupMenuButton<String>(
+                tooltip: 'Menu',
+                onSelected: (acao) => _acaoMenu(context, ref, lista.id, acao),
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'desmarcar',
+                    child: Text(AppStrings.desmarcarTodos),
+                  ),
+                  const PopupMenuItem(
+                    value: 'limpar',
+                    child: Text(AppStrings.limparConcluidos),
+                  ),
+                  const PopupMenuItem(
+                    value: 'renomear',
+                    child: Text(AppStrings.renomearLista),
+                  ),
+                  const PopupMenuItem(
+                    value: 'excluir',
+                    child: Text(
+                      AppStrings.excluirLista,
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
           body: Column(
             children: [
               _CampoAdicionar(listaId: listaId),

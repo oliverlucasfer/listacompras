@@ -73,6 +73,13 @@ abstract final class AppStrings {
   static const unidade = 'Unidade';
   static const listaNaoEncontrada = 'Lista não encontrada.';
 
+  // Ações em massa (doc 05 §6.3, wireframe 10 §3.4)
+  static const desmarcarTodos = 'Desmarcar todos';
+  static const limparConcluidos = 'Limpar concluídos';
+  static const limpar = 'Limpar';
+  static const limparConcluidosMensagem =
+      'Os itens concluídos serão removidos da lista.';
+
   // Estados transversais
   static const carregando = 'Carregando...';
   static const tentarNovamente = 'Tentar novamente';

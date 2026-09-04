@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
@@ -261,5 +262,54 @@ void main() {
     expect(mutacoes.last['operacao'], 'UPDATE');
     final payload = mutacoes.last['payload'] as Map<String, Object?>;
     expect(payload['deletado_em'], isNull);
+  });
+
+  test(
+    'deve_desmarcar_todos_os_concluidos_quando_reaproveitar_lista',
+    () async {
+      final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+      final i1 = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+      await repo.adicionarItem(listaId: lista.id, nome: 'Feijão');
+      final i3 = await repo.adicionarItem(listaId: lista.id, nome: 'Leite');
+      await repo.editarItem(i1.id, concluido: true);
+      await repo.editarItem(i3.id, concluido: true);
+      final antes = await fila();
+
+      await repo.desmarcarTodos(lista.id);
+
+      final itens = await (db.select(
+        db.itemLocal,
+      )..where((i) => i.listaId.equals(lista.id))).get();
+      expect(itens.where((i) => i.concluido), isEmpty);
+      expect(itens, hasLength(3));
+
+      final novas = (await fila()).skip(antes.length).toList();
+      expect(novas, hasLength(2));
+      expect(novas.every((m) => m['operacao'] == 'UPDATE'), isTrue);
+      expect(novas.map((m) => m['registro_id']).toSet(), {i1.id, i3.id});
+    },
+  );
+
+  test('deve_soft_delete_dos_concluidos_quando_limpar_concluidos', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    final i1 = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    final i2 = await repo.adicionarItem(listaId: lista.id, nome: 'Feijão');
+    final i3 = await repo.adicionarItem(listaId: lista.id, nome: 'Leite');
+    await repo.editarItem(i2.id, concluido: true);
+    await repo.editarItem(i3.id, concluido: true);
+
+    await repo.limparConcluidos(lista.id);
+
+    final ativos = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.listaId.equals(lista.id) & i.deletadoEm.isNull())).get();
+    expect(ativos.single.id, i1.id);
+
+    final mutacoes = await fila();
+    final deletes = mutacoes
+        .where((m) => m['operacao'] == 'DELETE_SOFT')
+        .toList();
+    expect(deletes, hasLength(2));
+    expect(deletes.map((m) => m['registro_id']).toSet(), {i2.id, i3.id});
   });
 }

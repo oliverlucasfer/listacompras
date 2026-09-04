@@ -262,6 +262,63 @@ class ListasRepository {
     );
   }
 
+  Future<void> desmarcarTodos(String listaId) async {
+    final concluidos =
+        await (_db.select(_db.itemLocal)..where(
+              (i) =>
+                  i.listaId.equals(listaId) &
+                  i.deletadoEm.isNull() &
+                  i.concluido.equals(true),
+            ))
+            .get();
+    final agora = DateTime.now().toUtc();
+    for (final item in concluidos) {
+      await (_db.update(
+        _db.itemLocal,
+      )..where((i) => i.id.equals(item.id))).write(
+        ItemLocalCompanion(
+          concluido: const Value(false),
+          updatedAt: Value(agora),
+        ),
+      );
+      await _enfileirar(
+        tabela: 'itens_lista',
+        operacao: 'UPDATE',
+        registroId: item.id,
+        listaId: listaId,
+        tsLocal: agora,
+        payload: await _payloadItem(item.id),
+      );
+    }
+  }
+
+  Future<void> limparConcluidos(String listaId) async {
+    final concluidos =
+        await (_db.select(_db.itemLocal)..where(
+              (i) =>
+                  i.listaId.equals(listaId) &
+                  i.deletadoEm.isNull() &
+                  i.concluido.equals(true),
+            ))
+            .get();
+    final agora = DateTime.now().toUtc();
+    for (final item in concluidos) {
+      await (_db.update(
+        _db.itemLocal,
+      )..where((i) => i.id.equals(item.id))).write(
+        ItemLocalCompanion(deletadoEm: Value(agora), updatedAt: Value(agora)),
+      );
+      await _enfileirar(
+        tabela: 'itens_lista',
+        operacao: 'DELETE_SOFT',
+        registroId: item.id,
+        listaId: listaId,
+        tsLocal: agora,
+        payload: await _payloadItem(item.id),
+      );
+    }
+  }
+
   // ---- Internos ----
 
   Future<Map<String, Object?>> _payloadLista(String id) async {
