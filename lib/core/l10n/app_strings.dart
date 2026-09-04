@@ -63,6 +63,16 @@ abstract final class AppStrings {
   static const atualizada = 'atualizada';
   static const erroNomeVazio = 'Informe um nome.';
 
+  // Tela da Lista (wireframe 10 §3, doc 05 §6.3)
+  static const itens = 'Itens';
+  static const desfazer = 'Desfazer';
+  static const itemRemovido = 'Item removido';
+  static const itemDuplicadoSomado = 'já está na lista. Quantidade aumentada.';
+  static const editarItem = 'Editar item';
+  static const quantidade = 'Quantidade';
+  static const unidade = 'Unidade';
+  static const listaNaoEncontrada = 'Lista não encontrada.';
+
   // Estados transversais
   static const carregando = 'Carregando...';
   static const tentarNovamente = 'Tentar novamente';

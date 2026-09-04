@@ -29,6 +29,12 @@ class ListasRepository {
         .map((rows) => rows.map(Lista.fromLocal).toList());
   }
 
+  Stream<Lista?> watchLista(String id) {
+    return (_db.select(_db.listaLocal)..where((l) => l.id.equals(id)))
+        .watchSingleOrNull()
+        .map((row) => row == null ? null : Lista.fromLocal(row));
+  }
+
   Stream<List<Item>> watchItensDaLista(String listaId) {
     return (_db.select(_db.itemLocal)
           ..where((i) => i.listaId.equals(listaId) & i.deletadoEm.isNull())
@@ -230,6 +236,25 @@ class ListasRepository {
     await _enfileirar(
       tabela: 'itens_lista',
       operacao: 'DELETE_SOFT',
+      registroId: id,
+      listaId: item.listaId,
+      tsLocal: agora,
+      payload: await _payloadItem(id),
+    );
+  }
+
+  Future<void> restaurarItem(String id) async {
+    final agora = DateTime.now().toUtc();
+    await (_db.update(_db.itemLocal)..where((i) => i.id.equals(id))).write(
+      ItemLocalCompanion(
+        deletadoEm: const Value(null),
+        updatedAt: Value(agora),
+      ),
+    );
+    final item = await _lerItem(id);
+    await _enfileirar(
+      tabela: 'itens_lista',
+      operacao: 'UPDATE',
       registroId: id,
       listaId: item.listaId,
       tsLocal: agora,

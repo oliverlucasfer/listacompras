@@ -238,4 +238,28 @@ void main() {
       expect(mutacoes.last['tabela'], 'itens_lista');
     },
   );
+
+  test('deve_restaurar_item_e_enfileirar_update_quando_undo', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Café');
+    await repo.removerItem(item.id);
+
+    await repo.restaurarItem(item.id);
+
+    final local = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals(item.id))).getSingle();
+    expect(local.deletadoEm, isNull);
+
+    final ativos = await repo
+        .watchItensDaLista(lista.id)
+        .first
+        .timeout(const Duration(seconds: 2));
+    expect(ativos, hasLength(1));
+
+    final mutacoes = await fila();
+    expect(mutacoes.last['operacao'], 'UPDATE');
+    final payload = mutacoes.last['payload'] as Map<String, Object?>;
+    expect(payload['deletado_em'], isNull);
+  });
 }

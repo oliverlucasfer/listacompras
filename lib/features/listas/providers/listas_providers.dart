@@ -24,6 +24,13 @@ final listasComContagemProvider = StreamProvider<List<ListaComContagem>>(
   (ref) => ref.watch(listasRepositoryProvider).watchListasComContagem(),
 );
 
+final listaPorIdProvider = StreamProvider.family<Lista?, String>((
+  ref,
+  listaId,
+) {
+  return ref.watch(listasRepositoryProvider).watchLista(listaId);
+});
+
 final itensDaListaProvider = StreamProvider.family<List<Item>, String>((
   ref,
   listaId,

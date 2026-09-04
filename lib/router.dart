@@ -7,7 +7,7 @@ import 'features/auth/ui/login_screen.dart';
 import 'features/auth/ui/recuperar_senha_screen.dart';
 import 'features/auth/ui/registro_screen.dart';
 import 'features/listas/ui/minhas_listas_screen.dart';
-import 'features/listas/ui/tela_lista_placeholder.dart';
+import 'features/listas/ui/tela_lista_screen.dart';
 
 /// Rotas (doc 05 §4): /login, /registro e /recuperar-senha são públicas;
 /// as demais exigem autenticação. Redirect global nas duas direções.
@@ -49,7 +49,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/lista/:listaId',
         builder: (context, state) =>
-            TelaListaPlaceholder(listaId: state.pathParameters['listaId']!),
+            TelaListaScreen(listaId: state.pathParameters['listaId']!),
       ),
     ],
   );
