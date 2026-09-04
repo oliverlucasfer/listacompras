@@ -80,9 +80,9 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [x] **F3-T08** — Ações em massa (desmarcar todos, limpar concluídos) + diálogo excluir lista
   Dep: F3-T07 · Docs: [05 §6.3](05-app-flutter.md), [10 §3.4](10-wireframes-telas.md) · RF-04
   CP: Confirmações destrutivas; "desmarcar todos" reaproveita a lista. *(menu ⋮ com desmarcar/limpar/renomear/excluir; diálogo excluir no formato 10 §3.4 e volta ao painel; repo desmarcarTodos/limparConcluidos enfileiram por item; sheet de título extraída para reuso)*
-- [ ] **F3-T09** — Widget tests das telas core
+- [x] **F3-T09** — Widget tests das telas core
   Dep: F3-T07, F3-T08 · Docs: [07 §1](07-qualidade-ci.md)
-  CP: Widgets críticos cobertos; CI verde.
+  CP: Widgets críticos cobertos; CI verde. *(30 widget tests escritos incrementalmente: auth 15 (F3-T04), painel 6 (F3-T05), lista 10 (F3-T07/08); + 17 de repositório e 7 de util; pipeline local 07 §3 verde — format/analyze/test)*
 
 ## Fase 4 — IA + Sincronização
 
@@ -147,10 +147,10 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | :--- | :--- | :--- |
 | F1 Infra & BD | 8 | 8 |
 | F2 IA | 5 | 5 |
-| F3 App Core | 9 | 8 |
+| F3 App Core | 9 | 9 |
 | F4 IA + Sync | 9 | 0 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **21** |
+| **Total** | **37** | **22** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
