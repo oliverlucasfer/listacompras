@@ -98,9 +98,9 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [x] **F4-T04** — LWW + tombstones na aplicação de mutações e remotos
   Dep: F4-T03 · Docs: [03 §5](03-sincronizacao-offline.md) · RF-08, RF-10
   CP: Casos-limite da tabela 03 §5 passam (relógio adiantado, criado+removido offline, remoção vs edição remota). *(SupabaseSyncRemoto consulta remoto e decide LWW — empate vence servidor, `remotoVenceNoLww` puro; AplicadorRemoto sobrescreve Drift incluindo tombstones; engine aplica vencedor remoto e descarta mutações do registro; criado+removido offline já coberto pelo coalescing F4-T03; 7 testes LWW + 3 aplicador + 4 engine com RemotoComLwwFake. Bootstrap/multi-conta na F4-T06)*
-- [ ] **F4-T05** — Reordenar itens (drag-and-drop → `ordem`)
+- [x] **F4-T05** — Reordenar itens (drag-and-drop → `ordem`)
   Dep: F3-T07 · Docs: [05 §6.3](05-app-flutter.md) · RF-05
-  CP: Reordenação persiste local e sincroniza.
+  CP: Reordenação persiste local e sincroniza. *(SliverReorderableList + alça ≡ (ReorderableDragStartListener); reordenarItens grava `ordem` e enfileira UPDATE só das linhas que mudaram; ordenação secundária por id para determinismo; fix: undo do SnackBar captura repo antes do unmount; sync via fila já coberto pelo engine (F4-T03); 1 teste de repo + 1 widget de drag)*
 - [ ] **F4-T06** — Realtime: aplicar remotos no Drift com LWW; bootstrap e re-sync
   Dep: F4-T04 · Docs: [03 §4, §7](03-sincronizacao-offline.md) · RF-07
   CP: Mudança remota visível < 1s; re-sync completo em gap de conexão; multi-conta isolada.
@@ -148,9 +148,9 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | F1 Infra & BD | 8 | 8 |
 | F2 IA | 5 | 5 |
 | F3 App Core | 9 | 9 |
-| F4 IA + Sync | 9 | 4 |
+| F4 IA + Sync | 9 | 5 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **26** |
+| **Total** | **37** | **27** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

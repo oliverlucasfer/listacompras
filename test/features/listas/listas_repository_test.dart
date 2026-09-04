@@ -312,4 +312,32 @@ void main() {
     expect(deletes, hasLength(2));
     expect(deletes.map((m) => m['registro_id']).toSet(), {i2.id, i3.id});
   });
+
+  test('deve_reordenar_e_enfileirar_apenas_mudancas_quando_drag', () async {
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final arroz = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    final leite = await repo.adicionarItem(listaId: lista.id, nome: 'Leite');
+    final cafe = await repo.adicionarItem(listaId: lista.id, nome: 'Café');
+
+    // Nova ordem: Leite (0), Arroz (1), Café (2) — Café não muda.
+    await repo.reordenarItens(lista.id, [leite.id, arroz.id, cafe.id]);
+
+    final itens = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.listaId.equals(lista.id) & i.deletadoEm.isNull())).get();
+    final ordens = {for (final i in itens) i.id: i.ordem};
+    expect(ordens, {leite.id: 0, arroz.id: 1, cafe.id: 2});
+
+    final mutacoes = await fila();
+    final updates = mutacoes
+        .where((m) => m['operacao'] == 'UPDATE' && m['tabela'] == 'itens_lista')
+        .toList();
+    expect(updates, hasLength(2)); // Café mantém a ordem → sem mutação
+    final ids = updates.map((m) => m['registro_id']).toSet();
+    expect(ids, {leite.id, arroz.id});
+    final leitePayload = updates
+        .map((m) => m['payload'] as Map<String, Object?>)
+        .firstWhere((p) => p['id'] == leite.id);
+    expect(leitePayload['ordem'], 0);
+  });
 }

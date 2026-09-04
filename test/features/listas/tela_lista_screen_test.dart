@@ -341,4 +341,37 @@ void main() {
 
     await fechar(tester);
   });
+
+  testWidgets('deve_reordenar_itens_quando_arrastar_alca', (tester) async {
+    await listaComItens(tester);
+
+    // Arrasta a alça do primeiro item (Arroz) uma posição para baixo: o
+    // item precisa cruzar o topo do segundo (~2×56px) para trocar de lugar.
+    await tester.drag(
+      find.byIcon(Icons.drag_handle).first,
+      const Offset(0, 150),
+    );
+    await tester.pumpAndSettle();
+
+    final dyLeite = tester.getTopLeft(find.text('Leite')).dy;
+    final dyArroz = tester.getTopLeft(find.text('Arroz')).dy;
+    expect(dyLeite, lessThan(dyArroz));
+
+    final itens = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.deletadoEm.isNull())).get();
+    final arroz = itens.firstWhere((i) => i.nome == 'Arroz');
+    final leite = itens.firstWhere((i) => i.nome == 'Leite');
+    expect(leite.ordem, 0);
+    expect(arroz.ordem, 1);
+
+    final mutacoes = await (db.select(db.mutacaoPendente)).get();
+    final idsComUpdate = mutacoes
+        .where((m) => m.operacao == 'UPDATE' && m.tabela == 'itens_lista')
+        .map((m) => m.registroId)
+        .toSet();
+    expect(idsComUpdate, containsAll([arroz.id, leite.id]));
+
+    await fechar(tester);
+  });
 }

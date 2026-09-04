@@ -38,7 +38,10 @@ class ListasRepository {
   Stream<List<Item>> watchItensDaLista(String listaId) {
     return (_db.select(_db.itemLocal)
           ..where((i) => i.listaId.equals(listaId) & i.deletadoEm.isNull())
-          ..orderBy([(i) => OrderingTerm.asc(i.ordem)]))
+          ..orderBy([
+            (i) => OrderingTerm.asc(i.ordem),
+            (i) => OrderingTerm.asc(i.id),
+          ]))
         .watch()
         .map((rows) => rows.map(Item.fromLocal).toList());
   }
@@ -260,6 +263,31 @@ class ListasRepository {
       tsLocal: agora,
       payload: await _payloadItem(id),
     );
+  }
+
+  /// Reordena os itens ativos (doc 05 §6.3, RF-05): grava a nova `ordem`
+  /// e enfileira UPDATE apenas para as linhas que mudaram de posição.
+  Future<void> reordenarItens(String listaId, List<String> idsOrdenados) async {
+    final itens = await (_db.select(
+      _db.itemLocal,
+    )..where((i) => i.listaId.equals(listaId) & i.deletadoEm.isNull())).get();
+    final agora = DateTime.now().toUtc();
+    for (var posicao = 0; posicao < idsOrdenados.length; posicao++) {
+      final id = idsOrdenados[posicao];
+      final item = itens.where((i) => i.id == id).firstOrNull;
+      if (item == null || item.ordem == posicao) continue;
+      await (_db.update(_db.itemLocal)..where((i) => i.id.equals(id))).write(
+        ItemLocalCompanion(ordem: Value(posicao), updatedAt: Value(agora)),
+      );
+      await _enfileirar(
+        tabela: 'itens_lista',
+        operacao: 'UPDATE',
+        registroId: id,
+        listaId: listaId,
+        tsLocal: agora,
+        payload: await _payloadItem(id),
+      );
+    }
   }
 
   Future<void> desmarcarTodos(String listaId) async {

@@ -262,6 +262,21 @@ class _ListaItens extends ConsumerWidget {
 
   final String listaId;
 
+  void _reordenar(
+    WidgetRef ref,
+    List<Item> pendentes,
+    int oldIndex,
+    int newIndex,
+  ) {
+    // onReorderItem já ajusta o newIndex para a remoção do item arrastado.
+    final ordenados = [...pendentes]
+      ..removeAt(oldIndex)
+      ..insert(newIndex, pendentes[oldIndex]);
+    ref.read(listasRepositoryProvider).reordenarItens(listaId, [
+      for (final i in ordenados) i.id,
+    ]);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final itensAsync = ref.watch(itensDaListaProvider(listaId));
@@ -274,23 +289,43 @@ class _ListaItens extends ConsumerWidget {
         if (itens.isEmpty) {
           return Center(child: Text(AppStrings.adicionarItem));
         }
-        return ListView(
-          padding: const EdgeInsets.only(bottom: 24),
-          children: [
-            _CabecalhoSecao('${AppStrings.itens} (${pendentes.length})'),
-            for (final item in pendentes)
-              _LinhaItem(listaId: listaId, item: item),
-            if (concluidos.isNotEmpty)
-              ExpansionTile(
-                tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-                title: Text(
-                  '${AppStrings.itensConcluidos} (${concluidos.length})',
-                ),
-                children: [
-                  for (final item in concluidos)
-                    _LinhaItem(listaId: listaId, item: item),
-                ],
+        return CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: _CabecalhoSecao(
+                '${AppStrings.itens} (${pendentes.length})',
               ),
+            ),
+            SliverReorderableList(
+              itemCount: pendentes.length,
+              onReorderItem: (oldIndex, newIndex) =>
+                  _reordenar(ref, pendentes, oldIndex, newIndex),
+              itemBuilder: (context, index) => _LinhaItem(
+                key: ValueKey(pendentes[index].id),
+                listaId: listaId,
+                item: pendentes[index],
+                index: index,
+              ),
+            ),
+            if (concluidos.isNotEmpty)
+              SliverToBoxAdapter(
+                child: ExpansionTile(
+                  tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+                  title: Text(
+                    '${AppStrings.itensConcluidos} (${concluidos.length})',
+                  ),
+                  children: [
+                    for (final item in concluidos)
+                      _LinhaItem(
+                        key: ValueKey(item.id),
+                        listaId: listaId,
+                        item: item,
+                        index: -1,
+                      ),
+                  ],
+                ),
+              ),
+            const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
           ],
         );
       },
@@ -319,15 +354,26 @@ class _CabecalhoSecao extends StatelessWidget {
 }
 
 class _LinhaItem extends ConsumerWidget {
-  const _LinhaItem({required this.listaId, required this.item});
+  const _LinhaItem({
+    super.key,
+    required this.listaId,
+    required this.item,
+    required this.index,
+  });
 
   final String listaId;
   final Item item;
 
+  /// Posição na seção reordenável; concluídos não participam (-1).
+  final int index;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Capturado antes de qualquer remoção: o undo do SnackBar pode rodar
+    // após este widget desmontar (Riverpod proíbe ref pós-unmount).
+    final repo = ref.read(listasRepositoryProvider);
     return Dismissible(
-      key: ValueKey(item.id),
+      key: key!,
       background: _FundoSwipe(
         alinhamento: Alignment.centerLeft,
         icone: Icons.edit_outlined,
@@ -343,7 +389,7 @@ class _LinhaItem extends ConsumerWidget {
           _abrirDialogoEditar(context, ref);
           return false;
         }
-        await ref.read(listasRepositoryProvider).removerItem(item.id);
+        await repo.removerItem(item.id);
         if (!context.mounted) return true;
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
@@ -352,8 +398,7 @@ class _LinhaItem extends ConsumerWidget {
               content: const Text(AppStrings.itemRemovido),
               action: SnackBarAction(
                 label: AppStrings.desfazer,
-                onPressed: () =>
-                    ref.read(listasRepositoryProvider).restaurarItem(item.id),
+                onPressed: () => repo.restaurarItem(item.id),
               ),
             ),
           );
@@ -362,9 +407,8 @@ class _LinhaItem extends ConsumerWidget {
       child: ListTile(
         leading: Checkbox(
           value: item.concluido,
-          onChanged: (_) => ref
-              .read(listasRepositoryProvider)
-              .editarItem(item.id, concluido: !item.concluido),
+          onChanged: (_) =>
+              repo.editarItem(item.id, concluido: !item.concluido),
         ),
         title: Text(
           item.nome,
@@ -372,8 +416,25 @@ class _LinhaItem extends ConsumerWidget {
               ? const TextStyle(decoration: TextDecoration.lineThrough)
               : null,
         ),
-        trailing: Text(
-          '${_formatarQuantidade(item.quantidade)} ${item.unidade.valor}',
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${_formatarQuantidade(item.quantidade)} ${item.unidade.valor}',
+            ),
+            if (index >= 0)
+              ReorderableDragStartListener(
+                index: index,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Icon(
+                    Icons.drag_handle,
+                    size: 24,
+                    semanticLabel: AppStrings.reordenar,
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
