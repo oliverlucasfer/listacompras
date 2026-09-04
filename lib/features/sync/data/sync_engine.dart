@@ -7,6 +7,7 @@ import 'package:drift/drift.dart';
 
 import '../../../drift/database.dart';
 import '../domain/sync_status.dart';
+import 'aplicador_remoto.dart';
 import 'mutacao_sync.dart';
 import 'sync_remoto.dart';
 
@@ -20,15 +21,19 @@ class SyncEngine {
   SyncEngine({
     required this._db,
     required this._remoto,
+    AplicadorRemoto? aplicador,
     this._conectividade,
     this._checarConexao,
     Future<void> Function(Duration)? esperar,
     this.maxTentativas = 10,
-  }) : _esperar = esperar ?? ((espera) => Future<void>.delayed(espera));
+  }) : _esperar = esperar ?? ((espera) => Future<void>.delayed(espera)) {
+    _aplicador = aplicador ?? AplicadorRemoto(_db);
+  }
   static const _backoffMaximoSegundos = 300; // 5 min (doc 03 §3)
 
   final AppDatabase _db;
   final SyncRemoto _remoto;
+  late final AplicadorRemoto _aplicador;
   final Stream<List<ConnectivityResult>>? _conectividade;
   final Future<bool> Function()? _checarConexao;
   final Future<void> Function(Duration) _esperar;
@@ -80,8 +85,16 @@ class SyncEngine {
         }
         try {
           for (final mutacao in lote) {
-            await _remoto.enviar(mutacao);
-            await _removerRegistro(mutacao.tabela, mutacao.registroId);
+            final resultado = await _remoto.enviar(mutacao);
+            switch (resultado) {
+              case Enviado():
+                await _removerRegistro(mutacao.tabela, mutacao.registroId);
+              case RemotoVenceu(:final registro):
+                // Remoto venceu no LWW: sobrescreve o Drift (inclusive
+                // tombstones) e descarta as mutações do registro — doc 03 §5.
+                await _aplicador.aplicar(mutacao.tabela, registro);
+                await _removerRegistro(mutacao.tabela, mutacao.registroId);
+            }
           }
         } on Exception {
           _falhou = true;

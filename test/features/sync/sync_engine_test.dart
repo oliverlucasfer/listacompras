@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/native.dart';
@@ -9,6 +10,7 @@ import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/sync/data/mutacao_sync.dart';
 import 'package:lista_compras/features/sync/data/sync_engine.dart';
 import 'package:lista_compras/features/sync/data/sync_remoto.dart';
+import 'package:lista_compras/features/sync/data/supabase_sync_remoto.dart';
 import 'package:lista_compras/features/sync/domain/sync_status.dart';
 
 /// Fake do SyncRemoto (doc 03 §2): registra envios; falha enquanto houver
@@ -20,12 +22,38 @@ class RemotoFake implements SyncRemoto {
   final recebidas = <MutacaoSync>[];
 
   @override
-  Future<void> enviar(MutacaoSync mutacao) async {
+  Future<ResultadoEnvio> enviar(MutacaoSync mutacao) async {
     if (falhasRestantes > 0) {
       falhasRestantes--;
       throw http.ClientException('servidor indisponível');
     }
     recebidas.add(mutacao);
+    return const Enviado();
+  }
+}
+
+/// Servidor fake com LWW (doc 03 §5): guarda linhas remotas por id e decide
+/// como o SupabaseSyncRemoto faria — empate vence o remoto (servidor).
+class RemotoComLwwFake implements SyncRemoto {
+  final remotos = <String, Map<String, Object?>>{};
+  final enviados = <MutacaoSync>[];
+
+  @override
+  Future<ResultadoEnvio> enviar(MutacaoSync mutacao) async {
+    final remoto = remotos[mutacao.registroId];
+    final atualizadoLocal = DateTime.parse(
+      mutacao.payload['updated_at'] as String,
+    );
+    if (remoto != null &&
+        remotoVenceNoLww(
+          DateTime.parse(remoto['updated_at'] as String),
+          atualizadoLocal,
+        )) {
+      return RemotoVenceu(remoto);
+    }
+    remotos[mutacao.registroId] = mutacao.payload;
+    enviados.add(mutacao);
+    return const Enviado();
   }
 }
 
@@ -266,5 +294,192 @@ void main() {
     expect(remoto.recebidas, hasLength(2));
     expect(await mutacoesNaFila(), 0);
     expect(engine.statusAtual, isA<Sincronizado>());
+  });
+
+  test('deve_aplicar_remoto_e_descartar_mutacao_quando_remoto_vence', () async {
+    // Caso-limite 03 §5: edição remota mais recente vence a local.
+    final agora = DateTime.now().toUtc();
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await repo.editarItem(item.id, concluido: true);
+
+    final remoto = RemotoComLwwFake()
+      ..remotos[item.id] = {
+        'id': item.id,
+        'lista_id': lista.id,
+        'nome': 'Arroz integral',
+        'quantidade': 2,
+        'unidade': 'kg',
+        'concluido': false,
+        'ordem': 0,
+        'created_at': agora.toIso8601String(),
+        'updated_at': agora.add(const Duration(minutes: 5)).toIso8601String(),
+        'deletado_em': null,
+      };
+
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+    await aguardarSincronizado(engine);
+
+    final local = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals(item.id))).getSingle();
+    expect(local.nome, 'Arroz integral');
+    expect(local.quantidade, 2.0);
+    expect(local.concluido, false);
+    expect(await mutacoesNaFila(), 0);
+  });
+
+  test('deve_enviar_tombstone_quando_remocao_local_mais_recente', () async {
+    // Caso-limite 03 §5: remoção offline vs edição remota — o tombstone
+    // local (mais novo) vence e o item não reaparece.
+    final agora = DateTime.now().toUtc();
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+
+    final remoto = RemotoComLwwFake()
+      ..remotos[item.id] = {
+        'id': item.id,
+        'lista_id': lista.id,
+        'nome': 'Arroz editado remotamente',
+        'quantidade': 3,
+        'unidade': 'un',
+        'concluido': false,
+        'ordem': 0,
+        'created_at': agora.toIso8601String(),
+        'updated_at': agora
+            .subtract(const Duration(minutes: 5))
+            .toIso8601String(),
+        'deletado_em': null,
+      };
+
+    await repo.removerItem(item.id);
+
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+    await aguardarSincronizado(engine);
+
+    expect(remoto.enviados.map((m) => m.operacao), contains('DELETE_SOFT'));
+    expect(remoto.remotos[item.id]!['deletado_em'], isNotNull);
+    final local = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals(item.id))).getSingle();
+    expect(local.deletadoEm, isNotNull);
+    expect(await mutacoesNaFila(), 0);
+  });
+
+  test('deve_enviar_edicao_com_relogio_adiantado_e_convergir', () async {
+    // Caso-limite 03 §5: relógio adiantado — o dispositivo vence até o
+    // flush; o servidor registra o ts do cliente (doc 01 §5).
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    final futuro = DateTime.utc(2030).toIso8601String();
+
+    await db
+        .into(db.mutacaoPendente)
+        .insert(
+          MutacaoPendenteCompanion.insert(
+            tabela: 'itens_lista',
+            operacao: 'UPDATE',
+            registroId: item.id,
+            payload: jsonEncode({
+              'id': item.id,
+              'lista_id': lista.id,
+              'nome': 'Arroz do futuro',
+              'quantidade': 1.0,
+              'unidade': 'un',
+              'concluido': false,
+              'ordem': 0,
+              'created_at': futuro,
+              'updated_at': futuro,
+              'deletado_em': null,
+            }),
+            tsLocal: DateTime.utc(2030),
+            listaId: lista.id,
+          ),
+        );
+
+    final remoto = RemotoComLwwFake()
+      ..remotos[item.id] = {
+        'id': item.id,
+        'lista_id': lista.id,
+        'nome': 'Arroz remoto',
+        'quantidade': 1,
+        'unidade': 'un',
+        'concluido': false,
+        'ordem': 0,
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
+        'deletado_em': null,
+      };
+
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+    await aguardarSincronizado(engine);
+
+    expect(remoto.enviados, isNotEmpty);
+    expect(remoto.remotos[item.id]!['nome'], 'Arroz do futuro');
+    expect(remoto.remotos[item.id]!['updated_at'], futuro);
+    expect(await mutacoesNaFila(), 0);
+  });
+
+  test('deve_vencer_servidor_quando_updated_at_empata', () async {
+    // Caso-limite 03 §5: empate — desempate pelo timestamp do servidor.
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await repo.editarItem(item.id, concluido: true);
+
+    // Ts do remoto exatamente igual ao da mutação local (empate exato).
+    final mutacoes = await (db.select(
+      db.mutacaoPendente,
+    )..where((m) => m.registroId.equals(item.id))).get();
+    final tsMutacao =
+        (jsonDecode(mutacoes.last.payload) as Map)['updated_at'] as String;
+
+    final remoto = RemotoComLwwFake()
+      ..remotos[item.id] = {
+        'id': item.id,
+        'lista_id': lista.id,
+        'nome': 'Arroz do servidor',
+        'quantidade': 5,
+        'unidade': 'un',
+        'concluido': false,
+        'ordem': 0,
+        'created_at': tsMutacao,
+        'updated_at': tsMutacao,
+        'deletado_em': null,
+      };
+
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+    await aguardarSincronizado(engine);
+
+    // Empate aproximado → servidor vence (remoto aplicado).
+    final local = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals(item.id))).getSingle();
+    expect(local.nome, 'Arroz do servidor');
+    expect(local.quantidade, 5.0);
+    expect(await mutacoesNaFila(), 0);
   });
 }

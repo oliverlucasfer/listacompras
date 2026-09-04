@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -5,12 +7,22 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/supabase_config.dart';
 import 'core/l10n/app_strings.dart';
 import 'core/theme/app_theme.dart';
+import 'features/sync/providers/sync_providers.dart';
 import 'router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
-  runApp(const ProviderScope(child: ListaComprasApp()));
+  final container = ProviderContainer();
+  runApp(
+    UncontrolledProviderScope(
+      container: container,
+      child: const ListaComprasApp(),
+    ),
+  );
+  // Liga o Sync Engine (doc 03 §4): drena a fila a cada escrita e ao
+  // reconectar; aplica remotos vencedores no LWW (doc 03 §5).
+  container.read(syncEngineProvider);
 }
 
 class ListaComprasApp extends ConsumerWidget {
