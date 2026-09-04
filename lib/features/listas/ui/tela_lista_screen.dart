@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/app_strings.dart';
 import '../../ia/ui/modal_importar_ia.dart';
+import '../../ia/ui/modal_previsao_ia.dart';
 import '../domain/item.dart';
 import '../domain/unidade.dart';
 import '../providers/listas_providers.dart';
@@ -108,8 +109,8 @@ class TelaListaScreen extends ConsumerWidget {
     );
   }
 
-  /// Importação por IA (doc 05 §6.3/§6.4, RF-06): abre o modal de entrada;
-  /// o sucesso segue para a pré-visualização (F4-T02) — placeholder atual.
+  /// Importação por IA (doc 05 §6.3/§6.4, RF-06): entrada → pré-visualização
+  /// → gravação local dos itens confirmados.
   Future<void> _importarPorIa(
     BuildContext context,
     WidgetRef ref,
@@ -117,13 +118,7 @@ class TelaListaScreen extends ConsumerWidget {
   ) async {
     final resposta = await abrirModalImportarIa(context, ref, idLista);
     if (resposta == null || !context.mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(AppStrings.itensExtraidos(resposta.itens.length)),
-        ),
-      );
+    await confirmarItensImportados(context, ref, idLista, resposta);
   }
 
   @override

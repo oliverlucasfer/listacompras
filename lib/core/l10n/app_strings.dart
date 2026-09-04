@@ -85,6 +85,11 @@ abstract final class AppStrings {
   static const iaColeOuDigite = 'Cole ou digite sua lista:';
   static const iaExtrairItens = 'Extrair itens';
   static const iaLendo = 'Lendo...';
+  static const iaConfirmeItens = 'Confirme os itens';
+
+  static String iaAdicionarN(int n) => 'Adicionar $n';
+  static String iaSeraoAdicionados(int n, int total) =>
+      '$n de $total serão adicionados';
 
   // Mensagens amigáveis do contrato de IA (doc 04 §2) — fallback quando o
   // servidor não envia `message` (ex.: rejeição do gateway).
