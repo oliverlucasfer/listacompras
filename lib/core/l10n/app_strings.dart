@@ -32,6 +32,7 @@ abstract final class AppStrings {
   static const erroCamposVazios = 'Preencha os campos acima.';
   static const erroPoliticaPrivacidade = 'É necessário aceitar a política.';
   static const erroAutenticacao = 'E-mail ou senha incorretos.';
+  static const erroEmailJaCadastrado = 'E-mail já cadastrado.';
   static const erroGenerico = 'Não foi possível concluir. Tente novamente.';
 
   // Listas

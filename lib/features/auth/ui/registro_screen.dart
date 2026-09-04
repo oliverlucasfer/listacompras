@@ -84,7 +84,7 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
       if (mounted) {
         setState(
           () => _erroGeral = e.message.toLowerCase().contains('already')
-              ? 'E-mail já cadastrado.'
+              ? AppStrings.erroEmailJaCadastrado
               : AppStrings.erroGenerico,
         );
       }
