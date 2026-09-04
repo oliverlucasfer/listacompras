@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../ia/ui/modal_importar_ia.dart';
 import '../../ia/ui/modal_previsao_ia.dart';
+import '../../sync/ui/indicador_sync.dart';
 import '../domain/item.dart';
 import '../domain/unidade.dart';
 import '../providers/listas_providers.dart';
@@ -171,6 +172,7 @@ class TelaListaScreen extends ConsumerWidget {
           ),
           body: Column(
             children: [
+              const IndicadorSync(),
               _CampoAdicionar(listaId: listaId),
               Expanded(child: _ListaItens(listaId: listaId)),
               Padding(

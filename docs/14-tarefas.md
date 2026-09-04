@@ -104,9 +104,9 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [x] **F4-T06** — Realtime: aplicar remotos no Drift com LWW; bootstrap e re-sync
   Dep: F4-T04 · Docs: [03 §4, §7](03-sincronizacao-offline.md) · RF-07
   CP: Mudança remota visível < 1s; re-sync completo em gap de conexão; multi-conta isolada. *(SupabaseBootstrap: canal Realtime `postgres_changes` aplica INSERT/UPDATE imediatamente via `aplicarRemoto` com LWW (sem debounce, DELETE físico ignorado); troca de usuário → flush final + limpa cache/fila + bootstrap; último usuário em SharedPreferences para a fila sobreviver ao restart; reconexão → re-sync completo + flush; 6 testes)*
-- [ ] **F4-T07** — Indicador de sync na UI (estados 03 §6 + banner offline)
+- [x] **F4-T07** — Indicador de sync na UI (estados 03 §6 + banner offline)
   Dep: F4-T06 · Docs: [03 §6](03-sincronizacao-offline.md), [10 §3.2](10-wireframes-telas.md) · RF-09
-  CP: Todos os 5 estados renderizam conforme wireframe.
+  CP: Todos os 5 estados renderizam conforme wireframe. *(IndicadorSync no topo do corpo da lista: check (Sincronizado), spinner (Sincronizando), contagem singular/plural (Pendente), banner nuvem cortada (Offline), banner errorContainer com ação "Tentar novamente" → engine.reiniciarTentativas (Erro); 6 widget tests + integração na tela da lista)*
 - [ ] **F4-T08** — Deduplicação no sync (unique violada → aumenta quantidade)
   Dep: F4-T04 · Docs: [03 §5](03-sincronizacao-offline.md) · RF-10
   CP: Item duplicado offline vira quantidade somada; testes de sync cobrem.
@@ -148,9 +148,9 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | F1 Infra & BD | 8 | 8 |
 | F2 IA | 5 | 5 |
 | F3 App Core | 9 | 9 |
-| F4 IA + Sync | 9 | 6 |
+| F4 IA + Sync | 9 | 7 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **28** |
+| **Total** | **37** | **29** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

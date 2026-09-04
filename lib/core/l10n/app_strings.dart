@@ -114,4 +114,14 @@ abstract final class AppStrings {
   static const carregando = 'Carregando...';
   static const tentarNovamente = 'Tentar novamente';
   static const offline = 'Offline — alterações serão sincronizadas';
+
+  // Indicador de sync (doc 03 §6, wireframe 10 §3.2)
+  static const syncSincronizado = 'Sincronizado';
+  static const syncSincronizando = 'Sincronizando';
+  static const syncSemConexao =
+      'Sem conexão — alterações serão sincronizadas depois';
+  static const syncErro = 'Erro na sincronização.';
+
+  static String syncPendentes(int n) =>
+      n == 1 ? '1 alteração pendente' : '$n alterações pendentes';
 }

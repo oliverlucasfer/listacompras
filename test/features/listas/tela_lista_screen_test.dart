@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +16,8 @@ import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
 import 'package:lista_compras/features/listas/domain/unidade.dart';
 import 'package:lista_compras/features/listas/ui/tela_lista_screen.dart';
+import 'package:lista_compras/features/sync/domain/sync_status.dart';
+import 'package:lista_compras/features/sync/providers/sync_providers.dart';
 
 void main() {
   late AppDatabase db;
@@ -44,9 +48,15 @@ void main() {
       );
       await repo.editarItem(detergente.id, concluido: true);
     }
+    final sync = StreamController<SyncStatus>();
+    sync.add(const Sincronizado());
+    addTearDown(sync.close);
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          syncStatusProvider.overrideWith((ref) => sync.stream),
+        ],
         child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
       ),
     );
@@ -256,10 +266,16 @@ void main() {
         GoRoute(path: '/listas', builder: (_, _) => const MinhasListasScreen()),
       ],
     );
+    final sync = StreamController<SyncStatus>();
+    sync.add(const Sincronizado());
+    addTearDown(sync.close);
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          syncStatusProvider.overrideWith((ref) => sync.stream),
+        ],
         child: MaterialApp.router(routerConfig: router),
       ),
     );
@@ -321,12 +337,16 @@ void main() {
         (_) async => http.Response('{"itens": [], "aviso": null}', 200),
       ),
     );
+    final sync = StreamController<SyncStatus>();
+    sync.add(const Sincronizado());
+    addTearDown(sync.close);
 
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           parseListaClientProvider.overrideWithValue(clienteIa),
+          syncStatusProvider.overrideWith((ref) => sync.stream),
         ],
         child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
       ),
