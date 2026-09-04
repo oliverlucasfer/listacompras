@@ -92,9 +92,9 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [x] **F4-T02** — Modal de pré-visualização (checkboxes, edição inline, aviso da IA)
   Dep: F4-T01 · Docs: [05 §6.4](05-app-flutter.md), [10 §4.2](10-wireframes-telas.md) · RF-06
   CP: Cancelar não grava; incluir/excluir por item; itens gravados via repositório local. *(checkbox por item + contador "N de M serão adicionados"; painel ▾ edita nome/quantidade/unidade inline; aviso em destaque; "Adicionar N" grava via `ListasRepository.adicionarItem`; 6 widget + 2 de integração com Drift)*
-- [ ] **F4-T03** — Sync Engine: flush da fila (coalescing, ordenação por lista, retry/backoff)
+- [x] **F4-T03** — Sync Engine: flush da fila (coalescing, ordenação por lista, retry/backoff)
   Dep: F3-T06 · Docs: [03 §3–4](03-sincronizacao-offline.md) · RF-08
-  CP: Fila esvazia ao reconectar; coalescing testado; retry exponencial testado com fake.
+  CP: Fila esvazia ao reconectar; coalescing testado; retry exponencial testado com fake. *(SyncEngine + SyncRemoto (interface) + estados 03 §6; dreno por lista em ordem, coalescing mantém última mutação por registro, backoff 1s→2s→…→5min com 10 tentativas → ErroSync + reiniciarTentativas; rede cai no meio do flush pausa sem queimar tentativas; gatilhos: watch da fila + conectividade; 9 testes com RemotoFake. Remoto real com LWW entra na F4-T04)*
 - [ ] **F4-T04** — LWW + tombstones na aplicação de mutações e remotos
   Dep: F4-T03 · Docs: [03 §5](03-sincronizacao-offline.md) · RF-08, RF-10
   CP: Casos-limite da tabela 03 §5 passam (relógio adiantado, criado+removido offline, remoção vs edição remota).
@@ -148,9 +148,9 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | F1 Infra & BD | 8 | 8 |
 | F2 IA | 5 | 5 |
 | F3 App Core | 9 | 9 |
-| F4 IA + Sync | 9 | 2 |
+| F4 IA + Sync | 9 | 3 |
 | F5 Publicação | 6 | 0 |
-| **Total** | **37** | **24** |
+| **Total** | **37** | **25** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
