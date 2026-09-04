@@ -119,12 +119,12 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [x] **F5-T01** — Tela Configurações (política de privacidade, versão, exclusão de conta)
   Dep: F4-T09 · Docs: [06 §3](06-mvp-entregas.md), [10 §5](10-wireframes-telas.md) · RF-11
   CP: Wireframe 5; links corretos. *(rota /configuracoes protegida + ícone ⚙ no painel; e-mail da conta (emailUsuarioProvider); Política de Privacidade exibida in-app (texto único do 06 §3.3 em core/l10n/politica_privacidade.dart — a URL pública online entra na F5-T06); versão via package_info_plus; botão vermelho Excluir minha conta + aviso, com fluxo placeholder para F5-T02; 3 widget tests)*
-- [ ] **F5-T02** — RPC `excluir_conta()` + fluxo de confirmação dupla
+- [x] **F5-T02** — RPC `excluir_conta()` + fluxo de confirmação dupla
   Dep: F5-T01 · Docs: [06 §3.3.1](06-mvp-entregas.md) · RF-11
-  CP: Conta excluída remove todos os dados (cascades verificados); app limpa cache/fila; sessão invalidada.
-- [ ] **F5-T03** — Testes de integração da exclusão de conta
+  CP: Conta excluída remove todos os dados (cascades verificados); app limpa cache/fila; sessão invalidada. *(migration 0005: RPC security definer apaga auth.users + ia_rate_limit (sem FK) e marca a transação `app.excluindo_conta`; sync_dono v2 reconhece a marca — exceção documentada no doc 01 §6 no mesmo PR; app: repo.excluirConta() (RPC + signOut) e confirmação dupla na tela — senha com reautenticação (erro inline "Senha incorreta") + diálogo final; cache/fila limpos pelo bootstrap ao detectar fim de sessão (F4-T06, testado em deve_limpar_cache_e_fila_quando_logout); 5 widget tests do fluxo)*
+- [x] **F5-T03** — Testes de integração da exclusão de conta
   Dep: F5-T02 · Docs: [07 §1](07-qualidade-ci.md)
-  CP: SELECT pós-exclusão retorna vazio em todas as tabelas; RLS sem vazamento.
+  CP: SELECT pós-exclusão retorna vazio em todas as tabelas; RLS sem vazamento. *(supabase/tests/excluir_conta_tests.sql: E-01 RPC sem usuário rejeita; E-02 RPC autenticado executa; E-03 auth.users/listas/membros/itens/ia_rate_limit vazios; E-04 dados de terceiros intactos e participação removida; E-05 execução negada a anon; job no CI após os testes RLS; 14 casos RLS revalidados sem regressão)*
 - [ ] **F5-T04** — Sentry (Flutter + Edge Function) sem conteúdo de listas
   Dep: F4-T09 · Docs: [07 §4](07-qualidade-ci.md) · RF-12
   CP: Erro simulado aparece no Sentry; payload inspecionado sem dados de itens.
@@ -149,8 +149,8 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | F2 IA | 5 | 5 |
 | F3 App Core | 9 | 9 |
 | F4 IA + Sync | 9 | 9 |
-| F5 Publicação | 6 | 1 |
-| **Total** | **37** | **32** |
+| F5 Publicação | 6 | 3 |
+| **Total** | **37** | **34** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
