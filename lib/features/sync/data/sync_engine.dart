@@ -26,6 +26,7 @@ class SyncEngine {
     this._checarConexao,
     Future<void> Function(Duration)? esperar,
     this.maxTentativas = 10,
+    this._reportar,
   }) : _esperar = esperar ?? ((espera) => Future<void>.delayed(espera)) {
     _aplicador = aplicador ?? AplicadorRemoto(_db);
   }
@@ -37,6 +38,11 @@ class SyncEngine {
   final Stream<List<ConnectivityResult>>? _conectividade;
   final Future<bool> Function()? _checarConexao;
   final Future<void> Function(Duration) _esperar;
+
+  /// Relatórios de observabilidade (doc 07 §4, RF-12): códigos e contagens
+  /// apenas — nunca conteúdo de listas.
+  final void Function(String codigo, Map<String, Object?> contexto)? _reportar;
+
   final int maxTentativas;
 
   bool _online = true;
@@ -105,6 +111,7 @@ class SyncEngine {
       }
       try {
         for (final mutacao in lote) {
+          _reportarSeRelogioAdiantado(mutacao);
           final resultado = await _remoto.enviar(mutacao);
           switch (resultado) {
             case Enviado():
@@ -132,12 +139,17 @@ class SyncEngine {
         } else {
           await _registrarFalha(lote);
           resultado = await _statusAposFalha();
+          await _reportarFalha(lote);
           _agendarRetry();
         }
         break;
       }
     }
     if (!_online) resultado = const Offline();
+    if (resultado is ErroSync) {
+      // doc 07 §4: syncStatus = Erro persistente é evento monitorado.
+      _reportar?.call('sync_erro_persistente', {'fila': await _contarFila()});
+    }
     _definir(resultado);
   }
 
@@ -199,7 +211,39 @@ class SyncEngine {
     listaId: linha.listaId,
     tsLocal: linha.tsLocal,
     payload: jsonDecode(linha.payload) as Map<String, Object?>,
+    tentativas: linha.tentativas,
   );
+
+  /// Relatório de relógio adiantado (doc 07 §4 evento 2, 03 §5): ts do
+  /// cliente mais de 24h no futuro em relação ao dispositivo.
+  void _reportarSeRelogioAdiantado(MutacaoSync mutacao) {
+    if (_reportar == null) return;
+    final ts = DateTime.tryParse(
+      mutacao.payload['updated_at'] as String? ?? '',
+    );
+    if (ts == null) return;
+    final atraso = ts.difference(DateTime.now().toUtc());
+    if (atraso > const Duration(hours: 24)) {
+      _reportar('sync_relogio_adiantado', {'atraso_horas': atraso.inHours});
+    }
+  }
+
+  /// Relatórios de falha (doc 07 §4 evento 1): fila > 10 mutações ou
+  /// mutação com > 5 tentativas.
+  Future<void> _reportarFalha(List<MutacaoSync> lote) async {
+    if (_reportar == null) return;
+    final fila = await _contarFila();
+    final maiorTentativas = lote.fold<int>(
+      0,
+      (maior, m) => m.tentativas > maior ? m.tentativas : maior,
+    );
+    if (fila > 10) {
+      _reportar('sync_falha_fila_grande', {'fila': fila});
+    }
+    if (maiorTentativas > 5) {
+      _reportar('sync_falha_tentativas_altas', {'tentativas': maiorTentativas});
+    }
+  }
 
   /// Sucesso apaga todas as linhas do registro (as sombreadas pelo
   /// coalescing incluem).

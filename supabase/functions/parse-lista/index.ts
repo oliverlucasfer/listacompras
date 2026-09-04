@@ -5,6 +5,7 @@ import { chamarGemini, GeminiQuotaError, GeminiTimeoutError } from "./gemini.ts"
 import { excedeuRateLimit } from "./rate-limit.ts";
 import { validarSchema } from "./schema.ts";
 import { PROMPT } from "./prompt.ts";
+import { reportarErro } from "./sentry.ts";
 
 const MAX_CHARS = 2000;
 const TIMEOUT_MS = 15_000;
@@ -87,6 +88,8 @@ Deno.serve(async (req) => {
     // 5. Validação do JSON retornado (zod) — nunca vaza JSON bruto (doc 04 §9)
     const resposta = validarSchema(respostaIA);
     if (!resposta) {
+      // doc 07 §4 evento 3: erros 422 da Edge Function são monitorados.
+      reportarErro("resposta_invalida");
       return erro(422, "resposta_invalida", "Não consegui entender a lista. Tente reescrever.");
     }
 
@@ -96,6 +99,9 @@ Deno.serve(async (req) => {
   } catch (e) {
     // Privacidade (doc 07 §4): log NUNCA contém texto de listas — só IDs/técnicos.
     console.error("erro_interno:", e instanceof Error ? `${e.name}: ${e.message}` : e);
+    reportarErro("erro_interno", {
+      name: e instanceof Error ? e.name : "unknown",
+    });
     return erro(500, "erro_interno", "Erro inesperado. Tente novamente.");
   }
 });

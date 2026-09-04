@@ -125,9 +125,9 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [x] **F5-T03** — Testes de integração da exclusão de conta
   Dep: F5-T02 · Docs: [07 §1](07-qualidade-ci.md)
   CP: SELECT pós-exclusão retorna vazio em todas as tabelas; RLS sem vazamento. *(supabase/tests/excluir_conta_tests.sql: E-01 RPC sem usuário rejeita; E-02 RPC autenticado executa; E-03 auth.users/listas/membros/itens/ia_rate_limit vazios; E-04 dados de terceiros intactos e participação removida; E-05 execução negada a anon; job no CI após os testes RLS; 14 casos RLS revalidados sem regressão)*
-- [ ] **F5-T04** — Sentry (Flutter + Edge Function) sem conteúdo de listas
+- [x] **F5-T04** — Sentry (Flutter + Edge Function) sem conteúdo de listas
   Dep: F4-T09 · Docs: [07 §4](07-qualidade-ci.md) · RF-12
-  CP: Erro simulado aparece no Sentry; payload inspecionado sem dados de itens.
+  CP: Erro simulado aparece no Sentry; payload inspecionado sem dados de itens. *(Flutter: SentryFlutter.init com DSN via --dart-define SENTRY_DSN (vazio → desligado), sendDefaultPii=false e beforeSend limpa breadcrumbs; engine reporta os eventos monitorados — sync_erro_persistente, sync_falha_fila_grande (>10), sync_falha_tentativas_altas (>5), sync_relogio_adiantado (>24h) — apenas códigos + contagens, via callback injetado (3 testes); Edge Function: supabase/functions/parse-lista/sentry.ts com SDK @sentry/deno carregado dinamicamente e no-op sem DSN, acoplado aos caminhos 422/500 (3 testes deno, CI com --allow-env). Smoke com DSN real do projeto: instruções em 09 §3 — operação externa (criar projeto Sentry + setar secret/dart-define)*
 - [ ] **F5-T05** — Testes de usabilidade (3–5 participantes)
   Dep: F4-T09, F5-T02 · Docs: [11](11-usabilidade-fase5.md)
   CP: Critério 11 §3.1: T1–T4 ≥ 80% sem ajuda **e** T3 100%; relatório de 1 página produzido.
@@ -149,8 +149,8 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | F2 IA | 5 | 5 |
 | F3 App Core | 9 | 9 |
 | F4 IA + Sync | 9 | 9 |
-| F5 Publicação | 6 | 3 |
-| **Total** | **37** | **34** |
+| F5 Publicação | 6 | 4 |
+| **Total** | **37** | **35** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

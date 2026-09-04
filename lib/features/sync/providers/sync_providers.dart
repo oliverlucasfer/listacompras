@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../listas/providers/listas_providers.dart';
@@ -19,6 +20,16 @@ final syncEngineProvider = Provider<SyncEngine>((ref) {
     conectividade: Connectivity().onConnectivityChanged,
     checarConexao: () async => (await Connectivity().checkConnectivity()).any(
       (r) => r != ConnectivityResult.none,
+    ),
+    // Observabilidade (doc 07 §4, RF-12): códigos + contagens apenas —
+    // nunca conteúdo de listas.
+    reportar: (codigo, contexto) => Sentry.captureMessage(
+      codigo,
+      withScope: (scope) {
+        for (final entrada in contexto.entries) {
+          scope.setTag(entrada.key, entrada.value.toString());
+        }
+      },
     ),
   );
   ref.onDispose(engine.dispose);

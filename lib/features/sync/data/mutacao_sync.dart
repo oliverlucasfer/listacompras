@@ -8,6 +8,7 @@ class MutacaoSync {
     required this.listaId,
     required this.tsLocal,
     required this.payload,
+    this.tentativas = 0,
   });
 
   final String tabela;
@@ -16,4 +17,7 @@ class MutacaoSync {
   final String listaId;
   final DateTime tsLocal;
   final Map<String, Object?> payload;
+
+  /// Contador de retry da linha (doc 03 §3) — usado nos relatórios 07 §4.
+  final int tentativas;
 }
