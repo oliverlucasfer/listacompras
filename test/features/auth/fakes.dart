@@ -22,6 +22,7 @@ class FakeAuthRepository extends SupabaseAuthRepository {
   bool registrarChamado = false;
   bool recuperacaoChamada = false;
   bool reenvioChamado = false;
+  bool excluirContaChamado = false;
 
   Future<AuthResponse> Function(String email, String senha)? onEntrar;
   Future<AuthResponse> Function(String email, String senha)? onRegistrar;
@@ -64,5 +65,10 @@ class FakeAuthRepository extends SupabaseAuthRepository {
     final fn = onReenviar;
     if (fn == null) throw StateError('onReenviar nao configurado');
     return fn(email);
+  }
+
+  @override
+  Future<void> excluirConta() async {
+    excluirContaChamado = true;
   }
 }

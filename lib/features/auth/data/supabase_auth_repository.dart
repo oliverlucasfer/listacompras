@@ -38,4 +38,12 @@ class SupabaseAuthRepository {
 
   Future<void> reenviarVerificacao(String email) =>
       _client.auth.resend(type: OtpType.signup, email: email);
+
+  /// Exclusão de conta (doc 06 §3.3.1, RF-11, ADR-008): RPC security
+  /// definer apaga o usuário (cascata em listas/membros/itens e
+  /// ia_rate_limit); encerra a sessão local em seguida.
+  Future<void> excluirConta() async {
+    await _client.rpc('excluir_conta');
+    await sair();
+  }
 }
