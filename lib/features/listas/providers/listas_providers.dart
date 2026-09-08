@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/categorias/sugestao_categorias.dart';
 import '../../../drift/database.dart';
 import '../data/listas_repository.dart';
 import '../domain/item.dart';
@@ -14,6 +15,10 @@ final appDatabaseProvider = Provider<AppDatabase>((ref) {
 
 final listasRepositoryProvider = Provider<ListasRepository>(
   (ref) => ListasRepository(ref.watch(appDatabaseProvider)),
+);
+
+final sugestaoCategoriasProvider = Provider<SugestaoCategorias>(
+  (ref) => SugestaoCategorias(ref.watch(appDatabaseProvider)),
 );
 
 final listasProvider = StreamProvider<List<Lista>>(

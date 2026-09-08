@@ -66,6 +66,15 @@ lib/
 | `syncStatusProvider` | StreamProvider | Estado de sync ([03 §6](03-sincronizacao-offline.md)) |
 | `importacaoIaProvider` | NotifierProvider | Estados do modal IA (idle/carregando/erro/prévia) |
 | `conectividadeProvider` | StreamProvider | Online/offline (dispara flush) |
+| `sugestaoCategoriasProvider` | Provider | Cadeia de sugestão local (Fase 6/RF-15) |
+
+**Sugestão de categoria em camadas (Fase 6, ADR-011, spec §4)** — `SugestaoCategorias.sugerirCategoria(nome)`, zero rede:
+
+1. **Memória por nome:** categoria do item ativo mais recente com o mesmo nome (qualquer lista do usuário no dispositivo; comparação sem acento/caixa; `updated_at` DESC).
+2. **Dicionário estático** (`core/categorias/dicionario_categorias.dart`, ~230 termos pt-BR versionados no repo): casa quando **todas** as palavras do termo aparecem no nome; multi-palavra casa antes de palavra única ("leite condensado" → Mercearia antes de "leite" → Laticínios), empate por ordem alfabética.
+3. **Fallback:** `outros`.
+
+A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado pela memória (a cadeia "aprende" pelo uso, sem tabela nova). Proteínas frescas (carne, frango, peixe, ovos) ficam em **Frios** por convenção do dicionário.
 
 ---
 

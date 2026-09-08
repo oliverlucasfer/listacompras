@@ -151,7 +151,7 @@ Spec do agrupamento por categoria: [superpowers/specs/2026-09-08-agrupamento-cat
 - [x] **F6-T02** — Drift v3 (`ItemLocal.categoria`) + repositório com categoria no payload
   Dep: F6-T01 · Docs: [05 §2–3](05-app-flutter.md), [03 §3](03-sincronizacao-offline.md)
   CP: migração v2→v3 preserva dados; adicionar/editar grava categoria e enfileira payload com `categoria`; 145 testes atuais verdes + novos de repo.
-- [ ] **F6-T03** — Cadeia de sugestão local (memória por nome → dicionário estático → `outros`)
+- [x] **F6-T03** — Cadeia de sugestão local (memória por nome → dicionário estático → `outros`)
   Dep: F6-T02 · Docs: [05 §3](05-app-flutter.md)
   CP: função pura; memória vence dicionário; match multi-palavra vence single ("leite condensado" → mercearia); fallback `outros`; unit tests dos 4 casos.
 - [ ] **F6-T04** — UI: grupos por categoria, contagem, drag interno, dropdown no editar
@@ -179,8 +179,8 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | F3 App Core | 9 | 9 |
 | F4 IA + Sync | 9 | 9 |
 | F5 Publicação | 7 | 5 |
-| F6 Pós-MVP | 7 | 3 |
-| **Total** | **45** | **39** |
+| F6 Pós-MVP | 7 | 4 |
+| **Total** | **45** | **40** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
