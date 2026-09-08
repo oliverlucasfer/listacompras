@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 
 import '../../../core/config/supabase_config.dart';
 import '../../../core/l10n/app_strings.dart';
+import '../../listas/domain/categoria.dart';
 import '../../listas/domain/unidade.dart';
 import '../domain/resposta_parse.dart';
 
@@ -99,6 +100,11 @@ class ParseListaClient {
             nome: (e as Map)['nome'] as String,
             quantidade: _quantidadeValida(e['quantidade']),
             unidade: Unidade.fromValor(e['unidade'] as String),
+            // Tolerância (spec F6 §7): function antiga sem categoria →
+            // outros; campo extra é ignorado implicitamente.
+            categoria: e['categoria'] == null
+                ? CategoriaItem.outros
+                : CategoriaItem.fromValor(e['categoria'] as String),
           ),
       ];
       final aviso = corpo['aviso'];

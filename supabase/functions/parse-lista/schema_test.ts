@@ -4,8 +4,8 @@ import { validarSchema } from "./schema.ts";
 
 const VALIDA = {
   itens: [
-    { nome: "Arroz", quantidade: 1, unidade: "kg" },
-    { nome: "Leite", quantidade: 2, unidade: "un" },
+    { nome: "Arroz", quantidade: 1, unidade: "kg", categoria: "mercearia" },
+    { nome: "Leite", quantidade: 2, unidade: "un", categoria: "laticinios" },
   ],
   aviso: null,
 };
@@ -13,6 +13,46 @@ const VALIDA = {
 Deno.test("deve_aceitar_resposta_valida_do_gemini", () => {
   const r = validarSchema(VALIDA);
   assertEquals(r, VALIDA);
+});
+
+Deno.test("deve_aceitar_categorias_do_enum_f6t05", () => {
+  const categorias = [
+    "hortifruti",
+    "mercearia",
+    "frios",
+    "laticinios",
+    "congelados",
+    "padaria",
+    "bebidas",
+    "pet",
+    "limpeza",
+    "higiene",
+    "outros",
+  ];
+  for (const categoria of categorias) {
+    const r = validarSchema({
+      itens: [{ nome: "X", quantidade: 1, unidade: "un", categoria }],
+      aviso: null,
+    });
+    assertEquals(r?.itens[0].categoria, categoria, `categoria ${categoria}`);
+  }
+});
+
+Deno.test("deve_rejeitar_categoria_fora_do_enum_retornando_null_f6t05", () => {
+  const r = validarSchema({
+    itens: [{ nome: "Arroz", quantidade: 1, unidade: "kg", categoria: "alimentos" }],
+    aviso: null,
+  });
+  assertEquals(r, null);
+});
+
+Deno.test("deve_normalizar_categoria_faltante_para_outros_f6t05", () => {
+  // Defesa contra resposta do Gemini sem a categoria exigida pelo schema.
+  const r = validarSchema({
+    itens: [{ nome: "Arroz", quantidade: 1, unidade: "kg" }],
+    aviso: null,
+  });
+  assertEquals(r?.itens[0].categoria, "outros");
 });
 
 Deno.test("deve_rejeitar_unidade_fora_do_enum_retornando_null", () => {
@@ -53,12 +93,14 @@ Deno.test("deve_rejeitar_quando_itens_ausente_retornando_null", () => {
 
 Deno.test("deve_descartar_campos_desconhecidos_normalizando_resposta", () => {
   const r = validarSchema({
-    itens: [{ nome: "Arroz", quantidade: 1, unidade: "kg", marca: "X" }],
+    itens: [
+      { nome: "Arroz", quantidade: 1, unidade: "kg", categoria: "mercearia", marca: "X" },
+    ],
     aviso: null,
     extra: true,
   });
   assertEquals(r, {
-    itens: [{ nome: "Arroz", quantidade: 1, unidade: "kg" }],
+    itens: [{ nome: "Arroz", quantidade: 1, unidade: "kg", categoria: "mercearia" }],
     aviso: null,
   });
 });

@@ -152,7 +152,7 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 ### 6.4. Modal "Importar por IA"
 1. Textarea + contador de caracteres (máx. 2.000 — ver contrato em [04 §2](04-ia-edge-function.md)).
 2. Botão "Extrair itens" → estado de carregamento com feedback.
-3. **Modal de pré-visualização:** checkboxes para incluir/excluir cada item extraído; edição inline de nome/quantidade/unidade; `aviso` da IA exibido como nota.
+3. **Modal de pré-visualização:** checkboxes para incluir/excluir cada item extraído; edição inline de nome/quantidade/unidade/**categoria** (dropdown com o enum [01 §3.2](01-banco-de-dados.md), Fase 6); `aviso` da IA exibido como nota. Resposta sem `categoria` → `outros` (compat, [04 §2](04-ia-edge-function.md)).
 4. "Adicionar N itens à lista" → grava localmente (fila de INSERTs).
 5. Erros da Edge Function exibidos com as mensagens amigáveis do contrato.
 

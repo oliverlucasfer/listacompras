@@ -3,6 +3,7 @@ export interface ItemIA {
   nome: string;
   quantidade: number;
   unidade: string;
+  categoria: string;
 }
 
 export interface RespostaIA {
@@ -14,7 +15,8 @@ export class GeminiTimeoutError extends Error {}
 export class GeminiQuotaError extends Error {}
 export class GeminiRespostaError extends Error {}
 
-// responseSchema do contrato (doc 04 §6) — enum espelha unidade_item (doc 01 §3)
+// responseSchema do contrato (doc 04 §6) — enums espelham unidade_item
+// (doc 01 §3.1) e categoria_item (doc 01 §3.2, ADR-011, F6-T05)
 const RESPONSE_SCHEMA = {
   type: "object",
   properties: {
@@ -29,8 +31,24 @@ const RESPONSE_SCHEMA = {
             type: "string",
             enum: ["un", "kg", "g", "l", "ml", "caixa", "pacote", "pct", "dz"],
           },
+          categoria: {
+            type: "string",
+            enum: [
+              "hortifruti",
+              "mercearia",
+              "frios",
+              "laticinios",
+              "congelados",
+              "padaria",
+              "bebidas",
+              "pet",
+              "limpeza",
+              "higiene",
+              "outros",
+            ],
+          },
         },
-        required: ["nome", "quantidade", "unidade"],
+        required: ["nome", "quantidade", "unidade", "categoria"],
       },
     },
     aviso: { type: "string", nullable: true },

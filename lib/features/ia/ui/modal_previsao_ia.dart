@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/app_strings.dart';
+import '../../listas/domain/categoria.dart';
 import '../../listas/domain/unidade.dart';
 import '../../listas/providers/listas_providers.dart';
 import '../domain/resposta_parse.dart';
@@ -27,6 +28,7 @@ Future<void> confirmarItensImportados(
       nome: item.nome,
       quantidade: item.quantidade,
       unidade: item.unidade,
+      categoria: item.categoria,
     );
   }
   if (context.mounted) {
@@ -51,11 +53,13 @@ class _Linha {
   _Linha(ItemExtraido item)
     : nome = item.nome,
       quantidade = item.quantidade,
-      unidade = item.unidade;
+      unidade = item.unidade,
+      categoria = item.categoria;
 
   String nome;
   double quantidade;
   Unidade unidade;
+  CategoriaItem categoria;
   bool incluir = true;
   bool editando = false;
 }
@@ -72,6 +76,7 @@ class _ModalPrevisaoIaState extends State<ModalPrevisaoIa> {
           nome: linha.nome.trim(),
           quantidade: linha.quantidade,
           unidade: linha.unidade,
+          categoria: linha.categoria,
         ),
   ];
 
@@ -113,12 +118,14 @@ class _ModalPrevisaoIaState extends State<ModalPrevisaoIa> {
                     if (_linhas[i].editando)
                       _PainelEdicao(
                         linha: _linhas[i],
-                        onAlterar: (nome, quantidade, unidade) => setState(() {
-                          _linhas[i]
-                            ..nome = nome
-                            ..quantidade = quantidade
-                            ..unidade = unidade;
-                        }),
+                        onAlterar: (nome, quantidade, unidade, categoria) =>
+                            setState(() {
+                              _linhas[i]
+                                ..nome = nome
+                                ..quantidade = quantidade
+                                ..unidade = unidade
+                                ..categoria = categoria;
+                            }),
                       ),
                   ],
                 ],
@@ -183,12 +190,17 @@ class _LinhaItem extends StatelessWidget {
   }
 }
 
-/// Edição inline de nome/quantidade/unidade (doc 05 §6.4).
+/// Edição inline de nome/quantidade/unidade/categoria (doc 05 §6.4).
 class _PainelEdicao extends StatefulWidget {
   const _PainelEdicao({required this.linha, required this.onAlterar});
 
   final _Linha linha;
-  final void Function(String nome, double quantidade, Unidade unidade)
+  final void Function(
+    String nome,
+    double quantidade,
+    Unidade unidade,
+    CategoriaItem categoria,
+  )
   onAlterar;
 
   @override
@@ -201,6 +213,7 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
     text: _formatarQuantidade(widget.linha.quantidade),
   );
   late Unidade _unidade = widget.linha.unidade;
+  late CategoriaItem _categoria = widget.linha.categoria;
 
   @override
   void dispose() {
@@ -220,6 +233,7 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
       _nome.text,
       quantidade ?? _quantidadeLida() ?? widget.linha.quantidade,
       _unidade,
+      _categoria,
     );
   }
 
@@ -292,6 +306,26 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          // Categoria (F6-T05, spec §5.2): sugestão da IA editável antes
+          // de gravar na lista.
+          DropdownButtonFormField<CategoriaItem>(
+            initialValue: _categoria,
+            decoration: const InputDecoration(
+              labelText: 'Categoria',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
+            items: [
+              for (final c in CategoriaItem.values)
+                DropdownMenuItem(value: c, child: Text(c.rotulo)),
+            ],
+            onChanged: (c) {
+              if (c == null) return;
+              setState(() => _categoria = c);
+              _notificar();
+            },
           ),
         ],
       ),

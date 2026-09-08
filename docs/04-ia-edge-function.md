@@ -39,17 +39,18 @@ Content-Type: application/json
 ```json
 {
   "itens": [
-    { "nome": "Arroz", "quantidade": 1, "unidade": "kg" },
-    { "nome": "Leite", "quantidade": 2, "unidade": "un" },
-    { "nome": "Queijo prato", "quantidade": 500, "unidade": "g" },
-    { "nome": "Macarrão", "quantidade": 1, "unidade": "un" }
+    { "nome": "Arroz", "quantidade": 1, "unidade": "kg", "categoria": "mercearia" },
+    { "nome": "Leite", "quantidade": 2, "unidade": "un", "categoria": "laticinios" },
+    { "nome": "Queijo prato", "quantidade": 500, "unidade": "g", "categoria": "frios" },
+    { "nome": "Macarrão", "quantidade": 1, "unidade": "un", "categoria": "mercearia" }
   ],
   "aviso": null
 }
 ```
 
 * `aviso` (string nullable): observação da IA (ex.: item ambíguo interpretado) — exibida no modal de pré-visualização.
-* `unidade` restrito ao enum de [01 §3](01-banco-de-dados.md): `un, kg, g, l, ml, caixa, pacote, pct, dz`.
+* `unidade` restrito ao enum de [01 §3.1](01-banco-de-dados.md): `un, kg, g, l, ml, caixa, pacote, pct, dz`.
+* `categoria` restrita ao enum de [01 §3.2](01-banco-de-dados.md) (Fase 6, ADR-011, RF-15): `hortifruti, mercearia, frios, laticinios, congelados, padaria, bebidas, pet, limpeza, higiene, outros`. **IA é refinamento, não requisito:** o app funciona 100% sem IA — sugestão local em [05 §3](05-app-flutter.md). Compat: cliente tolera resposta sem `categoria` (→ `outros`, rollout em [01 §4.3](01-banco-de-dados.md) e spec F6 §7); servidor normaliza item sem `categoria` para `outros` (defesa contra falha do Gemini).
 * Conversão normalizada: se o usuário escreve "500g de queijo", a IA pode retornar `0.5 kg` **ou** `500 g` — decisão: **manter a unidade literal do usuário** quando estiver no enum; converter apenas valores sem enum possível (ex.: "meio quilo" → `0.5 kg`).
 
 ### Erros (mensagem amigável exibida no app)
@@ -153,13 +154,21 @@ REGRAS:
    - embalagens ("1 caixa de leite") → caixa/pacote conforme mencionado.
    - se a unidade mencionada não estiver na lista, converta para a mais
      próxima ou use "un" e registre a dúvida em "aviso".
-4. AGRUPE produtos repetidos: somar quantidades quando as unidades
+4. "categoria": um de ["hortifruti","mercearia","frios","laticinios",
+   "congelados","padaria","bebidas","pet","limpeza","higiene","outros"].
+   - classifique o produto pelo setor típico do mercado ("Leite" →
+     laticinios; "Arroz" → mercearia; "Queijo prato" → frios; "Detergente"
+     → limpeza).
+   - carnes, aves e peixes frescos → "frios".
+   - produto não alimentício ou difícil de classificar → "outros".
+   - em caso de dúvida, classifique o mais provável e registre em "aviso".
+5. AGRUPE produtos repetidos: somar quantidades quando as unidades
    coincidirem (ex.: "leite" citado 2x com 1 un → 1 item, quantidade 2).
-5. IGNORE palavras que não são produtos (ex.: "várias coisas para bolo"
+6. IGNORE palavras que não são produtos (ex.: "várias coisas para bolo"
    não vira item "coisas para bolo"; se impossível separar, liste como
    ingrediente concreto ou omita e avise).
-6. NÃO invente itens que não estão no texto.
-7. "aviso": soma dúvidas/ambiguidades em uma frase curta, ou null.
+7. NÃO invente itens que não estão no texto.
+8. "aviso": soma dúvidas/ambiguidades em uma frase curta, ou null.
 ```
 
 ## 6. `responseSchema` (structured output)
@@ -180,9 +189,15 @@ Enviado na chamada ao Gemini (`generationConfig.response_mime_type = "applicatio
           "unidade": {
             "type": "string",
             "enum": ["un", "kg", "g", "l", "ml", "caixa", "pacote", "pct", "dz"]
+          },
+          "categoria": {
+            "type": "string",
+            "enum": ["hortifruti", "mercearia", "frios", "laticinios",
+                     "congelados", "padaria", "bebidas", "pet", "limpeza",
+                     "higiene", "outros"]
           }
         },
-        "required": ["nome", "quantidade", "unidade"]
+        "required": ["nome", "quantidade", "unidade", "categoria"]
       }
     },
     "aviso": { "type": "string", "nullable": true }

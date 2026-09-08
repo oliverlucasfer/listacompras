@@ -218,7 +218,7 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 │                                 │
 │  ☑ Arroz          1  kg         │ ← desmarcar = não incluir
 │  ☑ Leite          2  un    ▾    │ ← ▾ abre edição inline
-│      [1] [kg|un|g|l|ml|...]     │
+│      [1] [kg|...]  [Laticínios|…]│ ← categoria editável (F6-T05)
 │  ☑ Queijo prato 500  g          │
 │  ☐ Café           1  pct        │
 │                                 │

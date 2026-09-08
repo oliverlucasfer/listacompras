@@ -1,21 +1,25 @@
 import '../../../core/l10n/app_strings.dart';
+import '../../listas/domain/categoria.dart';
 import '../../listas/domain/unidade.dart';
 
 /// Limite de entrada do contrato (docs 04 §2/§3, wireframe 10 §4.1).
 const int maxCaracteresEntradaIa = 2000;
 
-/// Item extraído pela IA (doc 04 §2): quantidade > 0 e unidade restrita ao
-/// enum fechado (doc 01 §3, ADR-005).
+/// Item extraído pela IA (doc 04 §2): quantidade > 0, unidade restrita ao
+/// enum fechado (doc 01 §3.1, ADR-005) e categoria ao enum fechado (doc 01
+/// §3.2, ADR-011). Resposta sem `categoria` → `outros` (compat, spec F6 §7).
 class ItemExtraido {
   const ItemExtraido({
     required this.nome,
     required this.quantidade,
     required this.unidade,
+    this.categoria = CategoriaItem.outros,
   });
 
   final String nome;
   final double quantidade;
   final Unidade unidade;
+  final CategoriaItem categoria;
 }
 
 /// Resposta 200 do contrato `parse-lista` (doc 04 §2). `aviso` é a

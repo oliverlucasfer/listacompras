@@ -35,6 +35,39 @@ function respostaGemini(textoJson: string, status = 200): Response {
   );
 }
 
+Deno.test("deve_exigir_categoria_no_responseSchema_quando_montar_requisicao_f6t05", async () => {
+  let corpoRequisicao: string | undefined;
+  await comFetchFake(
+    (_url, init) => {
+      corpoRequisicao = typeof init?.body === "string" ? init.body : undefined;
+      return respostaGemini(JSON.stringify({ itens: [], aviso: null }));
+    },
+    async () => {
+      await chamarGemini(PROMPT, TEXTO, 1000, API_KEY);
+    },
+  );
+  const body = JSON.parse(corpoRequisicao!);
+  const itemSchema =
+    body.generationConfig.responseSchema.properties.itens.items;
+  assertEquals(
+    itemSchema.properties.categoria.enum,
+    [
+      "hortifruti",
+      "mercearia",
+      "frios",
+      "laticinios",
+      "congelados",
+      "padaria",
+      "bebidas",
+      "pet",
+      "limpeza",
+      "higiene",
+      "outros",
+    ],
+  );
+  assertEquals(itemSchema.required.includes("categoria"), true);
+});
+
 Deno.test("deve_retornar_json_parseado_quando_gemini_responde", () =>
   comFetchFake(
     () => respostaGemini(JSON.stringify({ itens: [], aviso: null })),

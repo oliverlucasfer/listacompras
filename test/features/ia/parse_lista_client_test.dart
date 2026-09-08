@@ -4,6 +4,7 @@ import 'package:http/testing.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/features/ia/data/parse_lista_client.dart';
 import 'package:lista_compras/features/ia/domain/resposta_parse.dart';
+import 'package:lista_compras/features/listas/domain/categoria.dart';
 import 'package:lista_compras/features/listas/domain/unidade.dart';
 
 void main() {
@@ -80,6 +81,61 @@ void main() {
       expect(resposta.itens.single.quantidade, 0.5);
       expect(resposta.itens.single.unidade, Unidade.kg);
       expect(resposta.aviso, isNull);
+    },
+  );
+
+  test('deve_mapear_categoria_do_enum_quando_resposta_200_f6t05', () async {
+    final clienteFalso = cliente(
+      httpClient: MockClient(
+        (_) async => http.Response(
+          '{"itens": [{"nome": "Queijo prato", "quantidade": 500,'
+          ' "unidade": "g", "categoria": "frios"}], "aviso": null}',
+          200,
+        ),
+      ),
+    );
+
+    final resposta = await clienteFalso.parse('500g de queijo prato');
+
+    expect(resposta.itens.single.categoria, CategoriaItem.frios);
+  });
+
+  test('deve_usar_outros_quando_item_sem_categoria_f6t05', () async {
+    // Compat (spec F6 §7): function antiga responde sem categoria.
+    final clienteFalso = cliente(
+      httpClient: MockClient(
+        (_) async => http.Response(
+          '{"itens": [{"nome": "Arroz", "quantidade": 1, "unidade": "kg"}],'
+          '"aviso": null}',
+          200,
+        ),
+      ),
+    );
+
+    final resposta = await clienteFalso.parse('1kg de arroz');
+
+    expect(resposta.itens.single.categoria, CategoriaItem.outros);
+  });
+
+  test(
+    'deve_rejeitar_categoria_fora_do_enum_quando_resposta_200_f6t05',
+    () async {
+      final clienteFalso = cliente(
+        httpClient: MockClient(
+          (_) async => http.Response(
+            '{"itens": [{"nome": "Arroz", "quantidade": 1, "unidade": "kg",'
+            ' "categoria": "alimentos"}], "aviso": null}',
+            200,
+          ),
+        ),
+      );
+
+      await expectLater(
+        clienteFalso.parse('1kg de arroz'),
+        throwsA(
+          isA<ErroIa>().having((e) => e.code, 'code', 'resposta_invalida'),
+        ),
+      );
     },
   );
 

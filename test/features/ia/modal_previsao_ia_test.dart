@@ -7,6 +7,7 @@ import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/ia/domain/resposta_parse.dart';
 import 'package:lista_compras/features/ia/ui/modal_previsao_ia.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
+import 'package:lista_compras/features/listas/domain/categoria.dart';
 import 'package:lista_compras/features/listas/domain/unidade.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 
@@ -17,6 +18,24 @@ void main() {
       ItemExtraido(nome: 'Leite', quantidade: 2, unidade: Unidade.un),
       ItemExtraido(nome: 'Queijo prato', quantidade: 500, unidade: Unidade.g),
       ItemExtraido(nome: 'Café', quantidade: 1, unidade: Unidade.pct),
+    ],
+    aviso: null,
+  );
+
+  final respostaComCategoria = RespostaParse(
+    itens: const [
+      ItemExtraido(
+        nome: 'Queijo prato',
+        quantidade: 500,
+        unidade: Unidade.g,
+        categoria: CategoriaItem.frios,
+      ),
+      ItemExtraido(
+        nome: 'Leite',
+        quantidade: 2,
+        unidade: Unidade.un,
+        categoria: CategoriaItem.laticinios,
+      ),
     ],
     aviso: null,
   );
@@ -225,6 +244,67 @@ void main() {
     )..where((i) => i.listaId.equals(lista.id))).get();
     expect(itens, isEmpty);
     expect(find.byType(SnackBar), findsNothing);
+  });
+
+  testWidgets('deve_editar_categoria_quando_expandir_f6t05', (tester) async {
+    recebida = null;
+    await abrir(tester, respostaComCategoria);
+
+    // Expande a linha do Queijo prato (primeira) e troca a categoria.
+    await tester.tap(find.byIcon(Icons.expand_more).first);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(DropdownButtonFormField<CategoriaItem>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Laticínios').last);
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.widgetWithText(FilledButton, AppStrings.iaAdicionarN(2)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(recebida!.first.categoria, CategoriaItem.laticinios);
+    expect(recebida!.last.categoria, CategoriaItem.laticinios);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('deve_gravar_itens_com_categoria_quando_confirmar_f6t05', (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        child: MaterialApp(
+          home: _TelaConfirmar(
+            listaId: lista.id,
+            resposta: respostaComCategoria,
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('abrir'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.widgetWithText(FilledButton, AppStrings.iaAdicionarN(2)),
+    );
+    await tester.pumpAndSettle();
+
+    final itens = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.listaId.equals(lista.id))).get();
+    expect(itens, hasLength(2));
+    expect(
+      itens.firstWhere((i) => i.nome == 'Queijo prato').categoria,
+      'frios',
+    );
+    expect(itens.firstWhere((i) => i.nome == 'Leite').categoria, 'laticinios');
   });
 }
 

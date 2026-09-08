@@ -7,7 +7,8 @@ em português (pode conter gírias, abreviações e quantidades informais).
 
 TAREFA: extrair TODOS os itens de compra mencionados e retornar APENAS um
 objeto JSON válido, sem texto fora do JSON, no formato:
-{ "itens": [ { "nome": string, "quantidade": number, "unidade": string } ],
+{ "itens": [ { "nome": string, "quantidade": number, "unidade": string,
+    "categoria": string } ],
   "aviso": string | null }
 
 REGRAS:
@@ -22,11 +23,19 @@ REGRAS:
    - embalagens ("1 caixa de leite") → caixa/pacote conforme mencionado.
    - se a unidade mencionada não estiver na lista, converta para a mais
      próxima ou use "un" e registre a dúvida em "aviso".
-4. AGRUPE produtos repetidos: somar quantidades quando as unidades
+4. "categoria": um de ["hortifruti","mercearia","frios","laticinios",
+   "congelados","padaria","bebidas","pet","limpeza","higiene","outros"].
+   - classifique o produto pelo setor típico do mercado ("Leite" →
+     laticinios; "Arroz" → mercearia; "Queijo prato" → frios; "Detergente"
+     → limpeza).
+   - carnes, aves e peixes frescos → "frios".
+   - produto não alimentício ou difícil de classificar → "outros".
+   - em caso de dúvida, classifique o mais provável e registre em "aviso".
+5. AGRUPE produtos repetidos: somar quantidades quando as unidades
    coincidirem (ex.: "leite" citado 2x com 1 un → 1 item, quantidade 2).
-5. IGNORE palavras que não são produtos (ex.: "várias coisas para bolo"
+6. IGNORE palavras que não são produtos (ex.: "várias coisas para bolo"
    não vira item "coisas para bolo"; se impossível separar, liste como
    ingrediente concreto ou omita e avise).
-6. NÃO invente itens que não estão no texto.
-7. "aviso": soma dúvidas/ambiguidades em uma frase curta, ou null.
+7. NÃO invente itens que não estão no texto.
+8. "aviso": soma dúvidas/ambiguidades em uma frase curta, ou null.
 `;
