@@ -175,6 +175,7 @@ Máquina de estados exposta por provider Riverpod (`syncStatusProvider`):
 - [ ] Relógio do dispositivo adiantado 1h: sync ainda converge.
 - [ ] Kill do app com fila pendente: fila sobrevive ao restart.
 - [ ] Status de sync reflete todos os estados da Seção 6.
+- [ ] **Categoria (Fase 6, RF-15):** edição de categoria no dispositivo A aparece em B (LWW); registro remoto de app antigo sem `categoria` aplicado como `outros`.
 
 ---
 

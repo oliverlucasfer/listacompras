@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
+import 'package:lista_compras/features/listas/domain/categoria.dart';
 import 'package:lista_compras/features/sync/data/mutacao_sync.dart';
 import 'package:lista_compras/features/sync/data/sync_engine.dart';
 import 'package:lista_compras/features/sync/data/sync_remoto.dart';
@@ -179,6 +181,57 @@ void main() {
       expect(doItem.single.payload['deletado_em'], isNotNull);
     },
   );
+
+  test('deve_aplicar_categoria_do_remoto_quando_lww_vence_f6t06', () async {
+    // Cenário "2 dispositivos" (checklist 03 §8, F6): o dispositivo A editou
+    // a categoria (categoria: limpeza). O dispositivo B tinha o item com
+    // categoria antiga (frios) e uma mutação pendente mais velha — o remoto
+    // vence no LWW e o B adota a categoria do A.
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Detergente',
+      categoria: CategoriaItem.limpeza,
+    );
+    // Cópia local divergente no "dispositivo B" com ts mais velho.
+    await (db.update(db.itemLocal)..where((i) => i.id.equals(item.id))).write(
+      ItemLocalCompanion(
+        categoria: const Value('frios'),
+        updatedAt: Value(
+          DateTime.now().toUtc().subtract(const Duration(minutes: 1)),
+        ),
+      ),
+    );
+
+    final agora = DateTime.now().toUtc();
+    final remoto = RemotoComLwwFake()
+      ..remotos[item.id] = {
+        'id': item.id,
+        'lista_id': lista.id,
+        'nome': 'Detergente',
+        'quantidade': 1.0,
+        'unidade': 'un',
+        'categoria': 'limpeza',
+        'concluido': false,
+        'ordem': 0,
+        'created_at': agora.toIso8601String(),
+        'updated_at': agora.add(const Duration(minutes: 2)).toIso8601String(),
+        'deletado_em': null,
+      };
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+    await aguardarSincronizado(engine);
+
+    final local = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals(item.id))).getSingle();
+    expect(local.categoria, 'limpeza');
+  });
 
   test('deve_drenar_por_lista_em_ordem_quando_varias_listas', () async {
     final listaA = await repo.criarLista(titulo: 'A', donoId: 'user-a');

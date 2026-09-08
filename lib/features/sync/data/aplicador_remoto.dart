@@ -46,6 +46,13 @@ class AplicadorRemoto {
             nome: r['nome'] as String,
             quantidade: Value((r['quantidade'] as num).toDouble()),
             unidade: Value(Unidade.fromValor(r['unidade'] as String).valor),
+            // Tolerância (spec F6 §7): linha gravada por app antigo
+            // (1.0.0+2) chega sem a coluna → 'outros'.
+            categoria: Value(
+              r['categoria'] is String && (r['categoria'] as String).isNotEmpty
+                  ? r['categoria'] as String
+                  : 'outros',
+            ),
             concluido: Value(r['concluido'] as bool? ?? false),
             ordem: Value((r['ordem'] as num?)?.toInt() ?? 0),
             deletadoEm: Value(_dataOpcional(r['deletado_em'])),

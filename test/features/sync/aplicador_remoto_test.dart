@@ -125,4 +125,73 @@ void main() {
     expect(itens.single.quantidade, 2.0);
     expect(itens.single.unidade, 'kg');
   });
+
+  test('deve_aplicar_categoria_remota_quando_item_validado_f6t06', () async {
+    final aplicador = AplicadorRemoto(db);
+    await db
+        .into(db.listaLocal)
+        .insert(
+          ListaLocalCompanion.insert(
+            id: 'lista-1',
+            createdAt: DateTime.utc(2026, 9, 8, 12),
+            updatedAt: DateTime.utc(2026, 9, 8, 12),
+            titulo: 'Compras',
+            donoId: 'user-a',
+          ),
+        );
+
+    await aplicador.aplicar('itens_lista', {
+      'id': 'item-1',
+      'lista_id': 'lista-1',
+      'nome': 'Detergente',
+      'quantidade': 1,
+      'unidade': 'un',
+      'categoria': 'limpeza',
+      'concluido': false,
+      'ordem': 0,
+      'created_at': '2026-09-08T12:00:00.000Z',
+      'updated_at': '2026-09-08T12:30:00.000Z',
+      'deletado_em': null,
+    });
+
+    final item = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals('item-1'))).getSingle();
+    expect(item.categoria, 'limpeza');
+  });
+
+  test('deve_usar_outros_quando_registro_remoto_sem_categoria_f6t06', () async {
+    // Compat (spec F6 §7): linha gravada por app antigo (1.0.0+2) chega
+    // sem a coluna no bootstrap/Realtime.
+    final aplicador = AplicadorRemoto(db);
+    await db
+        .into(db.listaLocal)
+        .insert(
+          ListaLocalCompanion.insert(
+            id: 'lista-1',
+            createdAt: DateTime.utc(2026, 9, 8, 12),
+            updatedAt: DateTime.utc(2026, 9, 8, 12),
+            titulo: 'Compras',
+            donoId: 'user-a',
+          ),
+        );
+
+    await aplicador.aplicar('itens_lista', {
+      'id': 'item-2',
+      'lista_id': 'lista-1',
+      'nome': 'Arroz',
+      'quantidade': 1,
+      'unidade': 'kg',
+      'concluido': false,
+      'ordem': 0,
+      'created_at': '2026-09-08T12:00:00.000Z',
+      'updated_at': '2026-09-08T12:30:00.000Z',
+      'deletado_em': null,
+    });
+
+    final item = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals('item-2'))).getSingle();
+    expect(item.categoria, 'outros');
+  });
 }
