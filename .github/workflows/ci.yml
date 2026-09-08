@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.116.0  # pinado ao CLI do dev — v2.117 não emite SERVICE_ROLE_KEY no status -o env
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
