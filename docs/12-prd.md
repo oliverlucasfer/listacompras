@@ -36,6 +36,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-12 | Observabilidade: Sentry com privacidade (sem conteúdo de listas em logs) | 07 §4 | F5 | [07](07-qualidade-ci.md) |
 | RF-13 | Compartilhamento por convite (link/e-mail) com papéis — **Fase 6** | 08 | F6 | [08 §9](08-compartilhamento-colaborativo.md) |
 | RF-14 | Transferência de dono — **Fase 6** | 08 §6 | F6 | [08 §9](08-compartilhamento-colaborativo.md) |
+| RF-15 | Agrupamento da lista por categoria (enum fechado [01 §3](01-banco-de-dados.md)) com sugestão local em camadas (memória por nome → dicionário estático → `outros`); IA sugere no import | 05 §6.3 + 01 §4.3 | F6 | [05 §8](05-app-flutter.md) + [03 §8](03-sincronizacao-offline.md) |
 
 ## 3. Requisitos Não-Funcionais
 
@@ -82,6 +83,16 @@ Como P2, quero enviar um link para meu parceiro acessar minha lista, para compar
 Como P2, quero dar acesso só de leitura ao filho, para que ele acompanhe sem alterar.
 - Given um membro é `leitor`, when ele abre a lista, then vê banner de somente leitura e não consegue editar (UI bloqueia + RLS nega).
 
+### Comprador solo (P1) — agrupamento *(Fase 6)*
+
+**US-07 — Lista por setores**
+Como P1, quero os itens pendentes agrupados por categoria (Hortifrúti, Mercearia, Frios…), para comprar por setor sem voltar atrás na loja.
+- Given a lista tem leite e queijo, when adiciono "arroz", then os pendentes aparecem em grupos fixos (Laticínios, Frios, Mercearia) com contagem em cada header.
+
+**US-08 — Sugestão automática sem IA**
+Como P1 sem plano de IA, quero que itens comuns já venham categorizados mesmo offline, para não classificar manualmente.
+- Given o app não usa IA, when digito "detergente" e pressiono Enter, then o item entra em Limpeza via dicionário local; nomes fora do dicionário entram em Outros e passam a ser lembrados (memória por nome).
+
 ## 5. Mapa do Design (o "SDD" — onde cada decisão vive)
 
 > **Regra:** este mapa apenas APONTA. O conteúdo técnico vive exclusivamente no doc dono — alterações de design são feitas lá.
@@ -113,6 +124,7 @@ Cada requisito liga story → design → tarefas ([14](14-tarefas.md)) → verif
 | RF-11 | — | F5 | F5-T02, F5-T03 | Integração RPC |
 | RF-12 | — | F5 | F5-T04 | Sentry smoke |
 | RF-13/14 | US-05, US-06 | F6 | (planejar na F6) | N-11…N-14 |
+| RF-15 | US-07, US-08 | F6 | F6-T01…T06 | Repo + sugestão + widgets + sync |
 
 ## 7. Fora de escopo (MVP)
 

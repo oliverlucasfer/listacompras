@@ -39,12 +39,14 @@ App local (Drift): ListaLocal, ItemLocal, MutacaoPendente (fila)
 | Entidade | Campos essenciais | Detalhe |
 | :--- | :--- | :--- |
 | `listas` | id (uuid, cliente), titulo, dono_id, updated_at, deletado_em | [01 §4.1](01-banco-de-dados.md) |
-| `itens_lista` | id (uuid, cliente), lista_id, nome, quantidade>0, unidade (enum), concluido, ordem, updated_at, deletado_em | unique parcial `(lista_id, lower(nome))` ativos |
+| `itens_lista` | id (uuid, cliente), lista_id, nome, quantidade>0, unidade (enum), categoria (enum), concluido, ordem, updated_at, deletado_em | unique parcial `(lista_id, lower(nome))` ativos |
 | `lista_membros` | lista_id, user_id, papel ∈ {dono, editor, leitor} | **1 dono por lista** (trigger `sync_dono`) |
 | `convites` (F6) | token, tipo link/email, papel_oferecido ≠ dono, estado, expira_em | [08 §2](08-compartilhamento-colaborativo.md) |
 | `mutacoes_pendentes` (local) | tabela, operacao, registro_id, payload JSON, ts_local, tentativas | [03 §3](03-sincronizacao-offline.md) |
 
 **Enum de unidades (fechado):** `un, kg, g, l, ml, caixa, pacote, pct, dz` — mesma lista no Postgres, no Dart e no `responseSchema` do Gemini.
+
+**Enum de categorias (fechado, ADR-011):** `hortifruti, mercearia, frios, laticinios, congelados, padaria, bebidas, pet, limpeza, higiene, outros` — mesma lista no Postgres, no Dart e no `responseSchema`; a ordem do enum define a ordem dos grupos na UI. Sugestão **local em camadas** (memória por nome → dicionário estático → `outros`); IA só refina o import.
 
 ## 4. Fluxos essenciais
 
@@ -55,7 +57,7 @@ UI → Repositório → **Drift aplica + enfileira mutação** → (online?) flu
 Drena por lista, em ordem; **coalescing** (múltiplas mutações do mesmo registro = envia só a última); upsert com comparação **LWW por `updated_at`**; empate → servidor; retry exponencial (máx 10 → estado `Erro` na UI). [03 §4–5](03-sincronizacao-offline.md)
 
 ### F3 — Importação IA
-App → `POST /functions/v1/parse-lista` (JWT) → rate limit 10/min + ≤2000 chars → Gemini (JSON mode, temp 0.1, timeout 15s) → `{itens:[{nome,quantidade,unidade}], aviso}` → **pré-visualização editável** → grava local. Erros amigáveis por código ([04 §2](04-ia-edge-function.md)).
+App → `POST /functions/v1/parse-lista` (JWT) → rate limit 10/min + ≤2000 chars → Gemini (JSON mode, temp 0.1, timeout 15s) → `{itens:[{nome,quantidade,unidade,categoria}], aviso}` → **pré-visualização editável** → grava local. Erros amigáveis por código ([04 §2](04-ia-edge-function.md)). Cliente tolerante: item sem `categoria` → `outros`.
 
 ### F4 — Realtime
 WebSocket Supabase → mudanças remotas → aplicar no Drift **se vencerem LWW** → Stream notifica UI (< 1s). RLS filtra o que cada usuário recebe. [03 §4](03-sincronizacao-offline.md)
@@ -85,6 +87,7 @@ POST parse-lista  Authorization: Bearer <jwt>  { "texto": "..." }
 | 003 | Drift/SQLite local |
 | 004 | LWW + tombstones (sem modal de conflito) |
 | 005 | Enum fechado de unidades |
+| 011 | Categoria do item: enum fechado (11 valores) + sugestão local em camadas (memória → dicionário → outros); IA só refina o import |
 | 006 | IDs UUID v4 gerados no cliente |
 | 007 | Free tier aceito; Supabase Pro = gatilho de lançamento público |
 | 008 | Exclusão de conta: delete físico em cascata (F5) |

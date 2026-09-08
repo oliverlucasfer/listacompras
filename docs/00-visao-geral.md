@@ -125,6 +125,7 @@ Aplicação multiplataforma para criação, organização e execução de compra
 | ADR-008 | 02/09/2026 | **Delete físico em cascata** na exclusão de conta; exclusão disponível na Fase 5 | Anonimização de dados | Domínio com pouco dado sensível; CASCADE já nativo; atende LGPD |
 | ADR-009 | 02/09/2026 | **Sentry** (plano free) como observabilidade no MVP | Crashlytics, nada | Cobertura Flutter/Web; integração simples; decisão mínima viável |
 | ADR-010 | 02/09/2026 | **GitHub Actions** como CI desde a Fase 1 | Nenhum CI, GitLab CI | Já hospedamos no GitHub; pipeline simples (analyze + format + test) |
+| ADR-011 | 08/09/2026 | `categoria` do item como **enum fechado** (11 valores) com sugestão local em camadas — memória por nome → dicionário estático → `outros`; IA apenas refina a importação | Texto livre; sugestão só via IA | Consistência de dados ("Frios" × "frios") e alimenta o `responseSchema` (como ADR-005); preserva o offline-first e o uso **sem plano de IA** |
 
 ---
 
@@ -137,7 +138,7 @@ Aplicação multiplataforma para criação, organização e execução de compra
 | **Fase 3** | **App Flutter - Core e Entrada Manual** | Configurar projeto Flutter (Riverpod + Drift); telas de Login/Registro (**incluindo recuperação de senha e verificação de e-mail**) e Minhas Listas; interface da lista com adição/edição manual, checkboxes e enum de unidades. **Testes de repositório e widget tests desde esta fase** (ver [07](07-qualidade-ci.md)). | CRUD manual funciona online; CI verde |
 | **Fase 4** | **Integrar IA e Sincronização** | Implementar o modal de importação por texto + pré-visualização; implementar o **Sync Engine offline-first** (fila de mutações, LWW, tombstones — ver [03](03-sincronizacao-offline.md)); validar sincronização simultânea Web/Mobile. | Sync validado em 2 dispositivos; fila offline esvazia ao reconectar |
 | **Fase 5** | **Polimento e Publicação (MVP)** | Tratar estado offline (indicadores na UI), **testes de usabilidade** (roteiro em [11](11-usabilidade-fase5.md)), **exclusão de conta (LGPD)** e publicação de **Web + Android**. | Critérios de aceite do MVP 100% (ver [06](06-mvp-entregas.md)) |
-| **Fase 6** | **Pós-MVP** | Publicação iOS; suporte Desktop (Windows/macOS/Linux); **compartilhamento colaborativo ativado na UI** (planejamento em [08](08-compartilhamento-colaborativo.md)); limpeza de tombstones; avaliação de upgrade Supabase Pro. | — |
+| **Fase 6** | **Pós-MVP** | Publicação iOS; suporte Desktop (Windows/macOS/Linux); **compartilhamento colaborativo ativado na UI** (planejamento em [08](08-compartilhamento-colaborativo.md)); **agrupamento da lista por categoria** (spec em [superpowers/specs](superpowers/specs/2026-09-08-agrupamento-categorias-design.md)); limpeza de tombstones; avaliação de upgrade Supabase Pro. | — |
 
 ---
 

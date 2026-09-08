@@ -24,7 +24,7 @@ Sistema multiplataforma (MVP: Android, iOS e Web) para gerenciamento de listas d
 | [11](docs/11-usabilidade-fase5.md) | **Usabilidade (Fase 5)** | Roteiro, tarefas, métricas, critério de aprovação | Testes de usabilidade |
 | [12](docs/12-prd.md) | **PRD** | Requisitos funcionais/não-funcionais com IDs, user stories, matriz de rastreabilidade | Requisitos de produto |
 | [13](docs/13-premodelo-tecnico.md) | **Pré-modelo Técnico** | Contexto condensado para implementação (ler primeiro) | Resumo — nunca sobrepõe o doc dono |
-| [14](docs/14-tarefas.md) | **Tarefas** | Breakdown executável por fase (F1–F5) com dependências e critério de pronto | Execução e progresso |
+| [14](docs/14-tarefas.md) | **Tarefas** | Breakdown executável por fase (F1–F6) com dependências e critério de pronto | Execução e progresso |
 
 ---
 
@@ -49,7 +49,7 @@ Detalhes e DoD por fase: [00 §6](docs/00-visao-geral.md) · Breakdown executáv
 | :--- | :--- |
 | MVP = Android/iOS/Web; Desktop na Fase 6 | ADR-001 |
 | Riverpod · Drift/SQLite · LWW · IDs client-side | ADR-002/003/004/006 |
-| Enum fechado de unidades | ADR-005 |
+| Enum fechado de unidades · categorias (sugestão local em camadas) | ADR-005 / ADR-011 |
 | Free tier aceito no MVP; Supabase Pro como gatilho de lançamento público | ADR-007 |
 | Exclusão de conta (delete em cascata) na Fase 5 · Sentry · GitHub Actions | ADR-008/009/010 |
 

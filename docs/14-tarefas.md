@@ -138,7 +138,33 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
   Dep: F5-T05 · Docs: [06 §4](06-mvp-entregas.md)
   CP: Checklist 06 §1 100% marcado; URL Web pública; AAB no closed testing. *(ADIADA por decisão do dono: executar somente sob solicitação explícita — só quando for lançar na Play Store; Dep F5-T05 permanece)*
 
-## Pós-MVP (Fase 6) — resumo
+## Fase 6 — Pós-MVP
+
+Spec do agrupamento por categoria: [superpowers/specs/2026-09-08-agrupamento-categorias-design.md](superpowers/specs/2026-09-08-agrupamento-categorias-design.md) · Requisito: RF-15 · ADR-011.
+
+- [x] **F6-T00** — Spec + docs de planejamento (RF-15, ADR-011, campos no 13, breakdown no 14)
+  Dep: — · Docs: spec da feature
+  CP: docs de planejamento consistentes entre si (00/12/13/14/spec) sem tocar código.
+- [ ] **F6-T01** — Migration `0006_categorias.sql`: enum `categoria_item` (11 valores) + coluna em `itens_lista`
+  Dep: F6-T00 · Docs: [01 §3, §4.3, §8](01-banco-de-dados.md)
+  CP: `enum_range` retorna os 11 valores na ordem dos grupos; INSERT com categoria inválida rejeita; INSERT sem categoria → `outros`; `db reset` e `db push` ok.
+- [ ] **F6-T02** — Drift v3 (`ItemLocal.categoria`) + repositório com categoria no payload
+  Dep: F6-T01 · Docs: [05 §2–3](05-app-flutter.md), [03 §3](03-sincronizacao-offline.md)
+  CP: migração v2→v3 preserva dados; adicionar/editar grava categoria e enfileira payload com `categoria`; 145 testes atuais verdes + novos de repo.
+- [ ] **F6-T03** — Cadeia de sugestão local (memória por nome → dicionário estático → `outros`)
+  Dep: F6-T02 · Docs: [05 §3](05-app-flutter.md)
+  CP: função pura; memória vence dicionário; match multi-palavra vence single ("leite condensado" → mercearia); fallback `outros`; unit tests dos 4 casos.
+- [ ] **F6-T04** — UI: grupos por categoria, contagem, drag interno, dropdown no editar
+  Dep: F6-T02, F6-T03 · Docs: [05 §6.3](05-app-flutter.md), [10 §3](10-wireframes-telas.md)
+  CP: wireframe atualizado atendido; headers `Label (n)` na ordem do enum; drag só dentro do grupo; Enter aplica sugestão; concluídos sem grupos; widget tests.
+- [ ] **F6-T05** — IA com categoria (prompt + `responseSchema` + cliente tolerante + pré-visualização)
+  Dep: F6-T02 · Docs: [04](04-ia-edge-function.md)
+  CP: schema exige enum dos 11 valores; cliente sem `categoria` → `outros`; deno/e2e verdes; **deploy da function em produção antes do APK novo** aos testadores.
+- [ ] **F6-T06** — Checklist sync [03 §8](03-sincronizacao-offline.md) com categoria + distribuição nova
+  Dep: F6-T02, F6-T05 · Docs: [03 §8](03-sincronizacao-offline.md), [07 §1](07-qualidade-ci.md)
+  CP: cenário de categoria entre 2 dispositivos (servidor fake) verde; CI verde; APK atualizado distribuído ao grupo `testadores`.
+
+### Pós-MVP (Fase 6) — pendente de planejamento
 
 Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS, Desktop, limpeza de tombstones. Planejamento: [08](08-compartilhamento-colaborativo.md) — breakdown detalhado desta fase será criado ao iniciá-la.
 
@@ -153,7 +179,8 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | F3 App Core | 9 | 9 |
 | F4 IA + Sync | 9 | 9 |
 | F5 Publicação | 7 | 5 |
-| **Total** | **38** | **36** |
+| F6 Pós-MVP | 7 | 1 |
+| **Total** | **45** | **37** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
