@@ -79,6 +79,15 @@ supabase db push
 2. Billing → Upgrade → Pro (~US$ 25/mês): projeto não pausa, backups diários, 8 GB banco.
 3. Após upgrade: revalidar Realtime e Edge Functions (sem mudança de URL/keys).
 
+### 2.5. Histórico de operações em produção
+
+**2026-09-08 — Provisionamento inicial** (F5-T05b):
+- `supabase db push` — migrations 0001–0005 aplicadas (`migration list` local = remote).
+- `supabase functions deploy parse-lista` + `supabase secrets set --env-file` (`GEMINI_API_KEY`).
+- Auth → URL Configuration → Redirect URLs: `br.com.oliverlucas.listacompras://login-callback` (dashboard).
+- Validação: anon bloqueado por RLS (`GET /rest/v1/listas` → `200 []`), `RPC excluir_conta` → `401`, contrato da function (`401` sem JWT) e e2e real do dono (conta → confirmação por deep link → lista → itens → importação IA).
+- Canal de distribuição de teste: Firebase App Distribution — build `1.0.0+2` para o grupo `testadores` ([06 §4](06-mvp-entregas.md)).
+
 ---
 
 ## 3. Gemini / Edge Function
