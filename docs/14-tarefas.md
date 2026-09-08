@@ -145,7 +145,7 @@ Spec do agrupamento por categoria: [superpowers/specs/2026-09-08-agrupamento-cat
 - [x] **F6-T00** — Spec + docs de planejamento (RF-15, ADR-011, campos no 13, breakdown no 14)
   Dep: — · Docs: spec da feature
   CP: docs de planejamento consistentes entre si (00/12/13/14/spec) sem tocar código.
-- [ ] **F6-T01** — Migration `0006_categorias.sql`: enum `categoria_item` (11 valores) + coluna em `itens_lista`
+- [x] **F6-T01** — Migration `0006_categorias.sql`: enum `categoria_item` (11 valores) + coluna em `itens_lista`
   Dep: F6-T00 · Docs: [01 §3, §4.3, §8](01-banco-de-dados.md)
   CP: `enum_range` retorna os 11 valores na ordem dos grupos; INSERT com categoria inválida rejeita; INSERT sem categoria → `outros`; `db reset` e `db push` ok.
 - [ ] **F6-T02** — Drift v3 (`ItemLocal.categoria`) + repositório com categoria no payload
@@ -179,8 +179,8 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | F3 App Core | 9 | 9 |
 | F4 IA + Sync | 9 | 9 |
 | F5 Publicação | 7 | 5 |
-| F6 Pós-MVP | 7 | 1 |
-| **Total** | **45** | **37** |
+| F6 Pós-MVP | 7 | 2 |
+| **Total** | **45** | **38** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

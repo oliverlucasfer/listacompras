@@ -40,14 +40,19 @@ supabase/
 └── migrations/
     ├── 0001_init.sql            # enum, tabelas, índices, triggers
     ├── 0002_rls_policies.sql    # políticas RLS (ver 02)
-    └── 0003_realtime.sql        # publication do Realtime
+    ├── 0003_realtime.sql        # publication do Realtime
+    ├── 0004_ia_rate_limit.sql   # rate limit da IA (ver 04)
+    ├── 0005_excluir_conta.sql   # RPC de exclusão de conta (ver 06)
+    └── 0006_categorias.sql      # enum de categorias + coluna (ver §3.2, ADR-011)
 ```
 
 ---
 
-## 3. Enum de Unidades
+## 3. Enums Fechados
 
 > **Fonte única da verdade.** O [04 IA](04-ia-edge-function.md) replica estes valores no `responseSchema`; o [05 App](05-app-flutter.md) replica no enum Dart.
+
+### 3.1. Unidades (`unidade_item`)
 
 ```sql
 create type public.unidade_item as enum (
@@ -62,6 +67,31 @@ create type public.unidade_item as enum (
 | `l` / `ml` | Volume |
 | `caixa` / `pacote` / `pct` | Embalagens |
 | `dz` | Dúzia |
+
+### 3.2. Categorias (`categoria_item`, ADR-011)
+
+```sql
+create type public.categoria_item as enum (
+  'hortifruti', 'mercearia', 'frios', 'laticinios', 'congelados',
+  'padaria', 'bebidas', 'pet', 'limpeza', 'higiene', 'outros'
+);
+```
+
+A **ordem do enum define a ordem dos grupos na UI** (doc 05 §6.3). Labels pt-BR: Hortifrúti, Mercearia, Frios, Laticínios, Congelados, Padaria, Bebidas, Pet, Limpeza, Higiene, Outros.
+
+| Valor | Significado |
+| :--- | :--- |
+| `hortifruti` | Frutas, verduras e legumes |
+| `mercearia` | Secos e embalados (arroz, enlatados, grãos) |
+| `frios` | Fatiados e perecíveis de balcão (queijo, presunto) |
+| `laticinios` | Leite, iogurte, manteiga |
+| `congelados` | Congelados e sorvetes |
+| `padaria` | Pães e bolos |
+| `bebidas` | Água, sucos, refrigerantes |
+| `pet` | Produtos para animais |
+| `limpeza` | Produtos de limpeza da casa |
+| `higiene` | Higiene e cuidados pessoais |
+| `outros` | Fallback — não classificado (default) |
 
 ---
 
@@ -128,7 +158,8 @@ create index idx_membros_user on public.lista_membros (user_id);
 | `lista_id` | `uuid NOT NULL FK → listas.id ON DELETE CASCADE` | Lista vinculada |
 | `nome` | `text NOT NULL` | Nome do item (ex: "Leite") |
 | `quantidade` | `numeric NOT NULL DEFAULT 1 CHECK (quantidade > 0)` | Quantidade |
-| `unidade` | `unidade_item NOT NULL DEFAULT 'un'` | Enum (Seção 3) |
+| `unidade` | `unidade_item NOT NULL DEFAULT 'un'` | Enum (Seção 3.1) |
+| `categoria` | `categoria_item NOT NULL DEFAULT 'outros'` | Enum (Seção 3.2, ADR-011) — agrupa pendentes na UI; migrada aditivamente em `0006` (itens antigos → `outros`) |
 | `concluido` | `boolean NOT NULL DEFAULT false` | Estado da checkbox |
 | `ordem` | `integer NOT NULL DEFAULT 0` | Posição na lista (drag-and-drop) |
 | `deletado_em` | `timestamptz` nullable | Soft delete / tombstone |
@@ -146,6 +177,7 @@ create table public.itens_lista (
   nome       text not null check (length(btrim(nome)) between 1 and 120),
   quantidade numeric not null default 1 check (quantidade > 0),
   unidade    public.unidade_item not null default 'un',
+  categoria  public.categoria_item not null default 'outros',
   concluido  boolean not null default false,
   ordem      integer not null default 0,
   deletado_em timestamptz
@@ -159,6 +191,8 @@ create index idx_itens_lista_ordem
   on public.itens_lista (lista_id, ordem)
   where deletado_em is null;
 ```
+
+> **Compatibilidade (spec F6 §7):** clientes antigos que escrevem sem `categoria` recebem o default `outros` no INSERT; o upsert LWW do sync **não toca** a coluna quando ela não está no payload — a categoria existente é preservada.
 
 ---
 
@@ -282,6 +316,9 @@ alter publication supabase_realtime add table public.itens_lista;
 - [ ] `update` em `itens_lista` reflete em `updated_at`.
 - [ ] `insert` de item duplicado (mesmo nome, ativo) na mesma lista falha por unique parcial.
 - [ ] `insert` de `unidade = 'quilos'` falha (fora do enum).
+- [ ] `unnest(enum_range(null::categoria_item))` retorna os 11 valores na ordem dos grupos (F6-T01).
+- [ ] `insert` com `categoria = 'alimentos'` falha (fora do enum).
+- [ ] `insert` de item sem `categoria` grava `outros` (F6-T01).
 - [ ] Excluir `auth.users` em cascata remove listas/membros/itens (teste em ambiente dev).
 - [ ] Policies RLS aplicadas e testes de negação passando (ver [02](02-seguranca-rls.md)).
 
