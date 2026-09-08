@@ -87,6 +87,7 @@ supabase db push
 - Auth → URL Configuration → Redirect URLs: `br.com.oliverlucas.listacompras://login-callback` (dashboard).
 - Validação: anon bloqueado por RLS (`GET /rest/v1/listas` → `200 []`), `RPC excluir_conta` → `401`, contrato da function (`401` sem JWT) e e2e real do dono (conta → confirmação por deep link → lista → itens → importação IA).
 - Canal de distribuição de teste: Firebase App Distribution — build `1.0.0+2` para o grupo `testadores` ([06 §4](06-mvp-entregas.md)).
+- **Fase 6 (agrupamento por categoria, 08/09/2026):** migration `0006_categorias.sql` em produção (`db push`, aditiva); Edge Function `parse-lista` redeployada **antes** do APK novo (campo `categoria` no contrato, [04 §2](04-ia-edge-function.md)); app `1.1.0+3` (smoke: 401 sem JWT na function + "E-mail ou senha incorretos." do Auth de produção) distribuído ao grupo `testadores` (App Distribution). Rollout especificado no spec F6 §7 (docs/superpowers/specs).
 
 ---
 

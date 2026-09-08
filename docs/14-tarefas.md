@@ -161,9 +161,9 @@ Spec do agrupamento por categoria: [superpowers/specs/2026-09-08-agrupamento-cat
   Dep: F6-T02 · Docs: [04](04-ia-edge-function.md)
   CP: schema exige enum dos 11 valores; cliente sem `categoria` → `outros`; deno/e2e verdes; **deploy da function em produção antes do APK novo** aos testadores.
   *(Smoke de produção: função responde 401 sem JWT — deploy `5m` após F6-T04; e2e `--sem-gemini` local tem 1 falha pré-existente e ambiental (`.env` com `GEMINI_API_KEY` carregado pelo edge runtime faz o cenário "sem key" não dar 500 — o CI, com env limpo, valida esse cenário)*
-- [ ] **F6-T06** — Checklist sync [03 §8](03-sincronizacao-offline.md) com categoria + distribuição nova
+- [x] **F6-T06** — Checklist sync [03 §8](03-sincronizacao-offline.md) com categoria + distribuição nova
   Dep: F6-T02, F6-T05 · Docs: [03 §8](03-sincronizacao-offline.md), [07 §1](07-qualidade-ci.md)
-  CP: cenário de categoria entre 2 dispositivos (servidor fake) verde; CI verde; APK atualizado distribuído ao grupo `testadores`.
+  CP: cenário de categoria entre 2 dispositivos (servidor fake) verde; CI verde; APK `1.1.0+3` distribuído ao grupo `testadores` (história em [09 §2.5](09-runbook-operacoes.md)).
 
 ### Pós-MVP (Fase 6) — pendente de planejamento
 
@@ -180,8 +180,8 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | F3 App Core | 9 | 9 |
 | F4 IA + Sync | 9 | 9 |
 | F5 Publicação | 7 | 5 |
-| F6 Pós-MVP | 7 | 6 |
-| **Total** | **45** | **42** |
+| F6 Pós-MVP | 7 | 7 |
+| **Total** | **45** | **43** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
