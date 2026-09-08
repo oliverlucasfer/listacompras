@@ -31,5 +31,8 @@ android/key.properties
 *.jks
 *.keystore
 
+# Config de build de produção (F5-T05b — doc 06 §4)
+dart_defines_prod.json
+
 # Diversos
 *.log

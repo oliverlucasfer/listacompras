@@ -131,9 +131,9 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [ ] **F5-T05** — Testes de usabilidade (3–5 participantes)
   Dep: F4-T09, F5-T02 · Docs: [11](11-usabilidade-fase5.md)
   CP: Critério 11 §3.1: T1–T4 ≥ 80% sem ajuda **e** T3 100%; relatório de 1 página produzido. *(ADIADA por decisão do dono: executar somente sob solicitação explícita — só quando for lançar. Relatório modelo pronto em [docs/relatorio-usabilidade-fase5.md](relatorio-usabilidade-fase5.md); exige participantes humanos, fora do escopo do agente)*
-- [ ] **F5-T05b** — Distribuição interna via Firebase App Distribution
+- [x] **F5-T05b** — Distribuição interna via Firebase App Distribution
   Dep: F4-T09 · Docs: [06 §4](06-mvp-entregas.md)
-  CP: APK release assinado, instalável por 2+ testadores apontando para o Supabase de produção; keystore via `android/key.properties` (gitignored, template em `key.properties.example`) com fallback para debug quando ausente. *(fora do gate de T05/T06 — é o canal provisório de builds de teste até o lançamento)*
+  CP: APK release assinado, instalável por 2+ testadores apontando para o Supabase de produção; keystore via `android/key.properties` (gitignored, template em `key.properties.example`) com fallback para debug quando ausente. *(fora do gate de T05/T06 — é o canal provisório de builds de teste até o lançamento. Build `1.0.0+2` assinado (V2, CN=Lucas Oliveira), URL de produção verificada embutida no libapp.so e smoke no emulador: instala, abre e login com credenciais erradas devolve "E-mail ou senha incorretos" da produção. Distribuído ao grupo "testadores" (2 membros) via `firebase appdistribution:distribute --groups`; dart-defines de produção em `dart_defines_prod.json` (gitignored). Correções de CI no caminho: Flutter 3.44.5 e CLI 2.116.0 pinados, e2e cria usuários via Admin API (confirmations F3) — doc 07 §3 e 04 §8 atualizados)*
 - [ ] **F5-T06** — Publicação Web + Android (teste interno) + política de privacidade online
   Dep: F5-T05 · Docs: [06 §4](06-mvp-entregas.md)
   CP: Checklist 06 §1 100% marcado; URL Web pública; AAB no closed testing. *(ADIADA por decisão do dono: executar somente sob solicitação explícita — só quando for lançar na Play Store; Dep F5-T05 permanece)*
@@ -152,8 +152,8 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | F2 IA | 5 | 5 |
 | F3 App Core | 9 | 9 |
 | F4 IA + Sync | 9 | 9 |
-| F5 Publicação | 7 | 4 |
-| **Total** | **38** | **35** |
+| F5 Publicação | 7 | 5 |
+| **Total** | **38** | **36** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
