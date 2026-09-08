@@ -2,11 +2,15 @@
 // Uso: node parse_lista_e2e.mjs [--sem-gemini]
 // Requer `supabase start` com supabase/.env (GEMINI_API_KEY) para o cenário Gemini.
 // Cenários sem Gemini (401/400/429) rodam no CI (F2-T05) com --sem-gemini.
+// Desde F3 (enable_confirmations=true) usuários de teste são criados via Admin API
+// (service_role de teste em SERVICE_ROLE_KEY — `supabase status -o env`) e autenticados
+// por senha, pois signUp não devolve session sem confirmação de e-mail.
 
 import { createClient } from '@supabase/supabase-js';
 
-const URL = 'http://127.0.0.1:54321';
-const KEY = 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH';
+const URL = process.env.API_URL || 'http://127.0.0.1:54321';
+const KEY = process.env.ANON_KEY || 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH';
+const SERVICE_ROLE = process.env.SERVICE_ROLE_KEY;
 const FUNCAO = `${URL}/functions/v1/parse-lista`;
 const SEM_GEMINI = process.argv.includes('--sem-gemini');
 
@@ -18,9 +22,19 @@ function ok(msg) { console.log(`  OK ${msg}`); }
 function falhou(msg) { falhas++; console.error(`  FALHOU ${msg}`); }
 
 async function jwtPara(email) {
+  if (!SERVICE_ROLE) throw new Error('SERVICE_ROLE_KEY ausente — gere com `supabase status -o env`');
+  const admin = createClient(URL, SERVICE_ROLE, { auth: { autoRefreshToken: false, persistSession: false } });
+  const { error: errCreate } = await admin.auth.admin.createUser({
+    email,
+    password: 'senha-teste-123',
+    email_confirm: true,
+  });
+  if (errCreate && !/already|registered|exists/i.test(errCreate.message)) {
+    throw new Error(`createUser ${email}: ${errCreate.message}`);
+  }
   const c = createClient(URL, KEY);
-  const { data, error } = await c.auth.signUp({ email, password: 'senha-teste-123' });
-  if (error) throw new Error(`signup ${email}: ${error.message}`);
+  const { data, error } = await c.auth.signInWithPassword({ email, password: 'senha-teste-123' });
+  if (error) throw new Error(`login ${email}: ${error.message}`);
   return data.session.access_token;
 }
 

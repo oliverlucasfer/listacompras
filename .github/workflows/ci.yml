@@ -24,6 +24,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.44.5  # pinado ao SDK do dev — formatter de versões novas diverge
       - if: steps.check.outputs.flutter == 'enabled'
         run: dart format --set-exit-if-changed .
       - if: steps.check.outputs.flutter == 'enabled'
@@ -53,6 +54,9 @@ jobs:
         run: deno test --allow-env supabase/functions/parse-lista/
       - name: Testes e2e do contrato parse-lista (cenários sem Gemini)
         run: |
+          # enable_confirmations=true (F3) exige usuários já confirmados via Admin API;
+          # SERVICE_ROLE_KEY local = chave de ambiente de teste (07 §3), nunca produção.
+          supabase status -o env | grep -E '^(export )?(API_URL|SERVICE_ROLE_KEY)=' | sed -E 's/^export //; s/"//g' >> "$GITHUB_ENV"
           npm ci --prefix supabase/tests
           node supabase/tests/parse_lista_e2e.mjs --sem-gemini
       # Fase 4+: deno test de novas functions, sync tests no job flutter

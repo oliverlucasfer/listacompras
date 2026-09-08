@@ -259,7 +259,7 @@ supabase/
         └── schema_test.ts      # unit: validação do contrato (422)
 ```
 
-Testes: `deno test supabase/functions/parse-lista/` (unit) e `node supabase/tests/parse_lista_e2e.mjs` (e2e contra stack local; `--sem-gemini` roda só os cenários sem IA, usados no CI).
+Testes: `deno test supabase/functions/parse-lista/` (unit) e `node supabase/tests/parse_lista_e2e.mjs` (e2e contra stack local; `--sem-gemini` roda só os cenários sem IA, usados no CI). Com `enable_confirmations=true` (F3), os usuários de teste são criados via Admin API — exporte `API_URL` e `SERVICE_ROLE_KEY` de `supabase status -o env` antes de rodar.
 
 ## 9. Checklist de validação (Fase 2)
 
