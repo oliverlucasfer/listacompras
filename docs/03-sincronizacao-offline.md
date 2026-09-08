@@ -57,6 +57,7 @@ Tabela local Drift (`mutacoes_pendentes`):
 * Fila **ordenada por lista**, drenada em sequência (mutações da mesma lista são aplicadas em ordem; listas distintas podem paralelizar).
 * **Coalescing:** se houver múltiplas mutações do mesmo registro na fila (ex.: criar + editar + concluir), o flush envia apenas a **última** (o payload final + maior `ts_local`) — reduz requisições e elimina conflitos intra-dispositivo.
 * Retry com **backoff exponencial** (1s → 2s → 4s → ... → máx. 5 min); após 10 tentativas, a mutação entra em estado `erro` visível na UI com ação "tentar de novo".
+* **Payload de itens inclui `categoria`** (enum fechado [01 §3.2](01-banco-de-dados.md), Fase 6/ADR-011). Clientes antigos (1.0.0+2) sem a coluna recebem o default no INSERT e o upsert LWW não toca a coluna fora do payload — categoria existente preservada ([01 §4.3](01-banco-de-dados.md)).
 
 ---
 

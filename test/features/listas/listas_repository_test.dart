@@ -4,6 +4,7 @@ import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
+import 'package:lista_compras/features/listas/domain/categoria.dart';
 import 'package:lista_compras/features/listas/domain/unidade.dart';
 import 'package:lista_compras/drift/database.dart';
 
@@ -340,4 +341,70 @@ void main() {
         .firstWhere((p) => p['id'] == leite.id);
     expect(leitePayload['ordem'], 0);
   });
+
+  test('deve_gravar_categoria_informada_quando_adicionar_item_f6t02', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+
+    final item = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Queijo prato',
+      categoria: CategoriaItem.frios,
+    );
+
+    final local = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals(item.id))).getSingle();
+    expect(local.categoria, 'frios');
+    expect(item.categoria, CategoriaItem.frios);
+  });
+
+  test(
+    'deve_gravar_outros_quando_adicionar_item_sem_categoria_f6t02',
+    () async {
+      final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+
+      final item = await repo.adicionarItem(listaId: lista.id, nome: 'Coisa');
+
+      expect(item.categoria, CategoriaItem.outros);
+    },
+  );
+
+  test(
+    'deve_incluir_categoria_no_payload_quando_enfileirar_item_f6t02',
+    () async {
+      final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+      final item = await repo.adicionarItem(
+        listaId: lista.id,
+        nome: 'Leite',
+        categoria: CategoriaItem.laticinios,
+      );
+
+      final mutacoes = await fila();
+      final inserts = mutacoes
+          .where(
+            (m) => m['tabela'] == 'itens_lista' && m['operacao'] == 'INSERT',
+          )
+          .toList();
+      final payload = inserts.single['payload'] as Map<String, Object?>;
+      expect(payload['categoria'], 'laticinios');
+
+      await repo.editarItem(item.id, categoria: CategoriaItem.frios);
+
+      final local = await (db.select(
+        db.itemLocal,
+      )..where((i) => i.id.equals(item.id))).getSingle();
+      expect(local.categoria, 'frios');
+
+      final updates = (await fila())
+          .where(
+            (m) => m['tabela'] == 'itens_lista' && m['operacao'] == 'UPDATE',
+          )
+          .toList();
+      expect(updates, hasLength(1));
+      expect(
+        (updates.single['payload'] as Map<String, Object?>)['categoria'],
+        'frios',
+      );
+    },
+  );
 }

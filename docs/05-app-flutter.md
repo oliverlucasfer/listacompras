@@ -37,7 +37,7 @@ lib/
 │   │   └── ui/                      # Login, Registro, RecuperarSenha
 │   ├── listas/
 │   │   ├── data/                    # ListasRepository (Drift + Supabase)
-│   │   ├── domain/                  # modelos Lista, Item
+│   │   ├── domain/                  # modelos Lista, Item; enums Unidade, CategoriaItem
 │   │   ├── providers/               # listasProvider, itensProvider(consulta)
 │   │   └── ui/                      # MinhasListas, TelaLista, modais
 │   ├── ia/
@@ -62,7 +62,7 @@ lib/
 | `authStateProvider` | StreamProvider | Sessão atual (login/logout/refresh) |
 | `appDatabaseProvider` | Provider | Instância única do Drift |
 | `listasProvider` | StreamProvider | Listas ativas do usuário (Drift → UI) |
-| `itensDaListaProvider(listaId)` | StreamProvider.family | Itens ativos ordenados por `ordem` |
+| `itensDaListaProvider(listaId)` | StreamProvider.family | Itens ativos; ordenação de exibição por categoria e `ordem` (Fase 6) |
 | `syncStatusProvider` | StreamProvider | Estado de sync ([03 §6](03-sincronizacao-offline.md)) |
 | `importacaoIaProvider` | NotifierProvider | Estados do modal IA (idle/carregando/erro/prévia) |
 | `conectividadeProvider` | StreamProvider | Online/offline (dispara flush) |

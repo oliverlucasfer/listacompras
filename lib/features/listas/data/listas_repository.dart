@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../drift/database.dart';
+import '../domain/categoria.dart';
 import '../domain/item.dart';
 import '../domain/lista.dart';
 import '../domain/lista_com_contagem.dart';
@@ -155,6 +156,7 @@ class ListasRepository {
     required String nome,
     double quantidade = 1.0,
     Unidade unidade = Unidade.un,
+    CategoriaItem categoria = CategoriaItem.outros,
   }) async {
     if (quantidade <= 0) {
       throw ArgumentError('quantidade deve ser maior que zero');
@@ -173,6 +175,7 @@ class ListasRepository {
             nome: nome,
             quantidade: Value(quantidade),
             unidade: Value(unidade.valor),
+            categoria: Value(categoria.valor),
             ordem: Value(ordem),
           ),
         );
@@ -190,6 +193,7 @@ class ListasRepository {
       nome: nome,
       quantidade: quantidade,
       unidade: unidade,
+      categoria: categoria,
       concluido: false,
       ordem: ordem,
       criadoEm: agora,
@@ -202,6 +206,7 @@ class ListasRepository {
     String? nome,
     double? quantidade,
     Unidade? unidade,
+    CategoriaItem? categoria,
     bool? concluido,
   }) async {
     if (quantidade != null && quantidade <= 0) {
@@ -215,6 +220,9 @@ class ListasRepository {
             ? const Value.absent()
             : Value(quantidade),
         unidade: unidade == null ? const Value.absent() : Value(unidade.valor),
+        categoria: categoria == null
+            ? const Value.absent()
+            : Value(categoria.valor),
         concluido: concluido == null ? const Value.absent() : Value(concluido),
         updatedAt: Value(agora),
       ),
@@ -371,6 +379,7 @@ class ListasRepository {
       'nome': i.nome,
       'quantidade': i.quantidade,
       'unidade': i.unidade,
+      'categoria': i.categoria,
       'concluido': i.concluido,
       'ordem': i.ordem,
       'created_at': _iso(i.createdAt),

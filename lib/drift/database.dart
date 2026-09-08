@@ -18,7 +18,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   /// Datas como texto ISO-8601 com microssegundos: o armazenamento padrão
   /// (unix segundos) truncava `updated_at` e criava empates artificiais no
@@ -45,6 +45,11 @@ class AppDatabase extends _$AppDatabase {
           "UPDATE mutacao_pendente SET "
           "ts_local = strftime('%Y-%m-%dT%H:%M:%fZ', ts_local, 'unixepoch')",
         );
+      }
+      if (de < 3) {
+        // v2 → v3: coluna categoria (doc 01 §3.2, ADR-011, F6-T02) —
+        // aditiva; itens existentes passam a 'outros' (default).
+        await m.addColumn(itemLocal, itemLocal.categoria);
       }
     },
     beforeOpen: (details) async {

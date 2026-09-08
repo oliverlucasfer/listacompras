@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/drift/database.dart';
+import 'package:sqlite3/sqlite3.dart' as sq3;
 
 /// CP F3-T02 (doc 14): migração v1 criada; CRUD local funciona.
 /// O sqlite3 3.x resolve a biblioteca nativa via native assets.
@@ -195,4 +198,114 @@ void main() {
       isEmpty,
     );
   });
+
+  test('deve_gravar_outros_quando_item_sem_categoria_f6t02', () async {
+    await db
+        .into(db.listaLocal)
+        .insert(
+          ListaLocalCompanion.insert(
+            id: '99999999-8888-8888-8888-888888888888',
+            createdAt: agora,
+            updatedAt: agora,
+            titulo: 'Com categoria',
+            donoId: 'user-a',
+          ),
+        );
+    await db
+        .into(db.itemLocal)
+        .insert(
+          ItemLocalCompanion.insert(
+            id: '88888888-8888-8888-8888-888888888888',
+            createdAt: agora,
+            updatedAt: agora,
+            listaId: '99999999-8888-8888-8888-888888888888',
+            nome: 'Sem categoria',
+          ),
+        );
+
+    final item =
+        await (db.select(db.itemLocal)..where(
+              (i) => i.id.equals('88888888-8888-8888-8888-888888888888'),
+            ))
+            .getSingle();
+    expect(item.categoria, 'outros');
+  });
+
+  test(
+    'deve_migrar_v2_para_v3_preservando_itens_com_outros_quando_abrir_banco_antigo',
+    () async {
+      // Banco real na versão v2 (sem coluna categoria): DDL espelhando o
+      // schema v2 gerado, dados gravados e user_version = 2.
+      final arquivo = File(
+        '${Directory.systemTemp.path}/v2_para_v3_${DateTime.now().microsecondsSinceEpoch}.sqlite',
+      );
+      addTearDown(() {
+        if (arquivo.existsSync()) arquivo.deleteSync();
+      });
+
+      final antigo = sq3.sqlite3.open(arquivo.path);
+      antigo.execute('''
+        CREATE TABLE lista_local (
+          id TEXT NOT NULL PRIMARY KEY,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          titulo TEXT NOT NULL,
+          dono_id TEXT NOT NULL,
+          deletado_em TEXT NULL,
+          FOREIGN KEY (dono_id) REFERENCES lista_local (id) ON DELETE CASCADE
+        );
+        CREATE TABLE item_local (
+          id TEXT NOT NULL PRIMARY KEY,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          lista_id TEXT NOT NULL REFERENCES lista_local (id) ON DELETE CASCADE,
+          nome TEXT NOT NULL,
+          quantidade REAL NOT NULL DEFAULT 1.0,
+          unidade TEXT NOT NULL DEFAULT 'un',
+          concluido INTEGER NOT NULL DEFAULT 0,
+          ordem INTEGER NOT NULL DEFAULT 0,
+          deletado_em TEXT NULL
+        );
+        CREATE TABLE mutacao_pendente (
+          id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+          tabela TEXT NOT NULL,
+          operacao TEXT NOT NULL,
+          registro_id TEXT NOT NULL,
+          payload TEXT NOT NULL,
+          ts_local TEXT NOT NULL,
+          tentativas INTEGER NOT NULL DEFAULT 0,
+          lista_id TEXT NOT NULL
+        );
+        PRAGMA user_version = 2;
+      ''');
+      antigo.execute(
+        "INSERT INTO lista_local (id, created_at, updated_at, titulo, dono_id) "
+        "VALUES ('99999999-9999-9999-9999-999999999999', "
+        "'2026-01-01T00:00:00.000000Z', '2026-01-01T00:00:00.000000Z', "
+        "'Antiga', 'user-a')",
+      );
+      antigo.execute(
+        "INSERT INTO item_local (id, created_at, updated_at, lista_id, nome, "
+        "quantidade, unidade, concluido, ordem) VALUES "
+        "('aaaa9999-9999-9999-9999-999999999999', "
+        "'2026-01-01T00:00:00.000000Z', '2026-01-01T00:00:00.000000Z', "
+        "'99999999-9999-9999-9999-999999999999', 'Detergente', 2.0, 'un', 0, 3)",
+      );
+      antigo.close();
+
+      final migrado = AppDatabase(NativeDatabase(arquivo));
+      addTearDown(migrado.close);
+
+      final item =
+          await (migrado.select(migrado.itemLocal)..where(
+                (i) => i.id.equals('aaaa9999-9999-9999-9999-999999999999'),
+              ))
+              .getSingle();
+      expect(item.nome, 'Detergente');
+      expect(item.quantidade, 2.0);
+      expect(item.ordem, 3);
+      expect(item.categoria, 'outros');
+      expect(item.deletadoEm, isNull);
+    },
+  );
 }
