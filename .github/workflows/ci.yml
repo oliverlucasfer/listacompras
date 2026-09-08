@@ -56,8 +56,10 @@ jobs:
         run: |
           # enable_confirmations=true (F3) exige usuários já confirmados via Admin API;
           # SERVICE_ROLE_KEY local = chave de ambiente de teste (07 §3), nunca produção.
-          # 2>&1: em alguns ambientes o status emite as vars pelo stderr
-          supabase status -o env 2>&1 | grep -E '^(export )?(API_URL|SERVICE_ROLE_KEY)=' | sed -E 's/^export //; s/"//g' >> "$GITHUB_ENV"
+          # 2>&1: o status pode emitir as vars pelo stderr. GITHUB_ENV só vale para
+          # steps subsequentes — o node roda no mesmo step, então usamos shell direto.
+          supabase status -o env 2>&1 | grep -E '^(export )?(API_URL|SERVICE_ROLE_KEY)=' | sed -E 's/^export //; s/"//g; s/^/export /' > /tmp/sb_env.sh
+          . /tmp/sb_env.sh
           npm ci --prefix supabase/tests
           node supabase/tests/parse_lista_e2e.mjs --sem-gemini
       # Fase 4+: deno test de novas functions, sync tests no job flutter
