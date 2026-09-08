@@ -124,28 +124,30 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 
 ## 3. Tela da Lista de Compras
 
-### 3.1. Uso normal
+### 3.1. Uso normal (Fase 6: agrupamento por categoria, RF-15)
 ```
 ┌─────────────────────────────────┐
 │  ← Compras da Semana      [⋮]   │ ← [⋮]: desmarcar todos, limpar
-│  ● Sincronizado                 │    concluídos, convidar*, renomear,
-├─────────────────────────────────┤    excluir lista
+│  ● Sincronizado                 │    concluídos, renomear, excluir lista
+├─────────────────────────────────┤
 │  Adicionar item                 │
-│  [____________________ (＋) ]   │ ← Enter salva imediatamente
+│  [____________________ (＋) ]   │ ← Enter salva já categorizado (§3 05)
 │                                 │
-│  ITENS (7)                      │
-│  ☐ Arroz            1 kg    ≡   │ ← swipe ←/→: editar/remover (undo)
-│  ☐ Leite            2 un    ≡   │
-│  ☐ Queijo prato     500 g   ≡   │ ← long-press: reordenar (drag)
-│  ☐ Café             1 pacote ≡  │
+│  HORTIFRÚTI (1)                 │ ← ordem dos grupos = ordem do enum
+│  ☐ Banana           1 dz    ≡   │    [01 §3.2]; contagem de pendentes
+│  MERCEARIA (2)                  │
+│  ☐ Arroz            1 kg    ≡   │ ← swipe ←/→: editar/remover (undo);
+│  ☐ Café             1 pacote ≡  │    drag restrito ao grupo
+│  LATICÍNIOS (2)                 │
+│  ☐ Leite            2 un    ≡   │ ← editar: dropdown de categoria
+│  ☐ Queijo prato     500 g   ≡   │
 │                                 │
-│  ▼ Itens Concluídos (3)         │ ← seção dobrável
+│  ▼ Itens Concluídos (3)         │ ← seção única, sem categorias
 │    ☑ Detergente     2 un        │
-│    ☐ Macarrão       500 g       │ ← desmarcar volta para "Itens"
+│    ☑ Macarrão       500 g       │ ← desmarcar devolve ao seu grupo
 │                                 │
 │  (🤖 Importar por IA)           │
 └─────────────────────────────────┘
-  (*Convidar: dono apenas, Fase 6 [08 §8](08-compartilhamento-colaborativo.md))
 ```
 
 ### 3.2. Estados do indicador de sync (AppBar, [03 §6](03-sincronizacao-offline.md))

@@ -6,6 +6,7 @@ import '../../../core/l10n/app_strings.dart';
 import '../../ia/ui/modal_importar_ia.dart';
 import '../../ia/ui/modal_previsao_ia.dart';
 import '../../sync/ui/indicador_sync.dart';
+import '../domain/categoria.dart';
 import '../domain/item.dart';
 import '../domain/unidade.dart';
 import '../providers/listas_providers.dart';
@@ -233,7 +234,16 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
           );
       }
     } else {
-      await repo.adicionarItem(listaId: widget.listaId, nome: nome);
+      // Sugestão local em camadas (F6-T03, spec §4): memória → dicionário
+      // → outros; zero rede.
+      final categoria = await ref
+          .read(sugestaoCategoriasProvider)
+          .sugerirCategoria(nome);
+      await repo.adicionarItem(
+        listaId: widget.listaId,
+        nome: nome,
+        categoria: categoria,
+      );
     }
     _controller.clear();
   }
@@ -264,16 +274,18 @@ class _ListaItens extends ConsumerWidget {
 
   final String listaId;
 
-  void _reordenar(
+  void _reordenarGrupo(
     WidgetRef ref,
-    List<Item> pendentes,
+    CategoriaItem categoria,
+    List<Item> grupo,
     int oldIndex,
     int newIndex,
   ) {
-    // onReorderItem já ajusta o newIndex para a remoção do item arrastado.
-    final ordenados = [...pendentes]
+    // Drag é restrito ao grupo (F6-T04, spec §6): reordena só os ids do
+    // grupo; a exibição ordena por (categoria, ordem, id).
+    final ordenados = [...grupo]
       ..removeAt(oldIndex)
-      ..insert(newIndex, pendentes[oldIndex]);
+      ..insert(newIndex, grupo[oldIndex]);
     ref.read(listasRepositoryProvider).reordenarItens(listaId, [
       for (final i in ordenados) i.id,
     ]);
@@ -286,57 +298,69 @@ class _ListaItens extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, _) => const Center(child: Text(AppStrings.erroGenerico)),
       data: (itens) {
-        final pendentes = itens.where((i) => !i.concluido).toList();
-        final concluidos = itens.where((i) => i.concluido).toList();
         if (itens.isEmpty) {
           return Center(child: Text(AppStrings.adicionarItem));
         }
-        return CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: _CabecalhoSecao(
-                '${AppStrings.itens} (${pendentes.length})',
-              ),
-            ),
-            SliverReorderableList(
-              itemCount: pendentes.length,
-              onReorderItem: (oldIndex, newIndex) =>
-                  _reordenar(ref, pendentes, oldIndex, newIndex),
-              itemBuilder: (context, index) => _LinhaItem(
-                key: ValueKey(pendentes[index].id),
-                listaId: listaId,
-                item: pendentes[index],
-                index: index,
-              ),
-            ),
-            if (concluidos.isNotEmpty)
+        final pendentes = itens.where((i) => !i.concluido).toList();
+        final concluidos = itens.where((i) => i.concluido).toList();
+        final slivers = <Widget>[];
+        // Grupos na ordem do enum (doc 01 §3.2); exibição = (categoria, ordem,
+        // id) — o stream já chega ordenado por (ordem, id).
+        for (final categoria in CategoriaItem.values) {
+          final grupo = pendentes
+              .where((i) => i.categoria == categoria)
+              .toList();
+          if (grupo.isEmpty) continue;
+          slivers
+            ..add(
               SliverToBoxAdapter(
-                child: ExpansionTile(
-                  tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-                  title: Text(
-                    '${AppStrings.itensConcluidos} (${concluidos.length})',
-                  ),
-                  children: [
-                    for (final item in concluidos)
-                      _LinhaItem(
-                        key: ValueKey(item.id),
-                        listaId: listaId,
-                        item: item,
-                        index: -1,
-                      ),
-                  ],
+                child: _CabecalhoGrupo('${categoria.rotulo} (${grupo.length})'),
+              ),
+            )
+            ..add(
+              SliverReorderableList(
+                itemCount: grupo.length,
+                onReorderItem: (oldIndex, newIndex) =>
+                    _reordenarGrupo(ref, categoria, grupo, oldIndex, newIndex),
+                itemBuilder: (context, index) => _LinhaItem(
+                  key: ValueKey(grupo[index].id),
+                  listaId: listaId,
+                  item: grupo[index],
+                  index: index,
                 ),
               ),
-            const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
-          ],
-        );
+            );
+        }
+        if (concluidos.isNotEmpty) {
+          slivers.add(
+            SliverToBoxAdapter(
+              child: ExpansionTile(
+                tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+                title: Text(
+                  '${AppStrings.itensConcluidos} (${concluidos.length})',
+                ),
+                children: [
+                  for (final item in concluidos)
+                    _LinhaItem(
+                      key: ValueKey(item.id),
+                      listaId: listaId,
+                      item: item,
+                      index: -1,
+                    ),
+                ],
+              ),
+            ),
+          );
+        }
+        slivers.add(const SliverPadding(padding: EdgeInsets.only(bottom: 24)));
+        return CustomScrollView(slivers: slivers);
       },
     );
   }
 }
 
-class _CabecalhoSecao extends StatelessWidget {
-  const _CabecalhoSecao(this.titulo);
+class _CabecalhoGrupo extends StatelessWidget {
+  const _CabecalhoGrupo(this.titulo);
 
   final String titulo;
 
@@ -492,6 +516,7 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
     text: _formatarQuantidade(widget.item.quantidade),
   );
   late Unidade _unidade = widget.item.unidade;
+  late CategoriaItem _categoria = widget.item.categoria;
 
   @override
   void dispose() {
@@ -518,6 +543,7 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
           nome: nome,
           quantidade: quantidade,
           unidade: _unidade,
+          categoria: _categoria,
         );
     if (mounted) Navigator.pop(context);
   }
@@ -587,6 +613,22 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
               ],
               onChanged: (u) {
                 if (u != null) setState(() => _unidade = u);
+              },
+            ),
+            const SizedBox(height: 12),
+            // Categoria (F6-T04, spec §6): mudar de grupo via edição.
+            DropdownButtonFormField<CategoriaItem>(
+              initialValue: _categoria,
+              decoration: const InputDecoration(
+                labelText: 'Categoria',
+                border: OutlineInputBorder(),
+              ),
+              items: [
+                for (final c in CategoriaItem.values)
+                  DropdownMenuItem(value: c, child: Text(c.rotulo)),
+              ],
+              onChanged: (c) {
+                if (c != null) setState(() => _categoria = c);
               },
             ),
           ],

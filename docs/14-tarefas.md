@@ -154,7 +154,7 @@ Spec do agrupamento por categoria: [superpowers/specs/2026-09-08-agrupamento-cat
 - [x] **F6-T03** — Cadeia de sugestão local (memória por nome → dicionário estático → `outros`)
   Dep: F6-T02 · Docs: [05 §3](05-app-flutter.md)
   CP: função pura; memória vence dicionário; match multi-palavra vence single ("leite condensado" → mercearia); fallback `outros`; unit tests dos 4 casos.
-- [ ] **F6-T04** — UI: grupos por categoria, contagem, drag interno, dropdown no editar
+- [x] **F6-T04** — UI: grupos por categoria, contagem, drag interno, dropdown no editar
   Dep: F6-T02, F6-T03 · Docs: [05 §6.3](05-app-flutter.md), [10 §3](10-wireframes-telas.md)
   CP: wireframe atualizado atendido; headers `Label (n)` na ordem do enum; drag só dentro do grupo; Enter aplica sugestão; concluídos sem grupos; widget tests.
 - [ ] **F6-T05** — IA com categoria (prompt + `responseSchema` + cliente tolerante + pré-visualização)
@@ -179,8 +179,8 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | F3 App Core | 9 | 9 |
 | F4 IA + Sync | 9 | 9 |
 | F5 Publicação | 7 | 5 |
-| F6 Pós-MVP | 7 | 4 |
-| **Total** | **45** | **40** |
+| F6 Pós-MVP | 7 | 5 |
+| **Total** | **45** | **41** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

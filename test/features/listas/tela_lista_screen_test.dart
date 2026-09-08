@@ -12,6 +12,7 @@ import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/ia/data/parse_lista_client.dart';
 import 'package:lista_compras/features/ia/providers/ia_providers.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
+import 'package:lista_compras/features/listas/domain/categoria.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
 import 'package:lista_compras/features/listas/domain/unidade.dart';
@@ -39,12 +40,21 @@ void main() {
       titulo: 'Compras da Semana',
       donoId: 'user-a',
     );
-    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
-    await repo.adicionarItem(listaId: lista.id, nome: 'Leite');
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      categoria: CategoriaItem.mercearia,
+    );
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Leite',
+      categoria: CategoriaItem.laticinios,
+    );
     if (comConcluido) {
       final detergente = await repo.adicionarItem(
         listaId: lista.id,
         nome: 'Detergente',
+        categoria: CategoriaItem.limpeza,
       );
       await repo.editarItem(detergente.id, concluido: true);
     }
@@ -79,12 +89,68 @@ void main() {
     expect(find.text('Leite'), findsOneWidget);
     expect(find.text('1 kg'), findsNothing);
     expect(find.text('1 un'), findsNWidgets(2));
-    expect(find.text('${AppStrings.itens} (2)'), findsOneWidget);
+    // Grupos por categoria com contagem (F6-T04); sem cabeçalho global.
+    expect(find.text('Mercearia (1)'), findsOneWidget);
+    expect(find.text('Laticínios (1)'), findsOneWidget);
+    expect(find.text('${AppStrings.itens} (2)'), findsNothing);
     expect(find.text('${AppStrings.itensConcluidos} (1)'), findsOneWidget);
 
     await tester.tap(find.text('${AppStrings.itensConcluidos} (1)'));
     await tester.pumpAndSettle();
     expect(find.text('Detergente'), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_agrupar_pendentes_na_ordem_do_enum_quando_exibir_f6t04', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Leite',
+      categoria: CategoriaItem.laticinios,
+    );
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Banana',
+      categoria: CategoriaItem.hortifruti,
+    );
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      categoria: CategoriaItem.mercearia,
+    );
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Café',
+      categoria: CategoriaItem.mercearia,
+    );
+    final sync = StreamController<SyncStatus>();
+    sync.add(const Sincronizado());
+    addTearDown(sync.close);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          syncStatusProvider.overrideWith((ref) => sync.stream),
+        ],
+        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Hortifrúti (1)'), findsOneWidget);
+    expect(find.text('Mercearia (2)'), findsOneWidget);
+    expect(find.text('Laticínios (1)'), findsOneWidget);
+
+    // Ordem dos grupos segue o enum: Hortifrúti < Mercearia < Laticínios.
+    final dyHorti = tester.getTopLeft(find.text('Hortifrúti (1)')).dy;
+    final dyMerce = tester.getTopLeft(find.text('Mercearia (2)')).dy;
+    final dyLatic = tester.getTopLeft(find.text('Laticínios (1)')).dy;
+    expect(dyHorti, lessThan(dyMerce));
+    expect(dyMerce, lessThan(dyLatic));
 
     await fechar(tester);
   });
@@ -100,8 +166,27 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Café'), findsOneWidget);
-    expect(find.text('${AppStrings.itens} (3)'), findsOneWidget);
+    expect(find.text('Mercearia (2)'), findsOneWidget);
     expect(find.text('1 un'), findsNWidgets(3));
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_aplicar_sugestao_local_quando_adicionar_rapido_f6t04', (
+    tester,
+  ) async {
+    await listaComItens(tester);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      'Detergente',
+    );
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    // Dicionário: detergente → limpeza (sem memória prévia).
+    expect(find.text('Detergente'), findsOneWidget);
+    expect(find.text('Limpeza (1)'), findsOneWidget);
 
     await fechar(tester);
   });
@@ -137,7 +222,8 @@ void main() {
     await tester.tap(checkboxArroz);
     await tester.pumpAndSettle();
 
-    expect(find.text('${AppStrings.itens} (1)'), findsOneWidget);
+    expect(find.text('Laticínios (1)'), findsOneWidget);
+    expect(find.text('Mercearia (1)'), findsNothing);
     expect(find.text('${AppStrings.itensConcluidos} (1)'), findsOneWidget);
 
     await tester.tap(find.text('${AppStrings.itensConcluidos} (1)'));
@@ -150,7 +236,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('${AppStrings.itens} (2)'), findsOneWidget);
+    expect(find.text('Mercearia (1)'), findsOneWidget);
     expect(find.text('Arroz'), findsOneWidget);
 
     await fechar(tester);
@@ -165,14 +251,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Arroz'), findsNothing);
-    expect(find.text('${AppStrings.itens} (1)'), findsOneWidget);
+    expect(find.text('Laticínios (1)'), findsOneWidget);
     expect(find.text(AppStrings.itemRemovido), findsOneWidget);
 
     await tester.tap(find.text(AppStrings.desfazer));
     await tester.pumpAndSettle();
 
     expect(find.text('Arroz'), findsOneWidget);
-    expect(find.text('${AppStrings.itens} (2)'), findsOneWidget);
+    expect(find.text('Mercearia (1)'), findsOneWidget);
 
     await fechar(tester);
   });
@@ -218,7 +304,8 @@ void main() {
     await tester.tap(find.text(AppStrings.desmarcarTodos));
     await tester.pumpAndSettle();
 
-    expect(find.text('${AppStrings.itens} (2)'), findsOneWidget);
+    expect(find.text('Mercearia (1)'), findsOneWidget);
+    expect(find.text('Laticínios (1)'), findsOneWidget);
     expect(find.byType(ExpansionTile), findsNothing);
 
     await fechar(tester);
@@ -238,7 +325,8 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, AppStrings.limpar));
     await tester.pumpAndSettle();
 
-    expect(find.text('${AppStrings.itens} (2)'), findsOneWidget);
+    expect(find.text('Mercearia (1)'), findsOneWidget);
+    expect(find.text('Laticínios (1)'), findsOneWidget);
     expect(find.byType(ExpansionTile), findsNothing);
     expect(find.text('Detergente'), findsNothing);
 
@@ -362,35 +450,137 @@ void main() {
     await fechar(tester);
   });
 
-  testWidgets('deve_reordenar_itens_quando_arrastar_alca', (tester) async {
-    await listaComItens(tester);
+  testWidgets('deve_reordenar_dentro_do_grupo_quando_arrastar_alca_f6t04', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      categoria: CategoriaItem.mercearia,
+    ); // mercearia
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Feijão',
+      categoria: CategoriaItem.mercearia,
+    ); // mercearia
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Leite',
+      categoria: CategoriaItem.laticinios,
+    ); // laticinios
+    final sync = StreamController<SyncStatus>();
+    sync.add(const Sincronizado());
+    addTearDown(sync.close);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          syncStatusProvider.overrideWith((ref) => sync.stream),
+        ],
+        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+      ),
+    );
+    await tester.pumpAndSettle();
 
-    // Arrasta a alça do primeiro item (Arroz) uma posição para baixo: o
-    // item precisa cruzar o topo do segundo (~2×56px) para trocar de lugar.
+    // Arrasta a alça do Arroz (1º do grupo Mercearia) sobre o Feijão:
+    // troca de posição dentro do grupo; Leite (outro grupo) fica intacto.
     await tester.drag(
       find.byIcon(Icons.drag_handle).first,
       const Offset(0, 150),
     );
     await tester.pumpAndSettle();
 
-    final dyLeite = tester.getTopLeft(find.text('Leite')).dy;
+    final dyFeijao = tester.getTopLeft(find.text('Feijão')).dy;
     final dyArroz = tester.getTopLeft(find.text('Arroz')).dy;
-    expect(dyLeite, lessThan(dyArroz));
+    expect(dyFeijao, lessThan(dyArroz));
 
     final itens = await (db.select(
       db.itemLocal,
     )..where((i) => i.deletadoEm.isNull())).get();
     final arroz = itens.firstWhere((i) => i.nome == 'Arroz');
+    final feijao = itens.firstWhere((i) => i.nome == 'Feijão');
     final leite = itens.firstWhere((i) => i.nome == 'Leite');
-    expect(leite.ordem, 0);
+    expect(feijao.ordem, 0);
     expect(arroz.ordem, 1);
+    expect(leite.ordem, 2); // outro grupo — sem mutação
 
     final mutacoes = await (db.select(db.mutacaoPendente)).get();
     final idsComUpdate = mutacoes
         .where((m) => m.operacao == 'UPDATE' && m.tabela == 'itens_lista')
         .map((m) => m.registroId)
         .toSet();
-    expect(idsComUpdate, containsAll([arroz.id, leite.id]));
+    expect(idsComUpdate, {arroz.id, feijao.id});
+
+    await fechar(tester);
+  });
+
+  testWidgets(
+    'deve_manter_item_no_grupo_quando_arrastar_grupo_com_um_item_f6t04',
+    (tester) async {
+      await listaComItens(tester); // Arroz único em Mercearia
+
+      // Grupo com 1 item: arrastar a alça não muda nada.
+      await tester.drag(
+        find.byIcon(Icons.drag_handle).first,
+        const Offset(0, 300),
+      );
+      await tester.pumpAndSettle();
+
+      final arroz =
+          (await (db.select(
+            db.itemLocal,
+          )..where((i) => i.deletadoEm.isNull())).get()).firstWhere(
+            (i) => i.nome == 'Arroz',
+          );
+      expect(arroz.ordem, 0);
+
+      final mutacoes = await (db.select(db.mutacaoPendente)).get();
+      expect(
+        mutacoes.where(
+          (m) => m.operacao == 'UPDATE' && m.tabela == 'itens_lista',
+        ),
+        isEmpty,
+      );
+
+      await fechar(tester);
+    },
+  );
+
+  testWidgets('deve_editar_categoria_quando_swipe_direita_f6t04', (
+    tester,
+  ) async {
+    await listaComItens(tester);
+
+    await tester.drag(find.text('Arroz'), const Offset(500, 0));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.editarItem), findsOneWidget);
+
+    await tester.tap(find.byType(DropdownButtonFormField<CategoriaItem>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Frios').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.pumpAndSettle();
+
+    // Arroz saiu de Mercearia e entrou em Frios.
+    expect(find.text('Frios (1)'), findsOneWidget);
+    expect(find.text('Mercearia (1)'), findsNothing);
+    expect(find.text('Laticínios (1)'), findsOneWidget);
+
+    final itens = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.deletadoEm.isNull())).get();
+    expect(itens.firstWhere((i) => i.nome == 'Arroz').categoria, 'frios');
+
+    final mutacoes = await (db.select(db.mutacaoPendente)).get();
+    final payload = mutacoes
+        .where((m) => m.operacao == 'UPDATE' && m.tabela == 'itens_lista')
+        .map((m) => m.payload)
+        .last;
+    expect(payload, contains('"categoria":"frios"'));
 
     await fechar(tester);
   });

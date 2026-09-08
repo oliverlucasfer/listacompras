@@ -134,17 +134,19 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 ### 6.3. Tela da Lista de Compras
 | Elemento | Comportamento |
 | :--- | :--- |
-| Campo "Adicionar item" | Fixo no topo; Enter salva imediatamente (escrita local + fila) |
+| Campo "Adicionar item" | Fixo no topo; Enter salva imediatamente (escrita local + fila) com a categoria sugerida pelas camadas locais (§3, Fase 6) |
+| Itens pendentes | **Agrupados por categoria** na ordem do enum ([01 §3.2](01-banco-de-dados.md)); header por grupo: `Frios (3)` com contagem de pendentes; grupos vazios não renderizam (Fase 6, RF-15) |
+| Exibição | Ordenação determinística entre dispositivos: `(categoria, ordem, id)` |
 | Item | Nome, quantidade + unidade, checkbox |
-| Checkbox marcada | Item move para seção dobrável "Itens Concluídos (n)" |
-| Swipe direita/esquerda | Editar / Remover (com undo via SnackBar) |
+| Checkbox marcada | Item move para seção dobrável "Itens Concluídos (n)" — **sem divisão por categoria** (Fase 6) |
+| Swipe direita/esquerda | Editar / Remover (com undo via SnackBar); edição inclui **dropdown de categoria** ao lado das unidades (Fase 6) |
 | Botão de importação IA | Abre modal (6.4) |
 | Menu (⋮) | "Desmarcar todos", "Limpar concluídos", "Renomear lista", "Excluir lista" |
-| Ações em massa | Reaproveitar lista (desmarcar todos) e limpar concluídos — confirmação para destrutivas |
+| Ações em massa | Reaproveitar lista (desmarcar todos) e limpar concluídos — confirmação para destrutivas; "desmarcar" devolve o item ao seu grupo |
 | Indicador de sync | Estado de [03 §6](03-sincronizacao-offline.md) no AppBar |
 
-* **Reordenar:** drag-and-drop atualiza `ordem` (persistência local + fila).
-* Quantidades: stepper + input direto; unidades restritas ao enum ([01 §3](01-banco-de-dados.md)).
+* **Reordenar (Fase 6):** drag-and-drop restrito **ao grupo da categoria** — reordena só os itens do grupo (grava `ordem` local + fila); mudar de categoria é pelo dropdown do editar. Exibição continua `(categoria, ordem, id)` — sem coluna nova.
+* Quantidades: stepper + input direto; unidades restritas ao enum ([01 §3.1](01-banco-de-dados.md)).
 * Tentativa de item duplicado (mesmo nome ativo): sugerir aumento de quantidade em vez de bloquear.
 
 ### 6.4. Modal "Importar por IA"
