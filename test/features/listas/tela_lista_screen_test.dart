@@ -743,4 +743,108 @@ void main() {
     );
     await fechar(tester);
   });
+
+  // ---- Papel na tela da lista (F7-T04, doc 08 §1, RF-13) ----
+
+  testWidgets('deve_mostrar_banner_e_menu_reduzido_quando_leitor_f7t04', (
+    tester,
+  ) async {
+    await listaComItens(tester, papel: Papel.leitor);
+
+    // Banner fixo de somente leitura (surfaceVariant).
+    final banner = find.text(AppStrings.somenteLeitura);
+    expect(banner, findsOneWidget);
+    expect(find.text(AppStrings.somenteLeituraDica), findsOneWidget);
+    expect(
+      tester
+          .widget<Container>(
+            find.ancestor(of: banner, matching: find.byType(Container)).first,
+          )
+          .color,
+      isNotNull,
+    );
+
+    // Menu do leitor: sem escritas em massa, sem renomear/excluir/convidar.
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.desmarcarTodos), findsNothing);
+    expect(find.text(AppStrings.limparConcluidos), findsNothing);
+    expect(find.text(AppStrings.renomearLista), findsNothing);
+    expect(find.text(AppStrings.excluirLista), findsNothing);
+    expect(find.text(AppStrings.convidar), findsNothing);
+    expect(find.text(AppStrings.membros), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_bloquear_escritas_quando_leitor_f7t04', (tester) async {
+    await listaComItens(tester, papel: Papel.leitor);
+
+    // Sem campo adicionar, sem botão IA, sem checkbox, sem swipe, sem alça.
+    expect(find.byType(TextField), findsNothing);
+    expect(find.byType(Checkbox), findsNothing);
+    expect(find.byIcon(Icons.drag_handle), findsNothing);
+    expect(find.text(AppStrings.importarPorIa), findsNothing);
+
+    // Swipe não abre edição nem remove (Dismissible não existe).
+    await tester.drag(find.text('Arroz'), const Offset(-500, 0));
+    await tester.pumpAndSettle();
+    expect(find.text('Arroz'), findsOneWidget);
+    expect(find.text(AppStrings.itemRemovido), findsNothing);
+    expect(find.byType(SnackBar), findsNothing);
+
+    final itens = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.deletadoEm.isNull())).get();
+    expect(itens.firstWhere((i) => i.nome == 'Arroz').concluido, isFalse);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_esconder_itens_dono_quando_editor_f7t04', (tester) async {
+    await listaComItens(tester, papel: Papel.editor);
+
+    // Editor escreve: campo, IA, checkbox.
+    expect(
+      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      findsOneWidget,
+    );
+    expect(find.text(AppStrings.importarPorIa), findsOneWidget);
+    expect(find.byType(Checkbox), findsWidgets);
+
+    // Menu: dono-only ausente; demais escritas presentes.
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.excluirLista), findsNothing);
+    expect(find.text(AppStrings.convidar), findsNothing);
+    expect(find.text(AppStrings.membros), findsOneWidget);
+    expect(find.text(AppStrings.desmarcarTodos), findsOneWidget);
+    expect(find.text(AppStrings.limparConcluidos), findsOneWidget);
+    expect(find.text(AppStrings.renomearLista), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_manter_tudo_quando_dono_f7t04', (tester) async {
+    await listaComItens(tester, papel: Papel.dono);
+
+    expect(
+      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      findsOneWidget,
+    );
+    expect(find.text(AppStrings.importarPorIa), findsOneWidget);
+    expect(find.byType(Checkbox), findsWidgets);
+    expect(find.text(AppStrings.somenteLeitura), findsNothing);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.excluirLista), findsOneWidget);
+    expect(find.text(AppStrings.convidar), findsOneWidget);
+    expect(find.text(AppStrings.membros), findsOneWidget);
+    expect(find.text(AppStrings.desmarcarTodos), findsOneWidget);
+    expect(find.text(AppStrings.limparConcluidos), findsOneWidget);
+    expect(find.text(AppStrings.renomearLista), findsOneWidget);
+
+    await fechar(tester);
+  });
 }

@@ -163,59 +163,99 @@ class TelaListaScreen extends ConsumerWidget {
               PopupMenuButton<String>(
                 tooltip: 'Menu',
                 onSelected: (acao) => _acaoMenu(context, ref, lista.id, acao),
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'desmarcar',
-                    child: Text(AppStrings.desmarcarTodos),
-                  ),
-                  const PopupMenuItem(
-                    value: 'limpar',
-                    child: Text(AppStrings.limparConcluidos),
-                  ),
-                  const PopupMenuItem(
-                    value: 'renomear',
-                    child: Text(AppStrings.renomearLista),
-                  ),
-                  // Membros (doc 08 §8) todos veem; "Convidar" é ação de dono
-                  // (doc 08 §1). Papel reativo do PapelRepository (F7-T03);
-                  // loading/null = desconhecido → trata como não-dono.
-                  const PopupMenuItem(
-                    value: 'membros',
-                    child: Text(AppStrings.membros),
-                  ),
-                  if (_papelNaLista(ref, lista.id) == Papel.dono)
+                itemBuilder: (context) {
+                  // Papel (doc 08 §1, F7-T04): editor escreve itens, dono
+                  // além disso exclui lista e convida; leitor só navega a
+                  // membros. Papel reativo (F7-T03); loading/null = leitor.
+                  final papel = _papelNaLista(ref, lista.id);
+                  final podeEscrever =
+                      papel == Papel.dono || papel == Papel.editor;
+                  final ehDono = papel == Papel.dono;
+                  return [
+                    if (podeEscrever)
+                      const PopupMenuItem(
+                        value: 'desmarcar',
+                        child: Text(AppStrings.desmarcarTodos),
+                      ),
+                    if (podeEscrever)
+                      const PopupMenuItem(
+                        value: 'limpar',
+                        child: Text(AppStrings.limparConcluidos),
+                      ),
+                    if (podeEscrever)
+                      const PopupMenuItem(
+                        value: 'renomear',
+                        child: Text(AppStrings.renomearLista),
+                      ),
+                    // Membros (doc 08 §8) todos veem; navegação inclui
+                    // "Sair da lista" para não-donos.
                     const PopupMenuItem(
-                      value: 'convidar',
-                      child: Text(AppStrings.convidar),
+                      value: 'membros',
+                      child: Text(AppStrings.membros),
                     ),
-                  const PopupMenuItem(
-                    value: 'excluir',
-                    child: Text(
-                      AppStrings.excluirLista,
-                      style: TextStyle(color: Colors.red),
-                    ),
-                  ),
-                ],
+                    if (ehDono)
+                      const PopupMenuItem(
+                        value: 'convidar',
+                        child: Text(AppStrings.convidar),
+                      ),
+                    if (ehDono)
+                      const PopupMenuItem(
+                        value: 'excluir',
+                        child: Text(
+                          AppStrings.excluirLista,
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                  ];
+                },
               ),
             ],
           ),
           body: Column(
             children: [
               const IndicadorSync(),
-              _CampoAdicionar(listaId: listaId),
+              if (_papelNaLista(ref, lista.id) == Papel.leitor)
+                const _BannerSomenteLeitura(),
+              if (_papelNaLista(ref, lista.id) != Papel.leitor)
+                _CampoAdicionar(listaId: listaId),
               Expanded(child: _ListaItens(listaId: listaId)),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                child: OutlinedButton.icon(
-                  onPressed: () => _importarPorIa(context, ref, listaId),
-                  icon: const Icon(Icons.smart_toy_outlined),
-                  label: const Text(AppStrings.importarPorIa),
+              if (_papelNaLista(ref, lista.id) != Papel.leitor)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                  child: OutlinedButton.icon(
+                    onPressed: () => _importarPorIa(context, ref, listaId),
+                    icon: const Icon(Icons.smart_toy_outlined),
+                    label: const Text(AppStrings.importarPorIa),
+                  ),
                 ),
-              ),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+class _BannerSomenteLeitura extends StatelessWidget {
+  const _BannerSomenteLeitura();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            AppStrings.somenteLeitura,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const Text(AppStrings.somenteLeituraDica),
+        ],
+      ),
     );
   }
 }
@@ -321,13 +361,19 @@ class _ListaItens extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final papel =
+        ref.watch(papelNaListaStreamProvider(listaId)).value ??
+        (ref.watch(papelRepositoryProvider).papelDe(listaId) ?? Papel.leitor);
+    final podeEscrever = papel != Papel.leitor;
     final itensAsync = ref.watch(itensDaListaProvider(listaId));
     return itensAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, _) => const Center(child: Text(AppStrings.erroGenerico)),
       data: (itens) {
         if (itens.isEmpty) {
-          return Center(child: Text(AppStrings.adicionarItem));
+          return Center(
+            child: Text(podeEscrever ? AppStrings.adicionarItem : ''),
+          );
         }
         final pendentes = itens.where((i) => !i.concluido).toList();
         final concluidos = itens.where((i) => i.concluido).toList();
@@ -346,17 +392,35 @@ class _ListaItens extends ConsumerWidget {
               ),
             )
             ..add(
-              SliverReorderableList(
-                itemCount: grupo.length,
-                onReorderItem: (oldIndex, newIndex) =>
-                    _reordenarGrupo(ref, categoria, grupo, oldIndex, newIndex),
-                itemBuilder: (context, index) => _LinhaItem(
-                  key: ValueKey(grupo[index].id),
-                  listaId: listaId,
-                  item: grupo[index],
-                  index: index,
-                ),
-              ),
+              podeEscrever
+                  ? SliverReorderableList(
+                      itemCount: grupo.length,
+                      onReorderItem: (oldIndex, newIndex) => _reordenarGrupo(
+                        ref,
+                        categoria,
+                        grupo,
+                        oldIndex,
+                        newIndex,
+                      ),
+                      itemBuilder: (context, index) => _LinhaItem(
+                        key: ValueKey(grupo[index].id),
+                        listaId: listaId,
+                        item: grupo[index],
+                        index: index,
+                      ),
+                    )
+                  : SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => _LinhaItem(
+                          key: ValueKey(grupo[index].id),
+                          listaId: listaId,
+                          item: grupo[index],
+                          index: -1,
+                          podeEscrever: false,
+                        ),
+                        childCount: grupo.length,
+                      ),
+                    ),
             );
         }
         if (concluidos.isNotEmpty) {
@@ -374,6 +438,7 @@ class _ListaItens extends ConsumerWidget {
                       listaId: listaId,
                       item: item,
                       index: -1,
+                      podeEscrever: podeEscrever,
                     ),
                 ],
               ),
@@ -413,6 +478,7 @@ class _LinhaItem extends ConsumerWidget {
     required this.listaId,
     required this.item,
     required this.index,
+    this.podeEscrever = true,
   });
 
   final String listaId;
@@ -421,8 +487,46 @@ class _LinhaItem extends ConsumerWidget {
   /// Posição na seção reordenável; concluídos não participam (-1).
   final int index;
 
+  /// Leitor (doc 08 §1, F7-T04): sem checkbox, sem swipe, sem alça.
+  final bool podeEscrever;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final linha = ListTile(
+      leading: podeEscrever
+          ? Checkbox(
+              value: item.concluido,
+              onChanged: (_) => ref
+                  .read(listasRepositoryProvider)
+                  .editarItem(item.id, concluido: !item.concluido),
+            )
+          : const SizedBox(width: 40),
+      title: Text(
+        item.nome,
+        style: item.concluido
+            ? const TextStyle(decoration: TextDecoration.lineThrough)
+            : null,
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('${_formatarQuantidade(item.quantidade)} ${item.unidade.valor}'),
+          if (podeEscrever && index >= 0)
+            ReorderableDragStartListener(
+              index: index,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Icon(
+                  Icons.drag_handle,
+                  size: 24,
+                  semanticLabel: AppStrings.reordenar,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+    if (!podeEscrever) return linha;
     // Capturado antes de qualquer remoção: o undo do SnackBar pode rodar
     // após este widget desmontar (Riverpod proíbe ref pós-unmount).
     final repo = ref.read(listasRepositoryProvider);
@@ -458,39 +562,7 @@ class _LinhaItem extends ConsumerWidget {
           );
         return true;
       },
-      child: ListTile(
-        leading: Checkbox(
-          value: item.concluido,
-          onChanged: (_) =>
-              repo.editarItem(item.id, concluido: !item.concluido),
-        ),
-        title: Text(
-          item.nome,
-          style: item.concluido
-              ? const TextStyle(decoration: TextDecoration.lineThrough)
-              : null,
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '${_formatarQuantidade(item.quantidade)} ${item.unidade.valor}',
-            ),
-            if (index >= 0)
-              ReorderableDragStartListener(
-                index: index,
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Icon(
-                    Icons.drag_handle,
-                    size: 24,
-                    semanticLabel: AppStrings.reordenar,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
+      child: linha,
     );
   }
 

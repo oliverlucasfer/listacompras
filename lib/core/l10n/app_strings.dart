@@ -74,6 +74,11 @@ abstract final class AppStrings {
   static const unidade = 'Unidade';
   static const listaNaoEncontrada = 'Lista não encontrada.';
 
+  // Papel do usuário na lista (doc 08 §1, RF-13, F7-T04)
+  static const somenteLeitura = 'Somente leitura';
+  static const somenteLeituraDica =
+      'Você pode visualizar esta lista, mas não editá-la.';
+
   // Ações em massa (doc 05 §6.3, wireframe 10 §3.4)
   static const desmarcarTodos = 'Desmarcar todos';
   static const limparConcluidos = 'Limpar concluídos';
