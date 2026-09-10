@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:drift/native.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/convites/data/papel_repository.dart';
 import 'package:lista_compras/features/convites/domain/papel.dart';
+import 'package:lista_compras/features/convites/providers/papel_providers.dart';
 import 'package:lista_compras/features/sync/data/mutacao_sync.dart';
 import 'package:lista_compras/features/sync/data/supabase_bootstrap.dart';
 import 'package:lista_compras/features/sync/data/sync_engine.dart';
@@ -184,5 +186,30 @@ void main() {
 
     papelRepository.remover('l1');
     expect(papelRepository.papelDe('l1'), isNull);
+  });
+
+  test('deve_refletir_papel_na_ui_quando_realtime_muda', () async {
+    // papelNaListaStreamProvider assiste o repository — o realtime da
+    // F7-T06 (via PapelRepository.atualizar) precisa re-render na UI.
+    final papelRepository = PapelRepository(
+      _cliente(ServidorFake((req) => (200, <Map<String, Object?>>[]))),
+    );
+    final container = ProviderContainer(
+      overrides: [papelRepositoryProvider.overrideWithValue(papelRepository)],
+    );
+    addTearDown(container.dispose);
+
+    final eventos = <AsyncValue<Papel?>>[];
+    container.listen(
+      papelNaListaStreamProvider('l1'),
+      (anterior, atual) => eventos.add(atual),
+    );
+    await pumpEventQueue();
+    expect(eventos.last.value, isNull);
+
+    papelRepository.atualizar('l1', Papel.editor);
+    await pumpEventQueue();
+
+    expect(eventos.last.value, Papel.editor);
   });
 }

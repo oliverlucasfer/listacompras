@@ -7,12 +7,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/convites/data/papel_repository.dart';
+import 'package:lista_compras/features/convites/domain/papel.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/sync/data/supabase_bootstrap.dart';
 import 'package:lista_compras/features/sync/data/sync_engine.dart';
 import 'package:lista_compras/features/sync/data/sync_remoto.dart';
 import 'package:lista_compras/features/sync/data/mutacao_sync.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../convites/servidor_fake.dart';
 
 class RemotoFake implements SyncRemoto {
   final recebidas = <MutacaoSync>[];
@@ -56,6 +59,98 @@ class HttpPapelFalho implements http.Client {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// Canal fake que captura os callbacks de PostgresChanges registrados pelo
+/// bootstrap, permitindo simular eventos de realtime no teste.
+class CanalFake implements RealtimeChannel {
+  final callbacks = <void Function(PostgresChangePayload)>[];
+
+  @override
+  RealtimeChannel onPostgresChanges({
+    required PostgresChangeEvent event,
+    String? schema,
+    String? table,
+    PostgresChangeFilter? filter,
+    List<PostgresChangeFilter>? filters,
+    List<String>? select,
+    required void Function(PostgresChangePayload payload) callback,
+  }) {
+    callbacks.add(callback);
+    return this;
+  }
+
+  @override
+  RealtimeChannel subscribe([
+    void Function(RealtimeSubscribeStatus status, Object? error)? callback,
+    Duration? timeout,
+  ]) => this;
+
+  void enviar(PostgresChangePayload payload) {
+    for (final callback in [...callbacks]) {
+      callback(payload);
+    }
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('$invocation');
+}
+
+/// Auth fake — bootstrap acessa apenas `onAuthStateChange` quando nenhuma
+/// stream de usuário é injetada.
+class AutenticacaoFake implements GoTrueClient {
+  @override
+  Stream<AuthState> get onAuthStateChange => const Stream.empty();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('$invocation');
+}
+
+/// Cliente fake entregando o [CanalFake] — apenas channel/removeChannel
+/// são usados pelo bootstrap quando `baixar` e auth são injetados.
+class ClienteFake implements SupabaseClient {
+  final canal = CanalFake();
+  final _auth = AutenticacaoFake();
+  final canaisRemovidos = <RealtimeChannel>[];
+
+  @override
+  GoTrueClient get auth => _auth;
+
+  @override
+  RealtimeChannel channel(
+    String name, {
+    RealtimeChannelConfig opts = const RealtimeChannelConfig(),
+  }) => canal;
+
+  @override
+  Future<String> removeChannel(RealtimeChannel channel) async {
+    canaisRemovidos.add(channel);
+    return 'ok';
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('$invocation');
+}
+
+PostgresChangePayload eventoMembro(
+  PostgresChangeEvent evento,
+  Map<String, Object?> registro, {
+  Map<String, Object?>? oldRecord,
+}) {
+  return PostgresChangePayload(
+    schema: 'public',
+    table: 'lista_membros',
+    commitTimestamp: DateTime.utc(2026, 9, 10, 12),
+    eventType: evento,
+    newRecord: evento == PostgresChangeEvent.delete ? const {} : registro,
+    oldRecord: evento == PostgresChangeEvent.delete
+        ? registro
+        : (oldRecord ?? {}),
+    errors: null,
+  );
+}
+
 void main() {
   late AppDatabase db;
   late ListasRepository repo;
@@ -72,6 +167,29 @@ void main() {
   tearDown(() async {
     await db.close();
   });
+
+  SupabaseBootstrap criarComRealtime({
+    required ClienteFake cliente,
+    Stream<String?>? usuario,
+    String? usuarioSalvo,
+    PapelRepository? papelRepo,
+  }) {
+    return SupabaseBootstrap(
+      db: db,
+      engine: SyncEngine(
+        db: db,
+        remoto: remoto,
+        checarConexao: () async => true,
+      ),
+      client: cliente,
+      baixar: (tabela) async => remotos[tabela] ?? const [],
+      mudancasDeUsuario: usuario,
+      papelRepository: papelRepo,
+      checarConexao: () async => true,
+      lerUsuarioSalvo: () async => usuarioSalvo,
+      salvarUsuario: (id) async {},
+    );
+  }
 
   SupabaseBootstrap criar({
     Stream<String?>? usuario,
@@ -342,5 +460,132 @@ void main() {
     );
     expect(httpFalho.pedidos, isNotEmpty); // carga de papel foi tentada
     expect(papelRepo.valores, isEmpty); // papéis seguem vazios sem quebrar
+  });
+
+  test('deve_limpar_cache_quando_membro_removido_sou_eu', () async {
+    // DELETE com REPLICA IDENTITY FULL traz user_id no old_record (08 §7).
+    final cliente = ClienteFake();
+    final papelRepo = PapelRepository(
+      SupabaseClient(
+        'http://127.0.0.1:54321',
+        'test-key',
+        httpClient: ServidorFake((req) => (200, <Map<String, Object?>>[])),
+      ),
+    );
+    papelRepo.atualizar('l1', Papel.editor);
+    remotos['listas'] = [listaRemota('l1')];
+    final bootstrap = criarComRealtime(
+      cliente: cliente,
+      usuarioSalvo: 'U1',
+      papelRepo: papelRepo,
+    );
+    addTearDown(bootstrap.dispose);
+    await bootstrap.iniciar();
+    await pumpEventQueue();
+    expect(
+      await (db.select(db.listaLocal)..where((l) => l.id.equals('l1'))).get(),
+      isNotEmpty,
+    );
+
+    // RLS revogou o acesso: o re-download não traz mais a lista removida.
+    remotos.clear();
+    cliente.canal.enviar(
+      eventoMembro(PostgresChangeEvent.delete, {'id': 'm1', 'user_id': 'U1'}),
+    );
+    await pumpEventQueue();
+    expect(await (db.select(db.listaLocal)).get(), isEmpty);
+    expect(await (db.select(db.itemLocal)).get(), isEmpty);
+    expect(await (db.select(db.mutacaoPendente)).get(), isEmpty);
+    expect(papelRepo.valores, isEmpty); // papel limpo junto com o cache
+  });
+
+  test('deve_atualizar_papel_quando_update_meu_membro', () async {
+    final cliente = ClienteFake();
+    final papelRepo = PapelRepository(
+      SupabaseClient(
+        'http://127.0.0.1:54321',
+        'test-key',
+        httpClient: ServidorFake((req) {
+          return (
+            200,
+            [
+              {'lista_id': 'l1', 'papel': 'leitor'},
+            ],
+          );
+        }),
+      ),
+    );
+    remotos['listas'] = [listaRemota('l1')];
+    final bootstrap = criarComRealtime(
+      cliente: cliente,
+      usuarioSalvo: 'U1',
+      papelRepo: papelRepo,
+    );
+    addTearDown(bootstrap.dispose);
+    await bootstrap.iniciar();
+    await pumpEventQueue();
+    expect(papelRepo.papelDe('l1'), Papel.leitor);
+
+    cliente.canal.enviar(
+      eventoMembro(PostgresChangeEvent.update, {
+        'id': 'm1',
+        'lista_id': 'l1',
+        'user_id': 'U1',
+        'papel': 'editor',
+      }),
+    );
+    await pumpEventQueue();
+
+    expect(papelRepo.papelDe('l1'), Papel.editor);
+    // A lista segue no cache — só o papel mudou.
+    expect(
+      await (db.select(db.listaLocal)..where((l) => l.id.equals('l1'))).get(),
+      isNotEmpty,
+    );
+  });
+
+  test('deve_ignorar_membros_de_outros_quando_atualizacao', () async {
+    final cliente = ClienteFake();
+    final papelRepo = PapelRepository(
+      SupabaseClient(
+        'http://127.0.0.1:54321',
+        'test-key',
+        httpClient: ServidorFake((req) {
+          return (
+            200,
+            [
+              {'lista_id': 'l1', 'papel': 'leitor'},
+            ],
+          );
+        }),
+      ),
+    );
+    remotos['listas'] = [listaRemota('l1')];
+    final bootstrap = criarComRealtime(
+      cliente: cliente,
+      usuarioSalvo: 'U1',
+      papelRepo: papelRepo,
+    );
+    addTearDown(bootstrap.dispose);
+    await bootstrap.iniciar();
+    await pumpEventQueue();
+    expect(papelRepo.papelDe('l1'), Papel.leitor);
+
+    // UPDATE do papel de outro membro não deve mexer no meu papel.
+    cliente.canal.enviar(
+      eventoMembro(PostgresChangeEvent.update, {
+        'id': 'm2',
+        'lista_id': 'l1',
+        'user_id': 'U2',
+        'papel': 'dono',
+      }),
+    );
+    await pumpEventQueue();
+
+    expect(papelRepo.papelDe('l1'), Papel.leitor);
+    expect(
+      await (db.select(db.listaLocal)..where((l) => l.id.equals('l1'))).get(),
+      isNotEmpty,
+    );
   });
 }

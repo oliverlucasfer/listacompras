@@ -216,6 +216,11 @@ $$;
   alter publication supabase_realtime add table public.lista_membros;
   alter publication supabase_realtime add table public.convites;
   ```
+  Para o app identificar **quem** perdeu acesso no DELETE (`old_record`),
+  `lista_membros` usa `replica identity full` (senão o evento traz apenas a PK):
+  ```sql
+  alter table public.lista_membros replica identity full;
+  ```
 * Eventos geram feedback na UI: "Fulano entrou na lista", "Você foi removido da lista X", "Novo convite pendente".
 * Sem push notifications no MVP da feature (Fase 6); painel de convites pendentes cobre a descoberta.
 

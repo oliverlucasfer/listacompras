@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../drift/database.dart';
+import '../../convites/data/papel_realtime.dart';
 import '../../convites/data/papel_repository.dart';
 import 'aplicador_remoto.dart';
 import 'supabase_sync_remoto.dart';
@@ -31,6 +32,7 @@ class SupabaseBootstrap {
     Future<void> Function(String? usuarioId)? salvarUsuario,
     Future<List<Map<String, Object?>>> Function(String tabela)? baixar,
     this._papelRepository,
+    this._onPerdaAcesso,
   }) : _lerUsuarioSalvo = lerUsuarioSalvo ?? _lerSharedPreferences,
        _salvarUsuario = salvarUsuario ?? _gravarSharedPreferences {
     _baixar = baixar ?? _baixarDoSupabase;
@@ -51,6 +53,7 @@ class SupabaseBootstrap {
   late final AplicadorRemoto _aplicador;
   late Future<List<Map<String, Object?>>> Function(String tabela) _baixar;
   final PapelRepository? _papelRepository;
+  final void Function()? _onPerdaAcesso;
 
   String? _usuarioAtual;
   RealtimeChannel? _canal;
@@ -121,6 +124,16 @@ class SupabaseBootstrap {
 
   // ---- Internos ----
 
+  /// Perda de acesso (doc 08 §9): limpa o cache da conta (o papel do
+  /// usuário some com o repositorio) e re-baixa as listas visíveis —
+  /// com o RLS já sem acesso, a lista removida desaparece (< 5s).
+  void _perderAcessoPadrao() {
+    _encadear(() async {
+      await _limparCache();
+      await sincronizarTudo();
+    });
+  }
+
   /// Serializa trabalhos (troca de usuário, re-sync, realtime) para evitar
   /// corridas entre download e aplicação de eventos.
   void _encadear(Future<void> Function() trabalho) {
@@ -167,6 +180,20 @@ class SupabaseBootstrap {
         event: PostgresChangeEvent.all,
         schema: 'public',
         callback: (payload) {
+          if (payload.table == 'lista_membros') {
+            // Eventos de membros não passam por aplicarRemoto (sem
+            // updated_at): handler dedicado (doc 08 §7, F7-T06).
+            final perdaAcesso = _onPerdaAcesso ?? _perderAcessoPadrao;
+            _encadear(
+              () async => aplicarEventoMembro(
+                usuarioAtual: _usuarioAtual,
+                payload: payload,
+                papelRepository: _papelRepository,
+                onPerdaAcesso: perdaAcesso,
+              ),
+            );
+            return;
+          }
           final registro = payload.newRecord;
           if (registro.isEmpty) return;
           _encadear(() => aplicarRemoto(payload.table, registro));
