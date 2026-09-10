@@ -36,3 +36,4 @@ dart_defines_prod.json
 
 # Diversos
 *.log
+.superpowers/
