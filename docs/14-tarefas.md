@@ -172,9 +172,10 @@ Spec: [superpowers/specs/2026-09-10-compartilhamento-link-design.md](superpowers
 - [ ] **F7-T00** — Spec + ajustes nos docs de planejamento (08 §1.1, campo no 13, breakdown no 14)
   Dep: — · Docs: spec da feature
   CP: docs de planejamento consistentes entre si (00/12/13/14/spec) sem tocar código.
-- [ ] **F7-T01** — Migration `0007_convites.sql`: tabela, RLS, RPC `aceitar_convite`, publication
+- [x] **F7-T01** — Migration `0007_convites.sql`: tabela, RLS, RPC `aceitar_convite`, publication
   Dep: F7-T00 · Docs: [08 §2–§3.1, §7](08-compartilhamento-colaborativo.md), [02 §5](02-seguranca-rls.md)
   CP: policies de convites criadas; aceitar link pendente entra no `lista_membros`; expirado/revogado → `CONVITE_INVALIDO`; 2º aceite idempotente; N-11…N-14 em `supabase/tests/rls_tests.sql` + testes do RPC; `db reset` e CI verde.
+  Nota: casos A-01…A-07 em `supabase/tests/aceitar_convite_tests.sql` (idempotência, expiração, revogação, anon rejeitado, caminho de e-mail). RPC recebe guarda de anonimato (A-05) e mantém estado `aceito` aceitável (idempotência/§9) — desvios documentados no 08 §3.1 no mesmo PR; helper `email_autenticado` + policies de `convites` documentados no 02 §1/§4.4.
 - [ ] **F7-T02** — `ConvitesRepository` (criar link, listar pendentes, revogar, aceitar via RPC) + papel no bootstrap
   Dep: F7-T01 · Docs: [08 §3](08-compartilhamento-colaborativo.md), [03 §4](03-sincronizacao-offline.md)
   CP: chamadas diretas ao servidor (sem fila); códigos de erro mapeados em pt-BR; papel do usuário disponível nas consultas do app; unit tests com fake.
@@ -210,8 +211,8 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 | F4 IA + Sync | 9 | 9 |
 | F5 Publicação | 7 | 5 |
 | F6 Pós-MVP | 7 | 7 |
-| F7 Compartilhamento | 8 | 0 |
-| **Total** | **53** | **43** |
+| F7 Compartilhamento | 8 | 1 |
+| **Total** | **53** | **44** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

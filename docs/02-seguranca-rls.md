@@ -65,6 +65,22 @@ $$;
 
 > **Por que não um `EXISTS` direto sobre `listas`?** Subqueries dentro de policies são avaliadas com as policies do usuário invocante. No self-insert do dono em `lista_membros` logo após criar a lista, ele **ainda não é membro** — `is_member` é falso e o `EXISTS` não veria a própria lista, tornando o fluxo de criação (doc [02 §4.3](#43-lista_membros)) impossível. A função `SECURITY DEFINER` contorna o RLS do invocante.
 
+### Função auxiliar de e-mail (para policies de `convites`, Fase 6)
+
+```sql
+create or replace function public.email_autenticado()
+returns text
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select u.email from auth.users u where u.id = auth.uid()
+$$;
+```
+
+Mesma justificativa das demais: `auth.users` não é legível pelo role `authenticated` dentro de uma policy — a função `SECURITY DEFINER` resolve. Usada pela policy de SELECT de convites dirigidos ao próprio e-mail ([08 §2](08-compartilhamento-colaborativo.md)).
+
 ---
 
 ## 2. Habilitar RLS
@@ -95,6 +111,11 @@ alter table public.itens_lista   force row level security;
 | `lista_membros` | SELECT | Qualquer membro | `is_member(lista_id)` |
 | `lista_membros` | INSERT / DELETE | Só dono | lista em que `dono_id = auth.uid()` |
 | `lista_membros` | UPDATE | *(não permitido no MVP)* | — (transferência de papel é Fase 6) |
+| `convites` | SELECT | Dono da lista | papel `dono` em `lista_membros` |
+| `convites` | SELECT | Qualquer autenticado | só convite `email` dirigido a si, `pendente` |
+| `convites` | INSERT | Dono da lista | `criado_por = auth.uid()` e é dono |
+| `convites` | UPDATE | Dono da lista | idem (revogar) |
+| `convites` | DELETE | Dono da lista | idem (limpeza de convites antigos) |
 
 **Regras complementares:**
 * `leitor` tem acesso apenas de leitura — políticas de INSERT/UPDATE/DELETE checam explicitamente o papel.
@@ -190,6 +211,74 @@ create policy "membros_delete_dono"
 
 > **Nota sobre o próprio dono:** ao criar a lista, o fluxo é (1) INSERT em `listas` com `dono_id = auth.uid()`, (2) INSERT em `lista_membros` com `papel = 'dono'`. O trigger `sync_dono` ([01 §6](01-banco-de-dados.md)) valida a unicidade.
 
+### 4.4. `convites` (Fase 6 — [08 §2](08-compartilhamento-colaborativo.md))
+
+```sql
+create policy "convites_select_email_proprio"
+  on public.convites for select
+  using (
+    tipo = 'email'
+    and estado = 'pendente'
+    and lower(email) = lower(public.email_autenticado())
+  );
+
+create policy "convites_select_dono"
+  on public.convites for select
+  using (
+    exists (
+      select 1 from public.lista_membros m
+      where m.lista_id = convites.lista_id
+        and m.user_id = auth.uid()
+        and m.papel = 'dono'
+    )
+  );
+
+create policy "convites_insert_dono"
+  on public.convites for insert
+  with check (
+    criado_por = auth.uid()
+    and exists (
+      select 1 from public.lista_membros m
+      where m.lista_id = convites.lista_id
+        and m.user_id = auth.uid()
+        and m.papel = 'dono'
+    )
+  );
+
+create policy "convites_update_dono"
+  on public.convites for update
+  using (
+    exists (
+      select 1 from public.lista_membros m
+      where m.lista_id = convites.lista_id
+        and m.user_id = auth.uid()
+        and m.papel = 'dono'
+    )
+  )
+  with check (
+    criado_por = auth.uid()
+    and exists (
+      select 1 from public.lista_membros m
+      where m.lista_id = convites.lista_id
+        and m.user_id = auth.uid()
+        and m.papel = 'dono'
+    )
+  );
+
+create policy "convites_delete_dono"
+  on public.convites for delete
+  using (
+    exists (
+      select 1 from public.lista_membros m
+      where m.lista_id = convites.lista_id
+        and m.user_id = auth.uid()
+        and m.papel = 'dono'
+    )
+  );
+```
+
+> **Convite por link é "capacidade":** quem tem o token entra via RPC `aceitar_convite` (security definer, [08 §3.1](08-compartilhamento-colaborativo.md)) — contorna RLS por design, pois o convidado não é dono. O dono revoga com UPDATE direto (`estado = 'revogado'`).
+
 ---
 
 ## 5. Testes de Negação (obrigatórios na Fase 1)
@@ -208,6 +297,10 @@ Casos que **DEVEM falhar** (executados como usuário autenticado sem acesso, via
 | N-08 | Usuário anônimo (sem JWT) faz SELECT de qualquer tabela | 0 linhas |
 | N-09 | Usuário A tenta UPDATE de `listas.dono_id` para si mesmo | violação de policy |
 | N-10 | Usuário A insere 2º membro `papel='dono'` na própria lista | exceção do trigger `sync_dono` |
+| N-11 | Não-membro faz SELECT de convites da lista de outrem | 0 linhas (F7-T01) |
+| N-12 | Dono faz SELECT dos convites da própria lista | > 0 linhas (F7-T01) |
+| N-13 | `editor` tenta INSERT de convite | violação de policy (F7-T01) |
+| N-14 | `editor` tenta revogar convite (UPDATE) | 0 linhas (policy nega) (F7-T01) |
 
 Casos que **DEVEM passar**:
 

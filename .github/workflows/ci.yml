@@ -50,6 +50,8 @@ jobs:
         run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/rls_tests.sql
       - name: Testes de exclusão de conta (06 §3.3.1)
         run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/excluir_conta_tests.sql
+      - name: Testes do aceite de convite (08 §3.1)
+        run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/aceitar_convite_tests.sql
       - name: Testes unitários das Edge Functions (deno)
         run: deno test --allow-env supabase/functions/parse-lista/
       - name: Testes e2e do contrato parse-lista (cenários sem Gemini)

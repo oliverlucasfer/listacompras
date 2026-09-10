@@ -109,12 +109,17 @@ set search_path = public
 as $$
 declare
   c public.convites%rowtype;
-  novo_membro_id uuid;
 begin
+  -- guarda de anonimato: sem sessão autenticada não há aceite (ver bullets)
+  if auth.uid() is null then
+    raise exception 'CONVITE_INVALIDO';
+  end if;
+
   select * into c from public.convites
   where token = p_token for update;
 
-  if c.id is null or c.estado <> 'pendente' or c.expira_em < now() then
+  -- 'aceito' segue aceitável (idempotência); 'revogado'/expiração bloqueiam
+  if c.id is null or c.estado not in ('pendente', 'aceito') or c.expira_em < now() then
     raise exception 'CONVITE_INVALIDO';
   end if;
 
@@ -136,7 +141,8 @@ end;
 $$;
 ```
 
-* **Idempotente:** acessar o link duas vezes não duplica membro nem quebra.
+* **Idempotente:** acessar o link duas vezes (mesma pessoa ou outra) não duplica membro nem quebra — 2º uso apenas navega (§9). Na checagem `not in ('pendente', 'aceito')`, o estado `aceito` continua aceitável: só `revogado` e a expiração (`expira_em < now()`) bloqueiam. Estado `expirado` nunca é gravado.
+* **Guarda de anonimato:** o RPC é executável por `anon` por padrão; sem `auth.uid()` rejeita com `CONVITE_INVALIDO` logo no início — o aceite exige sessão autenticada (§3: não autenticado vai ao login e retoma depois).
 * Concorre com o trigger `sync_dono` sem risco: `papel_oferecido` nunca é `dono`.
 
 ## 4. Fluxo B — Convite por e-mail

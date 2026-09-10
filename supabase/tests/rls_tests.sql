@@ -1,7 +1,8 @@
 -- ============================================================================
 -- rls_tests.sql — Testes RLS da Fase 1 (doc 02 §5)
--- Casos: N-01..N-10 (negação) e P-01..P-04 (positivos, SQL).
--- P-05 (Realtime) é validado por supabase/tests/realtime_test.mjs (F1-T07).
+-- Casos: N-01..N-10 e P-01..P-04 (SQL); P-05 (Realtime) é validado por
+-- supabase/tests/realtime_test.mjs (F1-T07).
+-- N-11..N-14 cobrem as policies de `convites` (F7-T01, docs 02 §5 e 08 §2).
 --
 -- Execução (após `supabase db reset`):
 --   Get-Content supabase/tests/rls_tests.sql -Raw | docker exec -i supabase_db_<proj> psql -U postgres -d postgres
@@ -32,6 +33,11 @@ values
 
 insert into public.itens_lista (id, lista_id, nome)
 values ('33333333-3333-3333-3333-333333333333', '22222222-2222-2222-2222-222222222222', 'Leite');
+
+-- Convite link pendente na lista (N-11…N-14, F7-T01)
+insert into public.convites (lista_id, criado_por, token, tipo, papel_oferecido)
+values ('22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111',
+        'e1111111-1111-1111-1111-111111111111', 'link', 'editor');
 
 -- ===== N-01: outsider (D) não lê lista alheia → 0 linhas =====
 do $$
@@ -211,6 +217,53 @@ begin
   where lista_id = '22222222-2222-2222-2222-222222222222' and deletado_em is null;
   if cl = 1 and ci = 1 then raise notice 'OK P-04: leitor le lista e itens';
   else raise exception 'FALHOU P-04: leitor veu % listas e % itens', cl, ci; end if;
+end $$;
+
+-- ===== N-11: outsider (D) não lê convite da lista alheia → 0 linhas =====
+do $$
+declare c int;
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"66666666-6666-6666-6666-666666666666","role":"authenticated"}', true);
+  select count(*) into c from public.convites where lista_id = '22222222-2222-2222-2222-222222222222';
+  if c = 0 then raise notice 'OK N-11: outsider ve 0 convites';
+  else raise exception 'FALHOU N-11: outsider viu % convites', c; end if;
+end $$;
+
+-- ===== N-12: dono (A) lê os convites da própria lista → > 0 linhas =====
+do $$
+declare c int;
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+  select count(*) into c from public.convites where lista_id = '22222222-2222-2222-2222-222222222222';
+  if c > 0 then raise notice 'OK N-12: dono ve % convite(s)', c;
+  else raise exception 'FALHOU N-12: dono viu 0 convites'; end if;
+end $$;
+
+-- ===== N-13: editor (B) INSERT de convite → policy nega =====
+do $$
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}', true);
+  insert into public.convites (lista_id, criado_por, token, tipo, papel_oferecido)
+  values ('22222222-2222-2222-2222-222222222222', '44444444-4444-4444-4444-444444444444',
+          'e9999999-9999-9999-9999-999999999999', 'link', 'editor');
+  raise exception 'FALHOU N-13: editor inseriu convite';
+exception when insufficient_privilege then
+  raise notice 'OK N-13: policy negou INSERT de convite pelo editor';
+end $$;
+
+-- ===== N-14: editor (B) tenta revogar convite (UPDATE) → 0 linhas =====
+do $$
+declare c int;
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}', true);
+  update public.convites set estado = 'revogado' where token = 'e1111111-1111-1111-1111-111111111111';
+  get diagnostics c = row_count;
+  if c = 0 then raise notice 'OK N-14: editor alterou 0 convites (revogar so dono)';
+  else raise exception 'FALHOU N-14: editor alterou % convites', c; end if;
 end $$;
 
 rollback;
