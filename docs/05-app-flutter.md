@@ -82,14 +82,15 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 
 | Rota | Tela | Guard |
 | :--- | :--- | :--- |
-| `/login` | Login | redirect se autenticado → `/listas` |
-| `/registro` | Registro | idem |
+| `/login` | Login (aceita `?next=` para voltar ao fluxo pós-login, ex. `/entrar?token=...`) | redirect se autenticado → `/listas` |
+| `/registro` | Registro (propaga `?next=` para o login na tela "Verifique seu e-mail") | idem |
 | `/recuperar-senha` | Recuperação de senha | público |
-| `/listas` | Minhas Listas | exige autenticação |
+| `/entrar` | Aceite de convite (doc [08 §3](08-compartilhamento-colaborativo.md)): lê `?token=`; sem sessão mostra contexto e vai ao login/registro com `?next=`; com sessão aceita (RPC idempotente) e navega à lista | público |
+| `/listas` | Minhas Listas — AppBar "Entrar com código" (`person_add`): colar token cru → aceite → navega à lista; erro via SnackBar | exige autenticação |
 | `/listas/:id` | Tela da Lista | exige autenticação + pertencimento |
 
-* **Redirect global:** não autenticado → `/login`; autenticado em rota pública → `/listas`.
-* Deep link de convite (`/listas/entrar?token=...`) já previsto na rota — **fluxo completo de aceite planejado em [08 §3](08-compartilhamento-colaborativo.md)** (ativado na Fase 6).
+* **Redirect global:** não autenticado → `/login`; autenticado em rota pública → `/listas`, **exceto `/entrar`** (permanece pública — a tela decide).
+* Deep link de convite (`br.com.oliverlucas.listacompras://entrar?token=...`, intent-filter com host `entrar`): o supabase_flutter escuta os deep links via app_links mas só consome os que têm parâmetros de auth; links de convite são traduzidos para `/entrar?token=...` pela ponte `deeplinkConviteProvider` ([08 §1.1](08-compartilhamento-colaborativo.md)).
 * Wireframes (layout) de todas as telas: **[10 Wireframes](10-wireframes-telas.md)**.
 
 ---

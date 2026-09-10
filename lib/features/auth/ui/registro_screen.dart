@@ -10,7 +10,10 @@ import '../providers/auth_providers.dart';
 /// Tela de Registro (wireframe 10 §1.2): e-mail, senha, confirmação,
 /// aceite da política e tela "Verifique seu e-mail" após registro.
 class RegistroScreen extends ConsumerStatefulWidget {
-  const RegistroScreen({super.key});
+  const RegistroScreen({super.key, this.next});
+
+  /// Rota de retorno pós-verificação: propagada para o login (doc 08 §3.1).
+  final String? next;
 
   @override
   ConsumerState<RegistroScreen> createState() => _RegistroScreenState();
@@ -28,6 +31,13 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
   String? _erroGeral;
   bool _aguardandoVerificacao = false;
   String? _emailRegistrado;
+  String? _destino;
+
+  @override
+  void initState() {
+    super.initState();
+    _destino = widget.next;
+  }
 
   @override
   void dispose() {
@@ -98,7 +108,7 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
   @override
   Widget build(BuildContext context) {
     if (_aguardandoVerificacao) {
-      return _VerificacaoEmail(email: _emailRegistrado ?? '');
+      return _VerificacaoEmail(email: _emailRegistrado ?? '', next: _destino);
     }
     return Scaffold(
       appBar: AppBar(title: const Text(AppStrings.criarConta)),
@@ -180,9 +190,10 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
 
 /// Tela "Verifique seu e-mail" (wireframe 10 §1.2) com reenvio de link.
 class _VerificacaoEmail extends ConsumerWidget {
-  const _VerificacaoEmail({required this.email});
+  const _VerificacaoEmail({required this.email, this.next});
 
   final String email;
+  final String? next;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -224,7 +235,13 @@ class _VerificacaoEmail extends ConsumerWidget {
                   child: const Text(AppStrings.reenviarLink),
                 ),
                 TextButton(
-                  onPressed: () => context.go('/login'),
+                  onPressed: () => context.go(
+                    next == null || next!.isEmpty
+                        ? '/login'
+                        : Uri.parse('/login')
+                              .replace(queryParameters: {'next': next!})
+                              .toString(),
+                  ),
                   child: const Text(AppStrings.entrar),
                 ),
               ],

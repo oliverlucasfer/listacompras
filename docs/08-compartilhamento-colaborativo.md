@@ -29,7 +29,7 @@ Papéis já definidos no enum de `lista_membros.papel` ([01 §4.2](01-banco-de-d
 
 ### 1.1. Decisões da rodada (2026-09-10 — spec [`superpowers/specs/2026-09-10-compartilhamento-link-design.md`](superpowers/specs/2026-09-10-compartilhamento-link-design.md))
 
-Primeira rodada da fase é **link-only**: fluxos `email` (§4) e Edge Function `enviar-convite` ficam para uma rodada futura — o schema as prevê, o app ainda não as usa. Link usa **custom scheme** `listacompras://listas/entrar?token=...` (reusa o intent-filter da F3-T03) + opção de colar token cru, enquanto a Web não está publicada (F5-T06 adiada; universal link fica para depois). **Transferência de dono (§6) adiada**: nesta rodada o dono não consegue sair da lista; membros comuns saem normalmente (`sync_dono` não é alterado). Realtime: `lista_membros` e `convites` vão ao publication (§7); o painel de pendências faz fetch ao abrir — o canal de `convites` empurra evento, mas a UI não depende dele nesta rodada (sem e-mail, o painel não tem entradas).
+Primeira rodada da fase é **link-only**: fluxos `email` (§4) e Edge Function `enviar-convite` ficam para uma rodada futura — o schema as prevê, o app ainda não as usa. Link usa **custom scheme** `br.com.oliverlucas.listacompras://entrar?token=...` (host `entrar`, mais um intent-filter igual ao do login-callback da F3-T03) + opção de colar token cru, enquanto a Web não está publicada (F5-T06 adiada; universal link fica para depois). **Transferência de dono (§6) adiada**: nesta rodada o dono não consegue sair da lista; membros comuns saem normalmente (`sync_dono` não é alterado). Realtime: `lista_membros` e `convites` vão ao publication (§7); o painel de pendências faz fetch ao abrir — o canal de `convites` empurra evento, mas a UI não depende dele nesta rodada (sem e-mail, o painel não tem entradas).
 
 ---
 
@@ -81,11 +81,11 @@ create index idx_convites_email on public.convites (lower(email)) where estado =
 [dono] Tela da Lista → Menu → "Convidar"
         │ escolhe papel (editor/leitor) e gera link
         ▼
-INSERT convites (tipo='link') ──► link: https://app.../listas/entrar?token=<uuid>
+INSERT convites (tipo='link') ──► link: br.com.oliverlucas.listacompras://entrar?token=<uuid>
         │ dono compartilha (WhatsApp, e-mail, etc.)
         ▼
-[convidado] abre deep link (app instalado) ou web
-        │ rota /listas/entrar?token=... ([05 §4](05-app-flutter.md))
+[convidado] abre deep link (app instalado) ou cole o token em "Entrar com código"
+        │ rota /entrar?token=... ([05 §4](05-app-flutter.md))
         ▼
         ├─ não autenticado → tela de login/registro com contexto "Você foi
         │  convidado para a lista X" → após autenticar, retoma o aceite
@@ -227,7 +227,7 @@ $$;
 | Lista de membros | Nome, papel, ações do dono (mudar papel entre editor↔leitor, remover, transferir dono) |
 | Banner "Você é leitor" | Lista em modo somente leitura para `leitor` (inputs desabilitados com dica) |
 | Painel "Convites pendentes" (Minhas Listas) | Cards: "João convidou você para **Compras da Semana**" → Aceitar/Recusar |
-| Rota `/listas/entrar?token=` | Contexto de aceite (autenticado ou pós-login) |
+| Rota `/entrar?token=` | Contexto de aceite (autenticado ou pós-login); "Entrar com código" no painel de listas aceita token cru colado |
 
 * Wireframes destes componentes: [10 §4](10-wireframes-telas.md).
 * Comportamento de roles na UI (desabilitar ações de leitor): [05 §6.3](05-app-flutter.md).

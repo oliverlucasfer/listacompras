@@ -118,6 +118,13 @@ abstract final class AppStrings {
       'Sem conexão para entrar na lista. Verifique sua internet e tente novamente.';
   static const conviteInesperado =
       'Não foi possível entrar na lista. Tente novamente.';
+  static const conviteConvidadoTitulo = 'Você foi convidado para uma lista';
+  static const conviteConvidadoMensagem =
+      'Entre na sua conta (ou crie uma) para aceitar o convite e acessar a lista.';
+  static const conviteConvidadoEntrar = 'Entrar';
+  static const conviteConvidadoRegistrar = 'Criar conta';
+  static const conviteComCodigo = 'Entrar com código';
+  static const conviteCampoCodigo = 'Cole aqui o código do convite';
 
   // Sheet "Convidar" e tela de membros (doc 08 §5/§8, F7-T03)
   static const convidar = 'Convidar';

@@ -7,12 +7,14 @@ import 'features/auth/ui/login_screen.dart';
 import 'features/auth/ui/recuperar_senha_screen.dart';
 import 'features/auth/ui/registro_screen.dart';
 import 'features/configuracoes/ui/configuracoes_screen.dart';
+import 'features/convites/ui/entrar_screen.dart';
 import 'features/convites/ui/tela_membros_screen.dart';
 import 'features/listas/ui/minhas_listas_screen.dart';
 import 'features/listas/ui/tela_lista_screen.dart';
 
-/// Rotas (doc 05 §4): /login, /registro e /recuperar-senha são públicas;
-/// as demais exigem autenticação. Redirect global nas duas direções.
+/// Rotas (doc 05 §4): /login, /registro, /recuperar-senha e /entrar são
+/// públicas; as demais exigem autenticação. Redirect global nas duas
+/// direções (a tela /entrar decide por si quando há/ não há sessão).
 final routerProvider = Provider<GoRouter>((ref) {
   final repo = ref.watch(authRepositoryProvider);
 
@@ -23,10 +25,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       final autenticado = repo.sessaoAtual != null;
       final rota = state.matchedLocation;
       final publica =
-          rota == '/login' || rota == '/registro' || rota == '/recuperar-senha';
+          rota == '/login' ||
+          rota == '/registro' ||
+          rota == '/recuperar-senha' ||
+          rota == '/entrar';
 
       if (!autenticado && !publica) return '/login';
-      if (autenticado && publica) return '/listas';
+      // /entrar permanece pública também autenticado — a tela aceita o
+      // convite por si (doc 08 §3.1).
+      if (autenticado && publica && rota != '/entrar') return '/listas';
       return null;
     },
     routes: [
@@ -35,14 +42,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         redirect: (context, state) =>
             repo.sessaoAtual != null ? '/listas' : '/login',
       ),
-      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) =>
+            LoginScreen(next: state.uri.queryParameters['next']),
+      ),
       GoRoute(
         path: '/registro',
-        builder: (context, state) => const RegistroScreen(),
+        builder: (context, state) =>
+            RegistroScreen(next: state.uri.queryParameters['next']),
       ),
       GoRoute(
         path: '/recuperar-senha',
         builder: (context, state) => const RecuperarSenhaScreen(),
+      ),
+      GoRoute(
+        path: '/entrar',
+        builder: (context, state) =>
+            EntrarScreen(token: state.uri.queryParameters['token']),
       ),
       GoRoute(
         path: '/listas',

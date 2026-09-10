@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/utils/tempo_relativo.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../convites/domain/convite.dart';
+import '../../convites/providers/convites_providers.dart';
 import '../domain/lista_com_contagem.dart';
 import '../providers/listas_providers.dart';
 import 'sheet_titulo_lista.dart';
@@ -20,6 +22,11 @@ class MinhasListasScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text(AppStrings.minhasListas),
         actions: [
+          IconButton(
+            tooltip: AppStrings.conviteComCodigo,
+            icon: const Icon(Icons.person_add),
+            onPressed: () => _abrirDialogoEntrarComCodigo(context, ref),
+          ),
           IconButton(
             tooltip: AppStrings.configuracoes,
             icon: const Icon(Icons.settings_outlined),
@@ -225,6 +232,94 @@ class _CardLista extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Diálogo "Entrar com código" (doc 08 §1.1, RF-13): colar token cru →
+/// aceita o convite e navega para a lista; erro vira SnackBar amigável.
+void _abrirDialogoEntrarComCodigo(BuildContext context, WidgetRef ref) {
+  showDialog<void>(
+    context: context,
+    builder: (dialogContext) => const _DialogoEntrarComCodigo(),
+  ).then((_) {
+    ref.invalidate(listasComContagemProvider);
+  });
+}
+
+class _DialogoEntrarComCodigo extends ConsumerStatefulWidget {
+  const _DialogoEntrarComCodigo();
+
+  @override
+  ConsumerState<_DialogoEntrarComCodigo> createState() =>
+      _DialogoEntrarComCodigoState();
+}
+
+class _DialogoEntrarComCodigoState
+    extends ConsumerState<_DialogoEntrarComCodigo> {
+  final _token = TextEditingController();
+  bool _carregando = false;
+
+  @override
+  void dispose() {
+    _token.dispose();
+    super.dispose();
+  }
+
+  Future<void> _entrar(BuildContext dialogContext) async {
+    final token = _token.text.trim();
+    if (token.isEmpty) {
+      ScaffoldMessenger.of(
+        dialogContext,
+      ).showSnackBar(SnackBar(content: Text(AppStrings.conviteInvalido)));
+      return;
+    }
+    setState(() => _carregando = true);
+    try {
+      final listaId = await ref.read(convitesRepositoryProvider).aceitar(token);
+      if (dialogContext.mounted) Navigator.pop(dialogContext);
+      if (mounted) context.go('/listas/$listaId');
+    } on ErroConvite catch (e) {
+      if (dialogContext.mounted) Navigator.pop(dialogContext);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } finally {
+      if (mounted) setState(() => _carregando = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text(AppStrings.conviteComCodigo),
+      content: TextField(
+        controller: _token,
+        autofocus: true,
+        decoration: const InputDecoration(
+          labelText: AppStrings.conviteCampoCodigo,
+          border: OutlineInputBorder(),
+        ),
+        onSubmitted: (_) => _entrar(context),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text(AppStrings.cancelar),
+        ),
+        FilledButton(
+          onPressed: _carregando ? null : () => _entrar(context),
+          child: _carregando
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text(AppStrings.conviteConvidadoEntrar),
+        ),
+      ],
     );
   }
 }

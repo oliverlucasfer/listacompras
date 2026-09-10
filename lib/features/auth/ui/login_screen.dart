@@ -10,7 +10,11 @@ import '../providers/auth_providers.dart';
 /// Tela de Login (wireframe 10 §1.1): e-mail, senha com toggle, botão com
 /// spinner e erro inline.
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.next});
+
+  /// Rota de retorno após login bem-sucedido (doc 08 §3.1): o convite passa
+  /// `?next=/entrar?token=...`. Vazio → o guard manda para /listas.
+  final String? next;
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -58,7 +62,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _carregando = true);
     try {
       await ref.read(authRepositoryProvider).entrar(email: email, senha: senha);
-      // Redirect para /listas acontece pelo guard do router.
+      // Com `next`, volta ao fluxo que originou o login (ex.: aceite do
+      // convite); sem next, o guard do router redireciona para /listas.
+      final destino = widget.next;
+      if (destino != null && destino.isNotEmpty && mounted) {
+        context.go(destino);
+      }
     } on AuthException {
       if (mounted) setState(() => _erroGeral = AppStrings.erroAutenticacao);
     } catch (_) {

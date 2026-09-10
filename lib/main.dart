@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/supabase_config.dart';
 import 'core/l10n/app_strings.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/deeplink_convite.dart';
 import 'features/sync/providers/sync_providers.dart';
 import 'router.dart';
 
@@ -31,6 +32,8 @@ Future<void> main() async {
     // cada escrita e ao reconectar, aplica remotos vencedores no LWW e
     // isola o cache por usuário.
     container.read(syncBootstrapProvider);
+    // Ponte deep link de convite → go_router (doc 08 §1.1, RF-13).
+    container.read(deeplinkConviteProvider);
   }
 
   if (sentryDsn.isEmpty) {
