@@ -278,13 +278,20 @@ class _DialogoEntrarComCodigoState
     try {
       final listaId = await ref.read(convitesRepositoryProvider).aceitar(token);
       if (dialogContext.mounted) Navigator.pop(dialogContext);
-      if (mounted) context.go('/listas/$listaId');
+      if (mounted) context.go('/lista/$listaId');
     } on ErroConvite catch (e) {
       if (dialogContext.mounted) Navigator.pop(dialogContext);
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    } catch (_) {
+      if (dialogContext.mounted) Navigator.pop(dialogContext);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(AppStrings.conviteInesperado)));
       }
     } finally {
       if (mounted) setState(() => _carregando = false);

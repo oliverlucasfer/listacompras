@@ -26,11 +26,14 @@ class _ConvitesFakeLista extends ConvitesRepository {
   String? tokenRecebido;
   String? retorno;
   ErroConvite? erro;
+  Object? excecao;
 
   @override
   Future<String> aceitar(String token) async {
     aceitarChamado = true;
     tokenRecebido = token;
+    final ex = excecao;
+    if (ex != null) throw ex;
     final e = erro;
     if (e != null) throw e;
     return retorno!;
@@ -61,7 +64,7 @@ void main() {
       routes: [
         GoRoute(path: '/listas', builder: (_, _) => const MinhasListasScreen()),
         GoRoute(
-          path: '/listas/:id',
+          path: '/lista/:id',
           builder: (_, state) =>
               Scaffold(body: Text('lista-${state.pathParameters['id']}')),
         ),
@@ -173,6 +176,25 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_excluir_lista_quando_confirmar_dialogo', (tester) async {
+    final repo = ListasRepository(db);
+    await repo.criarLista(titulo: 'Para excluir', donoId: 'user-a');
+    await abrirTela(tester);
+
+    await tester.longPress(find.text('Para excluir'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.excluir).first);
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.excluirListaMensagem), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.excluir));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Para excluir'), findsNothing);
+    expect(find.text(AppStrings.nenhumaLista), findsOneWidget);
+    await fechar(tester);
+  });
+
   testWidgets('deve_entrar_com_codigo_quando_colado', (tester) async {
     final convites = _ConvitesFakeLista();
     convites.retorno = _listaIdConvite;
@@ -221,6 +243,30 @@ void main() {
     expect(find.text('lista-$_listaIdConvite'), findsNothing);
 
     // Loading desabilita o botão enquanto executa.
+    expect(find.byType(AlertDialog), findsNothing);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_exibir_snackbar_inesperado_quando_erro_fora_do_contrato', (
+    tester,
+  ) async {
+    final convites = _ConvitesFakeLista()..excecao = Exception('falha');
+    await abrirTela(tester, convites: convites);
+
+    await tester.tap(find.byIcon(Icons.person_add));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.conviteCampoCodigo),
+      _tokenConvite,
+    );
+    await tester.tap(
+      find.widgetWithText(FilledButton, AppStrings.conviteConvidadoEntrar),
+    );
+    await tester.pumpAndSettle();
+
+    expect(convites.aceitarChamado, isTrue);
+    expect(find.byType(SnackBar), findsOneWidget);
+    expect(find.text(AppStrings.conviteInesperado), findsOneWidget);
     expect(find.byType(AlertDialog), findsNothing);
     await fechar(tester);
   });

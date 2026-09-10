@@ -15,10 +15,12 @@ import 'package:lista_compras/router.dart';
 /// próprio stream do app_links; Web é tratado como URL normal do browser.
 final deeplinkConviteProvider = Provider<StreamSubscription<Uri>>((ref) {
   final router = ref.watch<GoRouter>(routerProvider);
-  return AppLinks().uriLinkStream.listen((uri) {
+  final sub = AppLinks().uriLinkStream.listen((uri) {
     if (uri.host != 'entrar') return;
     final token = uri.queryParameters['token'];
     if (token == null || token.isEmpty) return;
-    router.go('/entrar?token=$token');
+    router.go('/entrar?token=${Uri.encodeComponent(token)}');
   }, onError: (_) {});
+  ref.onDispose(sub.cancel);
+  return sub;
 });

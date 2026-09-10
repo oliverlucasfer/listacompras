@@ -64,7 +64,7 @@ class _EntrarScreenState extends ConsumerState<EntrarScreen> {
     });
     try {
       final listaId = await ref.read(convitesRepositoryProvider).aceitar(token);
-      if (mounted) context.go('/listas/$listaId');
+      if (mounted) context.go('/lista/$listaId');
     } on ErroConvite catch (e) {
       if (mounted) setState(() => _erro = e);
     } catch (_) {

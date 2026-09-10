@@ -99,7 +99,7 @@ void main() {
           builder: (_, _) => const Scaffold(body: Text('painel-listas')),
         ),
         GoRoute(
-          path: '/listas/:id',
+          path: '/lista/:id',
           builder: (_, state) =>
               Scaffold(body: Text('lista-${state.pathParameters['id']}')),
         ),
