@@ -14,3 +14,15 @@ final papelRepositoryProvider = Provider<PapelRepository>((ref) {
 final papelNaListaProvider = Provider.family<Papel?, String>((ref, listaId) {
   return ref.watch(papelRepositoryProvider).papelDe(listaId);
 });
+
+/// Papel reativo (F7-T03): stream do [PapelRepository] — a UI acompanha
+/// mudanças em memória (bootstrap, ações locais, realtime da F7-T06).
+final papelNaListaStreamProvider = StreamProvider.family<Papel?, String>((
+  ref,
+  listaId,
+) {
+  return ref
+      .watch(papelRepositoryProvider)
+      .watch()
+      .map((papeis) => papeis[listaId]);
+});

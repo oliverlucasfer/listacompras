@@ -9,6 +9,12 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
+import 'package:lista_compras/features/auth/providers/auth_providers.dart';
+import 'package:lista_compras/features/convites/data/convites_repository.dart';
+import 'package:lista_compras/features/convites/data/papel_repository.dart';
+import 'package:lista_compras/features/convites/domain/papel.dart';
+import 'package:lista_compras/features/convites/providers/convites_providers.dart';
+import 'package:lista_compras/features/convites/providers/papel_providers.dart';
 import 'package:lista_compras/features/ia/data/parse_lista_client.dart';
 import 'package:lista_compras/features/ia/providers/ia_providers.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
@@ -19,6 +25,9 @@ import 'package:lista_compras/features/listas/domain/unidade.dart';
 import 'package:lista_compras/features/listas/ui/tela_lista_screen.dart';
 import 'package:lista_compras/features/sync/domain/sync_status.dart';
 import 'package:lista_compras/features/sync/providers/sync_providers.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../convites/servidor_fake.dart';
 
 void main() {
   late AppDatabase db;
@@ -31,9 +40,31 @@ void main() {
     await db.close();
   });
 
+  /// PapelRepository de teste com papel pré-carregado (state em memória;
+  /// servidor fake não é consultado pelo estado).
+  PapelRepository papelRepo(
+    WidgetTester tester, {
+    required String listaId,
+    required Papel papel,
+  }) {
+    final servidor = ServidorFake((req) => (200, const <Object>[]));
+    addTearDown(servidor.close);
+    final repo = PapelRepository(
+      SupabaseClient(
+        'http://127.0.0.1:54321',
+        'test-key',
+        httpClient: servidor,
+        authOptions: const AuthClientOptions(autoRefreshToken: false),
+      ),
+    );
+    repo.atualizar(listaId, papel);
+    return repo;
+  }
+
   Future<String> listaComItens(
     WidgetTester tester, {
     bool comConcluido = false,
+    Papel papel = Papel.dono,
   }) async {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(
@@ -65,6 +96,9 @@ void main() {
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
+          papelRepositoryProvider.overrideWithValue(
+            papelRepo(tester, listaId: lista.id, papel: papel),
+          ),
           syncStatusProvider.overrideWith((ref) => sync.stream),
         ],
         child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
@@ -134,6 +168,9 @@ void main() {
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
+          papelRepositoryProvider.overrideWithValue(
+            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
+          ),
           syncStatusProvider.overrideWith((ref) => sync.stream),
         ],
         child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
@@ -362,6 +399,9 @@ void main() {
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
+          papelRepositoryProvider.overrideWithValue(
+            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
+          ),
           syncStatusProvider.overrideWith((ref) => sync.stream),
         ],
         child: MaterialApp.router(routerConfig: router),
@@ -434,6 +474,9 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           parseListaClientProvider.overrideWithValue(clienteIa),
+          papelRepositoryProvider.overrideWithValue(
+            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
+          ),
           syncStatusProvider.overrideWith((ref) => sync.stream),
         ],
         child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
@@ -477,6 +520,9 @@ void main() {
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
+          papelRepositoryProvider.overrideWithValue(
+            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
+          ),
           syncStatusProvider.overrideWith((ref) => sync.stream),
         ],
         child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
@@ -582,6 +628,102 @@ void main() {
         .last;
     expect(payload, contains('"categoria":"frios"'));
 
+    await fechar(tester);
+  });
+
+  testWidgets('deve_abrir_sheet_convidar_quando_dono_menu_f7t03', (
+    tester,
+  ) async {
+    await listaComItens(tester);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.membros), findsOneWidget);
+    expect(find.text(AppStrings.convidar), findsOneWidget);
+
+    await tester.tap(find.text(AppStrings.convidar));
+    await tester.pumpAndSettle();
+
+    // Sheet "Convidar" (F7-T03): radios de papel + botão gerar.
+    expect(
+      find.widgetWithText(FilledButton, AppStrings.gerarLink),
+      findsOneWidget,
+    );
+    expect(
+      find.widgetWithText(RadioListTile<Papel>, AppStrings.convidarPapelEditor),
+      findsOneWidget,
+    );
+    expect(
+      find.widgetWithText(RadioListTile<Papel>, AppStrings.convidarPapelLeitor),
+      findsOneWidget,
+    );
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_abrir_tela_membros_quando_membro_nao_dono_menu_f7t03', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    final servidor = ServidorFake((req) {
+      if (req.method == 'GET' && req.url.path.contains('/lista_membros')) {
+        return (
+          200,
+          [
+            {'lista_id': lista.id, 'user_id': 'user-a', 'papel': 'leitor'},
+          ],
+        );
+      }
+      return (200, const <Object>[]);
+    });
+    addTearDown(servidor.close);
+    final sync = StreamController<SyncStatus>();
+    sync.add(const Sincronizado());
+    addTearDown(sync.close);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          papelRepositoryProvider.overrideWithValue(
+            papelRepo(tester, listaId: lista.id, papel: Papel.leitor),
+          ),
+          convitesRepositoryProvider.overrideWithValue(
+            ConvitesRepository(
+              SupabaseClient(
+                'http://127.0.0.1:54321',
+                'test-key',
+                httpClient: servidor,
+                authOptions: const AuthClientOptions(autoRefreshToken: false),
+              ),
+            ),
+          ),
+          donoAtualIdProvider.overrideWithValue('user-a'),
+          syncStatusProvider.overrideWith((ref) => sync.stream),
+        ],
+        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.convidar), findsNothing);
+    expect(find.text(AppStrings.membros), findsOneWidget);
+
+    await tester.tap(find.text(AppStrings.membros));
+    await tester.pumpAndSettle();
+
+    // Tela de membros: próprio usuário destacado, chip de papel e "Sair da
+    // lista" (F7-T03).
+    expect(find.text(AppStrings.voce), findsOneWidget);
+    expect(find.text(AppStrings.convidarPapelLeitor), findsOneWidget);
+    expect(
+      find.widgetWithText(TextButton, AppStrings.sairDaLista),
+      findsOneWidget,
+    );
     await fechar(tester);
   });
 }

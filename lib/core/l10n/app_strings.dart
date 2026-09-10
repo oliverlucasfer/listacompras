@@ -114,6 +114,24 @@ abstract final class AppStrings {
   static const conviteInesperado =
       'Não foi possível entrar na lista. Tente novamente.';
 
+  // Sheet "Convidar" e tela de membros (doc 08 §5/§8, F7-T03)
+  static const convidar = 'Convidar';
+  static const convidarPapelEditor = 'Editor';
+  static const convidarPapelLeitor = 'Leitor';
+  static const gerarLink = 'Gerar link';
+  static const copiarLink = 'Copiar link';
+  static const compartilhar = 'Compartilhar';
+  static const linkCopiado = 'Link copiado para a área de transferência.';
+  static const membros = 'Membros';
+  static const voce = 'Você';
+  static const papelDono = 'Dono';
+  static const mudarPapel = 'Mudar papel';
+  static const removerMembro = 'Remover';
+  static const removerMembroMensagem = 'Remover este membro da lista?';
+  static const sairDaLista = 'Sair da lista';
+  static const sairListaTitulo = 'Sair da lista';
+  static const sairListaMensagem = 'Você deixará de ter acesso a esta lista.';
+
   static String itensExtraidos(int n) =>
       n == 1 ? '1 item extraído.' : '$n itens extraídos.';
 

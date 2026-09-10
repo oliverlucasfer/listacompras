@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/app_strings.dart';
+import '../../convites/domain/papel.dart';
+import '../../convites/providers/papel_providers.dart';
+import '../../convites/ui/sheet_convidar.dart';
+import '../../convites/ui/tela_membros_screen.dart';
 import '../../ia/ui/modal_importar_ia.dart';
 import '../../ia/ui/modal_previsao_ia.dart';
 import '../../sync/ui/indicador_sync.dart';
@@ -18,6 +22,15 @@ class TelaListaScreen extends ConsumerWidget {
   const TelaListaScreen({super.key, required this.listaId});
 
   final String listaId;
+
+  /// Papel do usuário na lista (F7-T03): stream do PapelRepository reativo;
+  /// enquanto o primeiro evento não chega, lê o estado atual do repositório
+  /// (o menu pode abrir antes do microtask do stream).
+  Papel _papelNaLista(WidgetRef ref, String listaId) {
+    final viaStream = ref.watch(papelNaListaStreamProvider(listaId)).value;
+    if (viaStream != null) return viaStream;
+    return ref.watch(papelRepositoryProvider).papelDe(listaId) ?? Papel.leitor;
+  }
 
   void _acaoMenu(
     BuildContext context,
@@ -40,6 +53,14 @@ class TelaListaScreen extends ConsumerWidget {
         );
       case 'excluir':
         _confirmarExcluirLista(context, ref, listaId);
+      case 'convidar':
+        abrirSheetConvidar(context, ref, idLista);
+      case 'membros':
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => TelaMembrosScreen(listaId: idLista),
+          ),
+        );
     }
   }
 
@@ -160,6 +181,18 @@ class TelaListaScreen extends ConsumerWidget {
                     value: 'renomear',
                     child: Text(AppStrings.renomearLista),
                   ),
+                  // Membros (doc 08 §8) todos veem; "Convidar" é ação de dono
+                  // (doc 08 §1). Papel reativo do PapelRepository (F7-T03);
+                  // loading/null = desconhecido → trata como não-dono.
+                  const PopupMenuItem(
+                    value: 'membros',
+                    child: Text(AppStrings.membros),
+                  ),
+                  if (_papelNaLista(ref, lista.id) == Papel.dono)
+                    const PopupMenuItem(
+                      value: 'convidar',
+                      child: Text(AppStrings.convidar),
+                    ),
                   const PopupMenuItem(
                     value: 'excluir',
                     child: Text(
