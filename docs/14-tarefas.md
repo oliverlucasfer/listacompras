@@ -165,9 +165,38 @@ Spec do agrupamento por categoria: [superpowers/specs/2026-09-08-agrupamento-cat
   Dep: F6-T02, F6-T05 · Docs: [03 §8](03-sincronizacao-offline.md), [07 §1](07-qualidade-ci.md)
   CP: cenário de categoria entre 2 dispositivos (servidor fake) verde; CI verde; APK `1.1.0+3` distribuído ao grupo `testadores` (história em [09 §2.5](09-runbook-operacoes.md)).
 
-### Pós-MVP (Fase 6) — pendente de planejamento
+### Pós-MVP (Fase 7) — Compartilhamento por link (spec aprovada)
 
-Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS, Desktop, limpeza de tombstones. Planejamento: [08](08-compartilhamento-colaborativo.md) — breakdown detalhado desta fase será criado ao iniciá-la.
+Spec: [superpowers/specs/2026-09-10-compartilhamento-link-design.md](superpowers/specs/2026-09-10-compartilhamento-link-design.md) · Requisito: RF-13 · Doc dono: [08](08-compartilhamento-colaborativo.md) (decisões em §1.1).
+
+- [ ] **F7-T00** — Spec + ajustes nos docs de planejamento (08 §1.1, campo no 13, breakdown no 14)
+  Dep: — · Docs: spec da feature
+  CP: docs de planejamento consistentes entre si (00/12/13/14/spec) sem tocar código.
+- [ ] **F7-T01** — Migration `0007_convites.sql`: tabela, RLS, RPC `aceitar_convite`, publication
+  Dep: F7-T00 · Docs: [08 §2–§3.1, §7](08-compartilhamento-colaborativo.md), [02 §5](02-seguranca-rls.md)
+  CP: policies de convites criadas; aceitar link pendente entra no `lista_membros`; expirado/revogado → `CONVITE_INVALIDO`; 2º aceite idempotente; N-11…N-14 em `supabase/tests/rls_tests.sql` + testes do RPC; `db reset` e CI verde.
+- [ ] **F7-T02** — `ConvitesRepository` (criar link, listar pendentes, revogar, aceitar via RPC) + papel no bootstrap
+  Dep: F7-T01 · Docs: [08 §3](08-compartilhamento-colaborativo.md), [03 §4](03-sincronizacao-offline.md)
+  CP: chamadas diretas ao servidor (sem fila); códigos de erro mapeados em pt-BR; papel do usuário disponível nas consultas do app; unit tests com fake.
+- [ ] **F7-T03** — UI: sheet "Convidar" (dono) + tela de membros (trocar papel, remover, sair da lista)
+  Dep: F7-T02 · Docs: [08 §5, §8](08-compartilhamento-colaborativo.md), [10 §4](10-wireframes-telas.md)
+  CP: link gerado com papel; copiar/compartilhar scheme + copiar token; troca editor↔leitor; remover membro com confirmação destrutiva; "sair da lista" para não-dono; widget tests.
+- [ ] **F7-T04** — Banner "Você é leitor" + bloqueio de ações de escrita na tela da lista
+  Dep: F7-T02 · Docs: [08 §1, §8](08-compartilhamento-colaborativo.md), [05 §6.3](05-app-flutter.md)
+  CP: leitor vê banner somente leitura; checkbox/menu/swipe/＋ desabilitados; widget tests do bloqueio por papel.
+- [ ] **F7-T05** — Rota `/entrar?token=` (deep link scheme) + "Entrar com código" + retomada pós-login
+  Dep: F7-T02 · Docs: [08 §3](08-compartilhamento-colaborativo.md), [05 §4](05-app-flutter.md)
+  CP: link abre o app (não autenticado → login com contexto "Você foi convidado..." e retoma o aceite); token válido navega à lista; expirado/revogado → erro amigável; já membro → só navega; token colado funciona igual; widget tests dos estados.
+- [ ] **F7-T06** — Realtime `lista_membros`: papel ao vivo, entrada de membro e perda de acesso < 5s
+  Dep: F7-T02 · Docs: [08 §5, §7](08-compartilhamento-colaborativo.md), [03 §7](03-sincronizacao-offline.md)
+  CP: INSERT → "membro entrou"; UPDATE papel → papel local atualiza; DELETE do próprio usuário → flush + limpa cache/fila + refetch de listas (padrão F4-T06); remoção refletida < 5s no device removido; teste com canal fake no estilo `checklist_sincronizacao_test.dart`.
+- [ ] **F7-T07** — Checklist de validação 08 §9 (recorte link-only) + CI verde + distribuição aos testadores
+  Dep: F7-T03, F7-T04, F7-T05, F7-T06 · Docs: [08 §9](08-compartilhamento-colaborativo.md), [07 §1](07-qualidade-ci.md)
+  CP: itens 1, 2→(adaptado a link), 4, 5, 6 e 8 do checklist verificados; APK `1.1.1+4` (ou próximo) via App Distribution; histórico em [09 §2.5](09-runbook-operacoes.md).
+
+### Pós-MVP (Fase 7) — pendente de planejamento
+
+Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), transferência de dono (RF-14), universal links (pós-F5-T06), iOS, Desktop, limpeza de tombstones.
 
 ---
 
@@ -181,7 +210,8 @@ Compartilhamento completo (convites, papéis na UI, transferência de dono), iOS
 | F4 IA + Sync | 9 | 9 |
 | F5 Publicação | 7 | 5 |
 | F6 Pós-MVP | 7 | 7 |
-| **Total** | **45** | **43** |
+| F7 Compartilhamento | 8 | 0 |
+| **Total** | **53** | **43** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

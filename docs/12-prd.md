@@ -34,8 +34,8 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-10 | Deduplicação de itens (unique parcial + aumento de quantidade no sync) | 01 §4.3 + 03 §5 | F4 | [01 §8](01-banco-de-dados.md) |
 | RF-11 | Exclusão de conta com delete físico em cascata (LGPD) | 06 §3.3.1 | F5 | [06 §3.3.1](06-mvp-entregas.md) |
 | RF-12 | Observabilidade: Sentry com privacidade (sem conteúdo de listas em logs) | 07 §4 | F5 | [07](07-qualidade-ci.md) |
-| RF-13 | Compartilhamento por convite (link/e-mail) com papéis — **Fase 6** | 08 | F6 | [08 §9](08-compartilhamento-colaborativo.md) |
-| RF-14 | Transferência de dono — **Fase 6** | 08 §6 | F6 | [08 §9](08-compartilhamento-colaborativo.md) |
+| RF-13 | Compartilhamento por convite (link/e-mail) com papéis — **Fase 6** (1ª rodada: link-only, [08 §1.1](08-compartilhamento-colaborativo.md)) | 08 | F7 | [08 §9](08-compartilhamento-colaborativo.md) |
+| RF-14 | Transferência de dono — **Fase 6** (adiada — [08 §1.1](08-compartilhamento-colaborativo.md)) | 08 §6 | F7 | [08 §9](08-compartilhamento-colaborativo.md) |
 | RF-15 | Agrupamento da lista por categoria (enum fechado [01 §3](01-banco-de-dados.md)) com sugestão local em camadas (memória por nome → dicionário estático → `outros`); IA sugere no import | 05 §6.3 + 01 §4.3 | F6 | [05 §8](05-app-flutter.md) + [03 §8](03-sincronizacao-offline.md) |
 
 ## 3. Requisitos Não-Funcionais
