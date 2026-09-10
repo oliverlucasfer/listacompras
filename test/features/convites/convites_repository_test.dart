@@ -1,3 +1,4 @@
+import 'dart:async' show TimeoutException;
 import 'dart:convert';
 import 'dart:io' show SocketException;
 
@@ -116,6 +117,29 @@ void main() {
   test('deve_mapear_erro_quando_sem_conexao', () async {
     final servidor = ServidorFake((req) {
       throw const SocketException('sem rota');
+    });
+    addTearDown(servidor.close);
+    final repo = ConvitesRepository(
+      SupabaseClient(
+        'http://127.0.0.1:54321',
+        'test-key',
+        httpClient: servidor,
+      ),
+    );
+
+    await expectLater(
+      repo.aceitar(_token),
+      throwsA(
+        isA<ErroConvite>()
+            .having((e) => e.code, 'code', 'sem_conexao')
+            .having((e) => e.message, 'message', AppStrings.iaSemConexao),
+      ),
+    );
+  });
+
+  test('deve_mapear_erro_quando_requisicao_expira', () async {
+    final servidor = ServidorFake((req) {
+      throw TimeoutException('tempo esgotado');
     });
     addTearDown(servidor.close);
     final repo = ConvitesRepository(

@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
 import 'package:lista_compras/drift/database.dart';
+import 'package:lista_compras/features/convites/data/papel_repository.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/sync/data/supabase_bootstrap.dart';
 import 'package:lista_compras/features/sync/data/sync_engine.dart';
@@ -19,6 +22,38 @@ class RemotoFake implements SyncRemoto {
     recebidas.add(mutacao);
     return const Enviado();
   }
+}
+
+/// Cliente HTTP que responde 403 (RLS) no SELECT de `lista_membros` —
+/// erro PostgREST imediato, sem retry com backoff do postgrest.
+class HttpPapelFalho implements http.Client {
+  final pedidos = <http.BaseRequest>[];
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    pedidos.add(request);
+    final bytes = utf8.encode(
+      jsonEncode({
+        'code': 'P0001',
+        'message': 'RLS: sem acesso a lista_membros',
+        'details': null,
+        'hint': null,
+      }),
+    );
+    return http.StreamedResponse(
+      Stream.value(bytes),
+      403,
+      request: request,
+      headers: {'content-type': 'application/json'},
+      contentLength: bytes.length,
+    );
+  }
+
+  @override
+  void close() {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {
@@ -256,5 +291,56 @@ void main() {
       db.itemLocal,
     )..where((i) => i.id.equals(item.id))).getSingle();
     expect(local.nome, 'Remoto novo');
+  });
+
+  test('deve_seguir_resync_quando_carga_de_papel_falhar', () async {
+    // Papel é secundário (doc 03 §7): o SELECT de lista_membros falhar
+    // não pode abortar o download de listas/itens nem o flush da fila.
+    final httpFalho = HttpPapelFalho();
+    final papelRepo = PapelRepository(
+      SupabaseClient(
+        'http://127.0.0.1:54321',
+        'test-key',
+        httpClient: httpFalho,
+      ),
+    );
+    remotos
+      ..['listas'] = [listaRemota('l1')]
+      ..['itens_lista'] = [itemRemota('i1', 'l1')];
+    final usuario = StreamController<String?>();
+    final bootstrap = SupabaseBootstrap(
+      db: db,
+      engine: SyncEngine(
+        db: db,
+        remoto: remoto,
+        checarConexao: () async => true,
+      ),
+      client: SupabaseClient('http://127.0.0.1:54321', 'test-key'),
+      baixar: (tabela) async => remotos[tabela] ?? const [],
+      mudancasDeUsuario: usuario.stream,
+      checarConexao: () async => true,
+      lerUsuarioSalvo: () async => null,
+      salvarUsuario: (id) async {},
+      papelRepository: papelRepo,
+    );
+    addTearDown(() async {
+      await bootstrap.dispose();
+      await usuario.close();
+    });
+    await bootstrap.iniciar();
+
+    usuario.add('U1');
+    await pumpEventQueue();
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    expect(
+      await (db.select(db.listaLocal)..where((l) => l.id.equals('l1'))).get(),
+      isNotEmpty,
+    );
+    expect(
+      await (db.select(db.itemLocal)..where((i) => i.id.equals('i1'))).get(),
+      isNotEmpty,
+    );
+    expect(httpFalho.pedidos, isNotEmpty); // carga de papel foi tentada
+    expect(papelRepo.valores, isEmpty); // papéis seguem vazios sem quebrar
   });
 }

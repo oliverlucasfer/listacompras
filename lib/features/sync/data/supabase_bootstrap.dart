@@ -97,7 +97,12 @@ class SupabaseBootstrap {
     final usuario = _usuarioAtual;
     final papel = _papelRepository;
     if (papel != null && usuario != null) {
-      await papel.carregar(usuario);
+      try {
+        await papel.carregar(usuario);
+      } on Exception {
+        // Papel é secundário (doc 03 §7): falha de rede/PostgREST não
+        // pode abortar o download de listas/itens nem o flush da fila.
+      }
     }
     for (final tabela in const ['listas', 'itens_lista']) {
       final registros = await _baixar(tabela);

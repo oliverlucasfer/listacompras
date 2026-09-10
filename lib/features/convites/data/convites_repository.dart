@@ -1,3 +1,4 @@
+import 'dart:async' show TimeoutException;
 import 'dart:io' show SocketException;
 
 import 'package:http/http.dart' show ClientException;
@@ -125,6 +126,8 @@ class ConvitesRepository {
     } on SocketException {
       throw const ErroConvite('sem_conexao', AppStrings.iaSemConexao);
     } on ClientException {
+      throw const ErroConvite('sem_conexao', AppStrings.iaSemConexao);
+    } on TimeoutException {
       throw const ErroConvite('sem_conexao', AppStrings.iaSemConexao);
     }
   }
