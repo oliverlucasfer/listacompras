@@ -21,6 +21,7 @@ import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/domain/categoria.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
+import 'package:lista_compras/features/convites/ui/tela_membros_screen.dart';
 import 'package:lista_compras/features/listas/domain/unidade.dart';
 import 'package:lista_compras/features/listas/ui/tela_lista_screen.dart';
 import 'package:lista_compras/features/sync/domain/sync_status.dart';
@@ -683,6 +684,21 @@ void main() {
     sync.add(const Sincronizado());
     addTearDown(sync.close);
 
+    final router = GoRouter(
+      initialLocation: '/lista/${lista.id}',
+      routes: [
+        GoRoute(
+          path: '/lista/:listaId',
+          builder: (_, state) =>
+              TelaListaScreen(listaId: state.pathParameters['listaId']!),
+        ),
+        GoRoute(
+          path: '/membros/:listaId',
+          builder: (_, state) =>
+              TelaMembrosScreen(listaId: state.pathParameters['listaId']!),
+        ),
+      ],
+    );
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -703,7 +719,7 @@ void main() {
           donoAtualIdProvider.overrideWithValue('user-a'),
           syncStatusProvider.overrideWith((ref) => sync.stream),
         ],
-        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+        child: MaterialApp.router(routerConfig: router),
       ),
     );
     await tester.pumpAndSettle();
@@ -716,8 +732,9 @@ void main() {
     await tester.tap(find.text(AppStrings.membros));
     await tester.pumpAndSettle();
 
-    // Tela de membros: próprio usuário destacado, chip de papel e "Sair da
-    // lista" (F7-T03).
+    // Navegação via rota /membros/:listaId (F7-T03): tela de membros com
+    // próprio usuário destacado, chip de papel e "Sair da lista".
+    expect(find.text(AppStrings.membros), findsOneWidget);
     expect(find.text(AppStrings.voce), findsOneWidget);
     expect(find.text(AppStrings.convidarPapelLeitor), findsOneWidget);
     expect(

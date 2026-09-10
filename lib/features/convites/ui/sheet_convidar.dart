@@ -47,12 +47,12 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
     if (mounted) setState(() => _gerando = false);
   }
 
-  Future<void> _copiar(String link) async {
-    await Clipboard.setData(ClipboardData(text: link));
+  Future<void> _copiar(String valor, String mensagem) async {
+    await Clipboard.setData(ClipboardData(text: valor));
     if (mounted) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(AppStrings.linkCopiado)));
+        ..showSnackBar(SnackBar(content: Text(mensagem)));
     }
   }
 
@@ -137,24 +137,32 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
                         ref
                             .read(convitesRepositoryProvider)
                             .linkConvite(convite.token),
+                        AppStrings.linkCopiado,
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton.icon(
-                      icon: const Icon(Icons.share_outlined),
-                      label: const Text(AppStrings.compartilhar),
-                      onPressed: () => SharePlus.instance.share(
-                        ShareParams(
-                          text: ref
-                              .read(convitesRepositoryProvider)
-                              .linkConvite(convite.token),
-                        ),
-                      ),
+                      icon: const Icon(Icons.copy_outlined),
+                      label: const Text(AppStrings.copiarToken),
+                      onPressed: () =>
+                          _copiar(convite.token, AppStrings.tokenCopiado),
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.share_outlined),
+                label: const Text(AppStrings.compartilhar),
+                onPressed: () => SharePlus.instance.share(
+                  ShareParams(
+                    text: ref
+                        .read(convitesRepositoryProvider)
+                        .linkConvite(convite.token),
+                  ),
+                ),
               ),
             ],
           ],

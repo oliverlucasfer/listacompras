@@ -183,4 +183,48 @@ void main() {
 
     await fechar(tester);
   });
+
+  testWidgets('deve_copiar_token_cru_quando_tocar_copiar_token', (
+    tester,
+  ) async {
+    String? copiado;
+    final canal = SystemChannels.platform;
+    tester.binding.defaultBinaryMessenger.setMockMessageHandler(canal.name, (
+      data,
+    ) async {
+      final conteudo = const JSONMessageCodec().decodeMessage(data);
+      if (conteudo is Map && conteudo['method'] == 'Clipboard.setData') {
+        copiado = conteudo['args']['text'] as String?;
+      }
+      return null;
+    });
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMessageHandler(
+        canal.name,
+        null,
+      ),
+    );
+
+    final servidor = ServidorFake((req) {
+      if (req.method == 'POST' && req.url.path.contains('/convites')) {
+        return (200, _linhaConvite(papel: 'editor'));
+      }
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    await abrir(tester, servidor);
+
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.gerarLink));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.widgetWithText(OutlinedButton, AppStrings.copiarToken),
+    );
+    await tester.pumpAndSettle();
+
+    // Token cru, sem scheme da deep link.
+    expect(copiado, _token);
+    expect(find.text(AppStrings.tokenCopiado), findsOneWidget);
+
+    await fechar(tester);
+  });
 }

@@ -6,7 +6,6 @@ import '../../../core/l10n/app_strings.dart';
 import '../../convites/domain/papel.dart';
 import '../../convites/providers/papel_providers.dart';
 import '../../convites/ui/sheet_convidar.dart';
-import '../../convites/ui/tela_membros_screen.dart';
 import '../../ia/ui/modal_importar_ia.dart';
 import '../../ia/ui/modal_previsao_ia.dart';
 import '../../sync/ui/indicador_sync.dart';
@@ -56,11 +55,7 @@ class TelaListaScreen extends ConsumerWidget {
       case 'convidar':
         abrirSheetConvidar(context, ref, idLista);
       case 'membros':
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => TelaMembrosScreen(listaId: idLista),
-          ),
-        );
+        context.push('/membros/$idLista');
     }
   }
 

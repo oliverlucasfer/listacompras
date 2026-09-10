@@ -120,8 +120,10 @@ abstract final class AppStrings {
   static const convidarPapelLeitor = 'Leitor';
   static const gerarLink = 'Gerar link';
   static const copiarLink = 'Copiar link';
+  static const copiarToken = 'Copiar token';
   static const compartilhar = 'Compartilhar';
   static const linkCopiado = 'Link copiado para a área de transferência.';
+  static const tokenCopiado = 'Token copiado para a área de transferência.';
   static const membros = 'Membros';
   static const voce = 'Você';
   static const papelDono = 'Dono';

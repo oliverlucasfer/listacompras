@@ -280,6 +280,62 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_ocultar_botao_sair_enquanto_isLoading_e_quando_dono', (
+    tester,
+  ) async {
+    final servidor = ServidorFake((req) {
+      if (req.method == 'GET' && req.url.path.contains('/lista_membros')) {
+        return (200, _linhasMembros());
+      }
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    final cliente = SupabaseClient(
+      'http://127.0.0.1:54321',
+      'test-key',
+      httpClient: servidor,
+      authOptions: const AuthClientOptions(autoRefreshToken: false),
+    );
+    final router = GoRouter(
+      initialLocation: '/membros/$_listaId',
+      routes: [
+        GoRoute(
+          path: '/membros/:listaId',
+          builder: (_, state) =>
+              TelaMembrosScreen(listaId: state.pathParameters['listaId']!),
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          convitesRepositoryProvider.overrideWithValue(
+            ConvitesRepository(cliente),
+          ),
+          donoAtualIdProvider.overrideWithValue('U1'),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+
+    // Durante isLoading (papel desconhecado): "Sair da lista" não aparece.
+    expect(
+      find.widgetWithText(TextButton, AppStrings.sairDaLista),
+      findsNothing,
+    );
+
+    await tester.pumpAndSettle();
+
+    // Dono com dados carregados: continua sem o botão.
+    expect(find.text(AppStrings.voce), findsOneWidget);
+    expect(
+      find.widgetWithText(TextButton, AppStrings.sairDaLista),
+      findsNothing,
+    );
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_ocultar_acoes_dono_quando_nao_e_dono', (tester) async {
     final servidor = ServidorFake((req) {
       if (req.method == 'GET' && req.url.path.contains('/lista_membros')) {

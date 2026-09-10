@@ -164,7 +164,9 @@ class TelaMembrosScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text(AppStrings.membros),
         actions: [
-          if (!_eDono(membrosAsync, usuarioId))
+          // O gate só decide com dados carregados: enquanto isLoading (ou
+          // papel desconhecido, ex.: erro), não renderiza "Sair da lista".
+          if (membrosAsync.hasValue && !_eDono(membrosAsync, usuarioId))
             TextButton(
               onPressed: () => _confirmarSair(context, ref),
               child: const Text(AppStrings.sairDaLista),
