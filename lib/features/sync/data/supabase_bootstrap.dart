@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../drift/database.dart';
+import '../../convites/data/papel_repository.dart';
 import 'aplicador_remoto.dart';
 import 'supabase_sync_remoto.dart';
 import 'sync_engine.dart';
@@ -29,6 +30,7 @@ class SupabaseBootstrap {
     Future<String?> Function()? lerUsuarioSalvo,
     Future<void> Function(String? usuarioId)? salvarUsuario,
     Future<List<Map<String, Object?>>> Function(String tabela)? baixar,
+    this._papelRepository,
   }) : _lerUsuarioSalvo = lerUsuarioSalvo ?? _lerSharedPreferences,
        _salvarUsuario = salvarUsuario ?? _gravarSharedPreferences {
     _baixar = baixar ?? _baixarDoSupabase;
@@ -48,6 +50,7 @@ class SupabaseBootstrap {
 
   late final AplicadorRemoto _aplicador;
   late Future<List<Map<String, Object?>>> Function(String tabela) _baixar;
+  final PapelRepository? _papelRepository;
 
   String? _usuarioAtual;
   RealtimeChannel? _canal;
@@ -88,9 +91,14 @@ class SupabaseBootstrap {
     }
   }
 
-  /// Re-sync completo (doc 03 §7): baixa as linhas visíveis do usuário
-  /// (RLS), aplica as vencedoras no LWW e drena a fila em seguida.
+  /// Re-sync completo (doc 03 §7): carrega os papéis do usuário, baixa as
+  /// linhas visíveis (RLS), aplica as vencedoras no LWW e drena a fila.
   Future<void> sincronizarTudo() async {
+    final usuario = _usuarioAtual;
+    final papel = _papelRepository;
+    if (papel != null && usuario != null) {
+      await papel.carregar(usuario);
+    }
     for (final tabela in const ['listas', 'itens_lista']) {
       final registros = await _baixar(tabela);
       for (final registro in registros) {
@@ -144,6 +152,7 @@ class SupabaseBootstrap {
     await _db.delete(_db.itemLocal).go();
     await _db.delete(_db.listaLocal).go();
     await _db.delete(_db.mutacaoPendente).go();
+    _papelRepository?.limpar();
   }
 
   Future<void> _assinarRealtime() async {

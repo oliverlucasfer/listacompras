@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../convites/providers/papel_providers.dart';
 import '../../listas/providers/listas_providers.dart';
 import '../data/supabase_bootstrap.dart';
 import '../data/supabase_sync_remoto.dart';
@@ -44,6 +45,7 @@ final syncBootstrapProvider = Provider<SupabaseBootstrap>((ref) {
     db: ref.watch(appDatabaseProvider),
     engine: ref.watch(syncEngineProvider),
     client: Supabase.instance.client,
+    papelRepository: ref.watch(papelRepositoryProvider),
   );
   ref.onDispose(bootstrap.dispose);
   unawaited(bootstrap.iniciar());

@@ -107,6 +107,13 @@ abstract final class AppStrings {
   static const iaSemConexao =
       'Sem conexão. Verifique sua internet e tente novamente.';
 
+  // Compartilhamento por convite (doc 08, RF-13)
+  static const conviteInvalido = 'Este convite não é mais válido.';
+  static const conviteSemConexao =
+      'Sem conexão para entrar na lista. Verifique sua internet e tente novamente.';
+  static const conviteInesperado =
+      'Não foi possível entrar na lista. Tente novamente.';
+
   static String itensExtraidos(int n) =>
       n == 1 ? '1 item extraído.' : '$n itens extraídos.';
 
