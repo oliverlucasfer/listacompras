@@ -169,31 +169,38 @@ Spec do agrupamento por categoria: [superpowers/specs/2026-09-08-agrupamento-cat
 
 Spec: [superpowers/specs/2026-09-10-compartilhamento-link-design.md](superpowers/specs/2026-09-10-compartilhamento-link-design.md) · Requisito: RF-13 · Doc dono: [08](08-compartilhamento-colaborativo.md) (decisões em §1.1).
 
-- [ ] **F7-T00** — Spec + ajustes nos docs de planejamento (08 §1.1, campo no 13, breakdown no 14)
+- [x] **F7-T00** — Spec + ajustes nos docs de planejamento (08 §1.1, campo no 13, breakdown no 14)
   Dep: — · Docs: spec da feature
   CP: docs de planejamento consistentes entre si (00/12/13/14/spec) sem tocar código.
+  Nota: *(spec aprovada + decisões em 08 §1.1 + break plan; commits 835cf26, c76d79e)*
 - [x] **F7-T01** — Migration `0007_convites.sql`: tabela, RLS, RPC `aceitar_convite`, publication
   Dep: F7-T00 · Docs: [08 §2–§3.1, §7](08-compartilhamento-colaborativo.md), [02 §5](02-seguranca-rls.md)
   CP: policies de convites criadas; aceitar link pendente entra no `lista_membros`; expirado/revogado → `CONVITE_INVALIDO`; 2º aceite idempotente; N-11…N-14 em `supabase/tests/rls_tests.sql` + testes do RPC; `db reset` e CI verde.
   Nota: casos A-01…A-07 em `supabase/tests/aceitar_convite_tests.sql` (idempotência, expiração, revogação, anon rejeitado, caminho de e-mail). RPC recebe guarda de anonimato (A-05) e mantém estado `aceito` aceitável (idempotência/§9) — desvios documentados no 08 §3.1 no mesmo PR; helper `email_autenticado` + policies de `convites` documentados no 02 §1/§4.4.
-- [ ] **F7-T02** — `ConvitesRepository` (criar link, listar pendentes, revogar, aceitar via RPC) + papel no bootstrap
+- [x] **F7-T02** — `ConvitesRepository` (criar link, listar pendentes, revogar, aceitar via RPC) + papel no bootstrap
   Dep: F7-T01 · Docs: [08 §3](08-compartilhamento-colaborativo.md), [03 §4](03-sincronizacao-offline.md)
   CP: chamadas diretas ao servidor (sem fila); códigos de erro mapeados em pt-BR; papel do usuário disponível nas consultas do app; unit tests com fake.
-- [ ] **F7-T03** — UI: sheet "Convidar" (dono) + tela de membros (trocar papel, remover, sair da lista)
+  Nota: *(ConvitesRepository com criarLink/revogar/pendentes/mudarPapel/removerMembro/sairDaLista/aceitar (RPC `aceitar_convite`; códigos CONVITE_* e falha de rede mapeados em pt-BR); `Papel`, `Convite`, `MembroLista`, `ErroConvite`; PapelRepository fora do Drift, injetado no bootstrap (carga antes do download das tabelas, limpeza no logout) + `papelNaListaProvider`; 17 testes com ServidorFake HTTP — commits 8635873, 6a2d0bd)*
+- [x] **F7-T03** — UI: sheet "Convidar" (dono) + tela de membros (trocar papel, remover, sair da lista)
   Dep: F7-T02 · Docs: [08 §5, §8](08-compartilhamento-colaborativo.md), [10 §4](10-wireframes-telas.md)
   CP: link gerado com papel; copiar/compartilhar scheme + copiar token; troca editor↔leitor; remover membro com confirmação destrutiva; "sair da lista" para não-dono; widget tests.
-- [ ] **F7-T04** — Banner "Você é leitor" + bloqueio de ações de escrita na tela da lista
+  Nota: *(sheet Convidar com seleção de papel (radios Editor/Leitor), link com copiar e compartilhar — `SharePlus.share` na share_plus 12.x (`Share.share` removido), pin atualizado no pubspec; tela de membros com chip de papel, "Você", troca editor↔leitor, remover com confirmação destrutiva e "Sair da lista" para não-dono; gate de "Sair" no loading, copiar token/código colado no painel; "Convidar" dono-only e "Membros" para todos no menu ⋮; papel reativo via `papelNaListaStreamProvider` com fallback síncrono; widget tests — commits 1e9051c, 6e1e640)*
+- [x] **F7-T04** — Banner "Você é leitor" + bloqueio de ações de escrita na tela da lista
   Dep: F7-T02 · Docs: [08 §1, §8](08-compartilhamento-colaborativo.md), [05 §6.3](05-app-flutter.md)
   CP: leitor vê banner somente leitura; checkbox/menu/swipe/＋ desabilitados; widget tests do bloqueio por papel.
-- [ ] **F7-T05** — Rota `/entrar?token=` (deep link scheme) + "Entrar com código" + retomada pós-login
+  Nota: *(banner "Somente leitura" no topo para leitor; sem campo adicionar, IA, checkbox, swipe (sem Dismissible) nem alça de drag; menu reduzido; default conservador (trata como leitor) quando papel não carregado; editor escreve, "Convidar" e "excluir lista" dono-only; 4 widget tests por papel — commit 832fbc3)*
+- [x] **F7-T05** — Rota `/entrar?token=` (deep link scheme) + "Entrar com código" + retomada pós-login
   Dep: F7-T02 · Docs: [08 §3](08-compartilhamento-colaborativo.md), [05 §4](05-app-flutter.md)
   CP: link abre o app (não autenticado → login com contexto "Você foi convidado..." e retoma o aceite); token válido navega à lista; expirado/revogado → erro amigável; já membro → só navega; token colado funciona igual; widget tests dos estados.
-- [ ] **F7-T06** — Realtime `lista_membros`: papel ao vivo, entrada de membro e perda de acesso < 5s
+  Nota: *(rota pública `/entrar` excluída do redirect de autenticação; sem sessão → contexto "Você foi convidado..." com Entrar/Criar conta e `?next=` para retomada pós-login; com sessão o aceite roda o RPC e navega a `/lista/:id`; expirado/revogado → erro amigável + "Tentar novamente" (idempotente); intent-filter host `entrar` + ponte deeplinkConviteProvider (app_links) — supabase_flutter só captura callbacks de auth com access_token/code (verificado no fonte do package); "Entrar com código" no painel (token colado, mesmo caminho `aceitar`); 12 widget tests. Deep link físico pendente de dispositivo (sem emulador na sessão) — smoke ficou responsabilidade do F7-T07; commits d46ef91, 2463c4b)*
+- [x] **F7-T06** — Realtime `lista_membros`: papel ao vivo, entrada de membro e perda de acesso < 5s
   Dep: F7-T02 · Docs: [08 §5, §7](08-compartilhamento-colaborativo.md), [03 §7](03-sincronizacao-offline.md)
   CP: INSERT → "membro entrou"; UPDATE papel → papel local atualiza; DELETE do próprio usuário → flush + limpa cache/fila + refetch de listas (padrão F4-T06); remoção refletida < 5s no device removido; teste com canal fake no estilo `checklist_sincronizacao_test.dart`.
+  Nota: *(função pura `aplicarEventoMembro` + roteamento por tabela no callback de `_assinarRealtime`: INSERT/UPDATE próprios atualizam o papel, DELETE próprio → flush + limpa cache/fila + re-sync (padrão F4-T06); eventos de `lista_membros` jamais passam pelo motor LWW (sem `updated_at`); migration 0008 replica identity full em `lista_membros` fora do plan — necessária para o `old_record` do DELETE chegar com `user_id` — doc 08 §7 atualizado no mesmo PR; testes com CanalFake + stream de papel; validação física < 5s pendente de 2 dispositivos; commit 3d57d07)*
 - [ ] **F7-T07** — Checklist de validação 08 §9 (recorte link-only) + CI verde + distribuição aos testadores
   Dep: F7-T03, F7-T04, F7-T05, F7-T06 · Docs: [08 §9](08-compartilhamento-colaborativo.md), [07 §1](07-qualidade-ci.md)
   CP: itens 1, 2→(adaptado a link), 4, 5, 6 e 8 do checklist verificados; APK `1.1.1+4` (ou próximo) via App Distribution; histórico em [09 §2.5](09-runbook-operacoes.md).
+  Nota: *(PARCIAL — itens 1 e 5 do checklist pendentes de validação em dispositivos: suite local completa verde (db reset + suites SQL rls/excluir_conta/aceitar_convite — N-01…N-14, E-01…E-05, A-01…A-07; 217 testes Flutter; format/analyze limpos); itens 1, 2, 4, 6 e 8 cobertos por widget tests + suites SQL e item 5 em code review + testes de canal fake; itens do membro removido permanecem (remoção só apaga `lista_membros` — verificado na migration/RPC); APK `1.1.1+4` distribuído ao grupo `testadores`; migrations 0007/0008 ainda NÃO aplicadas em produção — `db push` pendente do dono (histórico 09 §2.5))*
 
 ### Pós-MVP (Fase 7) — pendente de planejamento
 
@@ -211,8 +218,8 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 | F4 IA + Sync | 9 | 9 |
 | F5 Publicação | 7 | 5 |
 | F6 Pós-MVP | 7 | 7 |
-| F7 Compartilhamento | 8 | 1 |
-| **Total** | **53** | **44** |
+| F7 Compartilhamento | 8 | 7 |
+| **Total** | **53** | **50** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
