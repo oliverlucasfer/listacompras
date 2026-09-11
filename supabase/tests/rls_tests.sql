@@ -1,8 +1,10 @@
 -- ============================================================================
 -- rls_tests.sql — Testes RLS da Fase 1 (doc 02 §5)
--- Casos: N-01..N-10 e P-01..P-04 (SQL); P-05 (Realtime) é validado por
--- supabase/tests/realtime_test.mjs (F1-T07).
+-- Casos: N-01..N-17 e P-01..P-04, P-06..P-07 (SQL); P-05 (Realtime) é
+-- validado por supabase/tests/realtime_test.mjs (F1-T07).
 -- N-11..N-14 cobrem as policies de `convites` (F7-T01, docs 02 §5 e 08 §2).
+-- N-15..N-17 e P-06..P-07 cobrem troca de papel e saída da lista
+-- (F7-T07, migration 0009 — doc 02 §4.3); N-07 já cobre "dono não sai".
 --
 -- Execução (após `supabase db reset`):
 --   Get-Content supabase/tests/rls_tests.sql -Raw | docker exec -i supabase_db_<proj> psql -U postgres -d postgres
@@ -264,6 +266,75 @@ begin
   get diagnostics c = row_count;
   if c = 0 then raise notice 'OK N-14: editor alterou 0 convites (revogar so dono)';
   else raise exception 'FALHOU N-14: editor alterou % convites', c; end if;
+end $$;
+
+-- ===== N-15: editor (B) tenta mudar papel de outro membro → 0 linhas (F7-T07) =====
+do $$
+declare c int;
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}', true);
+  update public.lista_membros set papel = 'editor'
+  where lista_id = '22222222-2222-2222-2222-222222222222'
+    and user_id = '55555555-5555-5555-5555-555555555555';
+  get diagnostics c = row_count;
+  if c = 0 then raise notice 'OK N-15: editor alterou 0 papeis (mudar papel so dono)';
+  else raise exception 'FALHOU N-15: editor alterou % papeis', c; end if;
+end $$;
+
+-- ===== N-16: editor (B) tenta remover linha de outro membro → 0 linhas (F7-T07) =====
+do $$
+declare c int;
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}', true);
+  delete from public.lista_membros
+  where lista_id = '22222222-2222-2222-2222-222222222222'
+    and user_id = '55555555-5555-5555-5555-555555555555';
+  get diagnostics c = row_count;
+  if c = 0 then raise notice 'OK N-16: editor removeu 0 membros (remover so dono)';
+  else raise exception 'FALHOU N-16: editor removeu % membros', c; end if;
+end $$;
+
+-- ===== N-17: dono (A) tenta promover membro a 'dono' via UPDATE → policy nega (F7-T07) =====
+do $$
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+  update public.lista_membros set papel = 'dono'
+  where lista_id = '22222222-2222-2222-2222-222222222222'
+    and user_id = '55555555-5555-5555-5555-555555555555';
+  raise exception 'FALHOU N-17: promocao a dono aceita';
+exception when insufficient_privilege then
+  raise notice 'OK N-17: with check negou promocao a dono';
+end $$;
+
+-- ===== P-06: dono (A) muda papel de membro leitor→editor → 1 linha (F7-T07) =====
+do $$
+declare c int;
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+  update public.lista_membros set papel = 'editor'
+  where lista_id = '22222222-2222-2222-2222-222222222222'
+    and user_id = '55555555-5555-5555-5555-555555555555';
+  get diagnostics c = row_count;
+  if c = 1 then raise notice 'OK P-06: dono mudou papel leitor->editor';
+  else raise exception 'FALHOU P-06: dono alterou % linhas', c; end if;
+end $$;
+
+-- ===== P-07: membro comum sai da lista (remove a própria linha) → sucesso (F7-T07) =====
+do $$
+declare c int;
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}', true);
+  delete from public.lista_membros
+  where lista_id = '22222222-2222-2222-2222-222222222222'
+    and user_id = '55555555-5555-5555-5555-555555555555';
+  get diagnostics c = row_count;
+  if c = 1 then raise notice 'OK P-07: membro comum saiu da lista';
+  else raise exception 'FALHOU P-07: membro removeu % linhas', c; end if;
 end $$;
 
 rollback;

@@ -109,8 +109,9 @@ alter table public.itens_lista   force row level security;
 | `itens_lista` | UPDATE | Membros `dono`/`editor` | `papel_na_lista(lista_id) in ('dono','editor')` |
 | `itens_lista` | DELETE | Só dono da lista | join com `listas.dono_id` |
 | `lista_membros` | SELECT | Qualquer membro | `is_member(lista_id)` |
-| `lista_membros` | INSERT / DELETE | Só dono | lista em que `dono_id = auth.uid()` |
-| `lista_membros` | UPDATE | *(não permitido no MVP)* | — (transferência de papel é Fase 6) |
+| `lista_membros` | INSERT | Dono (adicionar membro) | `is_dono_de(lista_id)` |
+| `lista_membros` | UPDATE | Dono (papel de outro membro) | `is_dono_de(lista_id)` e alvo `user_id <> auth.uid()`; papel destino `in ('editor','leitor')` (F7-T07, migration 0009) |
+| `lista_membros` | DELETE | Dono remove outros **ou** o próprio membro sai | dono: `is_dono_de(lista_id)` e `user_id <> auth.uid()`; saída: `user_id = auth.uid()` e `not is_dono_de(lista_id)` (F7-T07, migration 0009) |
 | `convites` | SELECT | Dono da lista | papel `dono` em `lista_membros` |
 | `convites` | SELECT | Qualquer autenticado | só convite `email` dirigido a si, `pendente` |
 | `convites` | INSERT | Dono da lista | `criado_por = auth.uid()` e é dono |
@@ -207,7 +208,32 @@ create policy "membros_delete_dono"
     -- dono não remove a si mesmo por aqui (evita lista sem dono)
     and user_id <> auth.uid()
   );
+
+-- F7-T07 (migration 0009): troca de papel (`mudarPapel`) e saída
+-- voluntária (`sairDaLista`) — na 0002 o UPDATE era "não permitido no
+-- MVP" e sem estas policies ambas as operações eram no-ops silenciosos.
+create policy "membros_update_papel_dono"
+  on public.lista_membros for update
+  using (
+    public.is_dono_de(lista_id)
+    and user_id <> auth.uid()
+  )
+  with check (
+    public.is_dono_de(lista_id)
+    and user_id <> auth.uid()
+    -- nunca promove a dono: transferência é processo explícito (08 §6)
+    and papel in ('editor', 'leitor')
+  );
+
+create policy "membros_delete_proprio"
+  on public.lista_membros for delete
+  using (
+    user_id = auth.uid()
+    and not public.is_dono_de(lista_id)
+  );
 ```
+
+> **Notas:** o trigger `sync_dono` ([01 §6](01-banco-de-dados.md)) permanece intacto — é ele quem bloqueia qualquer mudança na linha do dono e a remoção/downgrade do dono (as policies acima já negam ao dono alterar/remover a própria linha). As policies de DELETE são permissivas e se somam (OR): dono remove outros, membro remove a própria linha.
 
 > **Nota sobre o próprio dono:** ao criar a lista, o fluxo é (1) INSERT em `listas` com `dono_id = auth.uid()`, (2) INSERT em `lista_membros` com `papel = 'dono'`. O trigger `sync_dono` ([01 §6](01-banco-de-dados.md)) valida a unicidade.
 
@@ -298,9 +324,13 @@ Casos que **DEVEM falhar** (executados como usuário autenticado sem acesso, via
 | N-09 | Usuário A tenta UPDATE de `listas.dono_id` para si mesmo | violação de policy |
 | N-10 | Usuário A insere 2º membro `papel='dono'` na própria lista | exceção do trigger `sync_dono` |
 | N-11 | Não-membro faz SELECT de convites da lista de outrem | 0 linhas (F7-T01) |
-| N-12 | Dono faz SELECT dos convites da própria lista | > 0 linhas (F7-T01) |
 | N-13 | `editor` tenta INSERT de convite | violação de policy (F7-T01) |
 | N-14 | `editor` tenta revogar convite (UPDATE) | 0 linhas (policy nega) (F7-T01) |
+| N-15 | `editor` tenta mudar papel de outro membro (UPDATE em `lista_membros`) | 0 linhas (F7-T07) |
+| N-16 | `editor` tenta remover linha de outro membro (DELETE em `lista_membros`) | 0 linhas (F7-T07) |
+| N-17 | Dono tenta promover membro a `dono` via UPDATE | violação de policy (`with check`, F7-T07) |
+
+> N-12 é **positivo** apesar do prefixo N (cobria a leitura legítima dos convites pelo dono) — movido para a tabela "DEVEM passar" abaixo.
 
 Casos que **DEVEM passar**:
 
@@ -311,6 +341,9 @@ Casos que **DEVEM passar**:
 | P-03 | `editor` cria/edita/soft-deleta itens | sucesso |
 | P-04 | `leitor` lê lista e itens | sucesso |
 | P-05 | Realtime entrega eventos apenas das listas do usuário | sucesso |
+| N-12 | Dono faz SELECT dos convites da própria lista | > 0 linhas (F7-T01) |
+| P-06 | Dono muda papel de membro `leitor`→`editor` (UPDATE em `lista_membros`) | 1 linha (F7-T07) |
+| P-07 | Membro comum sai da lista (DELETE da própria linha em `lista_membros`) | sucesso (F7-T07) |
 
 Ferramentas: testes de integração com dois usuários reais (ver [07 Qualidade](07-qualidade-ci.md)) ou script SQL com `set local role authenticated; set local request.jwt.claims = ...` em ambiente dev.
 
@@ -319,8 +352,8 @@ Ferramentas: testes de integração com dois usuários reais (ver [07 Qualidade]
 ## 6. Checklist de validação (Fase 1)
 
 - [ ] `force row level security` aplicado em todas as tabelas.
-- [ ] Todos os 10 casos de negação (N-01…N-10) falham como esperado.
-- [ ] Todos os 5 casos positivos (P-01…P-05) passam.
+- [ ] Todos os casos de negação (N-01…N-17; N-12 é positivo — ver §5) falham como esperado.
+- [ ] Todos os casos positivos (P-01…P-07, exceto P-05 Realtime) passam.
 - [ ] Policies versionadas na migration `0002_rls_policies.sql`.
 - [ ] Realtime recebe apenas eventos autorizados (teste com 2 contas).
 
