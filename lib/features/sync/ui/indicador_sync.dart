@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/theme/tokens/app_spacing.dart';
+import '../../../core/widgets/app_banner.dart';
+import '../../../core/widgets/app_botao.dart';
 import '../domain/sync_status.dart';
 import '../providers/sync_providers.dart';
 
@@ -37,18 +40,24 @@ class IndicadorSync extends ConsumerWidget {
         ),
         texto: AppStrings.syncPendentes(total),
       ),
-      Offline() => _BannerSync(
-        cor: cores.surfaceContainerHighest,
-        icone: Icons.cloud_off,
-        mensagem: AppStrings.syncSemConexao,
+      Offline() => const Padding(
+        padding: EdgeInsets.all(AppSpacing.sm),
+        child: AppBanner(
+          tipo: AppBannerTipo.offline,
+          mensagem: AppStrings.syncSemConexao,
+        ),
       ),
-      ErroSync() => _BannerSync(
-        cor: cores.errorContainer,
-        icone: Icons.error_outline,
-        mensagem: AppStrings.syncErro,
-        acao: TextButton(
-          onPressed: () => ref.read(syncEngineProvider).reiniciarTentativas(),
-          child: const Text(AppStrings.tentarNovamente),
+      ErroSync() => Padding(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        child: AppBanner(
+          tipo: AppBannerTipo.erro,
+          mensagem: AppStrings.syncErro,
+          acao: AppBotao(
+            rotulo: AppStrings.tentarNovamente,
+            variante: AppBotaoVariante.texto,
+            expandido: false,
+            onPressed: () => ref.read(syncEngineProvider).reiniciarTentativas(),
+          ),
         ),
       ),
     };
@@ -64,53 +73,22 @@ class _LinhaStatus extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.xs,
+        AppSpacing.lg,
+        0,
+      ),
       child: Row(
         children: [
           icone,
-          const SizedBox(width: 4),
+          const SizedBox(width: AppSpacing.xs),
           Text(
             texto,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BannerSync extends StatelessWidget {
-  const _BannerSync({
-    required this.cor,
-    required this.icone,
-    required this.mensagem,
-    this.acao,
-  });
-
-  final Color cor;
-  final IconData icone;
-  final String mensagem;
-  final Widget? acao;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      color: cor,
-      padding: const EdgeInsets.fromLTRB(16, 6, 8, 6),
-      child: Row(
-        children: [
-          Icon(icone, size: 16),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              mensagem,
-              style: Theme.of(context).textTheme.labelMedium,
-            ),
-          ),
-          ?acao,
         ],
       ),
     );

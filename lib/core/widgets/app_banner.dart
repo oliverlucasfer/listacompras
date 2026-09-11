@@ -45,7 +45,7 @@ class AppBanner extends StatelessWidget {
       AppBannerTipo.offline => (
         semanticas.warningContainer,
         semanticas.onWarningContainer,
-        Icons.cloud_off_outlined,
+        Icons.cloud_off,
       ),
       AppBannerTipo.leitura => (
         scheme.secondaryContainer,
