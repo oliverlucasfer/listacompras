@@ -289,8 +289,39 @@ create trigger trg_membros_dono
   for each row execute function public.sync_dono();
 ```
 
+**Associação automática do dono (migration `0010`, correção):** ao inserir uma lista, o servidor cria a linha do dono em `lista_membros` — o cliente nunca precisou (nem conseguiu, offline) fazer esse self-insert:
+
+```sql
+create or replace function public.criar_membro_dono()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.lista_membros (lista_id, user_id, papel)
+  values (new.id, new.dono_id, 'dono')
+  on conflict (lista_id, user_id) do nothing;
+  return new;
+end;
+$$;
+
+create trigger trg_listas_cria_dono
+  after insert on public.listas
+  for each row execute function public.criar_membro_dono();
+
+-- Backfill das listas existentes sem dono membro (migration 0010).
+insert into public.lista_membros (lista_id, user_id, papel)
+select l.id, l.dono_id, 'dono'
+from public.listas l
+where not exists (
+  select 1 from public.lista_membros lm
+  where lm.lista_id = l.id and lm.papel = 'dono'
+);
+```
+
 **Regras de negócio implementadas:**
-1. Ao criar a lista, o dono insere a própria linha em `lista_membros` com `papel = 'dono'` (a policy de INSERT de `listas` exige `dono_id = auth.uid()` — ver [02](02-seguranca-rls.md)).
+1. Ao inserir uma lista, o **servidor** cria a linha do dono em `lista_membros` com `papel = 'dono'` (trigger `trg_listas_cria_dono`, migration `0010`). A policy de INSERT de `listas` exige `dono_id = auth.uid()` (ver [02](02-seguranca-rls.md)); a associação do dono é derivada dele.
 2. Não é possível ter 2 donos.
 3. Não é possível remover ou rebaixar o dono sem processo explícito de transferência — **planejado na Fase 6, ver [08 §6](08-compartilhamento-colaborativo.md)** (RPC `transferir_dono` + alteração neste trigger).
 4. **Exceção — exclusão de conta ([06 §3.3.1](06-mvp-entregas.md), migration `0005`):** o RPC `excluir_conta()` marca a transação com `set_config('app.excluindo_conta', 'true')` e o trigger reconhece a marca, permitindo a remoção do dono em cascata — a conta inteira está sendo apagada, junto com suas listas. O `set_config` de namespace customizado só é executável por SQL direto (não via PostgREST), e o RPC é `security definer` — clientes não conseguem forjar a marca.

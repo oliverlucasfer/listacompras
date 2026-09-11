@@ -26,7 +26,8 @@ on conflict (id) do nothing;
 insert into public.listas (id, titulo, dono_id)
 values ('99999999-9999-9999-9999-999999999999', 'Lista do E', '77777777-7777-7777-7777-777777777777');
 insert into public.lista_membros (lista_id, user_id, papel)
-values ('99999999-9999-9999-9999-999999999999', '77777777-7777-7777-7777-777777777777', 'dono');
+values ('99999999-9999-9999-9999-999999999999', '77777777-7777-7777-7777-777777777777', 'dono')
+on conflict (lista_id, user_id) do nothing;
 insert into public.itens_lista (id, lista_id, nome)
 values ('aaaaaaa1-0000-0000-0000-000000000000', '99999999-9999-9999-9999-999999999999', 'Leite');
 
@@ -36,7 +37,8 @@ values ('99999999-9999-9999-9999-aaaaaaaaaaaa', 'Lista do F', '88888888-8888-888
 insert into public.lista_membros (lista_id, user_id, papel)
 values
   ('99999999-9999-9999-9999-aaaaaaaaaaaa', '88888888-8888-8888-8888-888888888888', 'dono'),
-  ('99999999-9999-9999-9999-aaaaaaaaaaaa', '77777777-7777-7777-7777-777777777777', 'editor');
+  ('99999999-9999-9999-9999-aaaaaaaaaaaa', '77777777-7777-7777-7777-777777777777', 'editor')
+on conflict (lista_id, user_id) do nothing;
 insert into public.itens_lista (id, lista_id, nome)
 values ('aaaaaaa2-0000-0000-0000-000000000000', '99999999-9999-9999-9999-aaaaaaaaaaaa', 'Café');
 

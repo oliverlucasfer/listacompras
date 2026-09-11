@@ -30,7 +30,8 @@ on conflict (id) do nothing;
 insert into public.listas (id, titulo, dono_id)
 values ('c9000000-0000-0000-0000-000000000000', 'Lista Convites', 'c0000000-0000-0000-0000-000000000000');
 insert into public.lista_membros (lista_id, user_id, papel)
-values ('c9000000-0000-0000-0000-000000000000', 'c0000000-0000-0000-0000-000000000000', 'dono');
+values ('c9000000-0000-0000-0000-000000000000', 'c0000000-0000-0000-0000-000000000000', 'dono')
+on conflict (lista_id, user_id) do nothing;
 
 -- Convites do dono: link pendente (A-01/A-02/A-05), link a expirar (A-03),
 -- link a revogar (A-04) e e-mail dirigido a E (A-06/A-07).

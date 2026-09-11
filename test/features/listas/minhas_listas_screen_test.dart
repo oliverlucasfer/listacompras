@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/auth/providers/auth_providers.dart';
+import 'package:lista_compras/features/convites/domain/papel.dart';
+import 'package:lista_compras/features/convites/providers/papel_providers.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
@@ -172,6 +174,28 @@ void main() {
 
     expect(find.text('Para excluir'), findsNothing);
     expect(find.text(AppStrings.nenhumaLista), findsOneWidget);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_marcar_dono_quando_cria_lista', (tester) async {
+    await abrirTela(tester);
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.nomeDaLista),
+      'Minha nova',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.criarLista));
+    await tester.pumpAndSettle();
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.text('Minha nova')),
+    );
+    final registros = await (db.select(db.listaLocal)).get();
+    final id = registros.firstWhere((l) => l.titulo == 'Minha nova').id;
+    expect(container.read(papelRepositoryProvider).papelDe(id), Papel.dono);
+
     await fechar(tester);
   });
 }

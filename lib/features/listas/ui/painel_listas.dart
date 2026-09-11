@@ -15,7 +15,9 @@ import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../convites/domain/convite.dart';
+import '../../convites/domain/papel.dart';
 import '../../convites/providers/convites_providers.dart';
+import '../../convites/providers/papel_providers.dart';
 import '../domain/lista_com_contagem.dart';
 import '../providers/listas_providers.dart';
 import 'sheet_titulo_lista.dart';
@@ -310,8 +312,13 @@ Future<void> abrirSheetNovaLista(BuildContext context, WidgetRef ref) {
     context,
     titulo: AppStrings.novaLista,
     rotuloBotao: AppStrings.criarLista,
-    onSalvar: (nome) => ref
-        .read(listasRepositoryProvider)
-        .criarLista(titulo: nome, donoId: ref.read(donoAtualIdProvider)),
+    onSalvar: (nome) async {
+      final lista = await ref
+          .read(listasRepositoryProvider)
+          .criarLista(titulo: nome, donoId: ref.read(donoAtualIdProvider));
+      // Papel local imediato (funciona offline): o criador é dono. O servidor
+      // confirma a associação em `lista_membros` na migration 0010.
+      ref.read(papelRepositoryProvider).atualizar(lista.id, Papel.dono);
+    },
   );
 }

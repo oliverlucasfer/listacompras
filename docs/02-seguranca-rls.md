@@ -63,7 +63,7 @@ as $$
 $$;
 ```
 
-> **Por que não um `EXISTS` direto sobre `listas`?** Subqueries dentro de policies são avaliadas com as policies do usuário invocante. No self-insert do dono em `lista_membros` logo após criar a lista, ele **ainda não é membro** — `is_member` é falso e o `EXISTS` não veria a própria lista, tornando o fluxo de criação (doc [02 §4.3](#43-lista_membros)) impossível. A função `SECURITY DEFINER` contorna o RLS do invocante.
+> **Por que não um `EXISTS` direto sobre `listas`?** Subqueries dentro de policies são avaliadas com as policies do usuário invocante. Quando o dono cria a lista e a associação do dono é criada (trigger `trg_listas_cria_dono`, migration `0010`) ou quando o dono adiciona membros, ele **ainda não é membro** — `is_member` é falso e o `EXISTS` não veria a própria lista, tornando o fluxo de criação (doc [02 §4.3](#43-lista_membros)) impossível. A função `SECURITY DEFINER` contorna o RLS do invocante.
 
 ### Função auxiliar de e-mail (para policies de `convites`, Fase 6)
 
@@ -109,7 +109,7 @@ alter table public.itens_lista   force row level security;
 | `itens_lista` | UPDATE | Membros `dono`/`editor` | `papel_na_lista(lista_id) in ('dono','editor')` |
 | `itens_lista` | DELETE | Só dono da lista | join com `listas.dono_id` |
 | `lista_membros` | SELECT | Qualquer membro | `is_member(lista_id)` |
-| `lista_membros` | INSERT | Dono (adicionar membro) | `is_dono_de(lista_id)` |
+| `lista_membros` | INSERT | Dono (adicionar membro) | `is_dono_de(lista_id)`; a associação do próprio dono é criada pelo servidor ao inserir a lista (migration `0010`) |
 | `lista_membros` | UPDATE | Dono (papel de outro membro) | `is_dono_de(lista_id)` e alvo `user_id <> auth.uid()`; papel destino `in ('editor','leitor')` (F7-T07, migration 0009) |
 | `lista_membros` | DELETE | Dono remove outros **ou** o próprio membro sai | dono: `is_dono_de(lista_id)` e `user_id <> auth.uid()`; saída: `user_id = auth.uid()` e `not is_dono_de(lista_id)` (F7-T07, migration 0009) |
 | `convites` | SELECT | Dono da lista | papel `dono` em `lista_membros` |
