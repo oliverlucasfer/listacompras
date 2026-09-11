@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/theme/tokens/app_spacing.dart';
+import '../../../core/widgets/app_botao.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../domain/convite.dart';
 import '../providers/convites_providers.dart';
@@ -97,25 +99,31 @@ class _EntrarScreenState extends ConsumerState<EntrarScreen> {
                   size: 64,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xl,
+                  ),
                   child: Text(
                     AppStrings.conviteConvidadoMensagem,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
-                const SizedBox(height: 24),
-                FilledButton(
+                const SizedBox(height: AppSpacing.xl),
+                AppBotao(
+                  rotulo: AppStrings.conviteConvidadoEntrar,
+                  expandido: false,
                   onPressed: () =>
                       context.go(_rotaLogin(base: '/login').toString()),
-                  child: const Text(AppStrings.conviteConvidadoEntrar),
                 ),
-                OutlinedButton(
+                const SizedBox(height: AppSpacing.sm),
+                AppBotao(
+                  rotulo: AppStrings.conviteConvidadoRegistrar,
+                  variante: AppBotaoVariante.outlined,
+                  expandido: false,
                   onPressed: () =>
                       context.go(_rotaLogin(base: '/registro').toString()),
-                  child: const Text(AppStrings.conviteConvidadoRegistrar),
                 ),
               ],
             ),
@@ -140,19 +148,22 @@ class _EntrarScreenState extends ConsumerState<EntrarScreen> {
                   size: 64,
                   color: Theme.of(context).colorScheme.error,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xl,
+                  ),
                   child: Text(
                     _erro!.message,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
-                const SizedBox(height: 24),
-                FilledButton(
+                const SizedBox(height: AppSpacing.xl),
+                AppBotao(
+                  rotulo: AppStrings.tentarNovamente,
+                  expandido: false,
                   onPressed: _processar,
-                  child: const Text(AppStrings.tentarNovamente),
                 ),
               ],
             ),

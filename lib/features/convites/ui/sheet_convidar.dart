@@ -4,7 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/l10n/app_strings.dart';
-import '../../../core/widgets/erro_inline.dart';
+import '../../../core/theme/tokens/app_spacing.dart';
+import '../../../core/widgets/app_banner.dart';
+import '../../../core/widgets/app_botao.dart';
+import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/app_snack_bar.dart';
 import '../domain/convite.dart';
 import '../domain/papel.dart';
 import '../providers/convites_providers.dart';
@@ -64,119 +68,108 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
   Future<void> _copiar(String valor, String mensagem) async {
     await Clipboard.setData(ClipboardData(text: valor));
     if (mounted) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(mensagem)));
+      mostrarSnackBar(context, mensagem);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final convite = _convite;
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    AppStrings.convidar,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                ),
-                IconButton(
-                  tooltip: AppStrings.cancelar,
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-            if (convite == null) ...[
-              RadioGroup<Papel>(
-                groupValue: _papel,
-                onChanged: (papel) {
-                  if (papel != null) setState(() => _papel = papel);
-                },
-                child: Column(
-                  children: [
-                    RadioListTile<Papel>(
-                      title: const Text(AppStrings.convidarPapelEditor),
-                      value: Papel.editor,
-                    ),
-                    RadioListTile<Papel>(
-                      title: const Text(AppStrings.convidarPapelLeitor),
-                      value: Papel.leitor,
-                    ),
-                  ],
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  AppStrings.convidar,
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
-              if (_erro != null) ErroInline(mensagem: _erro!),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: _gerando ? null : _gerar,
-                child: _gerando
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text(AppStrings.gerarLink),
+              IconButton(
+                tooltip: AppStrings.cancelar,
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
               ),
-            ] else ...[
-              const SizedBox(height: 16),
-              TextField(
-                readOnly: true,
-                controller: _linkController!,
-                decoration: const InputDecoration(border: OutlineInputBorder()),
-              ),
-              const SizedBox(height: 16),
-              Row(
+            ],
+          ),
+          if (convite == null) ...[
+            RadioGroup<Papel>(
+              groupValue: _papel,
+              onChanged: (papel) {
+                if (papel != null) setState(() => _papel = papel);
+              },
+              child: Column(
                 children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.copy_outlined),
-                      label: const Text(AppStrings.copiarLink),
-                      onPressed: () => _copiar(
-                        ref
-                            .read(convitesRepositoryProvider)
-                            .linkConvite(convite.token),
-                        AppStrings.linkCopiado,
-                      ),
-                    ),
+                  RadioListTile<Papel>(
+                    title: const Text(AppStrings.convidarPapelEditor),
+                    value: Papel.editor,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      icon: const Icon(Icons.copy_outlined),
-                      label: const Text(AppStrings.copiarToken),
-                      onPressed: () =>
-                          _copiar(convite.token, AppStrings.tokenCopiado),
-                    ),
+                  RadioListTile<Papel>(
+                    title: const Text(AppStrings.convidarPapelLeitor),
+                    value: Papel.leitor,
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                icon: const Icon(Icons.share_outlined),
-                label: const Text(AppStrings.compartilhar),
-                onPressed: () => SharePlus.instance.share(
-                  ShareParams(
-                    text: ref
-                        .read(convitesRepositoryProvider)
-                        .linkConvite(convite.token),
+            ),
+            if (_erro != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              AppBanner(tipo: AppBannerTipo.erro, mensagem: _erro!),
+            ],
+            const SizedBox(height: AppSpacing.lg),
+            AppBotao(
+              rotulo: AppStrings.gerarLink,
+              carregando: _gerando,
+              onPressed: _gerar,
+            ),
+          ] else ...[
+            const SizedBox(height: AppSpacing.lg),
+            TextField(readOnly: true, controller: _linkController!),
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              children: [
+                Expanded(
+                  child: AppBotao(
+                    rotulo: AppStrings.copiarLink,
+                    variante: AppBotaoVariante.outlined,
+                    icone: Icons.copy_outlined,
+                    onPressed: () => _copiar(
+                      ref
+                          .read(convitesRepositoryProvider)
+                          .linkConvite(convite.token),
+                      AppStrings.linkCopiado,
+                    ),
                   ),
                 ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: AppBotao(
+                    rotulo: AppStrings.copiarToken,
+                    variante: AppBotaoVariante.outlined,
+                    icone: Icons.copy_outlined,
+                    onPressed: () =>
+                        _copiar(convite.token, AppStrings.tokenCopiado),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppBotao(
+              rotulo: AppStrings.compartilhar,
+              variante: AppBotaoVariante.outlined,
+              icone: Icons.share_outlined,
+              onPressed: () => SharePlus.instance.share(
+                ShareParams(
+                  text: ref
+                      .read(convitesRepositoryProvider)
+                      .linkConvite(convite.token),
+                ),
               ),
-            ],
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -187,9 +180,8 @@ Future<void> abrirSheetConvidar(
   WidgetRef ref,
   String listaId,
 ) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    builder: (sheetContext) => SheetConvidar(listaId: listaId),
+  return AppSheet.mostrar<void>(
+    context,
+    child: SheetConvidar(listaId: listaId),
   );
 }

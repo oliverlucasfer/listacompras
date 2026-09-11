@@ -5,6 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/widgets/app_chip.dart';
+import '../../../core/widgets/app_dialog.dart';
+import '../../../core/widgets/app_estado_erro.dart';
+import '../../../core/widgets/app_snack_bar.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../sync/providers/sync_providers.dart';
 import '../domain/convite.dart';
@@ -58,103 +62,57 @@ class TelaMembrosScreen extends ConsumerWidget {
       ref.invalidate(membrosDaListaProvider(listaId));
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(AppStrings.erroGenerico)));
+        mostrarSnackBar(context, AppStrings.erroGenerico);
       }
     }
   }
 
-  void _confirmarRemover(
+  Future<void> _confirmarRemover(
     BuildContext context,
     WidgetRef ref,
     MembroLista membro,
-  ) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text(AppStrings.removerMembro),
-        content: const Text(AppStrings.removerMembroMensagem),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(AppStrings.cancelar),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              final repo = ref.read(convitesRepositoryProvider);
-              try {
-                await repo.removerMembro(
-                  listaId: listaId,
-                  userId: membro.userId,
-                );
-                ref.invalidate(membrosDaListaProvider(listaId));
-              } catch (_) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(
-                      SnackBar(content: Text(AppStrings.erroGenerico)),
-                    );
-                }
-              }
-            },
-            child: const Text(AppStrings.removerMembro),
-          ),
-        ],
-      ),
+  ) async {
+    final confirmou = await AppDialog.confirmarDestrutivo(
+      context,
+      titulo: AppStrings.removerMembro,
+      mensagem: AppStrings.removerMembroMensagem,
+      confirmar: AppStrings.removerMembro,
     );
+    if (!confirmou) return;
+    final repo = ref.read(convitesRepositoryProvider);
+    try {
+      await repo.removerMembro(listaId: listaId, userId: membro.userId);
+      ref.invalidate(membrosDaListaProvider(listaId));
+    } catch (_) {
+      if (context.mounted) {
+        mostrarSnackBar(context, AppStrings.erroGenerico);
+      }
+    }
   }
 
-  void _confirmarSair(BuildContext context, WidgetRef ref) {
+  Future<void> _confirmarSair(BuildContext context, WidgetRef ref) async {
+    final confirmou = await AppDialog.confirmarDestrutivo(
+      context,
+      titulo: AppStrings.sairListaTitulo,
+      mensagem: AppStrings.sairListaMensagem,
+      confirmar: AppStrings.sairDaLista,
+    );
+    if (!confirmou || !context.mounted) return;
     final repoConvites = ref.read(convitesRepositoryProvider);
     final repoPapeis = ref.read(papelRepositoryProvider);
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text(AppStrings.sairListaTitulo),
-        content: const Text(AppStrings.sairListaMensagem),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(AppStrings.cancelar),
-          ),
-          FilledButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              try {
-                await repoConvites.sairDaLista(listaId);
-                repoPapeis.remover(listaId);
-                // Belt-and-suspenders (doc 08 §5, F7-T07): o Realtime pode
-                // filtrar o DELETE do próprio usuário (RLS avalia a policy
-                // pelo old_record) — limpa o cache local explicitamente.
-                unawaited(ref.read(syncBootstrapProvider).perderAcessoLocal());
-                if (context.mounted) context.go('/listas');
-              } on ErroConvite catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(SnackBar(content: Text(e.message)));
-                }
-              } catch (_) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(
-                      SnackBar(content: Text(AppStrings.erroGenerico)),
-                    );
-                }
-              }
-            },
-            child: const Text(AppStrings.sairDaLista),
-          ),
-        ],
-      ),
-    );
+    try {
+      await repoConvites.sairDaLista(listaId);
+      repoPapeis.remover(listaId);
+      // Belt-and-suspenders (doc 08 §5, F7-T07): o Realtime pode filtrar o
+      // DELETE do próprio usuário (RLS avalia a policy pelo old_record) —
+      // limpa o cache local explicitamente.
+      unawaited(ref.read(syncBootstrapProvider).perderAcessoLocal());
+      if (context.mounted) context.go('/listas');
+    } on ErroConvite catch (e) {
+      if (context.mounted) mostrarSnackBar(context, e.message);
+    } catch (_) {
+      if (context.mounted) mostrarSnackBar(context, AppStrings.erroGenerico);
+    }
   }
 
   String _rotuloPapel(Papel papel) => switch (papel) {
@@ -182,19 +140,9 @@ class TelaMembrosScreen extends ConsumerWidget {
       ),
       body: membrosAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(AppStrings.erroGenerico),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () =>
-                    ref.invalidate(membrosDaListaProvider(listaId)),
-                child: const Text(AppStrings.tentarNovamente),
-              ),
-            ],
-          ),
+        error: (_, _) => AppEstadoErro(
+          mensagem: AppStrings.erroGenerico,
+          onRetentar: () => ref.invalidate(membrosDaListaProvider(listaId)),
         ),
         data: (membros) => ListView.builder(
           itemCount: membros.length,
@@ -217,14 +165,7 @@ class TelaMembrosScreen extends ConsumerWidget {
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Chip(
-                    visualDensity: VisualDensity.compact,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    label: Text(
-                      _rotuloPapel(membro.papel),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
+                  AppChip(rotulo: _rotuloPapel(membro.papel)),
                   if (_eDono(membrosAsync, usuarioId) && !souEu)
                     PopupMenuButton<String>(
                       onSelected: (acao) =>
