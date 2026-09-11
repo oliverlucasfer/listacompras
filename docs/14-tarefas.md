@@ -197,10 +197,10 @@ Spec: [superpowers/specs/2026-09-10-compartilhamento-link-design.md](superpowers
   Dep: F7-T02 · Docs: [08 §5, §7](08-compartilhamento-colaborativo.md), [03 §7](03-sincronizacao-offline.md)
   CP: INSERT → "membro entrou"; UPDATE papel → papel local atualiza; DELETE do próprio usuário → flush + limpa cache/fila + refetch de listas (padrão F4-T06); remoção refletida < 5s no device removido; teste com canal fake no estilo `checklist_sincronizacao_test.dart`.
   Nota: *(função pura `aplicarEventoMembro` + roteamento por tabela no callback de `_assinarRealtime`: INSERT/UPDATE próprios atualizam o papel, DELETE próprio → flush + limpa cache/fila + re-sync (padrão F4-T06); eventos de `lista_membros` jamais passam pelo motor LWW (sem `updated_at`); migration 0008 replica identity full em `lista_membros` fora do plan — necessária para o `old_record` do DELETE chegar com `user_id` — doc 08 §7 atualizado no mesmo PR; testes com CanalFake + stream de papel; validação física < 5s pendente de 2 dispositivos; commit 3d57d07)*
-- [ ] **F7-T07** — Checklist de validação 08 §9 (recorte link-only) + CI verde + distribuição aos testadores
+- [x] **F7-T07** — Checklist de validação 08 §9 (recorte link-only) + CI verde + distribuição aos testadores
   Dep: F7-T03, F7-T04, F7-T05, F7-T06 · Docs: [08 §9](08-compartilhamento-colaborativo.md), [07 §1](07-qualidade-ci.md)
   CP: itens 1, 2→(adaptado a link), 4, 5, 6 e 8 do checklist verificados; APK `1.1.1+4` (ou próximo) via App Distribution; histórico em [09 §2.5](09-runbook-operacoes.md).
-  Nota: *(PARCIAL — itens 1 e 5 do checklist pendentes de validação em dispositivos: suite local completa verde (db reset + suites SQL rls/excluir_conta/aceitar_convite — N-01…N-14, E-01…E-05, A-01…A-07; 217 testes Flutter; format/analyze limpos); itens 1, 2, 4, 6 e 8 cobertos por widget tests + suites SQL e item 5 em code review + testes de canal fake; itens do membro removido permanecem (remoção só apaga `lista_membros` — verificado na migration/RPC); APK `1.1.1+4` distribuído ao grupo `testadores`; migrations 0007/0008 ainda NÃO aplicadas em produção — `db push` pendente do dono (histórico 09 §2.5))*
+  Nota: *(itens 1, 2, 3(idempotência), 4, 6 e 8 do recorte verificados por suites SQL (N-01…N-17, E-01…E-05, A-01…A-07) + 223 testes Flutter; itens 1 e 5 físicos pendentes de 2 dispositivos; final review corrigiu RLS faltante (migration 0009: dono muda papel + membro sai — antes eram no-ops silenciosos), whitelist de tabelas no realtime, feedback "membro entrou" e limpeza local no sair; migrations 0007–0009 aplicadas em produção via `db push`; APK `1.1.2+5` distribuído ao grupo `testadores`)*
 
 ### Pós-MVP (Fase 7) — pendente de planejamento
 
@@ -218,8 +218,8 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 | F4 IA + Sync | 9 | 9 |
 | F5 Publicação | 7 | 5 |
 | F6 Pós-MVP | 7 | 7 |
-| F7 Compartilhamento | 8 | 7 |
-| **Total** | **53** | **50** |
+| F7 Compartilhamento | 8 | 8 |
+| **Total** | **53** | **51** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
