@@ -3,7 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/utils/tempo_relativo.dart';
+import '../../../core/widgets/app_botao.dart';
+import '../../../core/widgets/app_campo_texto.dart';
+import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_dialog.dart';
+import '../../../core/widgets/app_estado_erro.dart';
+import '../../../core/widgets/app_estado_vazio.dart';
+import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/app_snack_bar.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../convites/domain/convite.dart';
 import '../../convites/providers/convites_providers.dart';
@@ -44,23 +53,29 @@ class MinhasListasScreen extends ConsumerWidget {
       ),
       body: listasAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(AppStrings.erroGenerico),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => ref.invalidate(listasComContagemProvider),
-                child: const Text(AppStrings.tentarNovamente),
-              ),
-            ],
-          ),
+        error: (_, _) => AppEstadoErro(
+          mensagem: AppStrings.erroGenerico,
+          onRetentar: () => ref.invalidate(listasComContagemProvider),
         ),
         data: (listas) => listas.isEmpty
-            ? const _EstadoVazio()
+            ? AppEstadoVazio(
+                icone: Icons.sticky_note_2_outlined,
+                titulo: AppStrings.nenhumaLista,
+                descricao: AppStrings.criePrimeiraLista,
+                acao: AppBotao(
+                  rotulo: AppStrings.criarPrimeiraLista,
+                  icone: Icons.add,
+                  expandido: false,
+                  onPressed: () => _abrirSheetNovaLista(context, ref),
+                ),
+              )
             : ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                  AppSpacing.lg,
+                  88,
+                ),
                 itemCount: listas.length,
                 itemBuilder: (context, i) => _CardLista(contagem: listas[i]),
               ),
@@ -75,46 +90,6 @@ class MinhasListasScreen extends ConsumerWidget {
   }
 }
 
-class _EstadoVazio extends ConsumerWidget {
-  const _EstadoVazio();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.sticky_note_2_outlined,
-              size: 72,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              AppStrings.nenhumaLista,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              AppStrings.criePrimeiraLista,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: () => _abrirSheetNovaLista(context, ref),
-              icon: const Icon(Icons.add),
-              label: const Text(AppStrings.criarPrimeiraLista),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _CardLista extends ConsumerWidget {
   const _CardLista({required this.contagem});
 
@@ -123,7 +98,8 @@ class _CardLista extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lista = contagem.lista;
-    return Card(
+    return AppCard(
+      padding: EdgeInsets.zero,
       child: ListTile(
         onTap: () => context.go('/lista/${lista.id}'),
         onLongPress: () => _abrirAcoes(context, ref, contagem),
@@ -156,33 +132,31 @@ class _CardLista extends ConsumerWidget {
     ListaComContagem contagem,
   ) {
     final esquema = Theme.of(context).colorScheme;
-    showModalBottomSheet<void>(
-      context: context,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.edit_outlined),
-              title: const Text(AppStrings.renomear),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _abrirSheetRenomear(context, ref, contagem);
-              },
+    AppSheet.mostrar<void>(
+      context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.edit_outlined),
+            title: const Text(AppStrings.renomear),
+            onTap: () {
+              Navigator.pop(context);
+              _abrirSheetRenomear(context, ref, contagem);
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.delete_outline, color: esquema.error),
+            title: Text(
+              AppStrings.excluir,
+              style: TextStyle(color: esquema.error),
             ),
-            ListTile(
-              leading: Icon(Icons.delete_outline, color: esquema.error),
-              title: Text(
-                AppStrings.excluir,
-                style: TextStyle(color: esquema.error),
-              ),
-              onTap: () {
-                Navigator.pop(sheetContext);
-                _confirmarExclusao(context, ref, contagem);
-              },
-            ),
-          ],
-        ),
+            onTap: () {
+              Navigator.pop(context);
+              _confirmarExclusao(context, ref, contagem);
+            },
+          ),
+        ],
       ),
     );
   }
@@ -203,36 +177,19 @@ class _CardLista extends ConsumerWidget {
     );
   }
 
-  void _confirmarExclusao(
+  Future<void> _confirmarExclusao(
     BuildContext context,
     WidgetRef ref,
     ListaComContagem contagem,
-  ) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text(AppStrings.excluirLista),
-        content: const Text(AppStrings.excluirListaMensagem),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(AppStrings.cancelar),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              await ref
-                  .read(listasRepositoryProvider)
-                  .excluirLista(contagem.lista.id);
-            },
-            child: const Text(AppStrings.excluir),
-          ),
-        ],
-      ),
+  ) async {
+    final confirmou = await AppDialog.confirmarDestrutivo(
+      context,
+      titulo: AppStrings.excluirLista,
+      mensagem: AppStrings.excluirListaMensagem,
     );
+    if (confirmou) {
+      await ref.read(listasRepositoryProvider).excluirLista(contagem.lista.id);
+    }
   }
 }
 
@@ -269,9 +226,7 @@ class _DialogoEntrarComCodigoState
   Future<void> _entrar(BuildContext dialogContext) async {
     final token = _token.text.trim();
     if (token.isEmpty) {
-      ScaffoldMessenger.of(
-        dialogContext,
-      ).showSnackBar(SnackBar(content: Text(AppStrings.conviteInvalido)));
+      mostrarSnackBar(dialogContext, AppStrings.conviteInvalido);
       return;
     }
     setState(() => _carregando = true);
@@ -282,16 +237,12 @@ class _DialogoEntrarComCodigoState
     } on ErroConvite catch (e) {
       if (dialogContext.mounted) Navigator.pop(dialogContext);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        mostrarSnackBar(context, e.message);
       }
     } catch (_) {
       if (dialogContext.mounted) Navigator.pop(dialogContext);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(AppStrings.conviteInesperado)));
+        mostrarSnackBar(context, AppStrings.conviteInesperado);
       }
     } finally {
       if (mounted) setState(() => _carregando = false);
@@ -302,29 +253,21 @@ class _DialogoEntrarComCodigoState
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text(AppStrings.conviteComCodigo),
-      content: TextField(
+      content: AppCampoTexto(
         controller: _token,
-        autofocus: true,
-        decoration: const InputDecoration(
-          labelText: AppStrings.conviteCampoCodigo,
-          border: OutlineInputBorder(),
-        ),
-        onSubmitted: (_) => _entrar(context),
+        label: AppStrings.conviteCampoCodigo,
+        onSubmitted: () => _entrar(context),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text(AppStrings.cancelar),
         ),
-        FilledButton(
-          onPressed: _carregando ? null : () => _entrar(context),
-          child: _carregando
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text(AppStrings.conviteConvidadoEntrar),
+        AppBotao(
+          rotulo: AppStrings.conviteConvidadoEntrar,
+          carregando: _carregando,
+          expandido: false,
+          onPressed: () => _entrar(context),
         ),
       ],
     );
