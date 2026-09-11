@@ -251,6 +251,21 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
   Dep: F9-T01…F9-T07 · Docs: [10](10-wireframes-telas.md), [07 §1](07-qualidade-ci.md)
   CP: `format`/`analyze`/`test` verdes; wireframes sincronizados; fase marcada.
 
+## Fase 10 — Redesign de Navegação (spec em [superpowers/specs](superpowers/specs/2026-09-11-revisao-visual-ux-etapa3-design.md))
+
+- [ ] **F10-T00** — Spec + plano + fase nos docs
+  Dep: F9-T08 · Docs: spec da fase
+  CP: spec/plano registrados; fase 10 em 14 sem tocar código de app.
+- [ ] **F10-T01** — Split Minhas × Compartilhadas (`PainelListas` + telas)
+  Dep: F10-T00 · Docs: [05 §6.2](05-app-flutter.md), [15](15-design-system.md)
+  CP: Minhas = listas do dono; Compartilhadas = listas de membro; testes verdes.
+- [ ] **F10-T02** — `AppShell` (NavigationBar/Rail) + rotas por shell + logout em Configurações
+  Dep: F10-T01 · Docs: [05 §4](05-app-flutter.md)
+  CP: 3 destinos com estado preservado; rota protegida; logout em Configurações; testes verdes.
+- [ ] **F10-T03** — Testes de navegação, doc 10 e fechamento
+  Dep: F10-T02 · Docs: [10](10-wireframes-telas.md), [07 §1](07-qualidade-ci.md)
+  CP: `format`/`analyze`/`test` verdes; wireframes sincronizados; fase marcada.
+
 ---
 
 ## Progresso por fase (atualize ao concluir)
@@ -266,7 +281,8 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 | F7 Compartilhamento | 8 | 8 |
 | F8 Design System | 4 | 4 |
 | F9 Refresh Visual | 9 | 9 |
-| **Total** | **66** | **64** |
+| F10 Navegação | 4 | 0 |
+| **Total** | **70** | **64** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
