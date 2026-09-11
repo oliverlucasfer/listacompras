@@ -20,6 +20,8 @@ App Flutter ◄──200 { itens: [...] }─────────────
 
 Fluxo de UX completo (modal, pré-visualização, confirmação) está em [05 App Flutter](05-app-flutter.md).
 
+> **IA é opcional (RF-16):** o app oferece um modo de importação **local** (parser determinístico, offline) como padrão; a Edge Function é acionada apenas no modo IA.
+
 ---
 
 ## 2. Contrato HTTP

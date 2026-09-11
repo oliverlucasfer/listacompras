@@ -191,25 +191,25 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 
 ---
 
-## 4. Importação por IA ([04 §2](04-ia-edge-function.md))
+## 4. Importação de lista (RF-06 + RF-16 — [04 §2](04-ia-edge-function.md))
 
 ### 4.1. Modal de entrada
 ```
 ┌─────────────────────────────────┐
-│  Importar por IA             ✕  │
+│  Importar lista              ✕  │
 ├─────────────────────────────────┤
+│  ( Rápido | IA )                │ ← seletor; Rápido = local/offline (padrão)
 │  Cole ou digite sua lista:      │
 │  ┌───────────────────────────┐  │
 │  │ 1kg de arroz, 2 leites,   │ │
 │  │ 500g de queijo prato...    │ │
 │  │                           │ │
 │  └───────────────────────────┘  │
-│                        128/2000 │ ← contador; vermelho > 2000
+│                        128/2000 │ ← contador; Rápido ≤ 10.000; vermelho > limite
 │                                 │
-│  (     ✨ Extrair itens    )    │ ← carregando: spinner + "Lendo..."
+│  (     ✨ Extrair itens    )    │ ← Rápido: sem rede; IA: spinner + "Lendo..."
 └─────────────────────────────────┘
-   (erro → mensagem amigável do contrato [04 §2], ex.:
-    "Texto muito longo. Envie até 2.000 caracteres.")
+   (erro → mensagem amigável; no modo IA, do contrato [04 §2])
 ```
 
 ### 4.2. Modal de pré-visualização

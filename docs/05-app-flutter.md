@@ -150,12 +150,17 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 * Quantidades: stepper + input direto; unidades restritas ao enum ([01 §3.1](01-banco-de-dados.md)).
 * Tentativa de item duplicado (mesmo nome ativo): sugerir aumento de quantidade em vez de bloquear.
 
-### 6.4. Modal "Importar por IA"
-1. Textarea + contador de caracteres (máx. 2.000 — ver contrato em [04 §2](04-ia-edge-function.md)).
-2. Botão "Extrair itens" → estado de carregamento com feedback.
-3. **Modal de pré-visualização:** checkboxes para incluir/excluir cada item extraído; edição inline de nome/quantidade/unidade/**categoria** (dropdown com o enum [01 §3.2](01-banco-de-dados.md), Fase 6); `aviso` da IA exibido como nota. Resposta sem `categoria` → `outros` (compat, [04 §2](04-ia-edge-function.md)).
+### 6.4. Modal "Importar lista" (RF-06 + RF-16)
+
+Um único modal com seletor de modo **Rápido** (padrão, local/offline, RF-16) e **IA** (RF-06):
+
+1. Textarea + contador de caracteres (Rápido ≤ 10.000; IA ≤ 2.000 — [04 §2](04-ia-edge-function.md)).
+2. Botão "Extrair itens":
+   * **Rápido:** parser local puro (`lib/core/importacao/parser_lista_local.dart`), sem rede; categoria pela cadeia local (memória → dicionário → `outros`, [§3](05-app-flutter.md)); disponível offline.
+   * **IA:** fluxo atual (Edge Function `parse-lista`, com carregamento e erros do contrato).
+3. **Modal de pré-visualização (comum aos dois modos):** checkboxes para incluir/excluir cada item; edição inline de nome/quantidade/unidade/**categoria** (dropdown com o enum [01 §3.2](01-banco-de-dados.md)); `aviso` exibido como nota.
 4. "Adicionar N itens à lista" → grava localmente (fila de INSERTs).
-5. Erros da Edge Function exibidos com as mensagens amigáveis do contrato.
+5. Erros da IA exibidos com as mensagens amigáveis do contrato ([04 §2](04-ia-edge-function.md)).
 
 ---
 

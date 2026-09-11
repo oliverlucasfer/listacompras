@@ -37,6 +37,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-13 | Compartilhamento por convite (link/e-mail) com papéis — **Fase 6** (1ª rodada: link-only, [08 §1.1](08-compartilhamento-colaborativo.md)) | 08 | F7 | [08 §9](08-compartilhamento-colaborativo.md) |
 | RF-14 | Transferência de dono — **Fase 6** (adiada — [08 §1.1](08-compartilhamento-colaborativo.md)) | 08 §6 | F7 | [08 §9](08-compartilhamento-colaborativo.md) |
 | RF-15 | Agrupamento da lista por categoria (enum fechado [01 §3](01-banco-de-dados.md)) com sugestão local em camadas (memória por nome → dicionário estático → `outros`); IA sugere no import | 05 §6.3 + 01 §4.3 | F6 | [05 §8](05-app-flutter.md) + [03 §8](03-sincronizacao-offline.md) |
+| RF-16 | Importação de lista por texto livre **sem IA** (parser local determinístico, offline) com pré-visualização editável; IA permanece como modo opcional | 05 §6.4 | F11 | [05 §8](05-app-flutter.md) |
 
 ## 3. Requisitos Não-Funcionais
 
@@ -126,6 +127,7 @@ Cada requisito liga story → design → tarefas ([14](14-tarefas.md)) → verif
 | RF-12 | — | F5 | F5-T04 | Sentry smoke |
 | RF-13/14 | US-05, US-06 | F6 | (planejar na F6) | N-11…N-14 |
 | RF-15 | US-07, US-08 | F6 | F6-T01…T06 | Repo + sugestão + widgets + sync |
+| RF-16 | US-02 | F11 | F11-T01…T03 | Unit parser + widgets |
 
 ## 7. Fora de escopo (MVP)
 

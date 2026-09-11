@@ -271,6 +271,23 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 
 ---
 
+## Fase 11 — Importação local sem IA (spec em [superpowers/specs](superpowers/specs/2026-09-11-importacao-local-design.md))
+
+- [ ] **F11-T00** — RF-16 + docs de planejamento
+  Dep: F10-T04 · Docs: spec da fase
+  CP: RF-16 no 12; 05 §6.4, 10 §4.1 e 04 §1 atualizados; Fase 11 no 14; sem tocar código de app.
+- [ ] **F11-T01** — Tipos de importação, normalizador e parser local
+  Dep: F11-T00 · Docs: [05 §3/§6.4](05-app-flutter.md), [01 §3](01-banco-de-dados.md)
+  CP: parser puro com unit tests dos casos da spec §8; imports atualizados; `analyze`/`test` verdes.
+- [ ] **F11-T02** — Modal com seletor Rápido/IA + pré-visualização (nomes genéricos)
+  Dep: F11-T01 · Docs: [05 §6.4](05-app-flutter.md), [10 §4](10-wireframes-telas.md)
+  CP: modo Rápido offline e modo IA preservado; botão "Importar lista"; testes verdes.
+- [ ] **F11-T03** — Verificação final, docs e CI
+  Dep: F11-T02 · Docs: [07 §1](07-qualidade-ci.md)
+  CP: `format`/`analyze`/`test` verdes; fase marcada.
+
+---
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -285,7 +302,8 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 | F8 Design System | 4 | 4 |
 | F9 Refresh Visual | 9 | 9 |
 | F10 Navegação | 5 | 5 |
-| **Total** | **71** | **69** |
+| F11 Import local | 4 | 0 |
+| **Total** | **75** | **69** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
