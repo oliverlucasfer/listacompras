@@ -14,6 +14,11 @@ abstract final class AppStrings {
   static const senha = 'Senha';
   static const confirmarSenha = 'Confirmar senha';
   static const enviarLinkEmail = 'Enviar link por e-mail';
+  static const informeSeuEmail = 'Informe seu e-mail:';
+  static const linkUnicoExpira =
+      'Link único, expira conforme configuração do serviço.';
+  static const mostrarSenha = 'Mostrar senha';
+  static const ocultarSenha = 'Ocultar senha';
   static const verificarSeuEmail = 'Verifique seu e-mail';
   static const verificarEmailMensagem =
       'Enviamos um link de confirmação para o seu e-mail. Clique nele para ativar sua conta.';

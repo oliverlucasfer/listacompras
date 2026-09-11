@@ -9,6 +9,8 @@ class AppCampoTexto extends StatelessWidget {
     this.erro,
     this.teclado,
     this.senha = false,
+    this.sufixo,
+    this.autofillHints,
     this.onChanged,
     this.onSubmitted,
   });
@@ -18,6 +20,8 @@ class AppCampoTexto extends StatelessWidget {
   final String? erro;
   final TextInputType? teclado;
   final bool senha;
+  final Widget? sufixo;
+  final Iterable<String>? autofillHints;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onSubmitted;
 
@@ -27,9 +31,14 @@ class AppCampoTexto extends StatelessWidget {
       controller: controller,
       keyboardType: teclado,
       obscureText: senha,
+      autofillHints: autofillHints,
       onChanged: onChanged,
       onSubmitted: onSubmitted == null ? null : (_) => onSubmitted!(),
-      decoration: InputDecoration(labelText: label, errorText: erro),
+      decoration: InputDecoration(
+        labelText: label,
+        errorText: erro,
+        suffixIcon: sufixo,
+      ),
     );
   }
 }

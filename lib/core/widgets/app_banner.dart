@@ -22,7 +22,9 @@ class AppBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final semanticas = Theme.of(context).extension<AppSemanticColors>()!;
+    final semanticas =
+        Theme.of(context).extension<AppSemanticColors>() ??
+        AppSemanticColors.claro;
 
     final (fundo, frente, icone) = switch (tipo) {
       AppBannerTipo.info => (

@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/l10n/app_strings.dart';
-import '../../../core/widgets/erro_inline.dart';
+import '../../../core/theme/tokens/app_spacing.dart';
+import '../../../core/widgets/app_banner.dart';
+import '../../../core/widgets/app_botao.dart';
+import '../../../core/widgets/app_campo_texto.dart';
 import '../providers/auth_providers.dart';
 
 /// Tela de Registro (wireframe 10 §1.2): e-mail, senha, confirmação,
@@ -115,44 +118,34 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: AppSpacing.tela,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextField(
+                  AppCampoTexto(
                     controller: _email,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: AppStrings.email,
-                      border: const OutlineInputBorder(),
-                    ),
+                    label: AppStrings.email,
+                    erro: _erroEmail,
+                    teclado: TextInputType.emailAddress,
                   ),
-                  if (_erroEmail != null) ErroInline(mensagem: _erroEmail!),
-                  const SizedBox(height: 16),
-                  TextField(
+                  const SizedBox(height: AppSpacing.lg),
+                  AppCampoTexto(
                     controller: _senha,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      labelText: AppStrings.senha,
-                      border: const OutlineInputBorder(),
-                    ),
+                    label: AppStrings.senha,
+                    erro: _erroSenha,
+                    senha: true,
                   ),
-                  if (_erroSenha != null) ErroInline(mensagem: _erroSenha!),
-                  const SizedBox(height: 16),
-                  TextField(
+                  const SizedBox(height: AppSpacing.lg),
+                  AppCampoTexto(
                     controller: _confirmar,
-                    obscureText: true,
-                    onSubmitted: (_) => _registrar(),
-                    decoration: InputDecoration(
-                      labelText: AppStrings.confirmarSenha,
-                      border: const OutlineInputBorder(),
-                    ),
+                    label: AppStrings.confirmarSenha,
+                    erro: _erroConfirmar,
+                    senha: true,
+                    onSubmitted: _registrar,
                   ),
-                  if (_erroConfirmar != null)
-                    ErroInline(mensagem: _erroConfirmar!),
                   CheckboxListTile(
                     value: _aceitouPolitica,
                     onChanged: (v) =>
@@ -161,22 +154,21 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
                     contentPadding: EdgeInsets.zero,
                     title: const Text(AppStrings.liPoliticaPrivacidade),
                   ),
-                  if (_erroGeral != null) ErroInline(mensagem: _erroGeral!),
-                  const SizedBox(height: 12),
-                  FilledButton(
-                    onPressed: _carregando ? null : _registrar,
-                    child: _carregando
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text(AppStrings.criarConta),
+                  if (_erroGeral != null) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    AppBanner(tipo: AppBannerTipo.erro, mensagem: _erroGeral!),
+                  ],
+                  const SizedBox(height: AppSpacing.md),
+                  AppBotao(
+                    rotulo: AppStrings.criarConta,
+                    carregando: _carregando,
+                    onPressed: _registrar,
                   ),
-                  const SizedBox(height: 8),
-                  TextButton(
+                  const SizedBox(height: AppSpacing.sm),
+                  AppBotao(
+                    rotulo: AppStrings.entrar,
+                    variante: AppBotaoVariante.texto,
                     onPressed: () => context.go('/login'),
-                    child: const Text(AppStrings.entrar),
                   ),
                 ],
               ),
@@ -201,7 +193,7 @@ class _VerificacaoEmail extends ConsumerWidget {
       appBar: AppBar(title: const Text(AppStrings.verificarSeuEmail)),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: AppSpacing.tela,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: Column(
@@ -227,14 +219,17 @@ class _VerificacaoEmail extends ConsumerWidget {
                     context,
                   ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 24),
-                OutlinedButton(
+                const SizedBox(height: AppSpacing.xl),
+                AppBotao(
+                  rotulo: AppStrings.reenviarLink,
+                  variante: AppBotaoVariante.outlined,
                   onPressed: () => ref
                       .read(authRepositoryProvider)
                       .reenviarVerificacao(email),
-                  child: const Text(AppStrings.reenviarLink),
                 ),
-                TextButton(
+                AppBotao(
+                  rotulo: AppStrings.entrar,
+                  variante: AppBotaoVariante.texto,
                   onPressed: () => context.go(
                     next == null || next!.isEmpty
                         ? '/login'
@@ -242,7 +237,6 @@ class _VerificacaoEmail extends ConsumerWidget {
                               .replace(queryParameters: {'next': next!})
                               .toString(),
                   ),
-                  child: const Text(AppStrings.entrar),
                 ),
               ],
             ),

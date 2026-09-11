@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/app_strings.dart';
-import '../../../core/widgets/erro_inline.dart';
+import '../../../core/theme/tokens/app_spacing.dart';
+import '../../../core/widgets/app_botao.dart';
+import '../../../core/widgets/app_campo_texto.dart';
 import '../providers/auth_providers.dart';
 
 /// Tela de Recuperação de senha (wireframe 10 §1.2): envia link único
@@ -55,7 +57,7 @@ class _RecuperarSenhaScreenState extends ConsumerState<RecuperarSenhaScreen> {
       appBar: AppBar(title: const Text(AppStrings.recuperarSenha)),
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: AppSpacing.tela,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: _enviado
@@ -76,35 +78,26 @@ class _RecuperarSenhaScreenState extends ConsumerState<RecuperarSenhaScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Informe seu e-mail:',
+                        AppStrings.informeSeuEmail,
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
-                      const SizedBox(height: 12),
-                      TextField(
+                      const SizedBox(height: AppSpacing.md),
+                      AppCampoTexto(
                         controller: _email,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          labelText: AppStrings.email,
-                          border: const OutlineInputBorder(),
-                        ),
+                        label: AppStrings.email,
+                        erro: _erroEmail,
+                        teclado: TextInputType.emailAddress,
+                        onSubmitted: _enviar,
                       ),
-                      if (_erroEmail != null) ErroInline(mensagem: _erroEmail!),
-                      const SizedBox(height: 24),
-                      FilledButton(
-                        onPressed: _carregando ? null : _enviar,
-                        child: _carregando
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text(AppStrings.enviarLinkEmail),
+                      const SizedBox(height: AppSpacing.xl),
+                      AppBotao(
+                        rotulo: AppStrings.enviarLinkEmail,
+                        carregando: _carregando,
+                        onPressed: _enviar,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.md),
                       Text(
-                        'Link único, expira conforme configuração do serviço.',
+                        AppStrings.linkUnicoExpira,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),

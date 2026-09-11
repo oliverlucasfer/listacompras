@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/l10n/app_strings.dart';
-import '../../../core/widgets/erro_inline.dart';
+import '../../../core/theme/tokens/app_spacing.dart';
+import '../../../core/widgets/app_banner.dart';
+import '../../../core/widgets/app_botao.dart';
+import '../../../core/widgets/app_campo_texto.dart';
 import '../providers/auth_providers.dart';
 
 /// Tela de Login (wireframe 10 §1.1): e-mail, senha com toggle, botão com
@@ -83,7 +86,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: AppSpacing.tela,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Column(
@@ -95,67 +98,59 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     size: 64,
                     color: Theme.of(context).colorScheme.primary,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     AppStrings.appNome,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
-                  const SizedBox(height: 32),
-                  TextField(
+                  const SizedBox(height: AppSpacing.xxl),
+                  AppCampoTexto(
                     controller: _email,
-                    keyboardType: TextInputType.emailAddress,
+                    label: AppStrings.email,
+                    erro: _erroEmail,
+                    teclado: TextInputType.emailAddress,
                     autofillHints: const [AutofillHints.email],
-                    decoration: InputDecoration(
-                      labelText: AppStrings.email,
-                      border: const OutlineInputBorder(),
-                    ),
                   ),
-                  if (_erroEmail != null) ErroInline(mensagem: _erroEmail!),
-                  const SizedBox(height: 16),
-                  TextField(
+                  const SizedBox(height: AppSpacing.lg),
+                  AppCampoTexto(
                     controller: _senha,
-                    obscureText: _ocultarSenha,
+                    label: AppStrings.senha,
+                    erro: _erroSenha,
+                    senha: _ocultarSenha,
                     autofillHints: const [AutofillHints.password],
-                    onSubmitted: (_) => _entrar(),
-                    decoration: InputDecoration(
-                      labelText: AppStrings.senha,
-                      border: const OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                        onPressed: () =>
-                            setState(() => _ocultarSenha = !_ocultarSenha),
-                        icon: Icon(
-                          _ocultarSenha
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                        ),
+                    onSubmitted: _entrar,
+                    sufixo: IconButton(
+                      tooltip: _ocultarSenha
+                          ? AppStrings.mostrarSenha
+                          : AppStrings.ocultarSenha,
+                      onPressed: () =>
+                          setState(() => _ocultarSenha = !_ocultarSenha),
+                      icon: Icon(
+                        _ocultarSenha ? Icons.visibility : Icons.visibility_off,
                       ),
                     ),
                   ),
-                  if (_erroSenha != null) ErroInline(mensagem: _erroSenha!),
                   if (_erroGeral != null) ...[
-                    const SizedBox(height: 8),
-                    ErroInline(mensagem: _erroGeral!),
+                    const SizedBox(height: AppSpacing.sm),
+                    AppBanner(tipo: AppBannerTipo.erro, mensagem: _erroGeral!),
                   ],
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: _carregando ? null : _entrar,
-                    child: _carregando
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text(AppStrings.entrar),
+                  const SizedBox(height: AppSpacing.xl),
+                  AppBotao(
+                    rotulo: AppStrings.entrar,
+                    carregando: _carregando,
+                    onPressed: _entrar,
                   ),
-                  const SizedBox(height: 12),
-                  OutlinedButton(
+                  const SizedBox(height: AppSpacing.md),
+                  AppBotao(
+                    rotulo: AppStrings.criarMinhaConta,
+                    variante: AppBotaoVariante.outlined,
                     onPressed: () => context.go('/registro'),
-                    child: const Text(AppStrings.criarMinhaConta),
                   ),
-                  TextButton(
+                  AppBotao(
+                    rotulo: AppStrings.esqueciMinhaSenha,
+                    variante: AppBotaoVariante.texto,
                     onPressed: () => context.go('/recuperar-senha'),
-                    child: const Text(AppStrings.esqueciMinhaSenha),
                   ),
                 ],
               ),
