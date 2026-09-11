@@ -102,6 +102,7 @@ abstract final class AppStrings {
   // Importação por IA (doc 04 §2, wireframe 10 §4.1)
   static const fechar = 'Fechar';
   static const iaColeOuDigite = 'Cole ou digite sua lista:';
+  static const iaExemplo = '1kg de arroz, 2 leites, 500g de queijo prato...';
   static const iaExtrairItens = 'Extrair itens';
   static const iaLendo = 'Lendo...';
   static const iaConfirmeItens = 'Confirme os itens';

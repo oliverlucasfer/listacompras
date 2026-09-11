@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/app_strings.dart';
-import '../../../core/widgets/erro_inline.dart';
+import '../../../core/theme/tokens/app_spacing.dart';
+import '../../../core/widgets/app_banner.dart';
+import '../../../core/widgets/app_botao.dart';
 import '../domain/resposta_parse.dart';
 import '../providers/ia_providers.dart';
 
@@ -92,16 +94,13 @@ class _ModalImportarIaState extends ConsumerState<ModalImportarIa> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(AppStrings.iaColeOuDigite),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           TextField(
             controller: _controller,
             minLines: 5,
             maxLines: 5,
             keyboardType: TextInputType.multiline,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              hintText: '1kg de arroz, 2 leites, 500g de queijo prato...',
-            ),
+            decoration: const InputDecoration(hintText: AppStrings.iaExemplo),
           ),
           Align(
             alignment: Alignment.centerRight,
@@ -112,20 +111,18 @@ class _ModalImportarIaState extends ConsumerState<ModalImportarIa> {
                   : null,
             ),
           ),
-          if (_erro != null) ErroInline(mensagem: _erro!),
-          const SizedBox(height: 12),
-          FilledButton.icon(
+          if (_erro != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            AppBanner(tipo: AppBannerTipo.erro, mensagem: _erro!),
+          ],
+          const SizedBox(height: AppSpacing.md),
+          AppBotao(
+            rotulo: _carregando
+                ? AppStrings.iaLendo
+                : AppStrings.iaExtrairItens,
+            icone: Icons.auto_awesome,
+            carregando: _carregando,
             onPressed: _podeExtrair ? _extrair : null,
-            icon: _carregando
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.auto_awesome, size: 18),
-            label: Text(
-              _carregando ? AppStrings.iaLendo : AppStrings.iaExtrairItens,
-            ),
           ),
         ],
       ),

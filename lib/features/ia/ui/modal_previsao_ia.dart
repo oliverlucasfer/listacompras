@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/theme/tokens/app_spacing.dart';
+import '../../../core/widgets/app_banner.dart';
+import '../../../core/widgets/app_botao.dart';
+import '../../../core/widgets/app_snack_bar.dart';
 import '../../listas/domain/categoria.dart';
 import '../../listas/domain/unidade.dart';
 import '../../listas/providers/listas_providers.dart';
@@ -32,11 +36,7 @@ Future<void> confirmarItensImportados(
     );
   }
   if (context.mounted) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(AppStrings.itensExtraidos(selecionados.length))),
-      );
+    mostrarSnackBar(context, AppStrings.itensExtraidos(selecionados.length));
   }
 }
 
@@ -101,7 +101,13 @@ class _ModalPrevisaoIaState extends State<ModalPrevisaoIa> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (widget.resposta.aviso != null)
-              _AvisoIa(mensagem: widget.resposta.aviso!),
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: AppBanner(
+                  tipo: AppBannerTipo.aviso,
+                  mensagem: widget.resposta.aviso!,
+                ),
+              ),
             Flexible(
               child: ListView(
                 shrinkWrap: true,
@@ -146,11 +152,12 @@ class _ModalPrevisaoIaState extends State<ModalPrevisaoIa> {
           onPressed: () => Navigator.pop(context),
           child: const Text(AppStrings.cancelar),
         ),
-        FilledButton(
+        AppBotao(
+          rotulo: AppStrings.iaAdicionarN(selecionados.length),
+          expandido: false,
           onPressed: selecionados.isEmpty
               ? null
               : () => Navigator.pop(context, selecionados),
-          child: Text(AppStrings.iaAdicionarN(selecionados.length)),
         ),
       ],
     );
@@ -263,7 +270,7 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
           Row(
             children: [
               IconButton(
-                tooltip: 'Diminuir',
+                tooltip: AppStrings.diminuir,
                 icon: const Icon(Icons.remove_circle_outline),
                 onPressed: () => _passo(-1),
               ),
@@ -282,7 +289,7 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
                 ),
               ),
               IconButton(
-                tooltip: 'Aumentar',
+                tooltip: AppStrings.aumentar,
                 icon: const Icon(Icons.add_circle_outline),
                 onPressed: () => _passo(1),
               ),
@@ -313,7 +320,7 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
           DropdownButtonFormField<CategoriaItem>(
             initialValue: _categoria,
             decoration: const InputDecoration(
-              labelText: 'Categoria',
+              labelText: AppStrings.categoria,
               border: OutlineInputBorder(),
               isDense: true,
             ),
@@ -327,31 +334,6 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
               _notificar();
             },
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AvisoIa extends StatelessWidget {
-  const _AvisoIa({required this.mensagem});
-
-  final String mensagem;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.tertiaryContainer,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.warning_amber_rounded, size: 20),
-          const SizedBox(width: 8),
-          Expanded(child: Text(mensagem)),
         ],
       ),
     );
