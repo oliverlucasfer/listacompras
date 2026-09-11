@@ -47,7 +47,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RNF-03 | Segurança | Usuário não acessa lista alheia (RLS) | Negações N-01…N-10 de [02 §5](02-seguranca-rls.md) |
 | RNF-04 | Proteção da IA | Sem API key no client; rate limit 10/min; erros amigáveis | Checklist [04 §9](04-ia-edge-function.md) |
 | RNF-05 | Privacidade (LGPD) | Exclusão de conta funcional; logs sem dados de conteúdo | [06 §3](06-mvp-entregas.md) |
-| RNF-06 | Acessibilidade | Alvos ≥ 48dp, contraste AA, escala de fonte respeitada | Revisão de UI ([05 §7](05-app-flutter.md)) |
+| RNF-06 | Acessibilidade | Alvos ≥ 48dp, contraste AA, escala de fonte respeitada | Revisão de UI ([15 §4](15-design-system.md)) |
 | RNF-07 | Custo | R$ 0 no MVP (free tiers) | Riscos R-01/R-02 com gatilho definido ([00 §4](00-visao-geral.md)) |
 | RNF-08 | Qualidade | CI verde obrigatório; sync e RLS com prioridade máxima de testes | [07 §1](07-qualidade-ci.md) |
 
@@ -105,6 +105,7 @@ Como P1 sem plano de IA, quero que itens comuns já venham categorizados mesmo o
 | IA e contrato serverless | [04](04-ia-edge-function.md) | Prompt, responseSchema, rate limit |
 | Arquitetura do app e UX | [05](05-app-flutter.md) | Riverpod, rotas, telas, Material 3 |
 | Layout visual | [10](10-wireframes-telas.md) | Wireframes de todas as telas |
+| Design System (tokens, componentes) | [15](15-design-system.md) | Material 3 Expressive, componentes, acessibilidade |
 | Compartilhamento (F6) | [08](08-compartilhamento-colaborativo.md) | Convites, papéis, transferência |
 | Operação | [09](09-runbook-operacoes.md) | Runbook pós-lançamento |
 | Qualidade | [07](07-qualidade-ci.md) | Testes, CI, Sentry |

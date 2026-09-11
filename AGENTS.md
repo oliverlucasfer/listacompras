@@ -13,7 +13,7 @@ Projeto: app de lista de compras inteligente e colaborativa (Flutter + Supabase 
 
 ## Regras não negociáveis
 
-- **Doc dono é autoridade:** schema em `01`, RLS em `02`, sync em `03`, IA em `04`, app/UX em `05`, entregas/LGPD em `06`, qualidade em `07`, compartilhamento em `08`, operação em `09`, layout em `10`, usabilidade em `11`, requisitos em `12`. Mudança de comportamento exige atualizar o doc dono **no mesmo PR**. `13` é resumo — nunca sobrepõe o dono.
+- **Doc dono é autoridade:** schema em `01`, RLS em `02`, sync em `03`, IA em `04`, app/UX em `05`, design system em `15`, entregas/LGPD em `06`, qualidade em `07`, compartilhamento em `08`, operação em `09`, layout em `10`, usabilidade em `11`, requisitos em `12`. Mudança de comportamento exige atualizar o doc dono **no mesmo PR**. `13` é resumo — nunca sobrepõe o dono.
 - **Nenhuma chave/segredo** em código, commit ou log. `GEMINI_API_KEY` só via `supabase secrets set`.
 - **RLS é sagrado:** qualquer dado acessado deve passar pelas policies de `02`. Nunca use a service_role key no client.
 - **Offline-first:** UI nunca bloqueia em rede; escrita vai sempre ao Drift + fila ([03](docs/03-sincronizacao-offline.md)); IDs UUID v4 gerados no cliente.

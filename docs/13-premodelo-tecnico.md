@@ -104,6 +104,10 @@ supabase db push                      # aplica em produção
 supabase functions deploy parse-lista # deploy Edge Function
 ```
 
+## 8. Design System (doc 15)
+
+Material 3 Expressive, seed verde `#2E7D32`, fonte Plus Jakarta Sans bundlada, claro/escuro com paridade, modo Claro/Escuro/Sistema (SharedPreferences) e a biblioteca `App*` em `lib/core/widgets/`. Tokens em `lib/core/theme/tokens/`. Detalhes: [15](15-design-system.md).
+
 ---
 
 ## Documentos relacionados

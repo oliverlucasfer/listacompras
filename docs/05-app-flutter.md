@@ -161,19 +161,18 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 
 ## 7. Design System
 
-* **Material 3** com `useMaterial3: true` e `ColorScheme.fromSeed`.
-* **Tema claro + escuro automático** (segue o sistema); dark mode manual fica para pós-MVP.
-* Tipografia padrão do Material; sem fontes customizadas no MVP.
-* Componentes padrão para estados transversais:
+O design system (tokens, tipografia, componentes, motion, acessibilidade) é
+propriedade do **[doc 15](15-design-system.md)**. Resumo: Material 3 Expressive
+com seed verde, claro/escuro com paridade, modo Claro/Escuro/Sistema e fonte
+Plus Jakarta Sans bundlada. Aqui ficam apenas os estados transversais:
 
-| Estado | Componente padrão |
+| Estado | Componente padrão (doc 15) |
 | :--- | :--- |
-| Carregando | `CircularProgressIndicator` central ou shimmer leve |
-| Vazio | Ilustração + texto de orientação + CTA |
-| Erro | Banner + botão "Tentar novamente" |
-| Offline | Banner discreto persistente ([03 §6](03-sincronizacao-offline.md)) |
+| Carregando | `AppBotao(carregando: true)` / `CircularProgressIndicator` |
+| Vazio | `AppEstadoVazio` |
+| Erro | `AppEstadoErro` (com retry) |
+| Offline | `AppBanner.offline` ([03 §6](03-sincronizacao-offline.md)) |
 
-* Acessibilidade mínima: alvos de toque ≥ 48dp, contraste AA, textos respeitam escala do sistema.
 * i18n: pt-BR hardcoded no MVP (strings centralizadas em `core/l10n/app_strings.dart` para facilitar futura tradução).
 
 ---

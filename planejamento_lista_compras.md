@@ -25,6 +25,7 @@ Sistema multiplataforma (MVP: Android, iOS e Web) para gerenciamento de listas d
 | [12](docs/12-prd.md) | **PRD** | Requisitos funcionais/não-funcionais com IDs, user stories, matriz de rastreabilidade | Requisitos de produto |
 | [13](docs/13-premodelo-tecnico.md) | **Pré-modelo Técnico** | Contexto condensado para implementação (ler primeiro) | Resumo — nunca sobrepõe o doc dono |
 | [14](docs/14-tarefas.md) | **Tarefas** | Breakdown executável por fase (F1–F6) com dependências e critério de pronto | Execução e progresso |
+| [15](docs/15-design-system.md) | **Design System** | Tokens, tema M3 Expressive, componentes, motion e acessibilidade | Design system (tokens, componentes, acessibilidade) |
 
 ---
 
@@ -34,7 +35,7 @@ Sistema multiplataforma (MVP: Android, iOS e Web) para gerenciamento de listas d
 
 ## Cronograma (resumo)
 
-1. **Infraestrutura & BD** → 2. **Edge Function de IA** → 3. **App Flutter core** → 4. **IA + Sync offline-first** → 5. **Publicação MVP (Web + Android)** → 6. **Pós-MVP** (iOS, Desktop, compartilhamento).
+1. **Infraestrutura & BD** → 2. **Edge Function de IA** → 3. **App Flutter core** → 4. **IA + Sync offline-first** → 5. **Publicação MVP (Web + Android)** → 6. **Pós-MVP** (iOS, Desktop, compartilhamento) → 7. **Revisão visual e UX** (design system, refresh das telas e navegação — Fase 8+, spec em `docs/superpowers/specs/2026-09-11-revisao-visual-ux-design.md`).
 
 Detalhes e DoD por fase: [00 §6](docs/00-visao-geral.md) · Breakdown executável: [14](docs/14-tarefas.md).
 

@@ -139,6 +139,7 @@ Aplicação multiplataforma para criação, organização e execução de compra
 | **Fase 4** | **Integrar IA e Sincronização** | Implementar o modal de importação por texto + pré-visualização; implementar o **Sync Engine offline-first** (fila de mutações, LWW, tombstones — ver [03](03-sincronizacao-offline.md)); validar sincronização simultânea Web/Mobile. | Sync validado em 2 dispositivos; fila offline esvazia ao reconectar |
 | **Fase 5** | **Polimento e Publicação (MVP)** | Tratar estado offline (indicadores na UI), **testes de usabilidade** (roteiro em [11](11-usabilidade-fase5.md)), **exclusão de conta (LGPD)** e publicação de **Web + Android**. | Critérios de aceite do MVP 100% (ver [06](06-mvp-entregas.md)) |
 | **Fase 6** | **Pós-MVP** | Publicação iOS; suporte Desktop (Windows/macOS/Linux); **compartilhamento colaborativo ativado na UI** (planejamento em [08](08-compartilhamento-colaborativo.md)); **agrupamento da lista por categoria** (spec em [superpowers/specs](superpowers/specs/2026-09-08-agrupamento-categorias-design.md)); limpeza de tombstones; avaliação de upgrade Supabase Pro. | — |
+| **Fase 8** | **Revisão Visual e de UX** | Design system (tokens, M3 Expressive, fonte, componentes), refresh das telas e redesign de navegação. | Etapa 1 (fundação) entregue, CI verde — spec em [`superpowers/specs/2026-09-11-revisao-visual-ux-design.md`](superpowers/specs/2026-09-11-revisao-visual-ux-design.md) |
 
 ---
 
@@ -154,3 +155,4 @@ Aplicação multiplataforma para criação, organização e execução de compra
 - [09 Runbook de Operações](09-runbook-operacoes.md) — incidentes, backups, quotas
 - [10 Wireframes das Telas](10-wireframes-telas.md) — layout de todas as telas
 - [11 Usabilidade (Fase 5)](11-usabilidade-fase5.md) — roteiro e critérios de teste
+- [15 Design System](15-design-system.md) — tokens, componentes, acessibilidade

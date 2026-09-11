@@ -6,6 +6,8 @@
 
 Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` ícone · `▼/▸` seção aberta/fechada · `(...)` anotação de comportamento.
 
+**Convenções visuais:** espaçamento, raios, cores e tipografia vêm dos tokens do [doc 15](15-design-system.md) — os wireframes são ASCII e não fixam valores visuais. Banners/estados usam `AppBanner`/`AppEstadoVazio`/`AppEstadoErro` do doc 15.
+
 ---
 
 ## 1. Autenticação
