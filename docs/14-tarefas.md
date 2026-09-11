@@ -221,6 +221,36 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
   Dep: F8-T02 · Docs: [07 §1](07-qualidade-ci.md)
   CP: widget tests dos componentes e do seletor; `format`/`analyze`/`test` verdes.
 
+## Fase 9 — Refresh Visual das Telas (spec em [superpowers/specs](superpowers/specs/2026-09-11-revisao-visual-ux-etapa2-design.md))
+
+- [ ] **F9-T00** — Spec + plano + fase nos docs
+  Dep: F8-T03 · Docs: spec da fase
+  CP: spec/plano registrados; fase 9 em 14/14 sem tocar código de app.
+- [ ] **F9-T01** — Auth (login/registro/recuperar) com componentes/tokens
+  Dep: F9-T00 · Docs: [15](15-design-system.md) · RNF-06
+  CP: campos/botões/banners padronizados; tooltip no toggle; strings centralizadas; testes verdes.
+- [ ] **F9-T02** — Minhas Listas com `AppCard`/`AppEstadoVazio`/`AppEstadoErro`/`AppDialog`
+  Dep: F9-T01 · Docs: [15](15-design-system.md)
+  CP: card/vazio/erro/destrutivo padronizados; testes verdes.
+- [ ] **F9-T03** — Indicador de sync com `AppBanner`
+  Dep: F9-T01 · Docs: [15](15-design-system.md)
+  CP: offline/erro com contraste correto; testes verdes.
+- [ ] **F9-T04** — Tela da lista (banners, estados, destrutivo, strings/cores)
+  Dep: F9-T02, F9-T03 · Docs: [15](15-design-system.md), [10](10-wireframes-telas.md)
+  CP: banners/estados/cores/strings padronizados; testes verdes.
+- [ ] **F9-T05** — Modais de IA (aviso, botões, strings)
+  Dep: F9-T01 · Docs: [15](15-design-system.md)
+  CP: aviso via `AppBanner`; botões/strings padronizados; testes verdes.
+- [ ] **F9-T06** — Configurações (cabeçalho, destrutivo, sheet)
+  Dep: F9-T02 · Docs: [15](15-design-system.md)
+  CP: cabeçalho/botão/sheet padronizados; testes verdes.
+- [ ] **F9-T07** — Convites e membros (chip, botões, sheet, a11y)
+  Dep: F9-T02 · Docs: [15](15-design-system.md)
+  CP: chip ≥48dp; tooltips; confirmações destrutivas; testes verdes.
+- [ ] **F9-T08** — Acessibilidade, doc 10 e fechamento
+  Dep: F9-T01…F9-T07 · Docs: [10](10-wireframes-telas.md), [07 §1](07-qualidade-ci.md)
+  CP: `format`/`analyze`/`test` verdes; wireframes sincronizados; fase marcada.
+
 ---
 
 ## Progresso por fase (atualize ao concluir)
@@ -235,7 +265,8 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 | F6 Pós-MVP | 7 | 7 |
 | F7 Compartilhamento | 8 | 8 |
 | F8 Design System | 4 | 4 |
-| **Total** | **57** | **55** |
+| F9 Refresh Visual | 9 | 0 |
+| **Total** | **66** | **55** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
