@@ -167,6 +167,10 @@ abstract final class AppStrings {
 
   // Configurações (doc 06 §3, wireframe 10 §5)
   static const configuracoes = 'Configurações';
+  static const aparencia = 'Aparência';
+  static const temaClaro = 'Claro';
+  static const temaEscuro = 'Escuro';
+  static const temaSistema = 'Sistema';
   static const conta = 'Conta';
   static const sobre = 'Sobre';
   static const politicaPrivacidade = 'Política de Privacidade';

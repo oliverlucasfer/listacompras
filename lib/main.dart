@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/supabase_config.dart';
 import 'core/l10n/app_strings.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/theme_mode_provider.dart';
 import 'core/utils/deeplink_convite.dart';
 import 'features/sync/providers/sync_providers.dart';
 import 'router.dart';
@@ -58,10 +59,12 @@ class ListaComprasApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final modoTema = ref.watch(temaModoProvider).value ?? ThemeMode.system;
     return MaterialApp.router(
       title: AppStrings.appNome,
       theme: AppTheme.claro,
       darkTheme: AppTheme.escuro,
+      themeMode: modoTema,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );

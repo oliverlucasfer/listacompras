@@ -5,6 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/l10n/politica_privacidade.dart';
+import '../../../core/theme/seletor_tema.dart';
+import '../../../core/theme/tokens/app_spacing.dart';
 import '../../auth/providers/auth_providers.dart';
 
 /// Tela Configurações (doc 06 §3, wireframe 10 §5, RF-11): e-mail da conta,
@@ -102,6 +104,11 @@ class ConfiguracoesScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text(AppStrings.configuracoes)),
       body: ListView(
         children: [
+          const _CabecalhoSecao(AppStrings.aparencia),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: SeletorTema(),
+          ),
           const _CabecalhoSecao(AppStrings.conta),
           ListTile(
             leading: const Icon(Icons.email_outlined),
