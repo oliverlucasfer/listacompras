@@ -5,6 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/theme/tokens/app_spacing.dart';
+import '../../../core/widgets/app_botao.dart';
+import '../../../core/widgets/app_cabecalho_secao.dart';
+import '../../../core/widgets/app_campo_texto.dart';
+import '../../../core/widgets/app_dialog.dart';
+import '../../../core/widgets/app_estado_erro.dart';
+import '../../../core/widgets/app_estado_vazio.dart';
+import '../../../core/widgets/app_snack_bar.dart';
 import '../../convites/data/papel_repository.dart';
 import '../../convites/domain/papel.dart';
 import '../../convites/providers/papel_providers.dart';
@@ -49,9 +57,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
     final listaId = _membroEntrou?.value;
     if (listaId == null || listaId != widget.listaId || !mounted) return;
     _papelRepo?.consumirEntrada();
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(content: Text(AppStrings.membroEntrou)));
+    mostrarSnackBar(context, AppStrings.membroEntrou);
   }
 
   @override
@@ -96,72 +102,40 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
     }
   }
 
-  void _confirmarLimparConcluidos(
+  Future<void> _confirmarLimparConcluidos(
     BuildContext context,
     WidgetRef ref,
     String idLista,
-  ) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text(AppStrings.limparConcluidos),
-        content: const Text(AppStrings.limparConcluidosMensagem),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text(AppStrings.cancelar),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              ref.read(listasRepositoryProvider).limparConcluidos(idLista);
-            },
-            child: const Text(AppStrings.limpar),
-          ),
-        ],
-      ),
+  ) async {
+    final confirmou = await AppDialog.confirmarDestrutivo(
+      context,
+      titulo: AppStrings.limparConcluidos,
+      mensagem: AppStrings.limparConcluidosMensagem,
+      confirmar: AppStrings.limpar,
     );
+    if (confirmou) {
+      ref.read(listasRepositoryProvider).limparConcluidos(idLista);
+    }
   }
 
-  void _confirmarExcluirLista(
+  Future<void> _confirmarExcluirLista(
     BuildContext context,
     WidgetRef ref,
     String idLista,
-  ) {
+  ) async {
     final titulo = ref.read(listaPorIdProvider(idLista)).value?.titulo ?? '';
     final nItens = ref.read(itensDaListaProvider(idLista)).value?.length ?? 0;
     final mensagem = nItens == 1
         ? 'O item será removido.'
         : 'Os $nItens itens serão removidos.';
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text('Excluir "$titulo"?'),
-          content: Text(mensagem),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text(AppStrings.cancelar),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-              onPressed: () async {
-                Navigator.pop(dialogContext);
-                await ref.read(listasRepositoryProvider).excluirLista(idLista);
-                if (context.mounted) context.go('/listas');
-              },
-              child: const Text(AppStrings.excluir),
-            ),
-          ],
-        );
-      },
+    final confirmou = await AppDialog.confirmarDestrutivo(
+      context,
+      titulo: 'Excluir "$titulo"?',
+      mensagem: mensagem,
     );
+    if (!confirmou) return;
+    await ref.read(listasRepositoryProvider).excluirLista(idLista);
+    if (context.mounted) context.go('/listas');
   }
 
   /// Importação por IA (doc 05 §6.3/§6.4, RF-06): entrada → pré-visualização
@@ -199,7 +173,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
             title: Text(lista.titulo),
             actions: [
               PopupMenuButton<String>(
-                tooltip: 'Menu',
+                tooltip: AppStrings.menu,
                 onSelected: (acao) => _acaoMenu(context, ref, lista.id, acao),
                 itemBuilder: (context) {
                   // Papel (doc 08 §1, F7-T04): editor escreve itens, dono
@@ -237,11 +211,13 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                         child: Text(AppStrings.convidar),
                       ),
                     if (ehDono)
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'excluir',
                         child: Text(
                           AppStrings.excluirLista,
-                          style: TextStyle(color: Colors.red),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
                         ),
                       ),
                   ];
@@ -259,11 +235,17 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
               Expanded(child: _ListaItens(listaId: listaId)),
               if (_papelNaLista(lista.id) != Papel.leitor)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                  child: OutlinedButton.icon(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.xs,
+                    AppSpacing.lg,
+                    AppSpacing.md,
+                  ),
+                  child: AppBotao(
+                    rotulo: AppStrings.importarPorIa,
+                    variante: AppBotaoVariante.outlined,
+                    icone: Icons.smart_toy_outlined,
                     onPressed: () => _importarPorIa(context, ref, listaId),
-                    icon: const Icon(Icons.smart_toy_outlined),
-                    label: const Text(AppStrings.importarPorIa),
                   ),
                 ),
             ],
@@ -333,11 +315,7 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
       // Duplicado: aumenta a quantidade em vez de bloquear (doc 05 §6.3).
       await repo.editarItem(existente.id, quantidade: existente.quantidade + 1);
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(content: Text('$nome ${AppStrings.itemDuplicadoSomado}')),
-          );
+        mostrarSnackBar(context, '$nome ${AppStrings.itemDuplicadoSomado}');
       }
     } else {
       // Sugestão local em camadas (F6-T03, spec §4): memória → dicionário
@@ -357,18 +335,20 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-      child: TextField(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
+        AppSpacing.xs,
+      ),
+      child: AppCampoTexto(
         controller: _controller,
-        onSubmitted: (_) => _adicionar(),
-        decoration: InputDecoration(
-          labelText: AppStrings.adicionarItem,
-          border: const OutlineInputBorder(),
-          suffixIcon: IconButton(
-            tooltip: AppStrings.adicionarItem,
-            icon: const Icon(Icons.add),
-            onPressed: _adicionar,
-          ),
+        label: AppStrings.adicionarItem,
+        onSubmitted: _adicionar,
+        sufixo: IconButton(
+          tooltip: AppStrings.adicionarItem,
+          icon: const Icon(Icons.add),
+          onPressed: _adicionar,
         ),
       ),
     );
@@ -406,11 +386,20 @@ class _ListaItens extends ConsumerWidget {
     final itensAsync = ref.watch(itensDaListaProvider(listaId));
     return itensAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, _) => const Center(child: Text(AppStrings.erroGenerico)),
+      error: (_, _) => AppEstadoErro(
+        mensagem: AppStrings.erroGenerico,
+        onRetentar: () => ref.invalidate(itensDaListaProvider(listaId)),
+      ),
       data: (itens) {
         if (itens.isEmpty) {
-          return Center(
-            child: Text(podeEscrever ? AppStrings.adicionarItem : ''),
+          return AppEstadoVazio(
+            icone: Icons.shopping_basket_outlined,
+            titulo: podeEscrever
+                ? AppStrings.nenhumItem
+                : AppStrings.listaVazia,
+            descricao: podeEscrever
+                ? AppStrings.nenhumItemDica
+                : AppStrings.listaVaziaDica,
           );
         }
         final pendentes = itens.where((i) => !i.concluido).toList();
@@ -426,7 +415,10 @@ class _ListaItens extends ConsumerWidget {
           slivers
             ..add(
               SliverToBoxAdapter(
-                child: _CabecalhoGrupo('${categoria.rotulo} (${grupo.length})'),
+                child: AppCabecalhoSecao(
+                  categoria.rotulo,
+                  contagem: grupo.length,
+                ),
               ),
             )
             ..add(
@@ -486,26 +478,6 @@ class _ListaItens extends ConsumerWidget {
         slivers.add(const SliverPadding(padding: EdgeInsets.only(bottom: 24)));
         return CustomScrollView(slivers: slivers);
       },
-    );
-  }
-}
-
-class _CabecalhoGrupo extends StatelessWidget {
-  const _CabecalhoGrupo(this.titulo);
-
-  final String titulo;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: Text(
-        titulo,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
     );
   }
 }
@@ -587,17 +559,12 @@ class _LinhaItem extends ConsumerWidget {
         }
         await repo.removerItem(item.id);
         if (!context.mounted) return true;
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: const Text(AppStrings.itemRemovido),
-              action: SnackBarAction(
-                label: AppStrings.desfazer,
-                onPressed: () => repo.restaurarItem(item.id),
-              ),
-            ),
-          );
+        mostrarSnackBar(
+          context,
+          AppStrings.itemRemovido,
+          rotuloAcao: AppStrings.desfazer,
+          onAcao: () => repo.restaurarItem(item.id),
+        );
         return true;
       },
       child: linha,
@@ -632,7 +599,7 @@ class _FundoSwipe extends StatelessWidget {
     return Container(
       color: cor,
       alignment: alinhamento,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
       child: Icon(icone),
     );
   }
@@ -695,18 +662,12 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              controller: _nome,
-              decoration: InputDecoration(
-                labelText: AppStrings.adicionarItem,
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
+            AppCampoTexto(controller: _nome, label: AppStrings.adicionarItem),
+            const SizedBox(height: AppSpacing.md),
             Row(
               children: [
                 IconButton(
-                  tooltip: 'Diminuir',
+                  tooltip: AppStrings.diminuir,
                   icon: const Icon(Icons.remove_circle_outline),
                   onPressed: () {
                     final atual = _quantidadeLida() ?? 1;
@@ -716,20 +677,16 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
                   },
                 ),
                 Expanded(
-                  child: TextField(
+                  child: AppCampoTexto(
                     controller: _quantidade,
-                    keyboardType: const TextInputType.numberWithOptions(
+                    label: AppStrings.quantidade,
+                    teclado: const TextInputType.numberWithOptions(
                       decimal: true,
-                    ),
-                    textAlign: TextAlign.center,
-                    decoration: InputDecoration(
-                      labelText: AppStrings.quantidade,
-                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Aumentar',
+                  tooltip: AppStrings.aumentar,
                   icon: const Icon(Icons.add_circle_outline),
                   onPressed: () {
                     final atual = _quantidadeLida() ?? 1;
@@ -738,7 +695,7 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             DropdownButtonFormField<Unidade>(
               initialValue: _unidade,
               decoration: InputDecoration(
@@ -753,12 +710,12 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
                 if (u != null) setState(() => _unidade = u);
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             // Categoria (F6-T04, spec §6): mudar de grupo via edição.
             DropdownButtonFormField<CategoriaItem>(
               initialValue: _categoria,
               decoration: const InputDecoration(
-                labelText: 'Categoria',
+                labelText: AppStrings.categoria,
                 border: OutlineInputBorder(),
               ),
               items: [
@@ -777,7 +734,11 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
           onPressed: () => Navigator.pop(context),
           child: const Text(AppStrings.cancelar),
         ),
-        FilledButton(onPressed: _salvar, child: const Text(AppStrings.salvar)),
+        AppBotao(
+          rotulo: AppStrings.salvar,
+          expandido: false,
+          onPressed: _salvar,
+        ),
       ],
     );
   }

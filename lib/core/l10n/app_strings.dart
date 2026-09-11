@@ -77,7 +77,15 @@ abstract final class AppStrings {
   static const editarItem = 'Editar item';
   static const quantidade = 'Quantidade';
   static const unidade = 'Unidade';
+  static const categoria = 'Categoria';
+  static const diminuir = 'Diminuir';
+  static const aumentar = 'Aumentar';
+  static const menu = 'Menu';
   static const listaNaoEncontrada = 'Lista não encontrada.';
+  static const nenhumItem = 'Nenhum item ainda';
+  static const nenhumItemDica = 'Adicione o primeiro item no campo acima.';
+  static const listaVazia = 'Lista vazia';
+  static const listaVaziaDica = 'Ainda não há itens nesta lista.';
 
   // Papel do usuário na lista (doc 08 §1, RF-13, F7-T04)
   static const somenteLeitura = 'Somente leitura';
