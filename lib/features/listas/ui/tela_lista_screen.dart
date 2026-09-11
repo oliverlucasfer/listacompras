@@ -41,14 +41,10 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
   PapelRepository? _papelRepo;
   ValueNotifier<String?>? _membroEntrou;
 
-  /// Papel do usuário na lista (F7-T03): stream do PapelRepository reativo;
-  /// enquanto o primeiro evento não chega, lê o estado atual do repositório
-  /// (o menu pode abrir antes do microtask do stream).
-  Papel _papelNaLista(String listaId) {
-    final viaStream = ref.watch(papelNaListaStreamProvider(listaId)).value;
-    if (viaStream != null) return viaStream;
-    return ref.watch(papelRepositoryProvider).papelDe(listaId) ?? Papel.leitor;
-  }
+  /// Papel efetivo na lista (F7-T03 + correção): o dono é derivado da própria
+  /// lista local antes do papel do servidor (editável offline/após reinício).
+  Papel _papelNaLista(String listaId) =>
+      ref.watch(papelEfetivoProvider(listaId));
 
   /// Feedback "membro entrou" (doc 08 §7, F7-T07): realtime INSERT de
   /// outro membro sinaliza o notifier — só a tela aberta da mesma lista
@@ -234,18 +230,21 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                 _CampoAdicionar(listaId: listaId),
               Expanded(child: _ListaItens(listaId: listaId)),
               if (_papelNaLista(lista.id) != Papel.leitor)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.xs,
-                    AppSpacing.lg,
-                    AppSpacing.md,
-                  ),
-                  child: AppBotao(
-                    rotulo: AppStrings.importarLista,
-                    variante: AppBotaoVariante.outlined,
-                    icone: Icons.smart_toy_outlined,
-                    onPressed: () => _importarPorIa(context, ref, listaId),
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      AppSpacing.xs,
+                      AppSpacing.lg,
+                      AppSpacing.xl,
+                    ),
+                    child: AppBotao(
+                      rotulo: AppStrings.importarLista,
+                      variante: AppBotaoVariante.outlined,
+                      icone: Icons.smart_toy_outlined,
+                      onPressed: () => _importarPorIa(context, ref, listaId),
+                    ),
                   ),
                 ),
             ],
@@ -382,9 +381,7 @@ class _ListaItens extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final papel =
-        ref.watch(papelNaListaStreamProvider(listaId)).value ??
-        (ref.watch(papelRepositoryProvider).papelDe(listaId) ?? Papel.leitor);
+    final papel = ref.watch(papelEfetivoProvider(listaId));
     final podeEscrever = papel != Papel.leitor;
     final itensAsync = ref.watch(itensDaListaProvider(listaId));
     return itensAsync.when(

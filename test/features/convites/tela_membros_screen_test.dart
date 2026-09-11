@@ -13,6 +13,7 @@ import 'package:lista_compras/features/convites/providers/convites_providers.dar
 import 'package:lista_compras/features/convites/data/papel_repository.dart';
 import 'package:lista_compras/features/convites/providers/papel_providers.dart';
 import 'package:lista_compras/features/convites/ui/tela_membros_screen.dart';
+import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/sync/data/supabase_bootstrap.dart';
 import 'package:lista_compras/features/sync/data/sync_engine.dart';
 import 'package:lista_compras/features/sync/data/sync_remoto.dart';
@@ -66,7 +67,10 @@ void main() {
     WidgetTester tester,
     ServidorFake servidor, {
     required String usuarioId,
+    AppDatabase? db,
   }) async {
+    final appDb = db ?? AppDatabase(NativeDatabase.memory());
+    addTearDown(appDb.close);
     final cliente = SupabaseClient(
       'http://127.0.0.1:54321',
       'test-key',
@@ -94,6 +98,7 @@ void main() {
             ConvitesRepository(cliente),
           ),
           donoAtualIdProvider.overrideWithValue(usuarioId),
+          appDatabaseProvider.overrideWithValue(appDb),
         ],
         child: MaterialApp.router(routerConfig: router),
       ),
@@ -138,6 +143,38 @@ void main() {
       find.widgetWithText(TextButton, AppStrings.sairDaLista),
       findsNothing,
     );
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_dono_local_quando_servidor_nao_devolve_linha', (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final agora = DateTime.now().toUtc();
+    await db
+        .into(db.listaLocal)
+        .insert(
+          ListaLocalCompanion.insert(
+            id: _listaId,
+            createdAt: agora,
+            updatedAt: agora,
+            titulo: 'Minha',
+            donoId: 'U1',
+          ),
+        );
+    final servidor = ServidorFake((req) {
+      if (req.method == 'GET' && req.url.path.contains('/lista_membros')) {
+        return (200, const <Object>[]);
+      }
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+
+    await abrir(tester, servidor, usuarioId: 'U1', db: db);
+
+    expect(find.text(AppStrings.voce), findsOneWidget);
+    expect(find.text(AppStrings.papelDono), findsOneWidget);
 
     await fechar(tester);
   });

@@ -268,6 +268,9 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 - [x] **F10-T04** — Correção: associação do dono ao criar lista
   Dep: F10-T03 · Docs: [01 §6](01-banco-de-dados.md), [02 §1/§3](02-seguranca-rls.md) · Bug: dono virava leitor
   CP: migration `0010_dono_automatico.sql` (trigger + backfill) em produção; papel local imediato no cliente; suites SQL (com P-08) e `flutter test` verdes.
+- [x] **F10-T05** — Correção: papel por propriedade, membros e reparo do dono
+  Dep: F10-T04 · Docs: [02 §3](02-seguranca-rls.md), [08 §5](08-compartilhamento-colaborativo.md)
+  CP: `papelEfetivoProvider` deriva dono de `listas.dono_id` (offline/após reinício); tela de membros mescla o dono local e refaz o fetch ao abrir; migration `0011_dono_repair.sql` (trigger + backfill idempotente) em produção; botão "Importar lista" com SafeArea + mais respiro inferior; `analyze`/`test` verdes.
 
 ---
 
@@ -301,9 +304,9 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 | F7 Compartilhamento | 8 | 8 |
 | F8 Design System | 4 | 4 |
 | F9 Refresh Visual | 9 | 9 |
-| F10 Navegação | 5 | 5 |
+| F10 Navegação | 6 | 6 |
 | F11 Import local | 4 | 4 |
-| **Total** | **75** | **73** |
+| **Total** | **76** | **74** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

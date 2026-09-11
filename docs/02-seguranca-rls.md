@@ -122,6 +122,7 @@ alter table public.itens_lista   force row level security;
 * `leitor` tem acesso apenas de leitura — políticas de INSERT/UPDATE/DELETE checam explicitamente o papel.
 * Realtime respeita as mesmas políticas (usuário só recebe broadcast de listas de que participa).
 * `auth.uid()` é sempre avaliado do JWT — **nunca** confiar em campos enviados pelo cliente.
+* **Associação do dono garantida:** toda lista tem exatamente um `papel='dono'` em `lista_membros` (trigger `trg_listas_cria_dono`, migrations `0010`/`0011`). O app deriva o papel do dono de `listas.dono_id` (offline, independente de carregar os papéis) e a tela de membros mescla o dono da lista local quando o servidor não devolve a linha.
 
 ---
 

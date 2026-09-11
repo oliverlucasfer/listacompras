@@ -29,8 +29,11 @@ import 'package:lista_compras/features/sync/providers/sync_providers.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../convites/servidor_fake.dart';
+import '../auth/fakes.dart';
 
 void main() {
+  setUpAll(inicializarSupabaseTeste);
+
   late AppDatabase db;
 
   setUp(() {
@@ -66,6 +69,7 @@ void main() {
     WidgetTester tester, {
     bool comConcluido = false,
     Papel papel = Papel.dono,
+    String donoAtual = '',
   }) async {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(
@@ -100,6 +104,7 @@ void main() {
           papelRepositoryProvider.overrideWithValue(
             papelRepo(tester, listaId: lista.id, papel: papel),
           ),
+          donoAtualIdProvider.overrideWithValue(donoAtual),
           syncStatusProvider.overrideWith((ref) => sync.stream),
         ],
         child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
@@ -667,7 +672,7 @@ void main() {
     tester,
   ) async {
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-c');
     await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
     final servidor = ServidorFake((req) {
       if (req.method == 'GET' && req.url.path.contains('/lista_membros')) {
@@ -845,6 +850,22 @@ void main() {
     expect(find.text(AppStrings.desmarcarTodos), findsOneWidget);
     expect(find.text(AppStrings.limparConcluidos), findsOneWidget);
     expect(find.text(AppStrings.renomearLista), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_editar_quando_donoId_e_do_usuario_mesmo_sem_papel', (
+    tester,
+  ) async {
+    // Correção: dono derivado da lista local, mesmo sem papel do servidor
+    // (ex.: após reiniciar o app a associação ainda não carregou).
+    await listaComItens(tester, papel: Papel.leitor, donoAtual: 'user-a');
+
+    expect(find.text(AppStrings.somenteLeitura), findsNothing);
+    expect(
+      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      findsOneWidget,
+    );
 
     await fechar(tester);
   });

@@ -10,6 +10,7 @@ import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../listas/providers/listas_providers.dart';
 import '../../sync/providers/sync_providers.dart';
 import '../domain/convite.dart';
 import '../domain/papel.dart';
@@ -19,16 +20,43 @@ import '../providers/papel_providers.dart';
 /// Membros da lista (doc 08 §5/§8, F7-T03, RF-13): FutureProvider.family por
 /// listaId via `membrosDaLista`; dono troca papel (editor↔leitor) e remove
 /// membro; não-dono sai da lista (doc 08 §5 — transferência de dono adiada,
-/// então o dono não sai).
+/// então o dono não sai). **Correção:** o dono é mesclado a partir da lista
+/// local (`donoId`) quando o servidor não devolve a linha — a tela nunca fica
+/// vazia para listas próprias (offline ou associação pendente).
 final membrosDaListaProvider = FutureProvider.family<List<MembroLista>, String>(
-  (ref, listaId) =>
-      ref.watch(convitesRepositoryProvider).membrosDaLista(listaId),
+  (ref, listaId) async {
+    final membros = await ref
+        .watch(convitesRepositoryProvider)
+        .membrosDaLista(listaId);
+    final donoId = ref.watch(listaPorIdProvider(listaId)).value?.donoId;
+    if (donoId != null &&
+        donoId.isNotEmpty &&
+        !membros.any((m) => m.papel == Papel.dono)) {
+      return [MembroLista(userId: donoId, papel: Papel.dono), ...membros];
+    }
+    return membros;
+  },
 );
 
-class TelaMembrosScreen extends ConsumerWidget {
+class TelaMembrosScreen extends ConsumerStatefulWidget {
   const TelaMembrosScreen({super.key, required this.listaId});
 
   final String listaId;
+
+  @override
+  ConsumerState<TelaMembrosScreen> createState() => _TelaMembrosScreenState();
+}
+
+class _TelaMembrosScreenState extends ConsumerState<TelaMembrosScreen> {
+  String get listaId => widget.listaId;
+
+  @override
+  void initState() {
+    super.initState();
+    // Refetch ao abrir: evita servir um `[]` cacheado de quando a lista ainda
+    // não havia sincronizado a associação de membros.
+    Future.microtask(() => ref.invalidate(membrosDaListaProvider(listaId)));
+  }
 
   void _acaoMenu(
     BuildContext context,
@@ -122,7 +150,7 @@ class TelaMembrosScreen extends ConsumerWidget {
   };
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final usuarioId = ref.watch(donoAtualIdProvider);
     final membrosAsync = ref.watch(membrosDaListaProvider(listaId));
     return Scaffold(
