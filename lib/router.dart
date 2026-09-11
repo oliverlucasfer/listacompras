@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,6 +10,7 @@ import 'features/auth/ui/registro_screen.dart';
 import 'features/configuracoes/ui/configuracoes_screen.dart';
 import 'features/convites/ui/entrar_screen.dart';
 import 'features/convites/ui/tela_membros_screen.dart';
+import 'features/design_system/ui/design_system_screen.dart';
 import 'features/listas/ui/minhas_listas_screen.dart';
 import 'features/listas/ui/tela_lista_screen.dart';
 
@@ -28,7 +30,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           rota == '/login' ||
           rota == '/registro' ||
           rota == '/recuperar-senha' ||
-          rota == '/entrar';
+          rota == '/entrar' ||
+          (kDebugMode && rota == '/design');
 
       if (!autenticado && !publica) return '/login';
       // /entrar permanece pública também autenticado — a tela aceita o
@@ -79,6 +82,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/configuracoes',
         builder: (context, state) => const ConfiguracoesScreen(),
       ),
+      if (kDebugMode)
+        GoRoute(
+          path: '/design',
+          builder: (context, state) => const DesignSystemScreen(),
+        ),
     ],
   );
 });
