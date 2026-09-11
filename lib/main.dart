@@ -60,8 +60,8 @@ class ListaComprasApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
     return MaterialApp.router(
       title: AppStrings.appNome,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
+      theme: AppTheme.claro,
+      darkTheme: AppTheme.escuro,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );
