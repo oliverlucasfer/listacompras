@@ -42,6 +42,10 @@ abstract final class AppStrings {
 
   // Listas
   static const minhasListas = 'Minhas Listas';
+  static const compartilhadas = 'Compartilhadas';
+  static const nenhumaCompartilhada = 'Nenhuma lista compartilhada';
+  static const nenhumaCompartilhadaDica =
+      'Quando alguém compartilhar uma lista com você, ela aparece aqui.';
   static const novaLista = 'Nova lista';
   static const tituloLista = 'Título da lista';
   static const salvar = 'Salvar';

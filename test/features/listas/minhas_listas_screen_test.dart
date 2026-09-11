@@ -6,39 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/auth/providers/auth_providers.dart';
-import 'package:lista_compras/features/convites/data/convites_repository.dart';
-import 'package:lista_compras/features/convites/domain/convite.dart';
-import 'package:lista_compras/features/convites/providers/convites_providers.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../auth/fakes.dart';
-
-const _listaIdConvite = '11111111-1111-2222-3333-444444444444';
-const _tokenConvite = 'aaaaaaaa-1111-2222-3333-bbbbbbbbbbbb';
-
-class _ConvitesFakeLista extends ConvitesRepository {
-  _ConvitesFakeLista() : super(Supabase.instance.client);
-
-  bool aceitarChamado = false;
-  String? tokenRecebido;
-  String? retorno;
-  ErroConvite? erro;
-  Object? excecao;
-
-  @override
-  Future<String> aceitar(String token) async {
-    aceitarChamado = true;
-    tokenRecebido = token;
-    final ex = excecao;
-    if (ex != null) throw ex;
-    final e = erro;
-    if (e != null) throw e;
-    return retorno!;
-  }
-}
 
 void main() {
   setUpAll(inicializarSupabaseTeste);
@@ -55,10 +27,7 @@ void main() {
     await db.close();
   });
 
-  Future<void> abrirTela(
-    WidgetTester tester, {
-    ConvitesRepository? convites,
-  }) async {
+  Future<void> abrirTela(WidgetTester tester) async {
     final router = GoRouter(
       initialLocation: '/listas',
       routes: [
@@ -75,8 +44,7 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           authRepositoryProvider.overrideWithValue(authRepo),
-          if (convites != null)
-            convitesRepositoryProvider.overrideWithValue(convites),
+          donoAtualIdProvider.overrideWithValue('user-a'),
         ],
         child: MaterialApp.router(routerConfig: router),
       ),
@@ -116,6 +84,18 @@ void main() {
     expect(find.text('Compras da Semana'), findsOneWidget);
     expect(find.text('1/2 itens concluídos'), findsOneWidget);
     expect(find.textContaining(AppStrings.atualizada), findsOneWidget);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_ocultar_lista_compartilhada_quando_nao_e_dono', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    await repo.criarLista(titulo: 'Do parceiro', donoId: 'user-b');
+
+    await abrirTela(tester);
+    expect(find.text('Do parceiro'), findsNothing);
+    expect(find.text(AppStrings.nenhumaLista), findsOneWidget);
     await fechar(tester);
   });
 
@@ -192,82 +172,6 @@ void main() {
 
     expect(find.text('Para excluir'), findsNothing);
     expect(find.text(AppStrings.nenhumaLista), findsOneWidget);
-    await fechar(tester);
-  });
-
-  testWidgets('deve_entrar_com_codigo_quando_colado', (tester) async {
-    final convites = _ConvitesFakeLista();
-    convites.retorno = _listaIdConvite;
-    await abrirTela(tester, convites: convites);
-
-    await tester.tap(find.byIcon(Icons.person_add));
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.conviteCampoCodigo),
-      _tokenConvite,
-    );
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.conviteConvidadoEntrar),
-    );
-    await tester.pumpAndSettle();
-
-    expect(convites.aceitarChamado, isTrue);
-    expect(convites.tokenRecebido, _tokenConvite);
-    expect(find.text('lista-$_listaIdConvite'), findsOneWidget);
-    expect(find.byType(AlertDialog), findsNothing);
-    await fechar(tester);
-  });
-
-  testWidgets('deve_exibir_snackbar_quando_codigo_invalido', (tester) async {
-    final convites = _ConvitesFakeLista()
-      ..erro = const ErroConvite(
-        'convite_invalido',
-        AppStrings.conviteInvalido,
-      );
-    await abrirTela(tester, convites: convites);
-
-    await tester.tap(find.byIcon(Icons.person_add));
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.conviteCampoCodigo),
-      'token-mau',
-    );
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.conviteConvidadoEntrar),
-    );
-    await tester.pumpAndSettle();
-
-    expect(convites.aceitarChamado, isTrue);
-    expect(find.byType(SnackBar), findsOneWidget);
-    expect(find.text(AppStrings.conviteInvalido), findsOneWidget);
-    expect(find.text('lista-$_listaIdConvite'), findsNothing);
-
-    // Loading desabilita o botão enquanto executa.
-    expect(find.byType(AlertDialog), findsNothing);
-    await fechar(tester);
-  });
-
-  testWidgets('deve_exibir_snackbar_inesperado_quando_erro_fora_do_contrato', (
-    tester,
-  ) async {
-    final convites = _ConvitesFakeLista()..excecao = Exception('falha');
-    await abrirTela(tester, convites: convites);
-
-    await tester.tap(find.byIcon(Icons.person_add));
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.conviteCampoCodigo),
-      _tokenConvite,
-    );
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.conviteConvidadoEntrar),
-    );
-    await tester.pumpAndSettle();
-
-    expect(convites.aceitarChamado, isTrue);
-    expect(find.byType(SnackBar), findsOneWidget);
-    expect(find.text(AppStrings.conviteInesperado), findsOneWidget);
-    expect(find.byType(AlertDialog), findsNothing);
     await fechar(tester);
   });
 }

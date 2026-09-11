@@ -403,6 +403,7 @@ void main() {
           papelRepositoryProvider.overrideWithValue(
             papelRepo(tester, listaId: lista.id, papel: Papel.dono),
           ),
+          donoAtualIdProvider.overrideWithValue('user-a'),
           syncStatusProvider.overrideWith((ref) => sync.stream),
         ],
         child: MaterialApp.router(routerConfig: router),
