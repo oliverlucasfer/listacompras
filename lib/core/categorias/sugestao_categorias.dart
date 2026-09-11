@@ -1,5 +1,6 @@
 import '../../drift/database.dart';
 import '../../features/listas/domain/categoria.dart';
+import '../texto/normalizar.dart';
 import 'dicionario_categorias.dart';
 
 /// Cadeia de sugestão de categoria em camadas (spec F6 §4, ADR-011):
@@ -16,14 +17,14 @@ class SugestaoCategorias {
   /// 2. Dicionário: multi-palavra casa antes de palavra única.
   /// 3. Fallback: `outros`.
   Future<CategoriaItem> sugerirCategoria(String nome) async {
-    final chave = _normalizar(nome);
+    final chave = normalizarTexto(nome);
     if (chave.isEmpty) return CategoriaItem.outros;
 
     final candidatos = await (_db.select(
       _db.itemLocal,
     )..where((i) => i.deletadoEm.isNull())).get();
     final memoria =
-        candidatos.where((i) => _normalizar(i.nome) == chave).toList()
+        candidatos.where((i) => normalizarTexto(i.nome) == chave).toList()
           ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
     if (memoria.isNotEmpty) {
       return CategoriaItem.fromValor(memoria.first.categoria);
@@ -42,52 +43,18 @@ CategoriaItem categoriaPorDicionario(String nomeNormalizado) {
 
   final entradas = dicionarioCategorias.entries.toList()
     ..sort((a, b) {
-      final pa = _normalizar(a.key).split(RegExp(r'\s+')).length;
-      final pb = _normalizar(b.key).split(RegExp(r'\s+')).length;
+      final pa = normalizarTexto(a.key).split(RegExp(r'\s+')).length;
+      final pb = normalizarTexto(b.key).split(RegExp(r'\s+')).length;
       if (pa != pb) return pb - pa;
-      return _normalizar(a.key).compareTo(_normalizar(b.key));
+      return normalizarTexto(a.key).compareTo(normalizarTexto(b.key));
     });
 
   for (final entrada in entradas) {
-    if (tokens.containsAll(_normalizar(entrada.key).split(RegExp(r'\s+')))) {
+    if (tokens.containsAll(
+      normalizarTexto(entrada.key).split(RegExp(r'\s+')),
+    )) {
       return entrada.value;
     }
   }
   return CategoriaItem.outros;
-}
-
-/// minúsculas + sem acento (pt-BR) + espaços colapsados nas pontas.
-String _normalizar(String texto) {
-  const acentos = {
-    'á': 'a',
-    'à': 'a',
-    'â': 'a',
-    'ã': 'a',
-    'ä': 'a',
-    'é': 'e',
-    'è': 'e',
-    'ê': 'e',
-    'ë': 'e',
-    'í': 'i',
-    'ì': 'i',
-    'î': 'i',
-    'ï': 'i',
-    'ó': 'o',
-    'ò': 'o',
-    'ô': 'o',
-    'õ': 'o',
-    'ö': 'o',
-    'ú': 'u',
-    'ù': 'u',
-    'û': 'u',
-    'ü': 'u',
-    'ç': 'c',
-    'ñ': 'n',
-  };
-  final semAcento = texto
-      .toLowerCase()
-      .split('')
-      .map((c) => acentos[c] ?? c)
-      .join();
-  return semAcento.trim().replaceAll(RegExp(r'\s+'), ' ');
 }

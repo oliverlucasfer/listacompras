@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/features/ia/data/parse_lista_client.dart';
-import 'package:lista_compras/features/ia/domain/resposta_parse.dart';
+import 'package:lista_compras/features/ia/domain/contrato_ia.dart';
 import 'package:lista_compras/features/listas/domain/categoria.dart';
 import 'package:lista_compras/features/listas/domain/unidade.dart';
 

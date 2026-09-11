@@ -131,6 +131,15 @@ abstract final class AppStrings {
   static const iaSemConexao =
       'Sem conexão. Verifique sua internet e tente novamente.';
 
+  // Importação de lista (RF-16): modo local sem IA
+  static const importarLista = 'Importar lista';
+  static const modoRapido = 'Rápido';
+  static const modoIa = 'IA';
+  static const importLocalAvisoPadrao =
+      'Itens sem quantidade entraram com 1 un.';
+  static const importLocalTextoLongo =
+      'Texto muito longo. Envie até 10.000 caracteres.';
+
   // Compartilhamento por convite (doc 08, RF-13)
   static const conviteInvalido = 'Este convite não é mais válido.';
   static const conviteSemConexao =

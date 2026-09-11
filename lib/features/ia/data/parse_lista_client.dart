@@ -4,10 +4,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../../../core/config/supabase_config.dart';
+import '../../../core/importacao/resposta_import.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../listas/domain/categoria.dart';
 import '../../listas/domain/unidade.dart';
-import '../domain/resposta_parse.dart';
+import '../domain/contrato_ia.dart';
 
 /// Cliente HTTP do Edge Function `parse-lista` (doc 04 §2, RF-06): POST com
 /// JWT do usuário; erros do contrato viram `ErroIa` com mensagem amigável —
