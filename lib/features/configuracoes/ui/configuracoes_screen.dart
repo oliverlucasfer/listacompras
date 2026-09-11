@@ -7,6 +7,11 @@ import '../../../core/l10n/app_strings.dart';
 import '../../../core/l10n/politica_privacidade.dart';
 import '../../../core/theme/seletor_tema.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
+import '../../../core/widgets/app_botao.dart';
+import '../../../core/widgets/app_cabecalho_secao.dart';
+import '../../../core/widgets/app_campo_texto.dart';
+import '../../../core/widgets/app_dialog.dart';
+import '../../../core/widgets/app_sheet.dart';
 import '../../auth/providers/auth_providers.dart';
 
 /// Tela Configurações (doc 06 §3, wireframe 10 §5, RF-11): e-mail da conta,
@@ -16,19 +21,9 @@ class ConfiguracoesScreen extends ConsumerWidget {
   const ConfiguracoesScreen({super.key});
 
   void _abrirPolitica(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (sheetContext) => DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.85,
-        builder: (_, controller) => SingleChildScrollView(
-          controller: controller,
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-          child: Text(politicaPrivacidadeTexto),
-        ),
-      ),
+    AppSheet.mostrar<void>(
+      context,
+      child: SingleChildScrollView(child: Text(politicaPrivacidadeTexto)),
     );
   }
 
@@ -40,28 +35,13 @@ class ConfiguracoesScreen extends ConsumerWidget {
       builder: (_) => const _DialogoSenhaExclusao(),
     );
     if (autenticou != true || !context.mounted) return;
-    final excluir = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text(AppStrings.excluirContaTitulo),
-        content: const Text(AppStrings.excluirContaMensagemFinal),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text(AppStrings.cancelar),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(dialogContext).colorScheme.error,
-              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
-            ),
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text(AppStrings.excluirConta),
-          ),
-        ],
-      ),
+    final excluir = await AppDialog.confirmarDestrutivo(
+      context,
+      titulo: AppStrings.excluirContaTitulo,
+      mensagem: AppStrings.excluirContaMensagemFinal,
+      confirmar: AppStrings.excluirConta,
     );
-    if (excluir != true || !context.mounted) return;
+    if (!excluir || !context.mounted) return;
     await _excluirConta(context, ref);
   }
 
@@ -104,17 +84,17 @@ class ConfiguracoesScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text(AppStrings.configuracoes)),
       body: ListView(
         children: [
-          const _CabecalhoSecao(AppStrings.aparencia),
+          const AppCabecalhoSecao(AppStrings.aparencia),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             child: SeletorTema(),
           ),
-          const _CabecalhoSecao(AppStrings.conta),
+          const AppCabecalhoSecao(AppStrings.conta),
           ListTile(
             leading: const Icon(Icons.email_outlined),
             title: Text(email ?? ''),
           ),
-          const _CabecalhoSecao(AppStrings.sobre),
+          const AppCabecalhoSecao(AppStrings.sobre),
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined),
             title: const Text(AppStrings.politicaPrivacidade),
@@ -132,20 +112,17 @@ class ConfiguracoesScreen extends ConsumerWidget {
           ),
           const Divider(height: 32),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: cores.error,
-                    foregroundColor: cores.onError,
-                  ),
+                AppBotao(
+                  rotulo: AppStrings.excluirMinhaConta,
+                  variante: AppBotaoVariante.destrutivo,
+                  icone: Icons.delete_forever_outlined,
                   onPressed: () => _confirmarExclusao(context, ref),
-                  icon: const Icon(Icons.delete_forever_outlined),
-                  label: const Text(AppStrings.excluirMinhaConta),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 Text(
                   AppStrings.excluirMinhaContaAviso,
                   textAlign: TextAlign.center,
@@ -153,31 +130,11 @@ class ConfiguracoesScreen extends ConsumerWidget {
                     context,
                   ).textTheme.bodySmall?.copyWith(color: cores.error),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xl),
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _CabecalhoSecao extends StatelessWidget {
-  const _CabecalhoSecao(this.titulo);
-
-  final String titulo;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-      child: Text(
-        titulo,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-        ),
       ),
     );
   }
@@ -233,17 +190,13 @@ class _DialogoSenhaExclusaoState extends ConsumerState<_DialogoSenhaExclusao> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(AppStrings.excluirContaSenhaMensagem),
-          const SizedBox(height: 16),
-          TextField(
+          const SizedBox(height: AppSpacing.lg),
+          AppCampoTexto(
             controller: _senha,
-            obscureText: true,
-            autofocus: true,
-            onSubmitted: (_) => _continuar(),
-            decoration: InputDecoration(
-              labelText: AppStrings.senha,
-              border: const OutlineInputBorder(),
-              errorText: _erro,
-            ),
+            label: AppStrings.senha,
+            erro: _erro,
+            senha: true,
+            onSubmitted: _continuar,
           ),
         ],
       ),
@@ -252,22 +205,13 @@ class _DialogoSenhaExclusaoState extends ConsumerState<_DialogoSenhaExclusao> {
           onPressed: () => Navigator.pop(context, false),
           child: const Text(AppStrings.cancelar),
         ),
-        FilledButton(
-          onPressed: _verificando ? null : _continuar,
-          child: _verificando
-              ? const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    SizedBox(width: 8),
-                    Text(AppStrings.reautenticando),
-                  ],
-                )
-              : const Text(AppStrings.continuar),
+        AppBotao(
+          rotulo: _verificando
+              ? AppStrings.reautenticando
+              : AppStrings.continuar,
+          carregando: _verificando,
+          expandido: false,
+          onPressed: _continuar,
         ),
       ],
     );
