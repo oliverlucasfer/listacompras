@@ -265,7 +265,7 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 - [x] **F10-T03** — Testes de navegação, doc 10 e fechamento
   Dep: F10-T02 · Docs: [10](10-wireframes-telas.md), [07 §1](07-qualidade-ci.md)
   CP: `format`/`analyze`/`test` verdes; wireframes sincronizados; fase marcada.
-- [ ] **F10-T04** — Correção: associação do dono ao criar lista
+- [x] **F10-T04** — Correção: associação do dono ao criar lista
   Dep: F10-T03 · Docs: [01 §6](01-banco-de-dados.md), [02 §1/§3](02-seguranca-rls.md) · Bug: dono virava leitor
   CP: migration `0010_dono_automatico.sql` (trigger + backfill) em produção; papel local imediato no cliente; suites SQL (com P-08) e `flutter test` verdes.
 
@@ -284,8 +284,8 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 | F7 Compartilhamento | 8 | 8 |
 | F8 Design System | 4 | 4 |
 | F9 Refresh Visual | 9 | 9 |
-| F10 Navegação | 5 | 4 |
-| **Total** | **71** | **68** |
+| F10 Navegação | 5 | 5 |
+| **Total** | **71** | **69** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
