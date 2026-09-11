@@ -486,7 +486,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text(AppStrings.importarPorIa));
+    await tester.tap(find.text(AppStrings.importarLista));
     await tester.pumpAndSettle();
 
     expect(find.text(AppStrings.iaColeOuDigite), findsOneWidget);
@@ -785,7 +785,7 @@ void main() {
     expect(find.byType(TextField), findsNothing);
     expect(find.byType(Checkbox), findsNothing);
     expect(find.byIcon(Icons.drag_handle), findsNothing);
-    expect(find.text(AppStrings.importarPorIa), findsNothing);
+    expect(find.text(AppStrings.importarLista), findsNothing);
 
     // Swipe não abre edição nem remove (Dismissible não existe).
     await tester.drag(find.text('Arroz'), const Offset(-500, 0));
@@ -810,7 +810,7 @@ void main() {
       find.widgetWithText(TextField, AppStrings.adicionarItem),
       findsOneWidget,
     );
-    expect(find.text(AppStrings.importarPorIa), findsOneWidget);
+    expect(find.text(AppStrings.importarLista), findsOneWidget);
     expect(find.byType(Checkbox), findsWidgets);
 
     // Menu: dono-only ausente; demais escritas presentes.
@@ -833,7 +833,7 @@ void main() {
       find.widgetWithText(TextField, AppStrings.adicionarItem),
       findsOneWidget,
     );
-    expect(find.text(AppStrings.importarPorIa), findsOneWidget);
+    expect(find.text(AppStrings.importarLista), findsOneWidget);
     expect(find.byType(Checkbox), findsWidgets);
     expect(find.text(AppStrings.somenteLeitura), findsNothing);
 

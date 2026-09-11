@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/importacao/resposta_import.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_banner.dart';
@@ -9,7 +10,6 @@ import '../../../core/widgets/app_snack_bar.dart';
 import '../../listas/domain/categoria.dart';
 import '../../listas/domain/unidade.dart';
 import '../../listas/providers/listas_providers.dart';
-import '../domain/resposta_parse.dart';
 
 /// Abre o modal de pré-visualização (doc 05 §6.4, wireframe 10 §4.2, RF-06)
 /// e grava os itens confirmados via repositório local (fila de INSERTs).
@@ -22,7 +22,7 @@ Future<void> confirmarItensImportados(
 ) async {
   final selecionados = await showDialog<List<ItemExtraido>>(
     context: context,
-    builder: (_) => ModalPrevisaoIa(resposta: resposta),
+    builder: (_) => ModalPrevisaoImportacao(resposta: resposta),
   );
   if (selecionados == null || selecionados.isEmpty || !context.mounted) return;
   final repo = ref.read(listasRepositoryProvider);
@@ -40,13 +40,14 @@ Future<void> confirmarItensImportados(
   }
 }
 
-class ModalPrevisaoIa extends StatefulWidget {
-  const ModalPrevisaoIa({super.key, required this.resposta});
+class ModalPrevisaoImportacao extends StatefulWidget {
+  const ModalPrevisaoImportacao({super.key, required this.resposta});
 
   final RespostaParse resposta;
 
   @override
-  State<ModalPrevisaoIa> createState() => _ModalPrevisaoIaState();
+  State<ModalPrevisaoImportacao> createState() =>
+      _ModalPrevisaoImportacaoState();
 }
 
 class _Linha {
@@ -64,7 +65,7 @@ class _Linha {
   bool editando = false;
 }
 
-class _ModalPrevisaoIaState extends State<ModalPrevisaoIa> {
+class _ModalPrevisaoImportacaoState extends State<ModalPrevisaoImportacao> {
   late final List<_Linha> _linhas = [
     for (final item in widget.resposta.itens) _Linha(item),
   ];

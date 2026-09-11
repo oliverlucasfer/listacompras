@@ -235,7 +235,13 @@ String mensagemContratoIa(String code) => switch (code) {
 };
 ```
 
-Apagar `lib/features/ia/domain/resposta_parse.dart`.
+Substituir o conteúdo de `lib/features/ia/domain/resposta_parse.dart` por um **shim de compatibilidade** (removido na F11-T02, quando os modais forem movidos):
+
+```dart
+// Compat temporário (F11-T01) — os tipos foram movidos; removido na F11-T02.
+export '../../../core/importacao/resposta_import.dart';
+export 'contrato_ia.dart';
+```
 
 - [ ] **Step 3: Atualizar imports do cliente e do provider**
 
@@ -500,6 +506,7 @@ Mover `lib/features/ia/ui/modal_previsao_ia.dart` → `lib/features/importacao/u
 - imports relativos: `../../../core/l10n/app_strings.dart`, `../../../core/theme/tokens/app_spacing.dart`, `../../../core/widgets/app_banner.dart`, `../../../core/widgets/app_botao.dart`, `../../../core/widgets/app_snack_bar.dart`, `../../../core/importacao/resposta_import.dart`, `../../listas/domain/categoria.dart`, `../../listas/domain/unidade.dart`, `../../listas/providers/listas_providers.dart`.
 - renomear `ModalPrevisaoIa` → `ModalPrevisaoImportacao` e `_ModalPrevisaoIaState` → `_ModalPrevisaoImportacaoState`.
 - `confirmarItensImportados` permanece com a mesma assinatura e corpo.
+- apagar o shim `lib/features/ia/domain/resposta_parse.dart` (nada mais o importa).
 
 - [ ] **Step 2: Mover o modal de entrada e adicionar o seletor**
 

@@ -17,8 +17,8 @@ import '../../convites/data/papel_repository.dart';
 import '../../convites/domain/papel.dart';
 import '../../convites/providers/papel_providers.dart';
 import '../../convites/ui/sheet_convidar.dart';
-import '../../ia/ui/modal_importar_ia.dart';
-import '../../ia/ui/modal_previsao_ia.dart';
+import '../../importacao/ui/modal_importar.dart';
+import '../../importacao/ui/modal_previsao_importacao.dart';
 import '../../sync/ui/indicador_sync.dart';
 import '../domain/categoria.dart';
 import '../domain/item.dart';
@@ -145,7 +145,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
     WidgetRef ref,
     String idLista,
   ) async {
-    final resposta = await abrirModalImportarIa(context, ref, idLista);
+    final resposta = await abrirModalImportar(context, ref, idLista);
     if (resposta == null || !context.mounted) return;
     await confirmarItensImportados(context, ref, idLista, resposta);
   }
@@ -242,7 +242,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                     AppSpacing.md,
                   ),
                   child: AppBotao(
-                    rotulo: AppStrings.importarPorIa,
+                    rotulo: AppStrings.importarLista,
                     variante: AppBotaoVariante.outlined,
                     icone: Icons.smart_toy_outlined,
                     onPressed: () => _importarPorIa(context, ref, listaId),

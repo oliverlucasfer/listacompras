@@ -1,15 +1,18 @@
 import 'dart:async';
 
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:lista_compras/core/importacao/resposta_import.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
+import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/ia/data/parse_lista_client.dart';
-import 'package:lista_compras/features/ia/domain/resposta_parse.dart';
 import 'package:lista_compras/features/ia/providers/ia_providers.dart';
-import 'package:lista_compras/features/ia/ui/modal_importar_ia.dart';
+import 'package:lista_compras/features/importacao/ui/modal_importar.dart';
+import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 
 void main() {
   const corpo200 =
@@ -33,11 +36,19 @@ void main() {
     WidgetTester tester, {
     required ParseListaClient cliente,
     ValueChanged<RespostaParse?>? onResultado,
+    ModoImportacao modo = ModoImportacao.ia,
   }) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [parseListaClientProvider.overrideWithValue(cliente)],
-        child: MaterialApp(home: _TelaAbrirModal(onResultado: onResultado)),
+        overrides: [
+          parseListaClientProvider.overrideWithValue(cliente),
+          appDatabaseProvider.overrideWithValue(db),
+        ],
+        child: MaterialApp(
+          home: _TelaAbrirModal(onResultado: onResultado, modo: modo),
+        ),
       ),
     );
     await tester.tap(find.text('abrir'));
@@ -184,6 +195,29 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  testWidgets('deve_extrair_localmente_quando_modo_rapido', (tester) async {
+    RespostaParse? recebida;
+    await abrir(
+      tester,
+      cliente: clienteQue(() async => http.Response(corpo200, 200)),
+      onResultado: (r) => recebida = r,
+      modo: ModoImportacao.rapido,
+    );
+
+    await tester.enterText(find.byType(TextField), '1kg de arroz, 2 leites');
+    await tester.pump();
+    await tester.tap(
+      find.widgetWithText(FilledButton, AppStrings.iaExtrairItens),
+    );
+    await tester.pumpAndSettle();
+
+    expect(recebida, isNotNull);
+    expect(recebida!.itens, hasLength(2));
+    expect(recebida!.itens.first.unidade.valor, 'kg');
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('deve_retornar_null_quando_fechar', (tester) async {
     RespostaParse? recebida = const RespostaParse(itens: [], aviso: null);
     await abrir(
@@ -203,9 +237,10 @@ void main() {
 }
 
 class _TelaAbrirModal extends ConsumerWidget {
-  const _TelaAbrirModal({this.onResultado});
+  const _TelaAbrirModal({this.onResultado, this.modo = ModoImportacao.ia});
 
   final ValueChanged<RespostaParse?>? onResultado;
+  final ModoImportacao modo;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -213,10 +248,11 @@ class _TelaAbrirModal extends ConsumerWidget {
       body: Center(
         child: FilledButton(
           onPressed: () async {
-            final resposta = await abrirModalImportarIa(
+            final resposta = await abrirModalImportar(
               context,
               ref,
               'lista-1',
+              modoInicial: modo,
             );
             onResultado?.call(resposta);
           },

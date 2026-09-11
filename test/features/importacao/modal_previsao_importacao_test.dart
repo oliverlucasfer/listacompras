@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
-import 'package:lista_compras/features/ia/domain/resposta_parse.dart';
-import 'package:lista_compras/features/ia/ui/modal_previsao_ia.dart';
+import 'package:lista_compras/core/importacao/resposta_import.dart';
+import 'package:lista_compras/features/importacao/ui/modal_previsao_importacao.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/domain/categoria.dart';
 import 'package:lista_compras/features/listas/domain/unidade.dart';
@@ -322,7 +322,7 @@ class _TelaAbrirPrevisao extends StatelessWidget {
           onPressed: () async {
             final r = await showDialog<List<ItemExtraido>>(
               context: context,
-              builder: (_) => ModalPrevisaoIa(resposta: resposta),
+              builder: (_) => ModalPrevisaoImportacao(resposta: resposta),
             );
             onResultado?.call(r);
           },
