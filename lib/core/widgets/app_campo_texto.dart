@@ -11,6 +11,7 @@ class AppCampoTexto extends StatelessWidget {
     this.senha = false,
     this.sufixo,
     this.autofillHints,
+    this.autofocus = false,
     this.onChanged,
     this.onSubmitted,
   });
@@ -22,6 +23,7 @@ class AppCampoTexto extends StatelessWidget {
   final bool senha;
   final Widget? sufixo;
   final Iterable<String>? autofillHints;
+  final bool autofocus;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onSubmitted;
 
@@ -32,6 +34,7 @@ class AppCampoTexto extends StatelessWidget {
       keyboardType: teclado,
       obscureText: senha,
       autofillHints: autofillHints,
+      autofocus: autofocus,
       onChanged: onChanged,
       onSubmitted: onSubmitted == null ? null : (_) => onSubmitted!(),
       decoration: InputDecoration(

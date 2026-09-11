@@ -264,7 +264,10 @@ class _BannerSomenteLeitura extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,

@@ -236,6 +236,8 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 ┌─────────────────────────────────┐
 │  ← Configurações                │
 ├─────────────────────────────────┤
+│  Aparência                      │
+│  [ Claro | Sistema | Escuro ]   │ ← tema manual (doc 15)
 │  Conta                          │
 │  oliveira@exemplo.com           │
 │                                 │

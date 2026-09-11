@@ -14,7 +14,7 @@ void main() {
       _app(const AppBanner(tipo: AppBannerTipo.offline, mensagem: 'Sem rede')),
     );
     expect(find.text('Sem rede'), findsOneWidget);
-    expect(find.byIcon(Icons.cloud_off_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.cloud_off), findsOneWidget);
   });
 
   testWidgets('deve_usar_onContainer_quando_erro', (tester) async {
