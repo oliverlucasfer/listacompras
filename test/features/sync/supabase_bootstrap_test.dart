@@ -151,6 +151,23 @@ PostgresChangePayload eventoMembro(
   );
 }
 
+/// Evento de realtime de tabela genérica (whitelist do callback, F7-T07).
+PostgresChangePayload eventoTabela(
+  String tabela,
+  PostgresChangeEvent evento,
+  Map<String, Object?> registro,
+) {
+  return PostgresChangePayload(
+    schema: 'public',
+    table: tabela,
+    commitTimestamp: DateTime.utc(2026, 9, 10, 12),
+    eventType: evento,
+    newRecord: evento == PostgresChangeEvent.delete ? const {} : registro,
+    oldRecord: evento == PostgresChangeEvent.delete ? registro : const {},
+    errors: null,
+  );
+}
+
 void main() {
   late AppDatabase db;
   late ListasRepository repo;
@@ -542,6 +559,103 @@ void main() {
       await (db.select(db.listaLocal)..where((l) => l.id.equals('l1'))).get(),
       isNotEmpty,
     );
+  });
+
+  test('deve_ignorar_tabela_desconhecida_sem_quebrar_cadeia', () async {
+    // Whitelist (F7-T07): evento de tabela fora do LWW (convites) é
+    // ignorado — sem o filtro, o ArgumentError do aplicador envenenaria
+    // a cadeia e o evento seguinte nunca seria aplicado.
+    final cliente = ClienteFake();
+    remotos['listas'] = [listaRemota('l1')];
+    final bootstrap = criarComRealtime(cliente: cliente, usuarioSalvo: 'U1');
+    addTearDown(bootstrap.dispose);
+    await bootstrap.iniciar();
+    await pumpEventQueue();
+
+    cliente.canal.enviar(
+      eventoTabela('convites', PostgresChangeEvent.insert, {
+        'id': 'c1',
+        'lista_id': 'l1',
+        'updated_at': '2026-09-10T12:00:00.000Z',
+      }),
+    );
+    await pumpEventQueue();
+
+    // A cadeia segue viva: o próximo evento de `listas` é aplicado.
+    cliente.canal.enviar(
+      eventoTabela('listas', PostgresChangeEvent.insert, listaRemota('l2')),
+    );
+    await pumpEventQueue();
+    expect(
+      await (db.select(db.listaLocal)..where((l) => l.id.equals('l2'))).get(),
+      isNotEmpty,
+    );
+  });
+
+  test('deve_limpar_cache_e_re_baixar_quando_perder_acesso_local', () async {
+    // Belt-and-suspenders do "sair da lista" (F7-T07): o Realtime pode
+    // filtrar o DELETE do próprio usuário — a tela força a limpeza local.
+    final cliente = ClienteFake();
+    remotos['listas'] = [listaRemota('l1')];
+    final bootstrap = criarComRealtime(cliente: cliente, usuarioSalvo: 'U1');
+    addTearDown(bootstrap.dispose);
+    await bootstrap.iniciar();
+    await pumpEventQueue();
+    expect(await (db.select(db.listaLocal)).get(), isNotEmpty);
+
+    // RLS sem acesso: o re-download não traz mais a lista.
+    remotos.clear();
+    await bootstrap.perderAcessoLocal();
+
+    expect(await (db.select(db.listaLocal)).get(), isEmpty);
+    expect(await (db.select(db.itemLocal)).get(), isEmpty);
+    expect(await (db.select(db.mutacaoPendente)).get(), isEmpty);
+  });
+
+  test('deve_notificar_entrada_quando_insert_de_outro_membro', () async {
+    // Feedback "membro entrou" (doc 08 §7, F7-T07): INSERT de outro
+    // usuário sinaliza a lista; o papel do próprio usuário não muda.
+    final cliente = ClienteFake();
+    final papelRepo = PapelRepository(
+      SupabaseClient(
+        'http://127.0.0.1:54321',
+        'test-key',
+        httpClient: ServidorFake((req) {
+          return (
+            200,
+            [
+              {'lista_id': 'l1', 'papel': 'leitor'},
+            ],
+          );
+        }),
+      ),
+    );
+    remotos['listas'] = [listaRemota('l1')];
+    final bootstrap = criarComRealtime(
+      cliente: cliente,
+      usuarioSalvo: 'U1',
+      papelRepo: papelRepo,
+    );
+    addTearDown(bootstrap.dispose);
+    await bootstrap.iniciar();
+    await pumpEventQueue();
+    expect(papelRepo.papelDe('l1'), Papel.leitor);
+
+    cliente.canal.enviar(
+      eventoMembro(PostgresChangeEvent.insert, {
+        'id': 'm2',
+        'lista_id': 'l1',
+        'user_id': 'U2',
+        'papel': 'editor',
+      }),
+    );
+    await pumpEventQueue();
+
+    expect(papelRepo.membroEntrou.value, 'l1');
+    expect(papelRepo.papelDe('l1'), Papel.leitor);
+
+    papelRepo.consumirEntrada();
+    expect(papelRepo.membroEntrou.value, isNull);
   });
 
   test('deve_ignorar_membros_de_outros_quando_atualizacao', () async {

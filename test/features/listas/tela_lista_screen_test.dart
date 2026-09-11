@@ -847,4 +847,67 @@ void main() {
 
     await fechar(tester);
   });
+
+  // ---- Feedback "membro entrou" (F7-T07, doc 08 §7) ----
+
+  Future<(PapelRepository, String)> abrirListaF7t07(WidgetTester tester) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    final servidor = ServidorFake((req) => (200, const <Object>[]));
+    addTearDown(servidor.close);
+    final papelRepo = PapelRepository(
+      SupabaseClient(
+        'http://127.0.0.1:54321',
+        'test-key',
+        httpClient: servidor,
+        authOptions: const AuthClientOptions(autoRefreshToken: false),
+      ),
+    );
+    papelRepo.atualizar(lista.id, Papel.dono);
+    final sync = StreamController<SyncStatus>();
+    sync.add(const Sincronizado());
+    addTearDown(sync.close);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          papelRepositoryProvider.overrideWithValue(papelRepo),
+          syncStatusProvider.overrideWith((ref) => sync.stream),
+        ],
+        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    return (papelRepo, lista.id);
+  }
+
+  testWidgets('deve_mostrar_membro_entrou_quando_outro_entrar_f7t07', (
+    tester,
+  ) async {
+    final (papelRepo, listaId) = await abrirListaF7t07(tester);
+    expect(find.text(AppStrings.membroEntrou), findsNothing);
+
+    papelRepo.notificarEntrada(listaId);
+    await tester.pump();
+
+    expect(find.text(AppStrings.membroEntrou), findsOneWidget);
+    expect(papelRepo.membroEntrou.value, isNull); // consumido pela tela
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_ignorar_entrada_de_outra_lista_quando_notificar_f7t07', (
+    tester,
+  ) async {
+    final (papelRepo, _) = await abrirListaF7t07(tester);
+
+    papelRepo.notificarEntrada('outra-lista');
+    await tester.pump();
+
+    expect(find.text(AppStrings.membroEntrou), findsNothing);
+    expect(papelRepo.membroEntrou.value, 'outra-lista'); // não consumido
+
+    await fechar(tester);
+  });
 }

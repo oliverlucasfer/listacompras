@@ -222,6 +222,7 @@ $$;
   alter table public.lista_membros replica identity full;
   ```
 * Eventos geram feedback na UI: "Fulano entrou na lista", "Você foi removido da lista X", "Novo convite pendente".
+* Rodada link-only (F7-T07): o feedback de entrada é o SnackBar **"Um novo membro entrou na lista"** na tela da lista aberta — sem nome, pois o RLS não expõe o perfil de outros membros.
 * Sem push notifications no MVP da feature (Fase 6); painel de convites pendentes cobre a descoberta.
 
 ## 8. UI necessária (complementa [05](05-app-flutter.md))
@@ -236,6 +237,7 @@ $$;
 
 * Wireframes destes componentes: [10 §4](10-wireframes-telas.md).
 * Comportamento de roles na UI (desabilitar ações de leitor): [05 §6.3](05-app-flutter.md).
+* Identificador de membros: enquanto não há perfis/e-mails expostos (rodada futura), membros exibem o UUID prefixado (8 primeiros caracteres).
 
 ## 9. Checklist de validação (Fase 6)
 

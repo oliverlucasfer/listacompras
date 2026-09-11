@@ -188,6 +188,22 @@ void main() {
     expect(papelRepository.papelDe('l1'), isNull);
   });
 
+  test('deve_sinalizar_e_consumir_entrada_quando_outro_membro_entrar', () {
+    final papelRepository = PapelRepository(
+      _cliente(ServidorFake((req) => (200, []))),
+    );
+
+    papelRepository.notificarEntrada('l1');
+    expect(papelRepository.membroEntrou.value, 'l1');
+
+    papelRepository.consumirEntrada();
+    expect(papelRepository.membroEntrou.value, isNull);
+
+    papelRepository.notificarEntrada('l2');
+    papelRepository.limpar();
+    expect(papelRepository.membroEntrou.value, isNull);
+  });
+
   test('deve_refletir_papel_na_ui_quando_realtime_muda', () async {
     // papelNaListaStreamProvider assiste o repository — o realtime da
     // F7-T06 (via PapelRepository.atualizar) precisa re-render na UI.

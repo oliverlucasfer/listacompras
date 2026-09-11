@@ -1,21 +1,57 @@
 import 'dart:convert';
 
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
+import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/auth/providers/auth_providers.dart';
 import 'package:lista_compras/features/convites/data/convites_repository.dart';
 import 'package:lista_compras/features/convites/providers/convites_providers.dart';
 import 'package:lista_compras/features/convites/data/papel_repository.dart';
 import 'package:lista_compras/features/convites/providers/papel_providers.dart';
 import 'package:lista_compras/features/convites/ui/tela_membros_screen.dart';
+import 'package:lista_compras/features/sync/data/supabase_bootstrap.dart';
+import 'package:lista_compras/features/sync/data/sync_engine.dart';
+import 'package:lista_compras/features/sync/data/sync_remoto.dart';
+import 'package:lista_compras/features/sync/data/mutacao_sync.dart';
+import 'package:lista_compras/features/sync/providers/sync_providers.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'servidor_fake.dart';
 
 const _listaId = '11111111-1111-2222-3333-444444444444';
+
+class _RemotoNenhum implements SyncRemoto {
+  @override
+  Future<ResultadoEnvio> enviar(MutacaoSync mutacao) async {
+    return const Enviado();
+  }
+}
+
+/// Espião do bootstrap (F7-T07): registra a chamada de limpeza local que
+/// a tela deve fazer após sair da lista (belt-and-suspenders do Realtime).
+class _BootstrapEspiao extends SupabaseBootstrap {
+  _BootstrapEspiao(SupabaseClient cliente)
+    : super(
+        db: AppDatabase(NativeDatabase.memory()),
+        engine: SyncEngine(
+          db: AppDatabase(NativeDatabase.memory()),
+          remoto: _RemotoNenhum(),
+          checarConexao: () async => true,
+        ),
+        client: cliente,
+      );
+
+  bool chamouPerderAcesso = false;
+
+  @override
+  Future<void> perderAcessoLocal() async {
+    chamouPerderAcesso = true;
+  }
+}
 
 List<Map<String, Object?>> _linhasMembros() {
   return [
@@ -227,6 +263,7 @@ void main() {
       authOptions: const AuthClientOptions(autoRefreshToken: false),
     );
     await cliente.auth.setSession('refresh-token-teste', accessToken: jwt);
+    final espiao = _BootstrapEspiao(cliente);
     final router = GoRouter(
       initialLocation: '/membros/$_listaId',
       routes: [
@@ -249,6 +286,7 @@ void main() {
           ),
           papelRepositoryProvider.overrideWithValue(PapelRepository(cliente)),
           donoAtualIdProvider.overrideWithValue('U2'),
+          syncBootstrapProvider.overrideWithValue(espiao),
         ],
         child: MaterialApp.router(routerConfig: router),
       ),
@@ -276,6 +314,8 @@ void main() {
     expect(filtro, containsPair('lista_id', 'eq.$_listaId'));
     expect(filtro, containsPair('user_id', 'eq.U2'));
     expect(find.text('painel-listas'), findsOneWidget);
+    // Belt-and-suspenders (F7-T07): a tela força a limpeza local após sair.
+    expect(espiao.chamouPerderAcesso, isTrue);
 
     await fechar(tester);
   });

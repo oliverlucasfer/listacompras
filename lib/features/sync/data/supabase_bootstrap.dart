@@ -128,10 +128,27 @@ class SupabaseBootstrap {
   /// usuário some com o repositorio) e re-baixa as listas visíveis —
   /// com o RLS já sem acesso, a lista removida desaparece (< 5s).
   void _perderAcessoPadrao() {
+    perderAcessoLocal();
+  }
+
+  /// Belt-and-suspenders do "sair da lista" (doc 08 §5, F7-T07): o
+  /// Realtime pode filtrar o DELETE do próprio usuário (RLS avalia a
+  /// policy pelo old_record), então a tela força a mesma série da perda
+  /// de acesso — limpa cache + fila e re-baixa o que o RLS ainda vê.
+  /// Melhor esforço: falha de rede não pode travar o fluxo de saída.
+  Future<void> perderAcessoLocal() {
+    final concluido = Completer<void>();
     _encadear(() async {
-      await _limparCache();
-      await sincronizarTudo();
+      try {
+        await _limparCache();
+        await sincronizarTudo();
+      } on Exception {
+        // Re-sync falhou (offline): o próximo re-sync/reconexão corrige.
+      } finally {
+        concluido.complete();
+      }
     });
+    return concluido.future;
   }
 
   /// Serializa trabalhos (troca de usuário, re-sync, realtime) para evitar
@@ -180,7 +197,8 @@ class SupabaseBootstrap {
         event: PostgresChangeEvent.all,
         schema: 'public',
         callback: (payload) {
-          if (payload.table == 'lista_membros') {
+          final tabela = payload.table;
+          if (tabela == 'lista_membros') {
             // Eventos de membros não passam por aplicarRemoto (sem
             // updated_at): handler dedicado (doc 08 §7, F7-T06).
             final perdaAcesso = _onPerdaAcesso ?? _perderAcessoPadrao;
@@ -194,9 +212,14 @@ class SupabaseBootstrap {
             );
             return;
           }
+          // Whitelist (F7-T07): só tabelas com schema conhecido seguem
+          // para o LWW — qualquer outra (`convites`, futuras) é ignorada,
+          // pois um ArgumentError do aplicador envenenaria a cadeia de
+          // trabalhos e travaria os eventos subsequentes.
+          if (tabela != 'listas' && tabela != 'itens_lista') return;
           final registro = payload.newRecord;
           if (registro.isEmpty) return;
-          _encadear(() => aplicarRemoto(payload.table, registro));
+          _encadear(() => aplicarRemoto(tabela, registro));
         },
       )
       ..subscribe();

@@ -26,6 +26,13 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
   bool _gerando = false;
   String? _erro;
   Convite? _convite;
+  TextEditingController? _linkController;
+
+  @override
+  void dispose() {
+    _linkController?.dispose();
+    super.dispose();
+  }
 
   Future<void> _gerar() async {
     setState(() {
@@ -38,7 +45,14 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
         listaId: widget.listaId,
         papel: _papel,
       );
-      if (mounted) setState(() => _convite = convite);
+      if (mounted) {
+        setState(() {
+          _convite = convite;
+          _linkController = TextEditingController(
+            text: repo.linkConvite(convite.token),
+          );
+        });
+      }
     } on ErroConvite catch (e) {
       if (mounted) setState(() => _erro = e.message);
     } catch (_) {
@@ -119,11 +133,7 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
               const SizedBox(height: 16),
               TextField(
                 readOnly: true,
-                controller: TextEditingController(
-                  text: ref
-                      .read(convitesRepositoryProvider)
-                      .linkConvite(convite.token),
-                ),
+                controller: _linkController!,
                 decoration: const InputDecoration(border: OutlineInputBorder()),
               ),
               const SizedBox(height: 16),

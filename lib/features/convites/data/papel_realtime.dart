@@ -18,7 +18,16 @@ void aplicarEventoMembro({
   final userId = evento == PostgresChangeEvent.delete
       ? payload.oldRecord['user_id']
       : (payload.newRecord['user_id'] ?? payload.oldRecord['user_id']);
-  if (userId is! String || userId != usuarioAtual) return;
+  if (userId is! String) return;
+
+  if (evento == PostgresChangeEvent.insert && userId != usuarioAtual) {
+    // Outro usuário entrou na lista (doc 08 §7, F7-T07): sinaliza para a
+    // UI — sem nome, o RLS não expõe o perfil de outros membros.
+    final listaId = payload.newRecord['lista_id'];
+    if (listaId is String) papelRepository?.notificarEntrada(listaId);
+    return;
+  }
+  if (userId != usuarioAtual) return;
 
   switch (evento) {
     case PostgresChangeEvent.delete:

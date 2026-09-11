@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/app_strings.dart';
+import '../../convites/data/papel_repository.dart';
 import '../../convites/domain/papel.dart';
 import '../../convites/providers/papel_providers.dart';
 import '../../convites/ui/sheet_convidar.dart';
@@ -17,18 +20,52 @@ import 'sheet_titulo_lista.dart';
 
 /// Tela da Lista de Compras (doc 05 §6.3, wireframe 10 §3.1, RF-03/RF-04).
 /// Indicador de sync (F4-T07), IA (F4-T01) e drag-and-drop (F4-T05) chegam depois.
-class TelaListaScreen extends ConsumerWidget {
+class TelaListaScreen extends ConsumerStatefulWidget {
   const TelaListaScreen({super.key, required this.listaId});
 
   final String listaId;
 
+  @override
+  ConsumerState<TelaListaScreen> createState() => _TelaListaScreenState();
+}
+
+class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
+  PapelRepository? _papelRepo;
+  ValueNotifier<String?>? _membroEntrou;
+
   /// Papel do usuário na lista (F7-T03): stream do PapelRepository reativo;
   /// enquanto o primeiro evento não chega, lê o estado atual do repositório
   /// (o menu pode abrir antes do microtask do stream).
-  Papel _papelNaLista(WidgetRef ref, String listaId) {
+  Papel _papelNaLista(String listaId) {
     final viaStream = ref.watch(papelNaListaStreamProvider(listaId)).value;
     if (viaStream != null) return viaStream;
     return ref.watch(papelRepositoryProvider).papelDe(listaId) ?? Papel.leitor;
+  }
+
+  /// Feedback "membro entrou" (doc 08 §7, F7-T07): realtime INSERT de
+  /// outro membro sinaliza o notifier — só a tela aberta da mesma lista
+  /// mostra o SnackBar (sem nome, o RLS não expõe outros perfis).
+  void _aoMembroEntrar() {
+    final listaId = _membroEntrou?.value;
+    if (listaId == null || listaId != widget.listaId || !mounted) return;
+    _papelRepo?.consumirEntrada();
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text(AppStrings.membroEntrou)));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _papelRepo = ref.read(papelRepositoryProvider);
+    _membroEntrou = _papelRepo?.membroEntrou;
+    _membroEntrou?.addListener(_aoMembroEntrar);
+  }
+
+  @override
+  void dispose() {
+    _membroEntrou?.removeListener(_aoMembroEntrar);
+    super.dispose();
   }
 
   void _acaoMenu(
@@ -51,7 +88,7 @@ class TelaListaScreen extends ConsumerWidget {
           onSalvar: (nome) => repo.renomearLista(id: idLista, titulo: nome),
         );
       case 'excluir':
-        _confirmarExcluirLista(context, ref, listaId);
+        _confirmarExcluirLista(context, ref, idLista);
       case 'convidar':
         abrirSheetConvidar(context, ref, idLista);
       case 'membros':
@@ -140,7 +177,8 @@ class TelaListaScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final listaId = widget.listaId;
     final listaAsync = ref.watch(listaPorIdProvider(listaId));
     return listaAsync.when(
       loading: () =>
@@ -167,7 +205,7 @@ class TelaListaScreen extends ConsumerWidget {
                   // Papel (doc 08 §1, F7-T04): editor escreve itens, dono
                   // além disso exclui lista e convida; leitor só navega a
                   // membros. Papel reativo (F7-T03); loading/null = leitor.
-                  final papel = _papelNaLista(ref, lista.id);
+                  final papel = _papelNaLista(lista.id);
                   final podeEscrever =
                       papel == Papel.dono || papel == Papel.editor;
                   final ehDono = papel == Papel.dono;
@@ -214,12 +252,12 @@ class TelaListaScreen extends ConsumerWidget {
           body: Column(
             children: [
               const IndicadorSync(),
-              if (_papelNaLista(ref, lista.id) == Papel.leitor)
+              if (_papelNaLista(lista.id) == Papel.leitor)
                 const _BannerSomenteLeitura(),
-              if (_papelNaLista(ref, lista.id) != Papel.leitor)
+              if (_papelNaLista(lista.id) != Papel.leitor)
                 _CampoAdicionar(listaId: listaId),
               Expanded(child: _ListaItens(listaId: listaId)),
-              if (_papelNaLista(ref, lista.id) != Papel.leitor)
+              if (_papelNaLista(lista.id) != Papel.leitor)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
                   child: OutlinedButton.icon(

@@ -145,6 +145,7 @@ abstract final class AppStrings {
   static const sairDaLista = 'Sair da lista';
   static const sairListaTitulo = 'Sair da lista';
   static const sairListaMensagem = 'Você deixará de ter acesso a esta lista.';
+  static const membroEntrou = 'Um novo membro entrou na lista';
 
   static String itensExtraidos(int n) =>
       n == 1 ? '1 item extraído.' : '$n itens extraídos.';

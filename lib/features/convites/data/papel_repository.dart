@@ -16,6 +16,10 @@ class PapelRepository {
 
   final ValueNotifier<Map<String, Papel>> _papeis = ValueNotifier(const {});
 
+  /// Última lista onde outro membro entrou (doc 08 §7, F7-T07): sinal
+  /// one-shot setado pelo realtime e consumido/resettado pela tela aberta.
+  final ValueNotifier<String?> membroEntrou = ValueNotifier(null);
+
   Map<String, Papel> get valores => _papeis.value;
 
   /// Papel do usuário corrente na lista; null = desconhecido
@@ -63,12 +67,22 @@ class PapelRepository {
   void atualizar(String listaId, Papel papel) =>
       _notificar({..._papeis.value, listaId: papel});
 
+  /// INSERT de outro membro no realtime (doc 08 §7, F7-T07): sem nome —
+  /// o RLS não expõe o perfil de outros membros.
+  void notificarEntrada(String listaId) => membroEntrou.value = listaId;
+
+  /// A tela da lista aberta consome o sinal após mostrar o feedback.
+  void consumirEntrada() => membroEntrou.value = null;
+
   void remover(String listaId) {
     final copia = {..._papeis.value}..remove(listaId);
     _notificar(copia);
   }
 
-  void limpar() => _notificar(const {});
+  void limpar() {
+    _notificar(const {});
+    membroEntrou.value = null;
+  }
 
   void _notificar(Map<String, Papel> novos) {
     if (mapEquals(_papeis.value, novos)) return;
