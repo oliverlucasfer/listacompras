@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/navigation/app_shell.dart';
 import 'core/utils/router_refresh_stream.dart';
 import 'features/auth/providers/auth_providers.dart';
 import 'features/auth/ui/login_screen.dart';
@@ -11,6 +12,7 @@ import 'features/configuracoes/ui/configuracoes_screen.dart';
 import 'features/convites/ui/entrar_screen.dart';
 import 'features/convites/ui/tela_membros_screen.dart';
 import 'features/design_system/ui/design_system_screen.dart';
+import 'features/listas/ui/compartilhadas_screen.dart';
 import 'features/listas/ui/minhas_listas_screen.dart';
 import 'features/listas/ui/tela_lista_screen.dart';
 
@@ -64,9 +66,35 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             EntrarScreen(token: state.uri.queryParameters['token']),
       ),
-      GoRoute(
-        path: '/listas',
-        builder: (context, state) => const MinhasListasScreen(),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            AppShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/listas',
+                builder: (context, state) => const MinhasListasScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/compartilhadas',
+                builder: (context, state) => const CompartilhadasScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/configuracoes',
+                builder: (context, state) => const ConfiguracoesScreen(),
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: '/lista/:listaId',
@@ -77,10 +105,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/membros/:listaId',
         builder: (context, state) =>
             TelaMembrosScreen(listaId: state.pathParameters['listaId']!),
-      ),
-      GoRoute(
-        path: '/configuracoes',
-        builder: (context, state) => const ConfiguracoesScreen(),
       ),
       if (kDebugMode)
         GoRoute(

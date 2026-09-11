@@ -42,6 +42,7 @@ abstract final class AppStrings {
 
   // Listas
   static const minhasListas = 'Minhas Listas';
+  static const abaMinhas = 'Minhas';
   static const compartilhadas = 'Compartilhadas';
   static const nenhumaCompartilhada = 'Nenhuma lista compartilhada';
   static const nenhumaCompartilhadaDica =
@@ -185,6 +186,7 @@ abstract final class AppStrings {
 
   // Configurações (doc 06 §3, wireframe 10 §5)
   static const configuracoes = 'Configurações';
+  static const abaAjustes = 'Ajustes';
   static const aparencia = 'Aparência';
   static const temaClaro = 'Claro';
   static const temaEscuro = 'Escuro';

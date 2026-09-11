@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -93,6 +94,14 @@ class ConfiguracoesScreen extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.email_outlined),
             title: Text(email ?? ''),
+          ),
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text(AppStrings.sair),
+            onTap: () async {
+              await ref.read(authRepositoryProvider).sair();
+              if (context.mounted) context.go('/login');
+            },
           ),
           const AppCabecalhoSecao(AppStrings.sobre),
           ListTile(
