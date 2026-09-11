@@ -24,7 +24,7 @@ Permitir importar uma lista a partir de texto livre **sem depender de IA/rede**,
 
 ## 3. Parser local (`lib/core/importacao/parser_lista_local.dart`)
 
-`List<ItemExtraido> analisarListaLocal(String texto)` — puro, síncrono, sem rede/DB.
+`RespostaParse analisarListaLocal(String texto)` — puro, síncrono, sem rede/DB (devolve itens + `aviso` quando algum item entrou com quantidade padrão).
 
 1. **Segmentação**: quebra por linha, `,`, `;` e pelo token ` e ` (`\s+e\s+`, case-insensitive).
 2. **Por segmento**, detecta `quantidade [unidade]` no **início** ou no **fim** do segmento, removendo conectivos (`de`, `do`, `da`, `em`) entre quantidade e nome. O restante é o **nome**.
