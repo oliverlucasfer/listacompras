@@ -208,16 +208,16 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 
 ## Fase 8 — Revisão Visual e de UX (spec em [superpowers/specs](superpowers/specs/2026-09-11-revisao-visual-ux-design.md))
 
-- [ ] **F8-T00** — Spec + ajustes de docs de planejamento
+- [x] **F8-T00** — Spec + ajustes de docs de planejamento
   Dep: — · Docs: spec da fase
   CP: docs 15/05/10/00/12/13/14/index/AGENTS consistentes entre si, sem tocar código.
-- [ ] **F8-T01** — Tokens + `AppTheme` claro/escuro + fonte bundlada + cores semânticas + seletor de tema
+- [x] **F8-T01** — Tokens + `AppTheme` claro/escuro + fonte bundlada + cores semânticas + seletor de tema
   Dep: F8-T00 · Docs: [15](15-design-system.md) · RNF-06
   CP: tema claro/escuro com paridade, extensão semântica presente, fonte Plus Jakarta Sans aplicada, modo persistido; `analyze`/`test` verdes.
-- [ ] **F8-T02** — Biblioteca de componentes (`App*`) + catálogo `/design`
+- [x] **F8-T02** — Biblioteca de componentes (`App*`) + catálogo `/design`
   Dep: F8-T01 · Docs: [15 §3](15-design-system.md)
   CP: componentes do doc 15 renderizam em claro/escuro; catálogo em `kDebugMode`.
-- [ ] **F8-T03** — Testes dos componentes + CI verde
+- [x] **F8-T03** — Testes dos componentes + CI verde
   Dep: F8-T02 · Docs: [07 §1](07-qualidade-ci.md)
   CP: widget tests dos componentes e do seletor; `format`/`analyze`/`test` verdes.
 
@@ -234,8 +234,8 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 | F5 Publicação | 7 | 5 |
 | F6 Pós-MVP | 7 | 7 |
 | F7 Compartilhamento | 8 | 8 |
-| F8 Design System | 4 | 0 |
-| **Total** | **57** | **51** |
+| F8 Design System | 4 | 4 |
+| **Total** | **57** | **55** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
