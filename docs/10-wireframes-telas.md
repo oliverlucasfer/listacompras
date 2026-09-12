@@ -56,7 +56,7 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 
 ## 2. Minhas Listas
 
-**Navegação (F10):** barra inferior (NavigationBar) com **Minhas**, **Compartilhadas** e **Ajustes**; em telas largas vira NavigationRail. O painel abaixo é **Minhas Listas** (listas em que você é dono). A aba **Compartilhadas** usa o mesmo layout, **sem FAB** e com a ação "Entrar com código" no AppBar (long-press leva aos membros para sair da lista).
+**Navegação (F10):** barra inferior (NavigationBar) com **Minhas**, **Compartilhadas** e **Configurações**; em telas largas vira NavigationRail. O painel abaixo é **Minhas Listas** (listas em que você é dono). A aba **Compartilhadas** usa o mesmo layout, **sem FAB** e com a ação "Entrar com código" no AppBar (long-press leva aos membros para sair da lista). Abrir uma lista/membros é `push` sobre o shell: a tela é cheia (barra some) e o voltar retorna à aba de origem (doc [05 §4](../05-app-flutter.md)).
 
 ### 2.1. Estado preenchido
 ```
@@ -127,6 +127,8 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 ---
 
 ## 3. Tela da Lista de Compras
+
+**Navegação (F10):** abre em tela cheia por cima da barra de abas, com seta de voltar (retorna à aba de origem); o AppBar mostra o título da lista (fallback "Lista" em carregando/erro/não encontrada). A tela de **Membros** usa `Membros · {título}` no AppBar.
 
 ### 3.1. Uso normal (Fase 6: agrupamento por categoria, RF-15)
 ```

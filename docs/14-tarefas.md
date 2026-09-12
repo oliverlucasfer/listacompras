@@ -271,6 +271,9 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 - [x] **F10-T05** — Correção: papel por propriedade, membros e reparo do dono
   Dep: F10-T04 · Docs: [02 §3](02-seguranca-rls.md), [08 §5](08-compartilhamento-colaborativo.md)
   CP: `papelEfetivoProvider` deriva dono de `listas.dono_id` (offline/após reinício); tela de membros mescla o dono local e refaz o fetch ao abrir; migration `0011_dono_repair.sql` (trigger + backfill idempotente) em produção; botão "Importar lista" com SafeArea + mais respiro inferior; `analyze`/`test` verdes.
+- [x] **F10-T06** — Navegação: push sobre o shell, voltar por origem e títulos
+  Dep: F10-T03 · Docs: [05 §4/§5](05-app-flutter.md), [10 §2/§3](10-wireframes-telas.md) · Spec: [navegacao-titulos](superpowers/specs/2026-09-11-navegacao-titulos-design.md)
+  CP: abrir lista/membros por `push` retorna à aba de origem (seta e voltar do Android); sem pilha cai em `/listas`/`/compartilhadas`; aba e AppBar "Configurações"; membros com `Membros · {lista}`; estados da lista com título; `analyze`/`test` verdes; APK `1.2.0+6` distribuído ao grupo `testadores` (App Distribution).
 
 ---
 
@@ -304,9 +307,9 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 | F7 Compartilhamento | 8 | 8 |
 | F8 Design System | 4 | 4 |
 | F9 Refresh Visual | 9 | 9 |
-| F10 Navegação | 6 | 6 |
+| F10 Navegação | 7 | 7 |
 | F11 Import local | 4 | 4 |
-| **Total** | **76** | **74** |
+| **Total** | **77** | **75** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

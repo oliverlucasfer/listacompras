@@ -86,9 +86,16 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 | `/registro` | Registro (propaga `?next=` para o login na tela "Verifique seu e-mail") | idem |
 | `/recuperar-senha` | Recuperação de senha | público |
 | `/entrar` | Aceite de convite (doc [08 §3](08-compartilhamento-colaborativo.md)): lê `?token=`; sem sessão mostra contexto e vai ao login/registro com `?next=`; com sessão aceita (RPC idempotente) e navega à lista | público |
-| `/listas` | Minhas Listas — AppBar "Entrar com código" (`person_add`): colar token cru → aceite → navega à lista; erro via SnackBar | exige autenticação |
-| `/listas/:id` | Tela da Lista | exige autenticação + pertencimento |
+| `/listas` | Minhas Listas (shell) — listas em que o usuário é dono | exige autenticação |
+| `/compartilhadas` | Compartilhadas (shell) — listas em que participa (não dono); AppBar "Entrar com código" (`person_add`): colar token → aceite → navega à lista | exige autenticação |
+| `/configuracoes` | Configurações (shell) — aparência, conta, logout, excluir conta | exige autenticação |
+| `/lista/:listaId` | Tela da Lista (fora do shell) | exige autenticação + pertencimento |
+| `/membros/:listaId` | Membros da lista (fora do shell) | exige autenticação + pertencimento |
+| `/design` | Design System (só `kDebugMode`) | público em debug |
 
+* **Navegação por abas (F10):** `NavigationBar` inferior com 3 destinos (**Minhas**, **Compartilhadas**, **Configurações**) que vira `NavigationRail` a partir de ~600dp; o `StatefulShellRoute.indexedStack` preserva o estado de cada aba e o AppBar de cada aba usa o mesmo texto do destino.
+* **Abrir lista/membros (`push` sobre o shell):** a tela cobre a barra (tela cheia) e o voltar retorna à **aba de origem**. Sem pilha (deep link/aceite de convite), a seta e o voltar do sistema vão para `/listas` (dono) ou `/compartilhadas` (membro) — helper `core/navigation/voltar_para_inicio.dart`.
+* **Títulos:** painel segue o destino ("Minhas Listas"/"Compartilhadas"/"Configurações"); a tela da lista usa o título da lista (fallback "Lista" em carregando/erro/não encontrada); membros usa `Membros · {título}`.
 * **Redirect global:** não autenticado → `/login`; autenticado em rota pública → `/listas`, **exceto `/entrar`** (permanece pública — a tela decide).
 * Deep link de convite (`br.com.oliverlucas.listacompras://entrar?token=...`, intent-filter com host `entrar`): o supabase_flutter escuta os deep links via app_links mas só consome os que têm parâmetros de auth; links de convite são traduzidos para `/entrar?token=...` pela ponte `deeplinkConviteProvider` ([08 §1.1](08-compartilhamento-colaborativo.md)).
 * Wireframes (layout) de todas as telas: **[10 Wireframes](10-wireframes-telas.md)**.

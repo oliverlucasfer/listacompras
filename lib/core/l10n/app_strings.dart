@@ -86,6 +86,7 @@ abstract final class AppStrings {
   static const diminuir = 'Diminuir';
   static const aumentar = 'Aumentar';
   static const menu = 'Menu';
+  static const lista = 'Lista';
   static const listaNaoEncontrada = 'Lista não encontrada.';
   static const nenhumItem = 'Nenhum item ainda';
   static const nenhumItemDica = 'Adicione o primeiro item no campo acima.';
@@ -195,7 +196,6 @@ abstract final class AppStrings {
 
   // Configurações (doc 06 §3, wireframe 10 §5)
   static const configuracoes = 'Configurações';
-  static const abaAjustes = 'Ajustes';
   static const aparencia = 'Aparência';
   static const temaClaro = 'Claro';
   static const temaEscuro = 'Escuro';

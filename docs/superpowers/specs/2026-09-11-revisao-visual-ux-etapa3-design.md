@@ -20,6 +20,8 @@ Dar ao app uma navegação de primeira classe com **NavigationBar inferior** (M3
 | "Entrar com código" | move para a tela **Compartilhadas** | Contexto de compartilhamento |
 | AppBar | limpa (sem configurações/sair/person_add no painel) | Menos ruído; navegação fica na barra |
 
+> **Nota (F10-T06, 2026-09-11):** o destino "Ajustes" passou a se chamar **Configurações** (igual ao AppBar) e a abertura de `/lista` e `/membros` deixou de ser `go` para ser **`push` sobre o shell** (tela cheia, voltar para a aba de origem; sem pilha, fallback para `/listas`/`/compartilhadas`). Ver [`2026-09-11-navegacao-titulos-design.md`](2026-09-11-navegacao-titulos-design.md).
+
 ## 3. Rotas (go_router)
 
 - `StatefulShellRoute.indexedStack` com 3 branches:

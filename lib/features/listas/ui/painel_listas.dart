@@ -132,7 +132,7 @@ class _CardLista extends ConsumerWidget {
     return AppCard(
       padding: EdgeInsets.zero,
       child: ListTile(
-        onTap: () => context.go('/lista/${lista.id}'),
+        onTap: () => context.push('/lista/${lista.id}'),
         onLongPress: ehDono
             ? () => _abrirAcoes(context, ref, contagem)
             : () => context.push('/membros/${lista.id}'),

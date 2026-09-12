@@ -740,7 +740,7 @@ void main() {
 
     // Navegação via rota /membros/:listaId (F7-T03): tela de membros com
     // próprio usuário destacado, chip de papel e "Sair da lista".
-    expect(find.text(AppStrings.membros), findsOneWidget);
+    expect(find.text('${AppStrings.membros} · Compras'), findsOneWidget);
     expect(find.text(AppStrings.voce), findsOneWidget);
     expect(find.text(AppStrings.convidarPapelLeitor), findsOneWidget);
     expect(
@@ -932,4 +932,43 @@ void main() {
 
     await fechar(tester);
   });
+
+  testWidgets(
+    'deve_mostrar_titulo_e_voltar_ao_painel_quando_lista_nao_encontrada',
+    (tester) async {
+      final router = GoRouter(
+        initialLocation: '/lista/inexistente',
+        routes: [
+          GoRoute(
+            path: '/lista/:listaId',
+            builder: (_, state) =>
+                TelaListaScreen(listaId: state.pathParameters['listaId']!),
+          ),
+          GoRoute(
+            path: '/listas',
+            builder: (_, _) => const MinhasListasScreen(),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appDatabaseProvider.overrideWithValue(db),
+            donoAtualIdProvider.overrideWithValue('user-a'),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.lista), findsOneWidget);
+      expect(find.text(AppStrings.listaNaoEncontrada), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.minhasListas), findsOneWidget);
+
+      await fechar(tester);
+    },
+  );
 }

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/navigation/voltar_para_inicio.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_cabecalho_secao.dart';
@@ -13,6 +14,7 @@ import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_snack_bar.dart';
+import '../../auth/providers/auth_providers.dart';
 import '../../convites/data/papel_repository.dart';
 import '../../convites/domain/papel.dart';
 import '../../convites/providers/papel_providers.dart';
@@ -151,103 +153,120 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
     final listaId = widget.listaId;
     final listaAsync = ref.watch(listaPorIdProvider(listaId));
     return listaAsync.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => Scaffold(
+        appBar: AppBar(
+          title: const Text(AppStrings.lista),
+          leading: botaoVoltarInicio(context, '/listas'),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      ),
       error: (_, _) => Scaffold(
-        appBar: AppBar(),
+        appBar: AppBar(
+          title: const Text(AppStrings.lista),
+          leading: botaoVoltarInicio(context, '/listas'),
+        ),
         body: const Center(child: Text(AppStrings.erroGenerico)),
       ),
       data: (lista) {
         if (lista == null) {
           return Scaffold(
-            appBar: AppBar(),
+            appBar: AppBar(
+              title: const Text(AppStrings.lista),
+              leading: botaoVoltarInicio(context, '/listas'),
+            ),
             body: const Center(child: Text(AppStrings.listaNaoEncontrada)),
           );
         }
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(lista.titulo),
-            actions: [
-              PopupMenuButton<String>(
-                tooltip: AppStrings.menu,
-                onSelected: (acao) => _acaoMenu(context, ref, lista.id, acao),
-                itemBuilder: (context) {
-                  // Papel (doc 08 §1, F7-T04): editor escreve itens, dono
-                  // além disso exclui lista e convida; leitor só navega a
-                  // membros. Papel reativo (F7-T03); loading/null = leitor.
-                  final papel = _papelNaLista(lista.id);
-                  final podeEscrever =
-                      papel == Papel.dono || papel == Papel.editor;
-                  final ehDono = papel == Papel.dono;
-                  return [
-                    if (podeEscrever)
+        final ehDono = lista.donoId == ref.watch(donoAtualIdProvider);
+        final inicio = inicioDaLista(ehDono: ehDono);
+        return PopScopeVoltarInicio(
+          inicio: inicio,
+          child: Scaffold(
+            appBar: AppBar(
+              leading: botaoVoltarInicio(context, inicio),
+              title: Text(lista.titulo),
+              actions: [
+                PopupMenuButton<String>(
+                  tooltip: AppStrings.menu,
+                  onSelected: (acao) => _acaoMenu(context, ref, lista.id, acao),
+                  itemBuilder: (context) {
+                    // Papel (doc 08 §1, F7-T04): editor escreve itens, dono
+                    // além disso exclui lista e convida; leitor só navega a
+                    // membros. Papel reativo (F7-T03); loading/null = leitor.
+                    final papel = _papelNaLista(lista.id);
+                    final podeEscrever =
+                        papel == Papel.dono || papel == Papel.editor;
+                    final ehDono = papel == Papel.dono;
+                    return [
+                      if (podeEscrever)
+                        const PopupMenuItem(
+                          value: 'desmarcar',
+                          child: Text(AppStrings.desmarcarTodos),
+                        ),
+                      if (podeEscrever)
+                        const PopupMenuItem(
+                          value: 'limpar',
+                          child: Text(AppStrings.limparConcluidos),
+                        ),
+                      if (podeEscrever)
+                        const PopupMenuItem(
+                          value: 'renomear',
+                          child: Text(AppStrings.renomearLista),
+                        ),
+                      // Membros (doc 08 §8) todos veem; navegação inclui
+                      // "Sair da lista" para não-donos.
                       const PopupMenuItem(
-                        value: 'desmarcar',
-                        child: Text(AppStrings.desmarcarTodos),
+                        value: 'membros',
+                        child: Text(AppStrings.membros),
                       ),
-                    if (podeEscrever)
-                      const PopupMenuItem(
-                        value: 'limpar',
-                        child: Text(AppStrings.limparConcluidos),
-                      ),
-                    if (podeEscrever)
-                      const PopupMenuItem(
-                        value: 'renomear',
-                        child: Text(AppStrings.renomearLista),
-                      ),
-                    // Membros (doc 08 §8) todos veem; navegação inclui
-                    // "Sair da lista" para não-donos.
-                    const PopupMenuItem(
-                      value: 'membros',
-                      child: Text(AppStrings.membros),
-                    ),
-                    if (ehDono)
-                      const PopupMenuItem(
-                        value: 'convidar',
-                        child: Text(AppStrings.convidar),
-                      ),
-                    if (ehDono)
-                      PopupMenuItem(
-                        value: 'excluir',
-                        child: Text(
-                          AppStrings.excluirLista,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
+                      if (ehDono)
+                        const PopupMenuItem(
+                          value: 'convidar',
+                          child: Text(AppStrings.convidar),
+                        ),
+                      if (ehDono)
+                        PopupMenuItem(
+                          value: 'excluir',
+                          child: Text(
+                            AppStrings.excluirLista,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
                           ),
                         ),
+                    ];
+                  },
+                ),
+              ],
+            ),
+            body: Column(
+              children: [
+                const IndicadorSync(),
+                if (_papelNaLista(lista.id) == Papel.leitor)
+                  const _BannerSomenteLeitura(),
+                if (_papelNaLista(lista.id) != Papel.leitor)
+                  _CampoAdicionar(listaId: listaId),
+                Expanded(child: _ListaItens(listaId: listaId)),
+                if (_papelNaLista(lista.id) != Papel.leitor)
+                  SafeArea(
+                    top: false,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg,
+                        AppSpacing.xs,
+                        AppSpacing.lg,
+                        AppSpacing.xl,
                       ),
-                  ];
-                },
-              ),
-            ],
-          ),
-          body: Column(
-            children: [
-              const IndicadorSync(),
-              if (_papelNaLista(lista.id) == Papel.leitor)
-                const _BannerSomenteLeitura(),
-              if (_papelNaLista(lista.id) != Papel.leitor)
-                _CampoAdicionar(listaId: listaId),
-              Expanded(child: _ListaItens(listaId: listaId)),
-              if (_papelNaLista(lista.id) != Papel.leitor)
-                SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.lg,
-                      AppSpacing.xs,
-                      AppSpacing.lg,
-                      AppSpacing.xl,
-                    ),
-                    child: AppBotao(
-                      rotulo: AppStrings.importarLista,
-                      variante: AppBotaoVariante.outlined,
-                      icone: Icons.smart_toy_outlined,
-                      onPressed: () => _importarPorIa(context, ref, listaId),
+                      child: AppBotao(
+                        rotulo: AppStrings.importarLista,
+                        variante: AppBotaoVariante.outlined,
+                        icone: Icons.smart_toy_outlined,
+                        onPressed: () => _importarPorIa(context, ref, listaId),
+                      ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         );
       },

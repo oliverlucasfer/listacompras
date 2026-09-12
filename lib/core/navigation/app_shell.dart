@@ -20,7 +20,7 @@ class AppShell extends StatelessWidget {
   static const _rotulos = [
     AppStrings.abaMinhas,
     AppStrings.compartilhadas,
-    AppStrings.abaAjustes,
+    AppStrings.configuracoes,
   ];
 
   @override

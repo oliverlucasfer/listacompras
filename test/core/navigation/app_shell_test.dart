@@ -6,7 +6,10 @@ import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/auth/data/supabase_auth_repository.dart';
 import 'package:lista_compras/features/auth/providers/auth_providers.dart';
+import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
+import 'package:lista_compras/features/sync/domain/sync_status.dart';
+import 'package:lista_compras/features/sync/providers/sync_providers.dart';
 import 'package:lista_compras/router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -37,17 +40,25 @@ class _AuthAutenticado extends SupabaseAuthRepository {
 void main() {
   setUpAll(inicializarSupabaseTeste);
 
-  Future<void> montar(WidgetTester tester, {required Size tamanho}) async {
+  Future<void> montar(
+    WidgetTester tester, {
+    required Size tamanho,
+    Future<void> Function(AppDatabase db)? seed,
+  }) async {
     tester.view.physicalSize = tamanho;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
+    if (seed != null) await seed(db);
     final container = ProviderContainer(
       overrides: [
         authRepositoryProvider.overrideWithValue(_AuthAutenticado()),
         appDatabaseProvider.overrideWithValue(db),
+        syncStatusProvider.overrideWith(
+          (ref) => Stream<SyncStatus>.value(const Sincronizado()),
+        ),
       ],
     );
     addTearDown(container.dispose);
@@ -76,9 +87,9 @@ void main() {
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.text(AppStrings.abaMinhas), findsOneWidget);
     expect(find.text(AppStrings.compartilhadas), findsOneWidget);
-    expect(find.text(AppStrings.abaAjustes), findsOneWidget);
+    expect(find.text(AppStrings.configuracoes), findsOneWidget);
 
-    await tester.tap(find.text(AppStrings.abaAjustes));
+    await tester.tap(find.text(AppStrings.configuracoes));
     await tester.pumpAndSettle();
     expect(find.text(AppStrings.configuracoes), findsWidgets);
     expect(find.text(AppStrings.sair), findsOneWidget);
@@ -91,6 +102,38 @@ void main() {
 
     expect(find.byType(NavigationRail), findsOneWidget);
     expect(find.byType(NavigationBar), findsNothing);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_voltar_para_aba_de_origem_quando_abrir_lista', (
+    tester,
+  ) async {
+    await montar(
+      tester,
+      tamanho: const Size(500, 800),
+      seed: (db) async {
+        final repo = ListasRepository(db);
+        await repo.criarLista(titulo: 'Minha lista', donoId: 'user-a');
+        await repo.criarLista(titulo: 'Do outro', donoId: 'user-b');
+      },
+    );
+
+    await tester.tap(find.text('Minha lista'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BackButton), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.abaMinhas), findsOneWidget);
+
+    await tester.tap(find.text(AppStrings.compartilhadas));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Do outro'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BackButton), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.compartilhadas), findsWidgets);
 
     await fechar(tester);
   });

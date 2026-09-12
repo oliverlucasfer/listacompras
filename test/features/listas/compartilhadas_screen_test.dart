@@ -66,8 +66,10 @@ void main() {
         ),
         GoRoute(
           path: '/lista/:id',
-          builder: (_, state) =>
-              Scaffold(body: Text('lista-${state.pathParameters['id']}')),
+          builder: (_, state) => Scaffold(
+            appBar: AppBar(),
+            body: Text('lista-${state.pathParameters['id']}'),
+          ),
         ),
         GoRoute(
           path: '/membros/:id',
@@ -181,6 +183,24 @@ void main() {
     expect(find.byType(SnackBar), findsOneWidget);
     expect(find.text(AppStrings.conviteInvalido), findsOneWidget);
     expect(find.text('lista-$_listaIdConvite'), findsNothing);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_empilhar_e_voltar_ao_painel_quando_abrir_compartilhada', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    await repo.criarLista(titulo: 'Do parceiro', donoId: 'user-a');
+    await abrirTela(tester);
+
+    await tester.tap(find.text('Do parceiro'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BackButton), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('Do parceiro'), findsOneWidget);
+
     await fechar(tester);
   });
 }

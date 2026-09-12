@@ -89,6 +89,11 @@ void main() {
           path: '/listas',
           builder: (_, _) => const Scaffold(body: Text('painel-listas')),
         ),
+        GoRoute(
+          path: '/compartilhadas',
+          builder: (_, _) =>
+              const Scaffold(body: Text('painel-compartilhadas')),
+        ),
       ],
     );
     await tester.pumpWidget(
@@ -313,6 +318,11 @@ void main() {
           path: '/listas',
           builder: (_, _) => const Scaffold(body: Text('painel-listas')),
         ),
+        GoRoute(
+          path: '/compartilhadas',
+          builder: (_, _) =>
+              const Scaffold(body: Text('painel-compartilhadas')),
+        ),
       ],
     );
     await tester.pumpWidget(
@@ -350,7 +360,7 @@ void main() {
         .queryParameters;
     expect(filtro, containsPair('lista_id', 'eq.$_listaId'));
     expect(filtro, containsPair('user_id', 'eq.U2'));
-    expect(find.text('painel-listas'), findsOneWidget);
+    expect(find.text('painel-compartilhadas'), findsOneWidget);
     // Belt-and-suspenders (F7-T07): a tela força a limpeza local após sair.
     expect(espiao.chamouPerderAcesso, isTrue);
 
@@ -429,6 +439,55 @@ void main() {
       find.widgetWithText(TextButton, AppStrings.sairDaLista),
       findsOneWidget,
     );
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_titulo_com_nome_da_lista_quando_existe', (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    final agora = DateTime.now().toUtc();
+    await db
+        .into(db.listaLocal)
+        .insert(
+          ListaLocalCompanion.insert(
+            id: _listaId,
+            createdAt: agora,
+            updatedAt: agora,
+            titulo: 'Feira',
+            donoId: 'U1',
+          ),
+        );
+    final servidor = ServidorFake((req) {
+      if (req.method == 'GET' && req.url.path.contains('/lista_membros')) {
+        return (200, _linhasMembros());
+      }
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    await abrir(tester, servidor, usuarioId: 'U1', db: db);
+
+    expect(find.text('${AppStrings.membros} · Feira'), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_voltar_para_compartilhadas_quando_sem_pilha_e_nao_e_dono', (
+    tester,
+  ) async {
+    final servidor = ServidorFake((req) {
+      if (req.method == 'GET' && req.url.path.contains('/lista_membros')) {
+        return (200, _linhasMembros());
+      }
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    await abrir(tester, servidor, usuarioId: 'U3');
+
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+    expect(find.text('painel-compartilhadas'), findsOneWidget);
 
     await fechar(tester);
   });

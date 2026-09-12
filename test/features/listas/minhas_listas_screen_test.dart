@@ -36,8 +36,10 @@ void main() {
         GoRoute(path: '/listas', builder: (_, _) => const MinhasListasScreen()),
         GoRoute(
           path: '/lista/:id',
-          builder: (_, state) =>
-              Scaffold(body: Text('lista-${state.pathParameters['id']}')),
+          builder: (_, state) => Scaffold(
+            appBar: AppBar(),
+            body: Text('lista-${state.pathParameters['id']}'),
+          ),
         ),
       ],
     );
@@ -195,6 +197,25 @@ void main() {
     final registros = await (db.select(db.listaLocal)).get();
     final id = registros.firstWhere((l) => l.titulo == 'Minha nova').id;
     expect(container.read(papelRepositoryProvider).papelDe(id), Papel.dono);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_empilhar_e_voltar_ao_painel_quando_abrir_lista', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await abrirTela(tester);
+
+    await tester.tap(find.text('Compras'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BackButton), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('Compras'), findsOneWidget);
+    expect(find.byType(BackButton), findsNothing);
 
     await fechar(tester);
   });
