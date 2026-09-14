@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show SocketException;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
@@ -691,5 +692,26 @@ void main() {
 
     expect(engine.statusAtual, isA<ErroSync>());
     expect(reportes, contains('sync_erro_persistente'));
+  });
+
+  test('deve_drenar_fila_quando_checar_conexao_lanca', () async {
+    // F12-T03: a checagem inicial de conectividade não pode impedir a
+    // assinatura da fila — senão a escrita nunca é enviada e o indicador
+    // fica preso em "Sincronizado".
+    await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+
+    final remoto = RemotoFake();
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => throw const SocketException('sem rede'),
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+
+    await aguardarSincronizado(engine);
+
+    expect(remoto.recebidas, hasLength(1));
+    expect(await mutacoesNaFila(), 0);
   });
 }

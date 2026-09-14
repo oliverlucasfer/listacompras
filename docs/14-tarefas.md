@@ -294,6 +294,55 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 
 ---
 
+## Fase 12 — Correções (pós-F11)
+
+Correções pontuais reportadas pelo dono: legibilidade no tema escuro e geração
+do link de convite. Docs donos: [15](15-design-system.md) (tema),
+[08](08-compartilhamento-colaborativo.md) (convites),
+[03](03-sincronizacao-offline.md) (sync).
+
+- [x] **F12-T01** — Tema escuro: `TextTheme` por brilho/`ColorScheme` (textos ilegíveis)
+  Dep: F9-T08 · Docs: [15 §1–2, §4](15-design-system.md) · RNF-06
+  CP: `AppTypography.textTheme(brightness, scheme)` deriva as cores do `ColorScheme` (claro → escuro; escuro → claro); teste de contraste em claro/escuro; `analyze`/`test` verdes.
+- [x] **F12-T02** — Compartilhamento: erros amigáveis + pré-condição ao gerar link
+  Dep: F7-T07 · Docs: [08 §3/§8](08-compartilhamento-colaborativo.md) · RF-13
+  CP: `criarLink` mapeia FK (`23503`)/RLS (`42501`) → `lista_nao_sincronizada` e rede → `sem_conexao`; sheet faz flush best-effort da fila antes de gerar; testes de repo (4) e de sheet (2) verdes.
+- [x] **F12-T03** — Robustez do sync: assinatura da fila e cadeia do bootstrap
+  Dep: F4-T09 · Docs: [03 §4/§7](03-sincronizacao-offline.md) · RF-08, RF-09
+  CP: `SyncEngine.iniciar()` assina a fila antes da checagem de conexão (falha não impede flush); `SupabaseBootstrap._encadear` descarta erro do trabalho para não envenenar a cadeia; 2 testes novos verdes.
+- [x] **F12-T04** — Sync: INSERT/UPDATE em vez de `upsert` + policy `listas_update_editores`
+  Dep: F12-T03 · Docs: [03 §4](03-sincronizacao-offline.md), [02 §4.1](02-seguranca-rls.md) · RF-08
+  CP: `SupabaseSyncRemoto.enviar` usa `INSERT` sem linha remota e `UPDATE` com linha remota; migration `0012_fix_listas_update_policy.sql` corrige o `WITH CHECK` (`l.id = listas.id`) aplicada em produção; 3 testes do `enviar` verdes; INSERT/UPDATE validados em produção (201/204).
+- [x] **F12-T05** — Visual: espaçamento entre os cards de listas
+  Dep: F10-T01 · Docs: [10 §2.1](10-wireframes-telas.md), [15 §3](15-design-system.md) · RNF-06
+  CP: `PainelListas` separa os cards com `AppSpacing.sm` (`ListView.separated`); teste de regressão mede o vão entre dois cards; `analyze`/`test` verdes.
+- [x] **F12-T06** — Tela da lista: unidade no add manual, parse do texto e editar/remover descobrível
+  Dep: F11-T01 · Docs: [05 §6.3](05-app-flutter.md), [10 §3.1](10-wireframes-telas.md) · RF-03, RF-04, RF-16
+  CP: seletor de unidade no campo; `interpretarItemAvulso` reconhece `1kg de banana` (unidade explícita vence o seletor); duplicado soma se unidade igual, senão atualiza; tocar no item abre o editor com **Remover** (undo); 5 testes de tela + 6 do parser verdes.
+- [x] **F12-T07** — SnackBar com duração curta
+  Dep: F12-T06 · Docs: [15 §3](15-design-system.md) · RNF-06
+  CP: `mostrarSnackBar` usa 2s sem ação e 3s com ação (`duracao` sobrescreve); 2 testes do widget verificam as durações.
+
+---
+
+## Fase 13 — Identidade visual (logo + títulos)
+
+Marca própria do app e ajuste dos títulos de tela. Doc dono:
+[15 §1/§3/§6](15-design-system.md); layout em [10](10-wireframes-telas.md);
+UX em [05](05-app-flutter.md).
+
+- [x] **F13-T01** — Logo do app: ícones, splash e web
+  Dep: F9-T08 · Docs: [15 §6](15-design-system.md) · RNF-06
+  CP: masters `assets/branding/logo.svg`/`logo_glyph.svg` + PNGs 1024; `flutter_launcher_icons` gera ícones Android (incl. adaptativo)/iOS/web e `flutter_native_splash` o splash verde; `web/manifest.json`/`index.html` com nome/cores da marca; teste garante o asset no bundle.
+- [x] **F13-T02** — Marca no cabeçalho das telas de topo
+  Dep: F13-T01 · Docs: [15 §3](15-design-system.md), [10 §2.1](10-wireframes-telas.md), [05 §6.2](05-app-flutter.md) · RNF-06
+  CP: `AppLogo` (28dp, `AppRadius.sm`, `Semantics` com o nome do app) à esquerda do título no painel; telas internas sem a marca; testes de widget verdes.
+- [x] **F13-T03** — Títulos de tela: 24sp bold
+  Dep: F9-T08 · Docs: [15 §1](15-design-system.md) · RNF-06
+  CP: `appBarTheme.titleTextStyle` com `fontSize: 24` e `FontWeight.bold` (tokens em `AppTypography`), claro/escuro; teste verifica tamanho e peso.
+
+---
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -309,7 +358,9 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 | F9 Refresh Visual | 9 | 9 |
 | F10 Navegação | 7 | 7 |
 | F11 Import local | 4 | 4 |
-| **Total** | **77** | **75** |
+| F12 Correções | 7 | 7 |
+| F13 Identidade visual | 3 | 3 |
+| **Total** | **87** | **85** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

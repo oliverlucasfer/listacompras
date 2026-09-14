@@ -43,7 +43,10 @@ void main() {
   });
 
   test('deve_usar_fonte_plus_jakarta_sans_no_text_theme', () {
-    final estilo = AppTypography.textTheme.bodyLarge;
+    final estilo = AppTypography.textTheme(
+      Brightness.light,
+      const ColorScheme.light(),
+    ).bodyLarge;
     expect(estilo?.fontFamily, 'PlusJakartaSans');
   });
 }

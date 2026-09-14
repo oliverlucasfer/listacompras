@@ -44,15 +44,35 @@ RespostaParse analisarListaLocal(String texto) {
   final itens = <ItemExtraido>[];
   var algumSemNumero = false;
   for (final parte in texto.split(_separadores)) {
-    final item = _parseSegmento(parte);
-    if (item == null) continue;
-    itens.add(item);
+    final lido = _lerSegmento(parte);
+    if (lido == null) continue;
+    itens.add(lido.item);
     if (!_tinhaNumero(parte)) algumSemNumero = true;
   }
   return RespostaParse(
     itens: itens,
     aviso: algumSemNumero ? AppStrings.importLocalAvisoPadrao : null,
   );
+}
+
+/// Interpreta um item avulso digitado no campo "Adicionar item" (F12-T06):
+/// quantidade/unidade **explícitas** no texto vencem; quando o texto não traz
+/// unidade, usa [unidadePadrao] (a unidade escolhida no seletor da UI). Usa só
+/// o primeiro segmento digitado.
+ItemExtraido? interpretarItemAvulso(
+  String texto, {
+  Unidade unidadePadrao = Unidade.un,
+}) {
+  final partes = texto.split(_separadores);
+  final lido = _lerSegmento(partes.first);
+  if (lido == null) return null;
+  return lido.unidadeExplicita
+      ? lido.item
+      : ItemExtraido(
+          nome: lido.item.nome,
+          quantidade: lido.item.quantidade,
+          unidade: unidadePadrao,
+        );
 }
 
 bool _tinhaNumero(String parte) {
@@ -64,7 +84,11 @@ bool _tinhaNumero(String parte) {
       _numeroColado.hasMatch(tokens.last);
 }
 
-ItemExtraido? _parseSegmento(String bruto) {
+/// Segmento lido + se a unidade veio **explícita** do texto (o `true`) ou é o
+/// padrão `un` (`false`) — distinção usada no [interpretarItemAvulso].
+typedef _Segmento = ({ItemExtraido item, bool unidadeExplicita});
+
+_Segmento? _lerSegmento(String bruto) {
   final texto = bruto.trim().replaceAll(RegExp(r'[.]$'), '');
   if (texto.isEmpty) return null;
   final tokens = texto.split(RegExp(r'\s+'));
@@ -74,10 +98,12 @@ ItemExtraido? _parseSegmento(String bruto) {
 
   late final double qtd;
   late final Unidade unidade;
+  late final bool explicita;
   late final List<String> nome;
   if (inicio != null) {
     qtd = inicio.$1;
     unidade = inicio.$2;
+    explicita = inicio.$4;
     var i = inicio.$3;
     if (i < tokens.length && _conectivos.contains(normalizarTexto(tokens[i]))) {
       i++;
@@ -86,46 +112,53 @@ ItemExtraido? _parseSegmento(String bruto) {
   } else if (fim != null) {
     qtd = fim.$1;
     unidade = fim.$2;
+    explicita = fim.$4;
     var j = fim.$3;
     if (j > 0 && _conectivos.contains(normalizarTexto(tokens[j - 1]))) j--;
     nome = tokens.sublist(0, j);
   } else {
     qtd = 1;
     unidade = Unidade.un;
+    explicita = false;
     nome = tokens;
   }
 
   final limpo = nome.join(' ').trim();
   if (limpo.isEmpty) return null;
-  return ItemExtraido(
-    nome: limpo[0].toUpperCase() + limpo.substring(1),
-    quantidade: qtd,
-    unidade: unidade,
+  return (
+    item: ItemExtraido(
+      nome: limpo[0].toUpperCase() + limpo.substring(1),
+      quantidade: qtd,
+      unidade: unidade,
+    ),
+    unidadeExplicita: explicita,
   );
 }
 
-(double, Unidade, int)? _qtdInicio(List<String> t) {
+(double, Unidade, int, bool)? _qtdInicio(List<String> t) {
   final colado = _numeroColado.firstMatch(t.first);
   if (colado != null) {
     final unidade = _unidades[normalizarTexto(colado.group(2)!)];
-    if (unidade != null) return (_paraDouble(colado.group(1)!), unidade, 1);
+    if (unidade != null) {
+      return (_paraDouble(colado.group(1)!), unidade, 1, true);
+    }
   }
   final numero = _soNumero.firstMatch(t.first);
   if (numero == null) return null;
   final qtd = _paraDouble(numero.group(1)!);
   if (t.length > 1) {
     final unidade = _unidades[normalizarTexto(t[1])];
-    if (unidade != null) return (qtd, unidade, 2);
+    if (unidade != null) return (qtd, unidade, 2, true);
   }
-  return (qtd, Unidade.un, 1);
+  return (qtd, Unidade.un, 1, false);
 }
 
-(double, Unidade, int)? _qtdFim(List<String> t) {
+(double, Unidade, int, bool)? _qtdFim(List<String> t) {
   final colado = _numeroColado.firstMatch(t.last);
   if (colado != null) {
     final unidade = _unidades[normalizarTexto(colado.group(2)!)];
     if (unidade != null) {
-      return (_paraDouble(colado.group(1)!), unidade, t.length - 1);
+      return (_paraDouble(colado.group(1)!), unidade, t.length - 1, true);
     }
   }
   final numero = _soNumero.firstMatch(t.last);
@@ -133,9 +166,9 @@ ItemExtraido? _parseSegmento(String bruto) {
   final qtd = _paraDouble(numero.group(1)!);
   if (t.length > 1) {
     final unidade = _unidades[normalizarTexto(t[t.length - 2])];
-    if (unidade != null) return (qtd, unidade, t.length - 2);
+    if (unidade != null) return (qtd, unidade, t.length - 2, true);
   }
-  return (qtd, Unidade.un, t.length - 1);
+  return (qtd, Unidade.un, t.length - 1, false);
 }
 
 double _paraDouble(String valor) => double.parse(valor.replaceAll(',', '.'));

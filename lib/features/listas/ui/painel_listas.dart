@@ -11,6 +11,7 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
+import '../../../core/widgets/app_logo.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../../auth/providers/auth_providers.dart';
@@ -50,8 +51,19 @@ class PainelListas extends ConsumerWidget {
         );
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          _compartilhadas ? AppStrings.compartilhadas : AppStrings.minhasListas,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const AppLogo(),
+            const SizedBox(width: AppSpacing.sm),
+            Flexible(
+              child: Text(
+                _compartilhadas
+                    ? AppStrings.compartilhadas
+                    : AppStrings.minhasListas,
+              ),
+            ),
+          ],
         ),
         actions: [
           if (_compartilhadas)
@@ -70,7 +82,7 @@ class PainelListas extends ConsumerWidget {
         ),
         data: (listas) => listas.isEmpty
             ? _vazio(context, ref)
-            : ListView.builder(
+            : ListView.separated(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.lg,
                   AppSpacing.sm,
@@ -78,6 +90,8 @@ class PainelListas extends ConsumerWidget {
                   88,
                 ),
                 itemCount: listas.length,
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.sm),
                 itemBuilder: (context, i) => _CardLista(contagem: listas[i]),
               ),
       ),

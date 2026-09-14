@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' show SocketException;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/native.dart';
@@ -697,6 +698,51 @@ void main() {
     await pumpEventQueue();
 
     expect(papelRepo.papelDe('l1'), Papel.leitor);
+    expect(
+      await (db.select(db.listaLocal)..where((l) => l.id.equals('l1'))).get(),
+      isNotEmpty,
+    );
+  });
+
+  test('deve_continuar_re_sincronizando_quando_um_resync_falha', () async {
+    // F12-T03: um trabalho que falha não pode envenenar a cadeia de
+    // `_encadear` — se a 1ª troca de usuário falhar (rede), a próxima ainda
+    // precisa rodar; senão nenhum re-sync/flush posterior acontece.
+    final usuario = StreamController<String?>();
+    var falhar = true;
+    final bootstrap = SupabaseBootstrap(
+      db: db,
+      engine: SyncEngine(
+        db: db,
+        remoto: remoto,
+        checarConexao: () async => true,
+      ),
+      client: SupabaseClient('http://127.0.0.1:54321', 'test-key'),
+      baixar: (tabela) async {
+        if (falhar && tabela == 'listas') {
+          throw const SocketException('sem rede');
+        }
+        return remotos[tabela] ?? const [];
+      },
+      mudancasDeUsuario: usuario.stream,
+      checarConexao: () async => true,
+      lerUsuarioSalvo: () async => null,
+      salvarUsuario: (id) async {},
+    );
+    addTearDown(() async {
+      await bootstrap.dispose();
+      await usuario.close();
+    });
+    await bootstrap.iniciar();
+
+    usuario.add('U1');
+    await pumpEventQueue();
+
+    remotos['listas'] = [listaRemota('l1', donoId: 'U2')];
+    falhar = false;
+    usuario.add('U2');
+    await pumpEventQueue();
+
     expect(
       await (db.select(db.listaLocal)..where((l) => l.id.equals('l1'))).get(),
       isNotEmpty,

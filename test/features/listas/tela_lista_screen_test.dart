@@ -253,6 +253,106 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_aplicar_unidade_do_seletor_quando_texto_sem_unidade', (
+    tester,
+  ) async {
+    await listaComItens(tester);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      'banana',
+    );
+    await tester.tap(find.text('un'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('dz').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Banana'), findsOneWidget);
+    expect(find.text('1 dz'), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_interpretar_quantidade_e_unidade_quando_texto_com_kg', (
+    tester,
+  ) async {
+    await listaComItens(tester);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      '1kg de banana',
+    );
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Banana'), findsOneWidget);
+    expect(find.text('1 kg'), findsOneWidget);
+    expect(find.text('Hortifrúti (1)'), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_priorizar_unidade_do_texto_sobre_seletor', (tester) async {
+    await listaComItens(tester);
+
+    await tester.tap(find.text('un'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('dz').last);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      '1kg de banana',
+    );
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 kg'), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_atualizar_item_quando_duplicado_com_unidade_diferente', (
+    tester,
+  ) async {
+    await listaComItens(tester);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      '2kg de arroz',
+    );
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Arroz'), findsOneWidget);
+    expect(find.text('2 kg'), findsOneWidget);
+    expect(find.textContaining(AppStrings.itemAtualizado), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_editar_e_remover_quando_tocar_no_item', (tester) async {
+    await listaComItens(tester);
+
+    await tester.tap(find.text('Arroz'));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.editarItem), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(TextButton, AppStrings.removerItem));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Arroz'), findsNothing);
+    expect(find.text(AppStrings.itemRemovido), findsOneWidget);
+
+    await tester.tap(find.text(AppStrings.desfazer));
+    await tester.pumpAndSettle();
+    expect(find.text('Arroz'), findsOneWidget);
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_mover_para_concluidos_e_voltar_quando_marcar_checkbox', (
     tester,
   ) async {

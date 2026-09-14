@@ -61,7 +61,7 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 ### 2.1. Estado preenchido
 ```
 ┌─────────────────────────────────┐
-│  Minhas Listas           [≡]    │
+│  [▣] Minhas Listas       [≡]    │ ← [▣] marca do app (F13-T02)
 │  ● Sincronizado            (1)  │ ← [03 §6] sincronizado/pendente/offline
 ├─────────────────────────────────┤
 │  ┌───────────────────────────┐  │
@@ -78,6 +78,9 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 │                      (＋ Nova)  │ ← FAB
 └─────────────────────────────────┘
 ```
+Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardTheme` zera a margem do `Card`, então o espaçamento entre cards empilhados é responsabilidade do layout da lista (`ListView.separated`, F12-T05).
+
+**Marca no cabeçalho (F13-T02):** as telas de **topo** (Minhas Listas / Compartilhadas, sem botão voltar) mostram a marca do app (`AppLogo`, 28dp) à esquerda do título; telas internas (`push`: lista, membros, configurações, auth) mantêm apenas o texto. Título de tela em **24sp bold** (F13-T03, doc [15 §1](15-design-system.md)).
 
 ### 2.2. Estado vazio
 ```
@@ -137,14 +140,16 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 │  ● Sincronizado                 │    concluídos, renomear, excluir lista
 ├─────────────────────────────────┤
 │  Adicionar item                 │
-│  [____________________ (＋) ]   │ ← Enter salva já categorizado (§3 05)
+│  [____________ un▾   (＋) ]     │ ← Enter salva já categorizado (§3 05);
+│                                 │    reconhece "1kg de banana" e a
+│                                 │    unidade vem do seletor (F12-T06)
 │                                 │
 │  HORTIFRÚTI (1)                 │ ← ordem dos grupos = ordem do enum
 │  ☐ Banana           1 dz    ≡   │    [01 §3.2]; contagem de pendentes
 │  MERCEARIA (2)                  │
-│  ☐ Arroz            1 kg    ≡   │ ← swipe ←/→: editar/remover (undo);
-│  ☐ Café             1 pacote ≡  │    drag restrito ao grupo
-│  LATICÍNIOS (2)                 │
+│  ☐ Arroz            1 kg    ≡   │ ← tocar: editar; swipe ←/→:
+│  ☐ Café             1 pacote ≡  │    editar/remover (undo);
+│  LATICÍNIOS (2)                 │    drag restrito ao grupo
 │  ☐ Leite            2 un    ≡   │ ← editar: dropdown de categoria
 │  ☐ Queijo prato     500 g   ≡   │
 │                                 │

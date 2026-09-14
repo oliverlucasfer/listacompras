@@ -356,4 +356,31 @@ begin
   else raise exception 'FALHOU P-08: % donos', c; end if;
 end $$;
 
+-- ===== P-09: dono (A) renomeia a lista com >1 lista no banco → 1 linha (F12-T04) =====
+-- Regressão do bug `l.id = l.id` em listas_update_editores: com mais de uma
+-- lista o subselect retornava múltiplas linhas (erro) e negava o UPDATE.
+do $$
+declare c int;
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+  update public.listas set titulo = 'Lista RLS 2'
+  where id = '22222222-2222-2222-2222-222222222222';
+  get diagnostics c = row_count;
+  if c = 1 then raise notice 'OK P-09: dono renomeou a lista com >1 listas';
+  else raise exception 'FALHOU P-09: % linhas', c; end if;
+end $$;
+
+-- ===== P-10: dono (A) tenta mudar dono_id via UPDATE → with check nega (F12-T04) =====
+do $$
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+  update public.listas set dono_id = '44444444-4444-4444-4444-444444444444'
+  where id = '22222222-2222-2222-2222-222222222222';
+  raise exception 'FALHOU P-10: alteracao de dono_id aceita';
+exception when insufficient_privilege then
+  raise notice 'OK P-10: with check negou alteracao de dono_id';
+end $$;
+
 rollback;

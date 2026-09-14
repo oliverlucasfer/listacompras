@@ -62,6 +62,8 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   drift_dev: ^2.34.0
   build_runner: ^2.15.1
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -87,6 +89,11 @@ flutter:
           weight: 700
         - asset: assets/fonts/PlusJakartaSans-ExtraBold.ttf
           weight: 800
+
+  # Identidade visual (doc 15 §6): master vetorial em assets/branding/*.svg e
+  # bitmaps gerados para ícones/splash/cabeçalho.
+  assets:
+    - assets/branding/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -118,3 +125,33 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+# Ícones do app (doc 15 §6): `dart run flutter_launcher_icons`.
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/branding/logo.png
+  adaptive_icon_background: "#2E7D32"
+  adaptive_icon_foreground: assets/branding/logo_glyph.png
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: assets/branding/logo.png
+    background_color: "#2E7D32"
+    theme_color: "#2E7D32"
+
+# Splash nativo (doc 15 §6): `dart run flutter_native_splash:create`.
+flutter_native_splash:
+  color: "#2E7D32"
+  image: assets/branding/logo_glyph.png
+  color_dark: "#1B5E20"
+  image_dark: assets/branding/logo_glyph.png
+  android: true
+  ios: true
+  web: false
+  android_12:
+    color: "#2E7D32"
+    image: assets/branding/logo_glyph.png
+    color_dark: "#1B5E20"
+    image_dark: assets/branding/logo_glyph.png
+

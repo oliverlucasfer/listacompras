@@ -148,8 +148,11 @@ create policy "listas_update_editores"
     -- a subquery lê a snapshot antiga da linha e nega qualquer alteração.
     -- Sem isto, um editor poderia se autoprometer a dono contornando o
     -- trigger sync_dono ([01 §6](01-banco-de-dados.md)), que só reage a lista_membros.
+    -- ATENÇÃO: a linha externa precisa ser qualificada (`listas.id`); usar `id`
+    -- não qualificado resolve para o `l.id` do próprio subselect (`l.id = l.id`,
+    -- sempre verdadeiro) — bug corrigido pela migration `0012` (F12-T04).
     and dono_id = (
-      select l.dono_id from public.listas l where l.id = id
+      select l.dono_id from public.listas l where l.id = listas.id
     )
   );
 

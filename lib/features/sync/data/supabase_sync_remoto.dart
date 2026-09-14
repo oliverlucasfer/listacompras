@@ -67,19 +67,21 @@ class SupabaseSyncRemoto implements SyncRemoto {
       if (duplicado != null) {
         final mesclado = mesclarDuplicado(duplicado, mutacao.payload);
         if (mesclado != null) {
-          await tabela.upsert(mesclado, onConflict: 'id');
+          await tabela.update(mesclado).eq('id', mesclado['id']!);
           return Duplicado(mesclado);
         }
         return Duplicado(duplicado);
       }
-      // ID client-side pode já existir (outro dispositivo) — doc 03 §4.2.
-      await tabela.upsert(
-        mutacao.payload,
-        onConflict: 'id',
-        ignoreDuplicates: true,
-      );
+    }
+    if (registro == null) {
+      // F12-T04: sem linha remota o envio é INSERT puro. Não usar `upsert`:
+      // o PostgREST avalia a policy de UPDATE no upsert e listas novas eram
+      // negadas (42501) — nada sincronizava (migration 0012 corrige a policy,
+      // mas o INSERT continua sendo o caminho correto para criar).
+      await tabela.insert(mutacao.payload);
     } else {
-      await tabela.upsert(mutacao.payload, onConflict: 'id');
+      // Linha remota existe: UPDATE direto (LWW já decidiu que o local vence).
+      await tabela.update(mutacao.payload).eq('id', mutacao.registroId);
     }
     return const Enviado();
   }

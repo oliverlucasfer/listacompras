@@ -61,11 +61,19 @@ class SyncEngine {
 
   /// Liga os gatilhos: fila de mutações e conectividade (doc 03 §4).
   Future<void> iniciar() async {
-    if (_checarConexao != null) {
-      _online = await _checarConexao();
-      if (!_online) _definir(const Offline());
+    // Checa a conexão primeiro (para não tentar drenar antes de saber que
+    // está offline), mas NUNCA aborta por falha na checagem: sem a
+    // assinatura da fila a escrita não sobe e o status mente "Sincronizado"
+    // (F12-T03). Na dúvida, assume online e deixa o flush/reconexão decidir.
+    final checar = _checarConexao;
+    if (checar != null) {
+      try {
+        _online = await checar();
+      } on Object {
+        _online = true;
+      }
     }
-    // Cada escrita do repositório enfileira uma mutação → dispara flush.
+    if (!_online) _definir(const Offline());
     _subFila = _db
         .select(_db.mutacaoPendente)
         .watch()

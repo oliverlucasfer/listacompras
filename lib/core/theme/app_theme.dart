@@ -20,7 +20,7 @@ abstract final class AppTheme {
       seedColor: AppColors.seed,
       brightness: brightness,
     );
-    final texto = AppTypography.textTheme;
+    final texto = AppTypography.textTheme(brightness, scheme);
     const botaoShape = RoundedRectangleBorder(
       borderRadius: AppRadius.fullTodos,
     );
@@ -38,7 +38,11 @@ abstract final class AppTheme {
         elevation: AppElevation.nivel0,
         scrolledUnderElevation: AppElevation.nivel2,
         centerTitle: false,
-        titleTextStyle: texto.titleLarge?.copyWith(color: scheme.onSurface),
+        titleTextStyle: texto.titleLarge?.copyWith(
+          fontSize: AppTypography.tituloTelaTamanho,
+          fontWeight: AppTypography.tituloTelaPeso,
+          color: scheme.onSurface,
+        ),
       ),
       cardTheme: CardThemeData(
         elevation: AppElevation.nivel1,

@@ -237,6 +237,147 @@ void main() {
     );
   });
 
+  test('deve_mapear_lista_nao_sincronizada_quando_fk_violada', () async {
+    // F12-T02: lista só no Drift local → FK de convites rejeita o INSERT.
+    final servidor = ServidorFake((req) {
+      if (req.method == 'POST' && req.url.path.contains('/convites')) {
+        return (
+          409,
+          {
+            'code': '23503',
+            'message':
+                'insert or update on table "convites" violates foreign key '
+                'constraint "convites_lista_id_fkey"',
+            'details': null,
+            'hint': null,
+          },
+        );
+      }
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    final repo = ConvitesRepository(
+      SupabaseClient(
+        'http://127.0.0.1:54321',
+        'test-key',
+        httpClient: servidor,
+      ),
+    );
+
+    await expectLater(
+      repo.criarLink(listaId: _listaId, papel: Papel.editor),
+      throwsA(
+        isA<ErroConvite>()
+            .having((e) => e.code, 'code', 'lista_nao_sincronizada')
+            .having(
+              (e) => e.message,
+              'message',
+              AppStrings.conviteListaNaoSincronizada,
+            ),
+      ),
+    );
+  });
+
+  test('deve_mapear_lista_nao_sincronizada_quando_rls_negada', () async {
+    final servidor = ServidorFake((req) {
+      if (req.method == 'POST' && req.url.path.contains('/convites')) {
+        return (
+          403,
+          {
+            'code': '42501',
+            'message': 'new row violates row-level security policy',
+            'details': null,
+            'hint': null,
+          },
+        );
+      }
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    final repo = ConvitesRepository(
+      SupabaseClient(
+        'http://127.0.0.1:54321',
+        'test-key',
+        httpClient: servidor,
+      ),
+    );
+
+    await expectLater(
+      repo.criarLink(listaId: _listaId, papel: Papel.editor),
+      throwsA(
+        isA<ErroConvite>().having(
+          (e) => e.code,
+          'code',
+          'lista_nao_sincronizada',
+        ),
+      ),
+    );
+  });
+
+  test('deve_mapear_sem_conexao_quando_socket_ao_criar_link', () async {
+    final servidor = ServidorFake((req) {
+      throw const SocketException('sem rota');
+    });
+    addTearDown(servidor.close);
+    final repo = ConvitesRepository(
+      SupabaseClient(
+        'http://127.0.0.1:54321',
+        'test-key',
+        httpClient: servidor,
+      ),
+    );
+
+    await expectLater(
+      repo.criarLink(listaId: _listaId, papel: Papel.editor),
+      throwsA(
+        isA<ErroConvite>()
+            .having((e) => e.code, 'code', 'sem_conexao')
+            .having((e) => e.message, 'message', AppStrings.conviteSemConexao),
+      ),
+    );
+  });
+
+  test(
+    'deve_mapear_erro_inesperado_quando_servidor_falha_ao_criar_link',
+    () async {
+      final servidor = ServidorFake((req) {
+        if (req.method == 'POST' && req.url.path.contains('/convites')) {
+          return (
+            500,
+            {
+              'code': '500',
+              'message': 'erro interno',
+              'details': null,
+              'hint': null,
+            },
+          );
+        }
+        return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+      });
+      addTearDown(servidor.close);
+      final repo = ConvitesRepository(
+        SupabaseClient(
+          'http://127.0.0.1:54321',
+          'test-key',
+          httpClient: servidor,
+        ),
+      );
+
+      await expectLater(
+        repo.criarLink(listaId: _listaId, papel: Papel.editor),
+        throwsA(
+          isA<ErroConvite>()
+              .having((e) => e.code, 'code', 'inesperado')
+              .having(
+                (e) => e.message,
+                'message',
+                AppStrings.conviteInesperado,
+              ),
+        ),
+      );
+    },
+  );
+
   test('deve_listar_pendentes_da_lista', () async {
     final servidor = ServidorFake((req) {
       if (req.method == 'GET' && req.url.path.contains('/convites')) {

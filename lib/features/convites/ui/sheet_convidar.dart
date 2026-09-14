@@ -9,6 +9,7 @@ import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_snack_bar.dart';
+import '../../sync/providers/sync_providers.dart';
 import '../domain/convite.dart';
 import '../domain/papel.dart';
 import '../providers/convites_providers.dart';
@@ -44,6 +45,13 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
       _gerando = true;
     });
     final repo = ref.read(convitesRepositoryProvider);
+    try {
+      // Pré-condição (F12-T02): flush best-effort para garantir que a lista
+      // já exista no servidor antes de criar o convite (que é online-only).
+      await ref.read(sincronizarAntesDeOperacaoProvider)();
+    } on Object {
+      // Falha de sync não impede a tentativa — o erro do INSERT orienta.
+    }
     try {
       final convite = await repo.criarLink(
         listaId: widget.listaId,

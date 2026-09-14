@@ -16,13 +16,16 @@ Fonte única em `lib/core/theme/tokens/` — proibido valor hardcoded na UI.
 | `app_radius.dart` | `sm=8, md=12, lg=16, xl=24, xxl=28, full=999` |
 | `app_elevation.dart` | níveis M3 `0..3` |
 | `app_motion.dart` | `rapida=150ms, media=250ms, longa=400ms`; curva padrão `easeInOutCubicEmphasized` |
-| `app_typography.dart` | `TextTheme` com `PlusJakartaSans` |
+| `app_typography.dart` | `TextTheme` com `PlusJakartaSans`; título de tela (`tituloTelaTamanho=24`, `tituloTelaPeso=bold`) |
+
+Título de tela (AppBar): **24sp bold** aplicado via `appBarTheme.titleTextStyle` (F13-T03). Precisa ser explícito — o `appBarTheme` não passa pela localização de tipografia do `Theme`, então um estilo só de cor deixaria o título sem tamanho (cairia no default).
 
 ## 2. Tema
 
 - `AppTheme.claro` / `AppTheme.escuro` (`lib/core/theme/app_theme.dart`).
 - `ColorScheme.fromSeed` + component themes (appBar, card, input, botões, chip, sheet, dialog, snackbar, navigationBar, etc.).
 - Cores semânticas via `ThemeExtension<AppSemanticColors>` (`lib/core/theme/app_semantic_colors.dart`), lidas com `Theme.of(context).extension<AppSemanticColors>()!`.
+- `TextTheme` derivado do `ColorScheme`/brilho (`app_typography.dart`, F12-T01): o claro usa cores escuras (`onSurface`) e o escuro, claras — um `TextTheme` fixo em `.black` sobrepõe o default do `ThemeData` e deixa texto preto no fundo escuro (viola §4).
 - Modo: Claro / Escuro / Sistema (padrão Sistema), persistido em SharedPreferences (`theme_mode_provider.dart`), seletor em Configurações (`seletor_tema.dart`).
 
 ## 3. Componentes (`lib/core/widgets/`)
@@ -32,14 +35,15 @@ Fonte única em `lib/core/theme/tokens/` — proibido valor hardcoded na UI.
 | `AppBotao` | Ações (filled/tonal/outlined/texto/destrutivo), com `carregando` |
 | `AppDialog.confirmarDestrutivo` | Confirmação de ação destrutiva |
 | `AppBanner` | info/aviso/erro/offline/leitura com contraste correto |
-| `AppCard` | Superfície padrão com padding/radius |
+| `AppCard` | Superfície padrão com padding/radius (sem margem; o espaçamento entre cards empilhados é do layout — ex.: `AppSpacing.sm`) |
+| `AppLogo` | Marca do app (carrinho de compras) no cabeçalho das telas de topo; 28dp, recortada com `AppRadius.sm` |
 | `AppChip` | Chip com alvo ≥48dp |
 | `AppCabecalhoSecao` | Cabeçalho de seção (`título (n)`) |
 | `AppEstadoVazio` | Vazio com ícone + texto + CTA |
 | `AppEstadoErro` | Erro de carga com retry |
 | `AppCampoTexto` | Campo de formulário com erro inline |
 | `AppSheet.mostrar` | Bottom sheet padrão |
-| `mostrarSnackBar` | Snackbar (inclusive undo) |
+| `mostrarSnackBar` | Snackbar (inclusive undo) com **duração curta**: 2s sem ação e 3s com ação (`duracao` sobrescreve — F12-T07) |
 
 ## 4. Acessibilidade (RNF-06)
 
@@ -51,6 +55,21 @@ Fonte única em `lib/core/theme/tokens/` — proibido valor hardcoded na UI.
 ## 5. Catálogo
 
 Rota de debug `/design` (`kDebugMode`) renderiza tokens e componentes em claro/escuro — base para revisão visual. Golden tests podem ser gerados localmente com `flutter test --update-goldens`, mas não rodam no CI (variação de antialias/fonte por runner).
+
+## 6. Identidade visual
+
+- **Marca:** carrinho de compras, branco sobre o verde da marca `#2E7D32`. O glifo vem do Material Symbols `shopping_cart` (Apache-2.0), na mesma linguagem dos ícones do app.
+- **Masters vetoriais** (fonte de verdade, editáveis): `assets/branding/logo.svg` (ícone cheio, fundo verde) e `assets/branding/logo_glyph.svg` (glifo com fundo transparente, já dentro da área segura do ícone adaptativo).
+- **Bitmaps gerados** (commitados, 1024px): `assets/branding/logo.png` (ícones/splash/cabeçalho) e `logo_glyph.png` (ícone adaptativo e splash).
+- **Usos:** ícone do app (Android/iOS/web), splash e cabeçalho das telas de topo (`AppLogo`, 28dp). O ícone cheio vai full-bleed — as plataformas aplicam a máscara (squircle/círculo).
+- **Área de respiro / tamanho mínimo:** não encostar o glifo nas bordas (o `logo_glyph` já traz ~19% de margem); não exibir o glifo abaixo de **24dp**.
+- **Splash:** fundo verde `#2E7D32` (escuro `#1B5E20`) com o glifo centrado.
+- **Regenerar** (após editar o SVG, re-renderizar o PNG de 1024 a partir dele — qualquer rasterizador serve; no dev usamos Chromium headless — e então):
+  ```bash
+  dart run flutter_launcher_icons
+  dart run flutter_native_splash:create
+  ```
+  Configuração de ambos em `pubspec.yaml` (`flutter_launcher_icons`, `flutter_native_splash`).
 
 ## Documentos relacionados
 

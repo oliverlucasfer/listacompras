@@ -56,3 +56,11 @@ final syncBootstrapProvider = Provider<SupabaseBootstrap>((ref) {
 final syncStatusProvider = StreamProvider<SyncStatus>(
   (ref) => ref.watch(syncEngineProvider).status,
 );
+
+/// Flush best-effort da fila antes de operações online-only que dependem de
+/// dados já no servidor (ex.: gerar link de convite — F12-T02). Injetável
+/// para os testes de widget não tocarem o engine/Drift.
+final sincronizarAntesDeOperacaoProvider = Provider<Future<void> Function()>(
+  (ref) =>
+      () => ref.read(syncEngineProvider).flush(),
+);

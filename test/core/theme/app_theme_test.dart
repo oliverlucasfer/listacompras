@@ -27,4 +27,23 @@ void main() {
     expect(AppTheme.claro.useMaterial3, isTrue);
     expect(AppTheme.claro.textTheme.bodyLarge?.fontFamily, 'PlusJakartaSans');
   });
+
+  test('deve_usar_texto_claro_quando_tema_escuro', () {
+    final cor = AppTheme.escuro.textTheme.bodyMedium!.color!;
+    expect(cor.computeLuminance(), greaterThan(0.5));
+  });
+
+  test('deve_usar_texto_escuro_quando_tema_claro', () {
+    final cor = AppTheme.claro.textTheme.bodyMedium!.color!;
+    expect(cor.computeLuminance(), lessThan(0.5));
+  });
+
+  test('deve_usar_titulo_de_appbar_24_bold_em_ambos_os_temas', () {
+    // F13-T03: títulos das telas maiores (24sp) e em negrito.
+    for (final tema in [AppTheme.claro, AppTheme.escuro]) {
+      final estilo = tema.appBarTheme.titleTextStyle!;
+      expect(estilo.fontSize, 24);
+      expect(estilo.fontWeight, FontWeight.bold);
+    }
+  });
 }

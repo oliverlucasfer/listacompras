@@ -79,6 +79,8 @@ abstract final class AppStrings {
   static const desfazer = 'Desfazer';
   static const itemRemovido = 'Item removido';
   static const itemDuplicadoSomado = 'já está na lista. Quantidade aumentada.';
+  static const itemAtualizado = 'Item atualizado.';
+  static const removerItem = 'Remover';
   static const editarItem = 'Editar item';
   static const quantidade = 'Quantidade';
   static const unidade = 'Unidade';
@@ -147,6 +149,8 @@ abstract final class AppStrings {
       'Sem conexão para entrar na lista. Verifique sua internet e tente novamente.';
   static const conviteInesperado =
       'Não foi possível entrar na lista. Tente novamente.';
+  static const conviteListaNaoSincronizada =
+      'Esta lista ainda não foi sincronizada. Verifique sua internet e tente novamente em instantes.';
   static const conviteConvidadoTitulo = 'Você foi convidado para uma lista';
   static const conviteConvidadoMensagem =
       'Entre na sua conta (ou crie uma) para aceitar o convite e acessar a lista.';

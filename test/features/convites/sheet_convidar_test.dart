@@ -8,6 +8,7 @@ import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/features/convites/data/convites_repository.dart';
 import 'package:lista_compras/features/convites/providers/convites_providers.dart';
 import 'package:lista_compras/features/convites/ui/sheet_convidar.dart';
+import 'package:lista_compras/features/sync/providers/sync_providers.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'servidor_fake.dart';
@@ -48,7 +49,11 @@ class _TelaAbrirSheet extends ConsumerWidget {
   }
 }
 
-Future<void> abrir(WidgetTester tester, ServidorFake servidor) async {
+Future<void> abrir(
+  WidgetTester tester,
+  ServidorFake servidor, {
+  Future<void> Function()? sincronizar,
+}) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -61,6 +66,9 @@ Future<void> abrir(WidgetTester tester, ServidorFake servidor) async {
               authOptions: const AuthClientOptions(autoRefreshToken: false),
             ),
           ),
+        ),
+        sincronizarAntesDeOperacaoProvider.overrideWithValue(
+          sincronizar ?? () async {},
         ),
       ],
       child: const MaterialApp(home: _TelaAbrirSheet()),
@@ -133,12 +141,33 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, AppStrings.gerarLink));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.erroGenerico), findsOneWidget);
+    expect(find.text(AppStrings.conviteListaNaoSincronizada), findsOneWidget);
     expect(
       find.widgetWithText(FilledButton, AppStrings.gerarLink),
       findsOneWidget,
     );
     expect(find.byType(TextField), findsNothing);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_sincronizar_antes_de_gerar_link', (tester) async {
+    // F12-T02: pré-condição — a fila é drenada antes de criar o convite.
+    var sincronizou = false;
+    final servidor = ServidorFake((req) {
+      if (req.method == 'POST' && req.url.path.contains('/convites')) {
+        return (200, _linhaConvite(papel: 'editor'));
+      }
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    await abrir(tester, servidor, sincronizar: () async => sincronizou = true);
+
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.gerarLink));
+    await tester.pumpAndSettle();
+
+    expect(sincronizou, isTrue);
+    expect(find.text(_link), findsOneWidget);
 
     await fechar(tester);
   });

@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
+import 'package:lista_compras/core/theme/tokens/app_spacing.dart';
+import 'package:lista_compras/core/widgets/app_card.dart';
+import 'package:lista_compras/core/widgets/app_logo.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/auth/providers/auth_providers.dart';
 import 'package:lista_compras/features/convites/domain/papel.dart';
@@ -88,6 +91,24 @@ void main() {
     expect(find.text('Compras da Semana'), findsOneWidget);
     expect(find.text('1/2 itens concluídos'), findsOneWidget);
     expect(find.textContaining(AppStrings.atualizada), findsOneWidget);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_separar_cards_com_espaco_vertical_quando_tem_listas', (
+    tester,
+  ) async {
+    // F12-T05: cards empilhados não podem ficar "grudados" (doc 10 §2.1).
+    final repo = ListasRepository(db);
+    await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.criarLista(titulo: 'Churrasco', donoId: 'user-a');
+
+    await abrirTela(tester);
+
+    final cards = find.byType(AppCard);
+    expect(cards, findsNWidgets(2));
+    final primeiro = tester.getRect(cards.at(0));
+    final segundo = tester.getRect(cards.at(1));
+    expect(segundo.top - primeiro.bottom, greaterThanOrEqualTo(AppSpacing.sm));
     await fechar(tester);
   });
 
@@ -215,6 +236,18 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
     expect(find.text('Compras'), findsOneWidget);
+    expect(find.byType(BackButton), findsNothing);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_exibir_logo_no_cabecalho_quando_tela_de_topo', (
+    tester,
+  ) async {
+    // F13-T02: a marca aparece nas telas de topo (sem botão voltar).
+    await abrirTela(tester);
+
+    expect(find.byType(AppLogo), findsOneWidget);
     expect(find.byType(BackButton), findsNothing);
 
     await fechar(tester);

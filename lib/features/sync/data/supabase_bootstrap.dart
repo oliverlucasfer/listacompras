@@ -152,9 +152,13 @@ class SupabaseBootstrap {
   }
 
   /// Serializa trabalhos (troca de usuário, re-sync, realtime) para evitar
-  /// corridas entre download e aplicação de eventos.
+  /// corridas entre download e aplicação de eventos. Um trabalho que falha
+  /// (rede) não pode envenenar a cadeia (F12-T03): o erro é descartado e o
+  /// próximo trabalho ainda roda.
   void _encadear(Future<void> Function() trabalho) {
-    _ultimoTrabalho = _ultimoTrabalho.then((_) => trabalho());
+    _ultimoTrabalho = _ultimoTrabalho
+        .then((_) => trabalho())
+        .catchError((Object _) {});
   }
 
   Future<void> _reSincronizar() async {

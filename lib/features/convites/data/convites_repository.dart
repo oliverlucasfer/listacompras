@@ -30,12 +30,31 @@ class ConvitesRepository {
       'papel_oferecido': papel.valor,
     };
     if (criadoPor != null) conteudo['criado_por'] = criadoPor;
-    final linha = await _client
-        .from('convites')
-        .insert(conteudo)
-        .select()
-        .single();
-    return Convite.fromMap(Map<String, Object?>.from(linha as Map));
+    try {
+      final linha = await _client
+          .from('convites')
+          .insert(conteudo)
+          .select()
+          .single();
+      return Convite.fromMap(Map<String, Object?>.from(linha as Map));
+    } on PostgrestException catch (e) {
+      // FK (23503) ou RLS (42501): a lista não existe no servidor para o
+      // usuário — só no Drift local (doc 08 §3/§8, F12-T02). Sem isto, o
+      // erro bruto viraria "algo deu errado" sem ação possível.
+      if (e.code == '23503' || e.code == '42501') {
+        throw const ErroConvite(
+          'lista_nao_sincronizada',
+          AppStrings.conviteListaNaoSincronizada,
+        );
+      }
+      throw const ErroConvite('inesperado', AppStrings.conviteInesperado);
+    } on SocketException {
+      throw const ErroConvite('sem_conexao', AppStrings.conviteSemConexao);
+    } on ClientException {
+      throw const ErroConvite('sem_conexao', AppStrings.conviteSemConexao);
+    } on TimeoutException {
+      throw const ErroConvite('sem_conexao', AppStrings.conviteSemConexao);
+    }
   }
 
   /// Marca o convite como revogado (doc 08 §3.1 — UPDATE direto, RLS de dono).

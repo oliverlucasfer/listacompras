@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/importacao/parser_lista_local.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/navigation/voltar_para_inicio.dart';
+import '../../../core/texto/normalizar.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_cabecalho_secao.dart';
@@ -313,6 +315,9 @@ class _CampoAdicionar extends ConsumerStatefulWidget {
 class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
   final _controller = TextEditingController();
 
+  /// Unidade usada quando o texto digitado não traz uma (F12-T06).
+  Unidade _unidade = Unidade.un;
+
   @override
   void dispose() {
     _controller.dispose();
@@ -320,33 +325,61 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
   }
 
   Future<void> _adicionar() async {
-    final nome = _controller.text.trim();
-    if (nome.isEmpty) return;
+    final texto = _controller.text.trim();
+    if (texto.isEmpty) return;
+    // Reconhece "1kg de banana" → Banana, 1 kg (F12-T06); sem unidade no
+    // texto, aplica a unidade escolhida no seletor.
+    final extra = interpretarItemAvulso(texto, unidadePadrao: _unidade);
+    if (extra == null) return;
     final repo = ref.read(listasRepositoryProvider);
     final itens =
         ref.read(itensDaListaProvider(widget.listaId)).value ?? const <Item>[];
+    final alvo = normalizarTexto(extra.nome);
     Item? existente;
     for (final i in itens) {
-      if (i.nome.toLowerCase() == nome.toLowerCase()) {
+      if (normalizarTexto(i.nome) == alvo) {
         existente = i;
         break;
       }
     }
     if (existente != null) {
-      // Duplicado: aumenta a quantidade em vez de bloquear (doc 05 §6.3).
-      await repo.editarItem(existente.id, quantidade: existente.quantidade + 1);
-      if (mounted) {
-        mostrarSnackBar(context, '$nome ${AppStrings.itemDuplicadoSomado}');
+      if (existente.unidade == extra.unidade) {
+        await repo.editarItem(
+          existente.id,
+          quantidade: existente.quantidade + extra.quantidade,
+        );
+        if (mounted) {
+          mostrarSnackBar(
+            context,
+            '${extra.nome} ${AppStrings.itemDuplicadoSomado}',
+          );
+        }
+      } else {
+        // Unidade diferente: o item é único por nome no servidor, então
+        // atualiza para a nova quantidade/unidade (F12-T06).
+        await repo.editarItem(
+          existente.id,
+          quantidade: extra.quantidade,
+          unidade: extra.unidade,
+        );
+        if (mounted) {
+          mostrarSnackBar(
+            context,
+            '${extra.nome}: ${AppStrings.itemAtualizado}',
+          );
+        }
       }
     } else {
       // Sugestão local em camadas (F6-T03, spec §4): memória → dicionário
       // → outros; zero rede.
       final categoria = await ref
           .read(sugestaoCategoriasProvider)
-          .sugerirCategoria(nome);
+          .sugerirCategoria(extra.nome);
       await repo.adicionarItem(
         listaId: widget.listaId,
-        nome: nome,
+        nome: extra.nome,
+        quantidade: extra.quantidade,
+        unidade: extra.unidade,
         categoria: categoria,
       );
     }
@@ -366,10 +399,34 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
         controller: _controller,
         label: AppStrings.adicionarItem,
         onSubmitted: _adicionar,
-        sufixo: IconButton(
-          tooltip: AppStrings.adicionarItem,
-          icon: const Icon(Icons.add),
-          onPressed: _adicionar,
+        sufixo: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            PopupMenuButton<Unidade>(
+              tooltip: AppStrings.unidade,
+              initialValue: _unidade,
+              onSelected: (u) => setState(() => _unidade = u),
+              itemBuilder: (context) => [
+                for (final u in Unidade.values)
+                  PopupMenuItem(value: u, child: Text(u.valor)),
+              ],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(_unidade.valor),
+                    const Icon(Icons.arrow_drop_down),
+                  ],
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: AppStrings.adicionarItem,
+              icon: const Icon(Icons.add),
+              onPressed: _adicionar,
+            ),
+          ],
         ),
       ),
     );
@@ -522,6 +579,8 @@ class _LinhaItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final linha = ListTile(
+      // Tocar no item abre o editor (F12-T06) — o swipe continua disponível.
+      onTap: podeEscrever ? () => _abrirDialogoEditar(context, ref) : null,
       leading: podeEscrever
           ? Checkbox(
               value: item.concluido,
@@ -556,9 +615,6 @@ class _LinhaItem extends ConsumerWidget {
       ),
     );
     if (!podeEscrever) return linha;
-    // Capturado antes de qualquer remoção: o undo do SnackBar pode rodar
-    // após este widget desmontar (Riverpod proíbe ref pós-unmount).
-    final repo = ref.read(listasRepositoryProvider);
     return Dismissible(
       key: key!,
       background: _FundoSwipe(
@@ -576,17 +632,23 @@ class _LinhaItem extends ConsumerWidget {
           _abrirDialogoEditar(context, ref);
           return false;
         }
-        await repo.removerItem(item.id);
-        if (!context.mounted) return true;
-        mostrarSnackBar(
-          context,
-          AppStrings.itemRemovido,
-          rotuloAcao: AppStrings.desfazer,
-          onAcao: () => repo.restaurarItem(item.id),
-        );
+        await _removerComUndo(context, ref);
         return true;
       },
       child: linha,
+    );
+  }
+
+  /// Remove o item e oferece Desfazer (usado pelo swipe e pelo diálogo).
+  Future<void> _removerComUndo(BuildContext context, WidgetRef ref) async {
+    final repo = ref.read(listasRepositoryProvider);
+    await repo.removerItem(item.id);
+    if (!context.mounted) return;
+    mostrarSnackBar(
+      context,
+      AppStrings.itemRemovido,
+      rotuloAcao: AppStrings.desfazer,
+      onAcao: () => repo.restaurarItem(item.id),
     );
   }
 
@@ -596,8 +658,11 @@ class _LinhaItem extends ConsumerWidget {
   void _abrirDialogoEditar(BuildContext context, WidgetRef ref) {
     showDialog<void>(
       context: context,
-      builder: (dialogContext) =>
-          _DialogoEditarItem(item: item, listaId: listaId),
+      builder: (dialogContext) => _DialogoEditarItem(
+        item: item,
+        listaId: listaId,
+        onRemover: () => _removerComUndo(context, ref),
+      ),
     );
   }
 }
@@ -625,10 +690,18 @@ class _FundoSwipe extends StatelessWidget {
 }
 
 class _DialogoEditarItem extends ConsumerStatefulWidget {
-  const _DialogoEditarItem({required this.item, required this.listaId});
+  const _DialogoEditarItem({
+    required this.item,
+    required this.listaId,
+    this.onRemover,
+  });
 
   final Item item;
   final String listaId;
+
+  /// Ação de remover (com Desfazer) oferecida dentro do editor (F12-T06);
+  /// nula em contextos sem remoção.
+  final Future<void> Function()? onRemover;
 
   @override
   ConsumerState<_DialogoEditarItem> createState() => _DialogoEditarItemState();
@@ -749,6 +822,17 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
         ),
       ),
       actions: [
+        if (widget.onRemover != null)
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              unawaited(widget.onRemover!());
+            },
+            child: Text(
+              AppStrings.removerItem,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text(AppStrings.cancelar),

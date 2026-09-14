@@ -75,4 +75,38 @@ void main() {
   test('deve_ignorar_texto_vazio', () {
     expect(analisarListaLocal('   ').itens, isEmpty);
   });
+
+  test('deve_interpretar_item_avulso_com_unidade_explicita', () {
+    final item = interpretarItemAvulso('1kg de banana');
+    expect(item, isNotNull);
+    expect(item!.nome, 'Banana');
+    expect(item.quantidade, 1);
+    expect(item.unidade, Unidade.kg);
+  });
+
+  test('deve_usar_unidade_padrao_quando_texto_sem_unidade', () {
+    final item = interpretarItemAvulso('banana', unidadePadrao: Unidade.dz);
+    expect(item!.nome, 'Banana');
+    expect(item.quantidade, 1);
+    expect(item.unidade, Unidade.dz);
+  });
+
+  test('deve_priorizar_unidade_explicita_sobre_padrao', () {
+    final item = interpretarItemAvulso(
+      '1kg de banana',
+      unidadePadrao: Unidade.dz,
+    );
+    expect(item!.unidade, Unidade.kg);
+  });
+
+  test('deve_aplicar_unidade_padrao_quando_ha_quantidade_sem_unidade', () {
+    final item = interpretarItemAvulso('2 banana', unidadePadrao: Unidade.dz);
+    expect(item!.quantidade, 2);
+    expect(item.nome, 'Banana');
+    expect(item.unidade, Unidade.dz);
+  });
+
+  test('deve_retornar_null_quando_item_avulso_vazio', () {
+    expect(interpretarItemAvulso('   '), isNull);
+  });
 }

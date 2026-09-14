@@ -65,10 +65,17 @@ Tabela local Drift (`mutacoes_pendentes`):
 
 1. **Escrita:** UI chama o repositório → Drift aplica local + enfileira mutação → dispara o Sync Engine (se online).
 2. **Flush (online):** o Sync Engine drena a fila enviando ao Supabase:
-   * `INSERT` → insert com `on conflict do nothing` (ID client-side pode já existir se outro dispositivo criou — improvável, UUID v4).
-   * `UPDATE` / `DELETE_SOFT` → **upsert com comparação LWW** (Seção 5).
+   * **Sem linha remota → `INSERT`** (F12-T04): o `upsert` do PostgREST avalia a policy de UPDATE e era negado para listas novas; ID client-side é UUID v4, colisão é improvável.
+   * **Com linha remota → `UPDATE`** (LWW já decidiu — Seção 5).
 3. **Realtime (WebSocket):** mudanças remotas chegam → aplicadas ao Drift **se vencerem no LWW** → UI reage reativamente (Streams do Drift).
 4. **Reconexão:** listener de conectividade dispara flush automático da fila.
+
+> **Robustez (F12-T03):** o engine assina a fila **antes** de checar a conexão —
+> falha na checagem (plugin/rede) não pode impedir o flush disparado por cada
+> escrita, sob risco de a fila ficar presa e o status mascarar como
+> "Sincronizado". No bootstrap, a cadeia serializada de trabalhos (`_encadear`)
+> descarta o erro de um trabalho para que uma falha de rede não bloqueie os
+> re-syncs seguintes.
 
 ### Pseudo-código do loop de flush
 

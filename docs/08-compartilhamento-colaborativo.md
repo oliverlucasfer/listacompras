@@ -98,6 +98,14 @@ App chama RPC `aceitar_convite(token)` (Seção 3.1)
         └─ já é membro → apenas navega para a lista
 ```
 
+**Erros e pré-condição do app (F12-T02):** o INSERT do link é online-only e
+exige a lista já no servidor. O app mapeia o retorno do PostgREST para
+mensagens amigáveis — violação de FK (`23503`) ou de RLS (`42501`) viram
+`lista_nao_sincronizada` ("Esta lista ainda não foi sincronizada…") e falha de
+rede vira `sem_conexao`. Antes de gerar, o app faz um flush **best-effort** da
+fila de mutações, para subir alterações pendentes da lista que possam existir
+só no cache local (Seção 3, fluxo do Drift em [03](03-sincronizacao-offline.md)).
+
 ### 3.1. RPC `aceitar_convite`
 
 ```sql

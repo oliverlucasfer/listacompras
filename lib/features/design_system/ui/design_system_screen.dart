@@ -8,6 +8,7 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
+import '../../../core/widgets/app_logo.dart';
 
 /// Catálogo de revisão do design system (doc 15 §5, rota /design em debug).
 class DesignSystemScreen extends StatelessWidget {
@@ -70,6 +71,18 @@ class DesignSystemScreen extends StatelessWidget {
                         ),
                     ],
                   ),
+                ],
+              ),
+            ),
+            const _Titulo('Marca'),
+            AppCard(
+              child: Row(
+                children: [
+                  for (final t in const <double>[28, 48, 72])
+                    Padding(
+                      padding: const EdgeInsets.only(right: AppSpacing.lg),
+                      child: AppLogo(tamanho: t),
+                    ),
                 ],
               ),
             ),

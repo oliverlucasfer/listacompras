@@ -95,7 +95,7 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 
 * **Navegação por abas (F10):** `NavigationBar` inferior com 3 destinos (**Minhas**, **Compartilhadas**, **Configurações**) que vira `NavigationRail` a partir de ~600dp; o `StatefulShellRoute.indexedStack` preserva o estado de cada aba e o AppBar de cada aba usa o mesmo texto do destino.
 * **Abrir lista/membros (`push` sobre o shell):** a tela cobre a barra (tela cheia) e o voltar retorna à **aba de origem**. Sem pilha (deep link/aceite de convite), a seta e o voltar do sistema vão para `/listas` (dono) ou `/compartilhadas` (membro) — helper `core/navigation/voltar_para_inicio.dart`.
-* **Títulos:** painel segue o destino ("Minhas Listas"/"Compartilhadas"/"Configurações"); a tela da lista usa o título da lista (fallback "Lista" em carregando/erro/não encontrada); membros usa `Membros · {título}`.
+* **Títulos:** painel segue o destino ("Minhas Listas"/"Compartilhadas"/"Configurações"); a tela da lista usa o título da lista (fallback "Lista" em carregando/erro/não encontrada); membros usa `Membros · {título}`. Título em **24sp bold** e, nas telas de topo, a **marca do app** (`AppLogo`, 28dp) à esquerda do texto (F13-T02/T03, doc [15 §1/§6](15-design-system.md)).
 * **Redirect global:** não autenticado → `/login`; autenticado em rota pública → `/listas`, **exceto `/entrar`** (permanece pública — a tela decide).
 * Deep link de convite (`br.com.oliverlucas.listacompras://entrar?token=...`, intent-filter com host `entrar`): o supabase_flutter escuta os deep links via app_links mas só consome os que têm parâmetros de auth; links de convite são traduzidos para `/entrar?token=...` pela ponte `deeplinkConviteProvider` ([08 §1.1](08-compartilhamento-colaborativo.md)).
 * Wireframes (layout) de todas as telas: **[10 Wireframes](10-wireframes-telas.md)**.
@@ -134,6 +134,7 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 
 ### 6.2. Painel "Minhas Listas"
 * Lista de cards: título, contagem de itens pendentes/total, atualização relativa ("há 5 min").
+* Cabeçalho das telas de topo exibe a marca (`AppLogo`) à esquerda do título (F13-T02).
 * FAB "Nova lista" → bottom sheet com campo de título.
 * Long-press no card: renomear / excluir (com confirmação).
 * Estado vazio: ilustração simples + CTA de criação.
@@ -142,11 +143,12 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 ### 6.3. Tela da Lista de Compras
 | Elemento | Comportamento |
 | :--- | :--- |
-| Campo "Adicionar item" | Fixo no topo; Enter salva imediatamente (escrita local + fila) com a categoria sugerida pelas camadas locais (§3, Fase 6) |
+| Campo "Adicionar item" | Fixo no topo; Enter salva imediatamente (escrita local + fila) com a categoria sugerida pelas camadas locais (§3, Fase 6). **Reconhece quantidade/unidade no texto** (`1kg de banana` → Banana, 1 kg) via parser local (RF-16); sem unidade no texto, usa a **unidade escolhida no seletor** do campo (menu com o enum, padrão `un`) — F12-T06 |
 | Itens pendentes | **Agrupados por categoria** na ordem do enum ([01 §3.2](01-banco-de-dados.md)); header por grupo: `Frios (3)` com contagem de pendentes; grupos vazios não renderizam (Fase 6, RF-15) |
 | Exibição | Ordenação determinística entre dispositivos: `(categoria, ordem, id)` |
 | Item | Nome, quantidade + unidade, checkbox |
 | Checkbox marcada | Item move para seção dobrável "Itens Concluídos (n)" — **sem divisão por categoria** (Fase 6) |
+| Tocar no item | Abre o editor (mesmo diálogo do swipe): nome, quantidade, unidade, categoria e ação **Remover** com undo (F12-T06) |
 | Swipe direita/esquerda | Editar / Remover (com undo via SnackBar); edição inclui **dropdown de categoria** ao lado das unidades (Fase 6) |
 | Botão de importação IA | Abre modal (6.4) |
 | Menu (⋮) | "Desmarcar todos", "Limpar concluídos", "Renomear lista", "Excluir lista" |
@@ -155,7 +157,7 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 
 * **Reordenar (Fase 6):** drag-and-drop restrito **ao grupo da categoria** — reordena só os itens do grupo (grava `ordem` local + fila); mudar de categoria é pelo dropdown do editar. Exibição continua `(categoria, ordem, id)` — sem coluna nova.
 * Quantidades: stepper + input direto; unidades restritas ao enum ([01 §3.1](01-banco-de-dados.md)).
-* Tentativa de item duplicado (mesmo nome ativo): sugerir aumento de quantidade em vez de bloquear.
+* Item duplicado (mesmo nome ativo, comparação normalizada): **mesma unidade → soma** a quantidade; **unidade diferente → atualiza** o item para a nova quantidade/unidade — nunca duplica o nome ativo (unique parcial no servidor) (F12-T06).
 
 ### 6.4. Modal "Importar lista" (RF-06 + RF-16)
 
