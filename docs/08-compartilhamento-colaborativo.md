@@ -170,6 +170,7 @@ $$;
 * Membro removido perde acesso no ato (RLS) e o Realtime derruba seus streams; seu cache local é limpo ao detectar perda de acesso (ou no próximo bootstrap).
 * Membro pode **sair voluntariamente** (DELETE da própria linha, exceto dono).
 * Revogar convite pendente: dono marca `estado = 'revogado'`; token deixa de ser aceito.
+* **Feedback (F14-T05):** remover membro e trocar papel dão SnackBar ("Membro removido" / "Papel atualizado") e compartilhar o convite dá "Link compartilhado" — hoje essas ações são silenciosas (só o erro aparece).
 
 ## 6. Transferência de dono (processo explícito)
 
@@ -245,7 +246,8 @@ $$;
 
 * Wireframes destes componentes: [10 §4](10-wireframes-telas.md).
 * Comportamento de roles na UI (desabilitar ações de leitor): [05 §6.3](05-app-flutter.md).
-* Identificador de membros: enquanto não há perfis/e-mails expostos (rodada futura), membros exibem o UUID prefixado (8 primeiros caracteres).
+* Vazio e feedback (F14-T04/T05): a lista de membros vazia (só acontece sem cache local, ex.: cache apagado) mostra `AppEstadoVazio` **sem ações** — o papel não é confiável nesse estado (o dono é sempre mesclado por `membrosDaListaProvider`); os SnackBars de papel/remoção/compartilhamento entram na T05.
+* Identificador de membros: enquanto não há perfis/e-mails expostos (rodada futura), membros exibem o UUID prefixado (8 primeiros caracteres). A identificação por nome/e-mail exige RPC `security definer` + policy (docs 01/02) e fica para a **Fase 15** ([spec F14 §16](superpowers/specs/2026-09-14-ux-acessibilidade-design.md)).
 
 ## 9. Checklist de validação (Fase 6)
 

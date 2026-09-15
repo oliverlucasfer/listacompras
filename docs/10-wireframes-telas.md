@@ -52,6 +52,23 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 └─────────────────────────────────┘
 ```
 
+### 1.3. Definir nova senha (link de recuperação — F14-T03)
+```
+┌─────────────────────────────────┐
+│  ← Definir nova senha           │
+│                                 │
+│  Nova senha                     │
+│  [____________________ (👁) ]   │
+│                                 │
+│  Confirmar nova senha           │
+│  [____________________ (👁) ]   │
+│                                 │
+│  (     Salvar nova senha    )   │
+└─────────────────────────────────┘
+   (sucesso → SnackBar "Senha alterada" e volta às listas;
+    link expirado → erro amigável + "Pedir novo link")
+```
+
 ---
 
 ## 2. Minhas Listas
@@ -65,12 +82,12 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 │  ● Sincronizado            (1)  │ ← [03 §6] sincronizado/pendente/offline
 ├─────────────────────────────────┤
 │  ┌───────────────────────────┐  │
-│  │ Compras da Semana         │  │
-│  │ 3/10 itens concluídos     │  │ ← long-press: renomear/excluir
-│  │ atualizada há 5 min       │  │
+│  │ Compras da Semana      [⋮] │  │ ← [⋮] (F14-T06): renomear/excluir
+│  │ 3/10 itens concluídos     │  │   (Compartilhadas: membros/sair);
+│  │ atualizada há 5 min       │  │   long-press abre o mesmo menu
 │  └───────────────────────────┘  │
 │  ┌───────────────────────────┐  │
-│  │ Churrasco Sábado          │  │
+│  │ Churrasco Sábado       [⋮] │  │
 │  │ 0/6 itens concluídos      │  │
 │  │ ontem                     │  │
 │  └───────────────────────────┘  │
@@ -183,6 +200,7 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 │                                 │    "Apenas o dono/editores editam"
 └─────────────────────────────────┘
 ```
+O aviso usa `AppBannerTipo.leitura` ([15 §3](15-design-system.md)), não um `Container` manual (F14-T08).
 
 ### 3.4. Diálogo "Excluir lista"
 ```
@@ -237,6 +255,7 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 │  (Cancelar)   (Adicionar 3)     │
 └─────────────────────────────────┘
 ```
+Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstadoVazio` — "Nada foi reconhecido" + dica de separar por vírgula/linha + "Voltar e editar" — e o botão de adicionar some (F14-T04).
 
 ---
 
@@ -268,10 +287,12 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 
 | Tela | Carregando | Vazio | Erro | Offline |
 | :--- | :--- | :--- | :--- | :--- |
-| Minhas Listas | Spinner central | 2.2 | Banner "Tentar novamente" | Banner global + lista local (usável) |
-| Tela da Lista | Spinner central | "Nenhum item. Adicione acima" | Banner | 3.2 — funcional |
-| Importar IA | Botão com spinner | — | Mensagem amigável (4.1) | Botão desabilitado c/ dica |
+| Minhas Listas | `AppEsqueleto` (F14-T09) | 2.2 | `AppEstadoErro` com retry | Banner global + lista local (usável) |
+| Tela da Lista | `AppEsqueleto` (F14-T09) | 3.1 — vazio instrui por papel (F14-T04) | `AppEstadoErro` com retry (F14-T04) | 3.2 — funcional |
+| Membros | `AppEsqueleto` (F14-T09) | `AppEstadoVazio` com orientação (F14-T04) | `AppEstadoErro` com retry | — |
+| Importar lista | Botão com spinner (IA) | "Nada foi reconhecido" (4.2, F14-T04) | Mensagem amigável (4.1) | Botão desabilitado c/ dica |
 | Login | Spinner no botão | — | Inline por campo | Banner |
+| Redefinir senha | Spinner no botão | — | Erro + "Pedir novo link" (1.3) | — |
 
 ---
 

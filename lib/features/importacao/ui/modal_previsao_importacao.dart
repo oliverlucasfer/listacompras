@@ -5,6 +5,7 @@ import '../../../core/importacao/resposta_import.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_banner.dart';
+import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../../listas/domain/categoria.dart';
@@ -84,6 +85,7 @@ class _ModalPrevisaoImportacaoState extends State<ModalPrevisaoImportacao> {
   @override
   Widget build(BuildContext context) {
     final selecionados = _selecionados;
+    final vazio = _linhas.isEmpty;
     return AlertDialog(
       title: Row(
         children: [
@@ -97,70 +99,85 @@ class _ModalPrevisaoImportacaoState extends State<ModalPrevisaoImportacao> {
       ),
       content: SizedBox(
         width: double.maxFinite,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (widget.resposta.aviso != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: AppBanner(
-                  tipo: AppBannerTipo.aviso,
-                  mensagem: widget.resposta.aviso!,
+        child: vazio
+            // Nada reconhecido (F14-T04): instrução + "Voltar e editar".
+            ? AppEstadoVazio(
+                titulo: AppStrings.nadaReconhecido,
+                descricao: AppStrings.separarItensDica,
+                acao: AppBotao(
+                  rotulo: AppStrings.voltarEEditar,
+                  variante: AppBotaoVariante.texto,
+                  expandido: false,
+                  onPressed: () => Navigator.pop(context),
                 ),
-              ),
-            Flexible(
-              child: ListView(
-                shrinkWrap: true,
+              )
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  for (var i = 0; i < _linhas.length; i++) ...[
-                    _LinhaItem(
-                      linha: _linhas[i],
-                      onIncluir: (v) =>
-                          setState(() => _linhas[i].incluir = v ?? false),
-                      onAlternarEdicao: () => setState(
-                        () => _linhas[i].editando = !_linhas[i].editando,
+                  if (widget.resposta.aviso != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: AppBanner(
+                        tipo: AppBannerTipo.aviso,
+                        mensagem: widget.resposta.aviso!,
                       ),
                     ),
-                    if (_linhas[i].editando)
-                      _PainelEdicao(
-                        linha: _linhas[i],
-                        onAlterar: (nome, quantidade, unidade, categoria) =>
-                            setState(() {
-                              _linhas[i]
-                                ..nome = nome
-                                ..quantidade = quantidade
-                                ..unidade = unidade
-                                ..categoria = categoria;
-                            }),
-                      ),
-                  ],
+                  Flexible(
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: [
+                        for (var i = 0; i < _linhas.length; i++) ...[
+                          _LinhaItem(
+                            linha: _linhas[i],
+                            onIncluir: (v) =>
+                                setState(() => _linhas[i].incluir = v ?? false),
+                            onAlternarEdicao: () => setState(
+                              () => _linhas[i].editando = !_linhas[i].editando,
+                            ),
+                          ),
+                          if (_linhas[i].editando)
+                            _PainelEdicao(
+                              linha: _linhas[i],
+                              onAlterar:
+                                  (nome, quantidade, unidade, categoria) =>
+                                      setState(() {
+                                        _linhas[i]
+                                          ..nome = nome
+                                          ..quantidade = quantidade
+                                          ..unidade = unidade
+                                          ..categoria = categoria;
+                                      }),
+                            ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    AppStrings.iaSeraoAdicionados(
+                      selecionados.length,
+                      _linhas.length,
+                    ),
+                  ),
                 ],
               ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              AppStrings.iaSeraoAdicionados(
-                selecionados.length,
-                _linhas.length,
-              ),
-            ),
-          ],
-        ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text(AppStrings.cancelar),
-        ),
-        AppBotao(
-          rotulo: AppStrings.iaAdicionarN(selecionados.length),
-          expandido: false,
-          onPressed: selecionados.isEmpty
-              ? null
-              : () => Navigator.pop(context, selecionados),
-        ),
-      ],
+      actions: vazio
+          ? null
+          : [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(AppStrings.cancelar),
+              ),
+              AppBotao(
+                rotulo: AppStrings.iaAdicionarN(selecionados.length),
+                expandido: false,
+                onPressed: selecionados.isEmpty
+                    ? null
+                    : () => Navigator.pop(context, selecionados),
+              ),
+            ],
     );
   }
 }

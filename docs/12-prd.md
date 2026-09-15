@@ -22,7 +22,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 
 | ID | Requisito | Dono (doc) | Fase | Aceite |
 | :--- | :--- | :--- | :--- | :--- |
-| RF-01 | Autenticação: registro com verificação de e-mail, login, recuperação de senha | 05 §6.1 | F3 | [06 §1](06-mvp-entregas.md) |
+| RF-01 | Autenticação: registro com verificação de e-mail, login, recuperação de senha | 05 §6.1 | F3 · F14 | [06 §1](06-mvp-entregas.md) |
 | RF-02 | Criar, renomear e excluir listas (delete lógico + confirmação) | 05 §6.2 | F3 | [06 §1](06-mvp-entregas.md) |
 | RF-03 | CRUD de itens com quantidade, unidade (enum [01 §3](01-banco-de-dados.md)) e checkbox | 05 §6.3 | F3 | [06 §1](06-mvp-entregas.md) |
 | RF-04 | Item concluído move para seção dobrável; ações em massa (desmarcar todos, limpar concluídos) | 05 §6.3 | F3 | [06 §1](06-mvp-entregas.md) |
@@ -48,7 +48,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RNF-03 | Segurança | Usuário não acessa lista alheia (RLS) | Negações N-01…N-10 de [02 §5](02-seguranca-rls.md) |
 | RNF-04 | Proteção da IA | Sem API key no client; rate limit 10/min; erros amigáveis | Checklist [04 §9](04-ia-edge-function.md) |
 | RNF-05 | Privacidade (LGPD) | Exclusão de conta funcional; logs sem dados de conteúdo | [06 §3](06-mvp-entregas.md) |
-| RNF-06 | Acessibilidade | Alvos ≥ 48dp, contraste AA, escala de fonte respeitada | Revisão de UI ([15 §4](15-design-system.md)) |
+| RNF-06 | Acessibilidade | Alvos ≥ 48dp, contraste AA, escala de fonte respeitada | Testes de a11y ([15 §4](15-design-system.md)) |
 | RNF-07 | Custo | R$ 0 no MVP (free tiers) | Riscos R-01/R-02 com gatilho definido ([00 §4](00-visao-geral.md)) |
 | RNF-08 | Qualidade | CI verde obrigatório; sync e RLS com prioridade máxima de testes | [07 §1](07-qualidade-ci.md) |
 
@@ -117,7 +117,7 @@ Cada requisito liga story → design → tarefas ([14](14-tarefas.md)) → verif
 
 | Requisito | US | Fase | Tarefas (14) | Testes (07) |
 | :--- | :--- | :--- | :--- | :--- |
-| RF-01 | — | F3 | F3-T04…T07 | Widget auth |
+| RF-01 | — | F3 · F14 | F3-T04…T07; F14-T03 | Widget auth + fluxo de nova senha |
 | RF-02/03/04 | US-01 | F3 | F3-T08…T12 | Repositórios + widgets |
 | RF-05 | US-01 | F3–F4 | F4-T05 | Widget reordenar |
 | RF-06 | US-02 | F4 | F2-T01…T05, F4-T01…T02 | Edge Function integração |
@@ -128,6 +128,7 @@ Cada requisito liga story → design → tarefas ([14](14-tarefas.md)) → verif
 | RF-13/14 | US-05, US-06 | F6 | (planejar na F6) | N-11…N-14 |
 | RF-15 | US-07, US-08 | F6 | F6-T01…T06 | Repo + sugestão + widgets + sync |
 | RF-16 | US-02 | F11 | F11-T01…T03 | Unit parser + widgets |
+| RNF-06 | — | F8 · F14 | F14-T01…T02 | Guidelines de a11y + escala de fonte |
 
 ## 7. Fora de escopo (MVP)
 

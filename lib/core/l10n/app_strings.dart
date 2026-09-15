@@ -27,6 +27,14 @@ abstract final class AppStrings {
       'Se o e-mail estiver cadastrado, o link de recuperação foi enviado.';
   static const definirNovaSenha = 'Definir nova senha';
   static const novaSenha = 'Nova senha';
+  static const senhaAlterada = 'Senha alterada.';
+  static const pedirNovoLink = 'Pedir novo link';
+  static const nadaReconhecido = 'Nada foi reconhecido';
+  static const separarItensDica =
+      'Separe os itens por vírgula ou linha e tente de novo.';
+  static const voltarEEditar = 'Voltar e editar';
+  static const erroRedefinirSenha =
+      'Não foi possível salvar a senha. O link pode ter expirado.';
   static const liPoliticaPrivacidade = 'Li a Política de Privacidade';
   static const sair = 'Sair';
 
@@ -90,6 +98,7 @@ abstract final class AppStrings {
   static const menu = 'Menu';
   static const lista = 'Lista';
   static const listaNaoEncontrada = 'Lista não encontrada.';
+  static const voltarParaListas = 'Voltar para as listas';
   static const nenhumItem = 'Nenhum item ainda';
   static const nenhumItemDica = 'Adicione o primeiro item no campo acima.';
   static const listaVazia = 'Lista vazia';
@@ -161,6 +170,9 @@ abstract final class AppStrings {
 
   // Sheet "Convidar" e tela de membros (doc 08 §5/§8, F7-T03)
   static const convidar = 'Convidar';
+  static const nenhumParticipante = 'Nenhum participante ainda';
+  static const nenhumParticipanteDica =
+      'Confira se você ainda tem acesso a esta lista.';
   static const convidarPapelEditor = 'Editor';
   static const convidarPapelLeitor = 'Leitor';
   static const gerarLink = 'Gerar link';

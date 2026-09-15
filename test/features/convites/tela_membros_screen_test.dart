@@ -152,6 +152,24 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_rotular_menu_de_acao_do_membro_com_tooltip', (
+    tester,
+  ) async {
+    final servidor = ServidorFake((req) {
+      if (req.method == 'GET' && req.url.path.contains('/lista_membros')) {
+        return (200, _linhasMembros());
+      }
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    await abrir(tester, servidor, usuarioId: 'U1');
+
+    // O default do Material é em inglês ("Show menu"); usamos o rótulo do app.
+    expect(find.byTooltip(AppStrings.menu), findsNWidgets(2));
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_mostrar_dono_local_quando_servidor_nao_devolve_linha', (
     tester,
   ) async {
@@ -488,6 +506,28 @@ void main() {
     await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pumpAndSettle();
     expect(find.text('painel-compartilhadas'), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_estado_vazio_quando_sem_membros_e_sem_cache', (
+    tester,
+  ) async {
+    // Sem lista local (db padrão vazio) e servidor sem linhas: o único caso
+    // em que a lista de membros pode ficar vazia (ex.: cache apagado).
+    final servidor = ServidorFake((req) {
+      if (req.method == 'GET' && req.url.path.contains('/lista_membros')) {
+        return (200, const <Object>[]);
+      }
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    await abrir(tester, servidor, usuarioId: 'U1');
+
+    expect(find.text(AppStrings.nenhumParticipante), findsOneWidget);
+    expect(find.text(AppStrings.nenhumParticipanteDica), findsOneWidget);
+    // Papel não confiável no cache vazio: sem ações de dono (doc 08 §8).
+    expect(find.byType(PopupMenuButton<String>), findsNothing);
 
     await fechar(tester);
   });

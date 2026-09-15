@@ -115,4 +115,13 @@ void main() {
     await tester.pump();
     expect(widgetCampo().obscureText, isFalse);
   });
+
+  testWidgets('deve_suportar_escala_de_texto_2x_quando_login', (tester) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await abrirTela(tester, FakeAuthRepository());
+
+    expect(tester.takeException(), isNull);
+  });
 }

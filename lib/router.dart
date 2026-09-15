@@ -6,6 +6,7 @@ import 'core/navigation/app_shell.dart';
 import 'core/utils/router_refresh_stream.dart';
 import 'features/auth/providers/auth_providers.dart';
 import 'features/auth/ui/login_screen.dart';
+import 'features/auth/ui/redefinir_senha_screen.dart';
 import 'features/auth/ui/recuperar_senha_screen.dart';
 import 'features/auth/ui/registro_screen.dart';
 import 'features/configuracoes/ui/configuracoes_screen.dart';
@@ -22,6 +23,11 @@ import 'features/listas/ui/tela_lista_screen.dart';
 final routerProvider = Provider<GoRouter>((ref) {
   final repo = ref.watch(authRepositoryProvider);
 
+  // Constrói/assina a flag do fluxo de recuperação ANTES do refresh do
+  // router: no evento passwordRecovery o estado precisa estar true quando o
+  // redirect roda (F14-T03, RF-01).
+  ref.listen(redefinindoSenhaProvider, (_, _) {});
+
   return GoRouter(
     initialLocation: '/',
     refreshListenable: RouterRefreshStream(repo.onAuthStateChange),
@@ -32,13 +38,25 @@ final routerProvider = Provider<GoRouter>((ref) {
           rota == '/login' ||
           rota == '/registro' ||
           rota == '/recuperar-senha' ||
+          rota == '/redefinir-senha' ||
           rota == '/entrar' ||
           (kDebugMode && rota == '/design');
+
+      // Fluxo do link de recuperação (F14-T03, RF-01): enquanto a nova senha
+      // não é definida, toda navegação passa pela tela de redefinição.
+      if (ref.read(redefinindoSenhaProvider)) {
+        return rota == '/redefinir-senha' ? null : '/redefinir-senha';
+      }
 
       if (!autenticado && !publica) return '/login';
       // /entrar permanece pública também autenticado — a tela aceita o
       // convite por si (doc 08 §3.1).
-      if (autenticado && publica && rota != '/entrar') return '/listas';
+      if (autenticado &&
+          publica &&
+          rota != '/entrar' &&
+          rota != '/redefinir-senha') {
+        return '/listas';
+      }
       return null;
     },
     routes: [
@@ -60,6 +78,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/recuperar-senha',
         builder: (context, state) => const RecuperarSenhaScreen(),
+      ),
+      GoRoute(
+        path: '/redefinir-senha',
+        builder: (context, state) => const RedefinirSenhaScreen(),
       ),
       GoRoute(
         path: '/entrar',

@@ -252,4 +252,15 @@ void main() {
 
     await fechar(tester);
   });
+
+  testWidgets('deve_suportar_escala_de_texto_2x_quando_painel', (tester) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await abrirTela(tester);
+
+    expect(tester.takeException(), isNull);
+
+    await fechar(tester);
+  });
 }

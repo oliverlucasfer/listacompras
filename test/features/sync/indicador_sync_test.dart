@@ -122,4 +122,52 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets('deve_anunciar_estado_como_live_region_quando_sincronizado', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    controller.add(const Sincronizado());
+    await pump(tester);
+
+    expect(
+      tester.getSemantics(find.bySemanticsLabel(AppStrings.syncSincronizado)),
+      matchesSemantics(label: AppStrings.syncSincronizado, isLiveRegion: true),
+    );
+
+    handle.dispose();
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('deve_anunciar_estado_como_live_region_quando_sincronizando', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    controller.add(const Sincronizando());
+    await pump(tester);
+
+    expect(
+      tester.getSemantics(find.bySemanticsLabel(AppStrings.syncSincronizando)),
+      matchesSemantics(label: AppStrings.syncSincronizando, isLiveRegion: true),
+    );
+
+    handle.dispose();
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('deve_anunciar_estado_como_live_region_quando_pendente', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    controller.add(const Pendente(3));
+    await pump(tester);
+
+    expect(
+      tester.getSemantics(find.bySemanticsLabel(AppStrings.syncPendentes(3))),
+      matchesSemantics(label: AppStrings.syncPendentes(3), isLiveRegion: true),
+    );
+
+    handle.dispose();
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }

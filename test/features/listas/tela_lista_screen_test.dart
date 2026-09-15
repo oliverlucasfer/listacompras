@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
+import 'package:lista_compras/core/widgets/app_estado_erro.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/auth/providers/auth_providers.dart';
 import 'package:lista_compras/features/convites/data/convites_repository.dart';
@@ -19,6 +20,7 @@ import 'package:lista_compras/features/ia/data/parse_lista_client.dart';
 import 'package:lista_compras/features/ia/providers/ia_providers.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/domain/categoria.dart';
+import 'package:lista_compras/features/listas/domain/lista.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
 import 'package:lista_compras/features/convites/ui/tela_membros_screen.dart';
@@ -1064,11 +1066,69 @@ void main() {
       expect(find.text(AppStrings.lista), findsOneWidget);
       expect(find.text(AppStrings.listaNaoEncontrada), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.arrow_back));
+      // CTA do estado vazio (F14-T04): volta ao painel sem precisar da seta.
+      await tester.tap(find.text(AppStrings.voltarParaListas));
       await tester.pumpAndSettle();
       expect(find.text(AppStrings.minhasListas), findsOneWidget);
 
       await fechar(tester);
     },
   );
+
+  testWidgets('deve_mostrar_estado_erro_com_retry_quando_lista_falha', (
+    tester,
+  ) async {
+    final router = GoRouter(
+      initialLocation: '/lista/falhou',
+      routes: [
+        GoRoute(
+          path: '/lista/:listaId',
+          builder: (_, state) =>
+              TelaListaScreen(listaId: state.pathParameters['listaId']!),
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          donoAtualIdProvider.overrideWithValue('user-a'),
+          listaPorIdProvider('falhou').overrideWith(
+            (ref) => Stream<Lista?>.error(Exception('cache corrompido')),
+          ),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AppEstadoErro), findsOneWidget);
+    expect(find.text(AppStrings.tentarNovamente), findsOneWidget);
+  });
+
+  testWidgets('deve_rotular_checkbox_com_o_nome_do_item', (tester) async {
+    final handle = tester.ensureSemantics();
+    await listaComItens(tester);
+
+    final checkbox = find.byType(Checkbox).first;
+    final data = tester.getSemantics(checkbox).getSemanticsData();
+
+    expect(data.label, 'Arroz');
+
+    handle.dispose();
+    await fechar(tester);
+  });
+
+  testWidgets('deve_suportar_escala_de_texto_2x_quando_tela_da_lista', (
+    tester,
+  ) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await listaComItens(tester, comConcluido: true);
+
+    expect(tester.takeException(), isNull);
+
+    await fechar(tester);
+  });
 }

@@ -32,25 +32,30 @@ Título de tela (AppBar): **24sp bold** aplicado via `appBarTheme.titleTextStyle
 
 | Componente | Uso |
 | :--- | :--- |
-| `AppBotao` | Ações (filled/tonal/outlined/texto/destrutivo), com `carregando` |
+| `AppBotao` | Ações (filled/tonal/outlined/texto/destrutivo), com `carregando` (progresso anunciado na semântica) |
 | `AppDialog.confirmarDestrutivo` | Confirmação de ação destrutiva |
-| `AppBanner` | info/aviso/erro/offline/leitura com contraste correto |
+| `AppBanner` | info/aviso/erro/offline/leitura com contraste correto; `liveRegion` (Fase 14) |
 | `AppCard` | Superfície padrão com padding/radius (sem margem; o espaçamento entre cards empilhados é do layout — ex.: `AppSpacing.sm`) |
 | `AppLogo` | Marca do app (carrinho de compras) no cabeçalho das telas de topo; 28dp, recortada com `AppRadius.sm` |
 | `AppChip` | Chip com alvo ≥48dp |
+| `AppEsqueleto` | Placeholder estático de carregamento das listas (Fase 14) |
 | `AppCabecalhoSecao` | Cabeçalho de seção (`título (n)`) |
-| `AppEstadoVazio` | Vazio com ícone + texto + CTA |
-| `AppEstadoErro` | Erro de carga com retry |
-| `AppCampoTexto` | Campo de formulário com erro inline |
+| `AppEstadoVazio` | Vazio com ícone + texto + CTA; rótulo único (título + descrição) para o leitor de tela, com a ação em nó próprio (Fase 14) |
+| `AppEstadoErro` | Erro de carga com retry rotulado |
+| `AppCampoTexto` | Campo de formulário com erro inline; aceita `maxLength`, `minLines`/`maxLines`, `textInputAction` e `readOnly` (Fase 14) |
 | `AppSheet.mostrar` | Bottom sheet padrão |
-| `mostrarSnackBar` | Snackbar (inclusive undo) com **duração curta**: 2s sem ação e 3s com ação (`duracao` sobrescreve — F12-T07) |
+| `mostrarSnackBar` | Snackbar (inclusive undo) com **duração curta**: 2s sem ação e 3s com ação (`duracao` sobrescreve — F12-T07); já anunciado por ser uma live region do próprio `SnackBar` |
 
 ## 4. Acessibilidade (RNF-06)
 
-- Contraste ≥ AA nos pares `container`/`on*`.
-- Alvos de toque ≥ 48dp.
-- `tooltip`/`Semantics` em ícones.
-- Respeito à escala de texto do sistema.
+Regras vinculantes (detalhe e evidência na [spec da Fase 14](superpowers/specs/2026-09-14-ux-acessibilidade-design.md)):
+
+- **Contraste ≥ AA** nos pares `container`/`on*`.
+- **Alvos de toque ≥ 48dp**.
+- **Semântica:** `tooltip` em todo `IconButton`/`PopupMenuButton`; ícones decorativos (logo, ícones de estado de 48–72dp) fora da árvore com `excludeSemantics`; controles com rótulo do contexto (ex.: `Checkbox` do item usa o nome do item).
+- **Live regions:** `AppBanner` (erro/offline/aviso), `mostrarSnackBar` e `IndicadorSync` são anunciados (`Semantics(liveRegion: true)`).
+- **Escala de texto:** as telas-chave não estouram com `textScaler` 1.3 e 2.0 (verificado com `textScaleFactor` 2.0 nos testes de tela).
+- **Verificação automatizada:** testes com `meetsGuideline(androidTapTargetGuideline)`, `labeledTapTargetGuideline` e `textContrastGuideline` (`test/core/widgets/acessibilidade_test.dart`) + os testes de semântica/estado nas telas — a acessibilidade é verificada por teste, não por inspeção.
 
 ## 5. Catálogo
 

@@ -21,7 +21,7 @@ class IndicadorSync extends ConsumerWidget {
     final cores = Theme.of(context).colorScheme;
     return switch (status) {
       Sincronizado() => _LinhaStatus(
-        icone: Icon(Icons.check_circle, size: 14, color: cores.primary),
+        icone: Icon(Icons.check_circle, size: 16, color: cores.primary),
         texto: AppStrings.syncSincronizado,
       ),
       Sincronizando() => const _LinhaStatus(
@@ -35,7 +35,7 @@ class IndicadorSync extends ConsumerWidget {
       Pendente(:final total) => _LinhaStatus(
         icone: Icon(
           Icons.cloud_upload_outlined,
-          size: 14,
+          size: 16,
           color: cores.onSurfaceVariant,
         ),
         texto: AppStrings.syncPendentes(total),
@@ -79,17 +79,24 @@ class _LinhaStatus extends StatelessWidget {
         AppSpacing.lg,
         0,
       ),
-      child: Row(
-        children: [
-          icone,
-          const SizedBox(width: AppSpacing.xs),
-          Text(
-            texto,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+      // O estado é anunciado ao leitor de tela sempre que muda (doc 15 §4);
+      // o ícone/spinner é decorativo e fica fora da árvore semântica.
+      child: Semantics(
+        label: texto,
+        liveRegion: true,
+        excludeSemantics: true,
+        child: Row(
+          children: [
+            icone,
+            const SizedBox(width: AppSpacing.xs),
+            Text(
+              texto,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

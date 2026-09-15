@@ -19,6 +19,13 @@ class AppBanner extends StatelessWidget {
   final String mensagem;
   final Widget? acao;
 
+  /// Banners que representam mudança de estado do sistema são anunciados pelo
+  /// leitor de tela; `info`/`leitura` são estáticos e ficam fora (doc 15 §4).
+  bool get _anuncia =>
+      tipo == AppBannerTipo.erro ||
+      tipo == AppBannerTipo.aviso ||
+      tipo == AppBannerTipo.offline;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -66,7 +73,12 @@ class AppBanner extends StatelessWidget {
           Icon(icone, color: frente, size: 20),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
-            child: Text(mensagem, style: TextStyle(color: frente)),
+            child: Semantics(
+              label: mensagem,
+              liveRegion: _anuncia,
+              excludeSemantics: true,
+              child: Text(mensagem, style: TextStyle(color: frente)),
+            ),
           ),
           ?acao,
         ],

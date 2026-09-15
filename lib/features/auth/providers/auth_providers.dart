@@ -27,3 +27,26 @@ final donoAtualIdProvider = Provider<String>((ref) {
 final emailUsuarioProvider = Provider<String?>((ref) {
   return ref.watch(authRepositoryProvider).sessaoAtual?.user.email;
 });
+
+/// true enquanto o app estiver no fluxo do link de recuperação de senha
+/// (`passwordRecovery`): o redirect leva a `/redefinir-senha` até a senha
+/// ser redefinida (F14-T03, doc 05 §4/§6.1).
+final redefinindoSenhaProvider = NotifierProvider<RedefinindoSenha, bool>(
+  RedefinindoSenha.new,
+);
+
+class RedefinindoSenha extends Notifier<bool> {
+  @override
+  bool build() {
+    final sub = ref.watch(authRepositoryProvider).onAuthStateChange.listen((
+      estado,
+    ) {
+      if (estado.event == AuthChangeEvent.passwordRecovery) state = true;
+    });
+    ref.onDispose(sub.cancel);
+    return false;
+  }
+
+  /// Encerra o fluxo (após redefinir ou desistir) e libera o redirect.
+  void concluir() => state = false;
+}

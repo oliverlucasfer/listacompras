@@ -343,6 +343,50 @@ UX em [05](05-app-flutter.md).
 
 ---
 
+## Fase 14 — Acessibilidade, fluxos e polimento de UX
+
+Spec: [superpowers/specs/2026-09-14-ux-acessibilidade-design.md](superpowers/specs/2026-09-14-ux-acessibilidade-design.md) · Docs donos: [15](15-design-system.md) (a11y/componentes), [05](05-app-flutter.md) (UX/rotas), [10](10-wireframes-telas.md) (layout), [08](08-compartilhamento-colaborativo.md) (membros), [12](12-prd.md) (RF-01/RNF-06).
+
+- [x] **F14-T00** — Spec + docs de planejamento
+  Dep: F13-T03 · Docs: spec da fase
+  CP: spec aprovada; `15 §3/§4`, `05 §4/§6/§7`, `10`, `08 §5/§8`, `12` e `14` consistentes entre si; sem tocar código de app.
+- [x] **F14-T01** — Semântica nos componentes `App*`
+  Dep: F14-T00 · Docs: [15 §3/§4](15-design-system.md) · RNF-06
+  CP: `AppEstadoVazio` com rótulo único (título + descrição; ação em nó próprio), `AppBanner` com `liveRegion` em erro/aviso/offline e `AppBotao(carregando)` anunciando progresso em nó próprio; `AppEstadoErro` e `mostrarSnackBar` já conformes (sem mudança); `test/core/widgets/acessibilidade_test.dart` com semântica + `meetsGuideline(labeledTapTargetGuideline)`/`androidTapTargetGuideline` verde (6 testes).
+- [x] **F14-T02** — Acessibilidade nas telas + escala de fonte
+  Dep: F14-T01 · Docs: [15 §4](15-design-system.md) · RNF-06
+  CP: `IndicadorSync` com live region e ícones ≥16dp (3 testes); `Checkbox` do item rotulado com o nome (`MergeSemantics`, 1 teste); `tooltip` pt-BR no menu de membros (1 teste); escala de texto 2.0 sem overflow em login/painel/lista (3 testes-guarda, com o overflow comprovadamente detectável). `Icon`/fundos do `Dismissible` já excluem a si mesmos — sem mudança.
+- [x] **F14-T03** — Recuperação de senha: tela de nova senha (RF-01)
+  Dep: F14-T00 · Docs: [05 §4/§6.1](05-app-flutter.md), [10 §1.3](10-wireframes-telas.md) · RF-01
+  CP: rota pública `/redefinir-senha`; `redefinindoSenhaProvider` reage a `passwordRecovery` (assinado antes do refresh do router — corrida de listeners coberta por teste) e força o redirect; nova senha + confirmação com toggle (strings órfãs usadas); sucesso → SnackBar "Senha alterada" + `/listas` e flag limpo; erro (`AuthException`) → banner + "Pedir novo link" → `/recuperar-senha`; 4 testes de tela/rota verdes.
+- [x] **F14-T04** — Estados vazios, de erro e transições
+  Dep: F14-T00 · Docs: [15 §3](15-design-system.md), [10 §3/§4/§6](10-wireframes-telas.md)
+  CP: erro da lista com `AppEstadoErro` + retry (invalida `listaPorIdProvider`) e "não encontrada" com CTA; vazios em membros (sem cache → instrução, sem ações — papel não confiável) e na pré-visualização com 0 itens ("Nada foi reconhecido" + "Voltar e editar" sem rodapé/botão); `/entrar` sem tela em branco e com AppBar no carregando (estados transientes, sem teste dedicado). Vazio do leitor já conforme (no-op). 4 testes novos verdes.
+- [ ] **F14-T05** — Feedback de ação
+  Dep: F14-T00 · Docs: [05 §6](05-app-flutter.md), [08 §5](08-compartilhamento-colaborativo.md)
+  CP: SnackBars de reenviar link/compartilhar/papel/remover membro/criar-renomear lista; undo em "limpar concluídos" (restaura `id`/`ordem`); "Sair" com confirmação destrutiva; testes verdes.
+- [ ] **F14-T06** — Affordance e rótulos
+  Dep: F14-T00 · Docs: [10 §2.1/§3](10-wireframes-telas.md), [05 §6.2/§6.3](05-app-flutter.md)
+  CP: `⋮` no card com as ações do contexto (long-press abre o mesmo menu); rótulo "Nome do item" no editor; "Copiar link" × "Copiar código" distinguidos; testes verdes.
+- [ ] **F14-T07** — Validação visível
+  Dep: F14-T00 · Docs: [05 §6](05-app-flutter.md), [15 §3](15-design-system.md)
+  CP: erro inline no editor (nome/quantidade) e na edição inline da importação; aviso quando o parser descarta todo o texto; toggle de senha no registro; testes verdes.
+- [ ] **F14-T08** — Consistência e dívida visual
+  Dep: F14-T00 · Docs: [15 §1/§3](15-design-system.md), [05 §6/§7](05-app-flutter.md)
+  CP: uma única copy de exclusão de lista; strings (tempo relativo, fallbacks) no `AppStrings`; `AppBannerTipo.leitura` usado; `AppCampoTexto` com `maxLength`/`minLines`/`textInputAction`/`readOnly` e os `TextField` crus migrados; medidas em tokens; `analyze`/`test` verdes.
+- [ ] **F14-T09** — Skeletons + fechamento
+  Dep: F14-T01…T08 · Docs: [15 §3](15-design-system.md), [07 §1](07-qualidade-ci.md)
+  CP: `AppEsqueleto` (estático, sem dependência nova) no painel/itens/membros; `format`/`analyze`/`test` verdes; docs sincronizados; APK aos testadores via F5-T05b (opcional).
+
+### Fase 15 — Backlog de planejamento
+
+Registrado pela [spec da F14 §16](superpowers/specs/2026-09-14-ux-acessibilidade-design.md); ainda sem spec nem tarefas:
+
+- **Identificação de membros por nome/e-mail** (hoje só UUID prefixado) — exige RPC `security definer` + policy nova (docs 01/02) e decisão de privacidade.
+- **Novas features de produto:** modo mercado (tela focada no supermercado), busca/filtro na lista e no painel, atalhos de itens frequentes, avatar/busca de membros.
+
+---
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -360,7 +404,8 @@ UX em [05](05-app-flutter.md).
 | F11 Import local | 4 | 4 |
 | F12 Correções | 7 | 7 |
 | F13 Identidade visual | 3 | 3 |
-| **Total** | **87** | **85** |
+| F14 Acessibilidade & UX | 10 | 5 |
+| **Total** | **97** | **90** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

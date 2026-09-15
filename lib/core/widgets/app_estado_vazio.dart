@@ -20,29 +20,42 @@ class AppEstadoVazio extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final rotulo = descricao == null ? titulo : '$titulo. $descricao';
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icone, size: 72, color: scheme.primary),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              titulo,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            if (descricao != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                descricao!,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+            // Ícone decorativo fora da árvore e um único rótulo (título +
+            // descrição) para o leitor de tela; a ação fica em nó próprio
+            // (doc 15 §4).
+            Semantics(
+              label: rotulo,
+              excludeSemantics: true,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icone, size: 72, color: scheme.primary),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text(
+                    titulo,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  if (descricao != null) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      descricao!,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ],
               ),
-            ],
+            ),
             if (acao != null) ...[const SizedBox(height: AppSpacing.xl), acao!],
           ],
         ),

@@ -132,7 +132,10 @@ class _EntrarScreenState extends ConsumerState<EntrarScreen> {
       );
     }
     if (_carregando) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        appBar: AppBar(title: const Text(AppStrings.conviteConvidadoTitulo)),
+        body: const Center(child: CircularProgressIndicator()),
+      );
     }
     if (_erro != null) {
       return Scaffold(
@@ -173,7 +176,8 @@ class _EntrarScreenState extends ConsumerState<EntrarScreen> {
     }
     return Scaffold(
       appBar: AppBar(title: const Text(AppStrings.conviteConvidadoTitulo)),
-      body: const SizedBox.shrink(),
+      // Transição breve (aceite concluído → navegação); nunca corpo em branco.
+      body: const Center(child: CircularProgressIndicator()),
     );
   }
 }

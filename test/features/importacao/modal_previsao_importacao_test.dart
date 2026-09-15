@@ -73,6 +73,27 @@ void main() {
     await tester.pump();
   }
 
+  testWidgets('deve_mostrar_estado_vazio_quando_nada_reconhecido', (
+    tester,
+  ) async {
+    await abrir(tester, RespostaParse(itens: const [], aviso: null));
+
+    expect(find.text(AppStrings.nadaReconhecido), findsOneWidget);
+    expect(find.text(AppStrings.separarItensDica), findsOneWidget);
+    // Sem rodapé/ação de adicionar quando não há nada a adicionar.
+    expect(find.text(AppStrings.iaAdicionarN(0)), findsNothing);
+  });
+
+  testWidgets('deve_voltar_e_editar_quando_nada_reconhecido', (tester) async {
+    await abrir(tester, RespostaParse(itens: const [], aviso: null));
+
+    await tester.tap(find.text(AppStrings.voltarEEditar));
+    await tester.pumpAndSettle();
+
+    // Modal fechado: voltou à tela de entrada da importação.
+    expect(find.text('abrir'), findsOneWidget);
+  });
+
   testWidgets('deve_exibir_itens_aviso_e_contagem_quando_abrir', (
     tester,
   ) async {

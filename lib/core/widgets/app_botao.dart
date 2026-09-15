@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_strings.dart';
+
 /// Ações padronizadas (doc 15 §3). Cobre os botões preenchidos, tonais,
 /// contornados, de texto e destrutivos — o destrutivo sempre com foreground
 /// explícito para garantir contraste sobre `colorScheme.error`.
@@ -58,10 +60,19 @@ class AppBotao extends StatelessWidget {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2),
+          // O spinner é decorativo; o progresso é anunciado num nó próprio
+          // (container evita fundir no rótulo do botão) — doc 15 §4.
+          Semantics(
+            container: true,
+            liveRegion: true,
+            label: AppStrings.carregando,
+            child: const ExcludeSemantics(
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
           ),
           const SizedBox(width: 12),
           Text(rotulo),

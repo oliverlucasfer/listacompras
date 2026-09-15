@@ -167,7 +167,11 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
           title: const Text(AppStrings.lista),
           leading: botaoVoltarInicio(context, '/listas'),
         ),
-        body: const Center(child: Text(AppStrings.erroGenerico)),
+        // Erro com retry, no padrão dos demais estados (doc 15 §3, F14-T04).
+        body: AppEstadoErro(
+          mensagem: AppStrings.erroGenerico,
+          onRetentar: () => ref.invalidate(listaPorIdProvider(listaId)),
+        ),
       ),
       data: (lista) {
         if (lista == null) {
@@ -176,7 +180,17 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
               title: const Text(AppStrings.lista),
               leading: botaoVoltarInicio(context, '/listas'),
             ),
-            body: const Center(child: Text(AppStrings.listaNaoEncontrada)),
+            body: Center(
+              child: AppEstadoVazio(
+                titulo: AppStrings.listaNaoEncontrada,
+                acao: AppBotao(
+                  rotulo: AppStrings.voltarParaListas,
+                  variante: AppBotaoVariante.texto,
+                  expandido: false,
+                  onPressed: () => context.go('/listas'),
+                ),
+              ),
+            ),
           );
         }
         final ehDono = lista.donoId == ref.watch(donoAtualIdProvider);
@@ -582,11 +596,18 @@ class _LinhaItem extends ConsumerWidget {
       // Tocar no item abre o editor (F12-T06) — o swipe continua disponível.
       onTap: podeEscrever ? () => _abrirDialogoEditar(context, ref) : null,
       leading: podeEscrever
-          ? Checkbox(
-              value: item.concluido,
-              onChanged: (_) => ref
-                  .read(listasRepositoryProvider)
-                  .editarItem(item.id, concluido: !item.concluido),
+          // O checkbox recebe o nome do item como rótulo (doc 15 §4): sem isso
+          // o leitor de tela anuncia uma caixa de seleção sem contexto.
+          ? MergeSemantics(
+              child: Semantics(
+                label: item.nome,
+                child: Checkbox(
+                  value: item.concluido,
+                  onChanged: (_) => ref
+                      .read(listasRepositoryProvider)
+                      .editarItem(item.id, concluido: !item.concluido),
+                ),
+              ),
             )
           : const SizedBox(width: 40),
       title: Text(

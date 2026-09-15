@@ -23,6 +23,8 @@ class FakeAuthRepository extends SupabaseAuthRepository {
   bool recuperacaoChamada = false;
   bool reenvioChamado = false;
   bool excluirContaChamado = false;
+  bool senhaAlterada = false;
+  String? erroAtualizarSenha;
 
   Future<AuthResponse> Function(String email, String senha)? onEntrar;
   Future<AuthResponse> Function(String email, String senha)? onRegistrar;
@@ -70,5 +72,21 @@ class FakeAuthRepository extends SupabaseAuthRepository {
   @override
   Future<void> excluirConta() async {
     excluirContaChamado = true;
+  }
+
+  @override
+  Future<UserResponse> atualizarSenha(String novaSenha) async {
+    final erro = erroAtualizarSenha;
+    if (erro != null) {
+      throw AuthException(erro, statusCode: '401');
+    }
+    senhaAlterada = true;
+    return UserResponse.fromJson({
+      'id': 'user-a',
+      'aud': 'authenticated',
+      'created_at': DateTime.now().toIso8601String(),
+      'app_metadata': <String, dynamic>{},
+      'user_metadata': <String, dynamic>{},
+    });
   }
 }

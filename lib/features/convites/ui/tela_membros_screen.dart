@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/navigation/voltar_para_inicio.dart';
 import '../../../core/widgets/app_chip.dart';
+import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_snack_bar.dart';
@@ -181,59 +182,73 @@ class _TelaMembrosScreenState extends ConsumerState<TelaMembrosScreen> {
             mensagem: AppStrings.erroGenerico,
             onRetentar: () => ref.invalidate(membrosDaListaProvider(listaId)),
           ),
-          data: (membros) => ListView.builder(
-            itemCount: membros.length,
-            itemBuilder: (context, i) {
-              final membro = membros[i];
-              final souEu = membro.userId == usuarioId;
-              return ListTile(
-                leading: Icon(
-                  souEu ? Icons.person : Icons.person_outline,
-                  color: souEu ? Theme.of(context).colorScheme.primary : null,
-                ),
-                title: Text(
-                  souEu ? AppStrings.voce : _identificador(membro),
-                  style: souEu
-                      ? Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        )
-                      : null,
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AppChip(rotulo: _rotuloPapel(membro.papel)),
-                    if (_eDono(membrosAsync, usuarioId) && !souEu)
-                      PopupMenuButton<String>(
-                        onSelected: (acao) =>
-                            _acaoMenu(context, ref, membro, acao),
-                        itemBuilder: (context) => [
-                          CheckedPopupMenuItem<String>(
-                            value: 'editor',
-                            checked: membro.papel == Papel.editor,
-                            child: const Text(AppStrings.convidarPapelEditor),
-                          ),
-                          CheckedPopupMenuItem<String>(
-                            value: 'leitor',
-                            checked: membro.papel == Papel.leitor,
-                            child: const Text(AppStrings.convidarPapelLeitor),
-                          ),
-                          PopupMenuItem(
-                            value: 'remover',
-                            child: Text(
-                              AppStrings.removerMembro,
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                  ],
+          data: (membros) {
+            if (membros.isEmpty) {
+              // Só acontece sem cache local (membrosDaListaProvider sempre
+              // mescla o dono): instrução sem ações, pois o papel não é
+              // confiável aqui (doc 08 §8, F14-T04).
+              return Center(
+                child: AppEstadoVazio(
+                  titulo: AppStrings.nenhumParticipante,
+                  descricao: AppStrings.nenhumParticipanteDica,
                 ),
               );
-            },
-          ),
+            }
+            return ListView.builder(
+              itemCount: membros.length,
+              itemBuilder: (context, i) {
+                final membro = membros[i];
+                final souEu = membro.userId == usuarioId;
+                return ListTile(
+                  leading: Icon(
+                    souEu ? Icons.person : Icons.person_outline,
+                    color: souEu ? Theme.of(context).colorScheme.primary : null,
+                  ),
+                  title: Text(
+                    souEu ? AppStrings.voce : _identificador(membro),
+                    style: souEu
+                        ? Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          )
+                        : null,
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AppChip(rotulo: _rotuloPapel(membro.papel)),
+                      if (_eDono(membrosAsync, usuarioId) && !souEu)
+                        PopupMenuButton<String>(
+                          tooltip: AppStrings.menu,
+                          onSelected: (acao) =>
+                              _acaoMenu(context, ref, membro, acao),
+                          itemBuilder: (context) => [
+                            CheckedPopupMenuItem<String>(
+                              value: 'editor',
+                              checked: membro.papel == Papel.editor,
+                              child: const Text(AppStrings.convidarPapelEditor),
+                            ),
+                            CheckedPopupMenuItem<String>(
+                              value: 'leitor',
+                              checked: membro.papel == Papel.leitor,
+                              child: const Text(AppStrings.convidarPapelLeitor),
+                            ),
+                            PopupMenuItem(
+                              value: 'remover',
+                              child: Text(
+                                AppStrings.removerMembro,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
         ),
       ),
     );

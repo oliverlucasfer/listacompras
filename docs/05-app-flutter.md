@@ -67,6 +67,7 @@ lib/
 | `importacaoIaProvider` | NotifierProvider | Estados do modal IA (idle/carregando/erro/prévia) |
 | `conectividadeProvider` | StreamProvider | Online/offline (dispara flush) |
 | `sugestaoCategoriasProvider` | Provider | Cadeia de sugestão local (Fase 6/RF-15) |
+| `redefinindoSenhaProvider` | NotifierProvider (bool) | true no evento `passwordRecovery`: força o redirect a `/redefinir-senha` até `concluir()` (F14-T03) — assinado antes do refresh do router (ordem de listeners) |
 
 **Sugestão de categoria em camadas (Fase 6, ADR-011, spec §4)** — `SugestaoCategorias.sugerirCategoria(nome)`, zero rede:
 
@@ -85,6 +86,7 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 | `/login` | Login (aceita `?next=` para voltar ao fluxo pós-login, ex. `/entrar?token=...`) | redirect se autenticado → `/listas` |
 | `/registro` | Registro (propaga `?next=` para o login na tela "Verifique seu e-mail") | idem |
 | `/recuperar-senha` | Recuperação de senha | público |
+| `/redefinir-senha` | Definir nova senha (destino do link de recuperação) | público (mesmo autenticado — exceção como `/entrar`) |
 | `/entrar` | Aceite de convite (doc [08 §3](08-compartilhamento-colaborativo.md)): lê `?token=`; sem sessão mostra contexto e vai ao login/registro com `?next=`; com sessão aceita (RPC idempotente) e navega à lista | público |
 | `/listas` | Minhas Listas (shell) — listas em que o usuário é dono | exige autenticação |
 | `/compartilhadas` | Compartilhadas (shell) — listas em que participa (não dono); AppBar "Entrar com código" (`person_add`): colar token → aceite → navega à lista | exige autenticação |
@@ -96,7 +98,8 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 * **Navegação por abas (F10):** `NavigationBar` inferior com 3 destinos (**Minhas**, **Compartilhadas**, **Configurações**) que vira `NavigationRail` a partir de ~600dp; o `StatefulShellRoute.indexedStack` preserva o estado de cada aba e o AppBar de cada aba usa o mesmo texto do destino.
 * **Abrir lista/membros (`push` sobre o shell):** a tela cobre a barra (tela cheia) e o voltar retorna à **aba de origem**. Sem pilha (deep link/aceite de convite), a seta e o voltar do sistema vão para `/listas` (dono) ou `/compartilhadas` (membro) — helper `core/navigation/voltar_para_inicio.dart`.
 * **Títulos:** painel segue o destino ("Minhas Listas"/"Compartilhadas"/"Configurações"); a tela da lista usa o título da lista (fallback "Lista" em carregando/erro/não encontrada); membros usa `Membros · {título}`. Título em **24sp bold** e, nas telas de topo, a **marca do app** (`AppLogo`, 28dp) à esquerda do texto (F13-T02/T03, doc [15 §1/§6](15-design-system.md)).
-* **Redirect global:** não autenticado → `/login`; autenticado em rota pública → `/listas`, **exceto `/entrar`** (permanece pública — a tela decide).
+* **Redirect global:** não autenticado → `/login`; autenticado em rota pública → `/listas`, **exceto `/entrar`** (permanece pública — a tela decide) **e `/redefinir-senha`** (o link de recuperação autentica o usuário, mas ele ainda precisa definir a senha).
+* **Recuperação de senha (F14-T03):** o link do Supabase volta pelo `deepLink` `...://login-callback` (o mesmo do cadastro). O app reage a `AuthChangeEvent.passwordRecovery`, marca a sessão como "redefinindo senha" e o `redirect` leva a `/redefinir-senha`; o sucesso limpa a marca e volta a `/listas`. Link expirado → erro amigável com "Pedir novo link".
 * Deep link de convite (`br.com.oliverlucas.listacompras://entrar?token=...`, intent-filter com host `entrar`): o supabase_flutter escuta os deep links via app_links mas só consome os que têm parâmetros de auth; links de convite são traduzidos para `/entrar?token=...` pela ponte `deeplinkConviteProvider` ([08 §1.1](08-compartilhamento-colaborativo.md)).
 * Wireframes (layout) de todas as telas: **[10 Wireframes](10-wireframes-telas.md)**.
 
@@ -130,13 +133,16 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 * E-mail + senha; botões: Entrar, Criar conta, Recuperar senha.
 * Provedores sociais (Google) — estrutura pronta, ativação opcional na Fase 5.
 * **Recuperação de senha e verificação de e-mail** obrigatórias no MVP (Fase 3).
+* **Nova senha (F14-T03):** o link de recuperação abre `/redefinir-senha` (nova senha + confirmação, ambas com toggle; mínimo de 6 e igualdade); sucesso → SnackBar "Senha alterada" + `/listas`; link expirado → erro amigável com CTA "Pedir novo link".
+* **Registro:** os dois campos de senha ganham toggle de mostrar/ocultar (paridade com o login) e "Reenviar link" passa a dar retorno (SnackBar) e a desabilitar durante o envio (F14-T05).
 * Estados: carregando (spinner no botão), erro (mensagem inline amigável).
 
 ### 6.2. Painel "Minhas Listas"
 * Lista de cards: título, contagem de itens pendentes/total, atualização relativa ("há 5 min").
 * Cabeçalho das telas de topo exibe a marca (`AppLogo`) à esquerda do título (F13-T02).
 * FAB "Nova lista" → bottom sheet com campo de título.
-* Long-press no card: renomear / excluir (com confirmação).
+* **Ações do card:** botão `⋮` com renomear / excluir (com confirmação) — nas Compartilhadas, membros / sair da lista; o **long-press abre o mesmo menu** (atalho, não mais o único caminho) (F14-T06).
+* Feedback: SnackBar curto "Lista criada" / "Lista renomeada" (F14-T05). As mensagens de exclusão usam **uma única** copy em `AppStrings`, variando se houver membros ([10 §3.4](10-wireframes-telas.md)) — vale para o painel e para a tela da lista (F14-T08).
 * Estado vazio: ilustração simples + CTA de criação.
 * Lista com `deletado_em` nunca aparece (tombstone invisível).
 
@@ -148,16 +154,19 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 | Exibição | Ordenação determinística entre dispositivos: `(categoria, ordem, id)` |
 | Item | Nome, quantidade + unidade, checkbox |
 | Checkbox marcada | Item move para seção dobrável "Itens Concluídos (n)" — **sem divisão por categoria** (Fase 6) |
-| Tocar no item | Abre o editor (mesmo diálogo do swipe): nome, quantidade, unidade, categoria e ação **Remover** com undo (F12-T06) |
+| Tocar no item | Abre o editor (mesmo diálogo do swipe): nome, quantidade, unidade, categoria e ação **Remover** com undo (F12-T06); nome vazio/quantidade inválida geram erro inline no campo (F14-T07) |
 | Swipe direita/esquerda | Editar / Remover (com undo via SnackBar); edição inclui **dropdown de categoria** ao lado das unidades (Fase 6) |
 | Botão de importação IA | Abre modal (6.4) |
 | Menu (⋮) | "Desmarcar todos", "Limpar concluídos", "Renomear lista", "Excluir lista" |
-| Ações em massa | Reaproveitar lista (desmarcar todos) e limpar concluídos — confirmação para destrutivas; "desmarcar" devolve o item ao seu grupo |
+| Ações em massa | Reaproveitar lista (desmarcar todos) e limpar concluídos — confirmação para destrutivas; "desmarcar" devolve o item ao seu grupo; **limpar concluídos tem undo** (SnackBar 3s, restaura `id`/`ordem` originais — F14-T05) |
 | Indicador de sync | Estado de [03 §6](03-sincronizacao-offline.md) no AppBar |
 
 * **Reordenar (Fase 6):** drag-and-drop restrito **ao grupo da categoria** — reordena só os itens do grupo (grava `ordem` local + fila); mudar de categoria é pelo dropdown do editar. Exibição continua `(categoria, ordem, id)` — sem coluna nova.
 * Quantidades: stepper + input direto; unidades restritas ao enum ([01 §3.1](01-banco-de-dados.md)).
 * Item duplicado (mesmo nome ativo, comparação normalizada): **mesma unidade → soma** a quantidade; **unidade diferente → atualiza** o item para a nova quantidade/unidade — nunca duplica o nome ativo (unique parcial no servidor) (F12-T06).
+* **Rótulo do campo de nome (F14-T06):** no editor, o campo usa "Nome do item" — "Adicionar item" vale só para a entrada rápida.
+* **Erro e vazio (F14-T04):** falha de carga usa `AppEstadoErro` **com retry** (não texto puro, como fazia); "Lista não encontrada" ganha CTA para `/listas`; o vazio do leitor **instrui** ("Peça a um editor para adicionar") em vez de apontar para um campo que ele não tem.
+* **Banner de leitura (F14-T08):** usa `AppBannerTipo.leitura` ([15 §3](15-design-system.md)), não um `Container` manual.
 
 ### 6.4. Modal "Importar lista" (RF-06 + RF-16)
 
@@ -183,11 +192,13 @@ Plus Jakarta Sans bundlada. Aqui ficam apenas os estados transversais:
 | Estado | Componente padrão (doc 15) |
 | :--- | :--- |
 | Carregando | `AppBotao(carregando: true)` / `CircularProgressIndicator` |
+| Carregando (listas) | `AppEsqueleto` — placeholder estático (F14-T09) |
 | Vazio | `AppEstadoVazio` |
 | Erro | `AppEstadoErro` (com retry) |
 | Offline | `AppBanner.offline` ([03 §6](03-sincronizacao-offline.md)) |
 
-* i18n: pt-BR hardcoded no MVP (strings centralizadas em `core/l10n/app_strings.dart` para facilitar futura tradução).
+* **Acessibilidade (RNF-06):** semântica/live region, alvos ≥48dp e escala de texto — regras e verificação por teste em [15 §4](15-design-system.md) (F14-T01/T02).
+* i18n: pt-BR hardcoded no MVP (strings centralizadas em `core/l10n/app_strings.dart` para facilitar futura tradução). String de UI fora do `AppStrings` é considerada bug (F14-T08).
 
 ---
 
@@ -199,6 +210,8 @@ Plus Jakarta Sans bundlada. Aqui ficam apenas os estados transversais:
 - [ ] Importação IA: pré-visualização editável; cancelar não grava nada.
 - [ ] Tema escuro aplicado em todas as telas (sem tela esquecida).
 - [ ] Estados vazio/erro/carregando implementados em todas as telas.
+- [ ] Acessibilidade (RNF-06): semântica/live region, alvos ≥48dp e escala de texto verificados por teste ([15 §4](15-design-system.md)).
+- [ ] Recuperação de senha conclui o ciclo (link → `/redefinir-senha` → login).
 - [ ] Widget tests das telas críticas ([07](07-qualidade-ci.md)).
 
 ---
