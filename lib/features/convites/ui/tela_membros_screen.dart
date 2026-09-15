@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/navigation/voltar_para_inicio.dart';
@@ -13,11 +12,10 @@ import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../listas/providers/listas_providers.dart';
-import '../../sync/providers/sync_providers.dart';
 import '../domain/convite.dart';
 import '../domain/papel.dart';
 import '../providers/convites_providers.dart';
-import '../providers/papel_providers.dart';
+import 'acao_sair_da_lista.dart';
 
 /// Membros da lista (doc 08 §5/§8, F7-T03, RF-13): FutureProvider.family por
 /// listaId via `membrosDaLista`; dono troca papel (editor↔leitor) e remove
@@ -126,31 +124,6 @@ class _TelaMembrosScreenState extends ConsumerState<TelaMembrosScreen> {
     }
   }
 
-  Future<void> _confirmarSair(BuildContext context, WidgetRef ref) async {
-    final confirmou = await AppDialog.confirmarDestrutivo(
-      context,
-      titulo: AppStrings.sairListaTitulo,
-      mensagem: AppStrings.sairListaMensagem,
-      confirmar: AppStrings.sairDaLista,
-    );
-    if (!confirmou || !context.mounted) return;
-    final repoConvites = ref.read(convitesRepositoryProvider);
-    final repoPapeis = ref.read(papelRepositoryProvider);
-    try {
-      await repoConvites.sairDaLista(listaId);
-      repoPapeis.remover(listaId);
-      // Belt-and-suspenders (doc 08 §5, F7-T07): o Realtime pode filtrar o
-      // DELETE do próprio usuário (RLS avalia a policy pelo old_record) —
-      // limpa o cache local explicitamente.
-      unawaited(ref.read(syncBootstrapProvider).perderAcessoLocal());
-      if (context.mounted) context.go('/compartilhadas');
-    } on ErroConvite catch (e) {
-      if (context.mounted) mostrarSnackBar(context, e.message);
-    } catch (_) {
-      if (context.mounted) mostrarSnackBar(context, AppStrings.erroGenerico);
-    }
-  }
-
   String _rotuloPapel(Papel papel) => switch (papel) {
     Papel.dono => AppStrings.papelDono,
     Papel.editor => AppStrings.convidarPapelEditor,
@@ -177,7 +150,7 @@ class _TelaMembrosScreenState extends ConsumerState<TelaMembrosScreen> {
             // papel desconhecido, ex.: erro), não renderiza "Sair da lista".
             if (membrosAsync.hasValue && !_eDono(membrosAsync, usuarioId))
               TextButton(
-                onPressed: () => _confirmarSair(context, ref),
+                onPressed: () => confirmarSairDaLista(context, ref, listaId),
                 child: const Text(AppStrings.sairDaLista),
               ),
           ],

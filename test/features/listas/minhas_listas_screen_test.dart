@@ -265,4 +265,34 @@ void main() {
 
     await fechar(tester);
   });
+
+  testWidgets('deve_renomear_lista_quando_toca_menu_do_card', (tester) async {
+    final repo = ListasRepository(db);
+    await repo.criarLista(titulo: 'Antigo', donoId: 'user-a');
+    await abrirTela(tester);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.renomear));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.nomeDaLista),
+      'Novo',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Novo'), findsOneWidget);
+    expect(find.text('Antigo'), findsNothing);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_exibir_tooltip_no_menu_do_card', (tester) async {
+    final repo = ListasRepository(db);
+    await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await abrirTela(tester);
+
+    expect(find.byTooltip(AppStrings.menu), findsOneWidget);
+    await fechar(tester);
+  });
 }

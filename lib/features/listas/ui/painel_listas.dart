@@ -12,13 +12,13 @@ import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_logo.dart';
-import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../convites/domain/convite.dart';
 import '../../convites/domain/papel.dart';
 import '../../convites/providers/convites_providers.dart';
 import '../../convites/providers/papel_providers.dart';
+import '../../convites/ui/acao_sair_da_lista.dart';
 import '../domain/lista_com_contagem.dart';
 import '../providers/listas_providers.dart';
 import 'sheet_titulo_lista.dart';
@@ -134,22 +134,27 @@ class PainelListas extends ConsumerWidget {
   }
 }
 
-class _CardLista extends ConsumerWidget {
+class _CardLista extends ConsumerStatefulWidget {
   const _CardLista({required this.contagem});
 
   final ListaComContagem contagem;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final lista = contagem.lista;
+  ConsumerState<_CardLista> createState() => _CardListaState();
+}
+
+class _CardListaState extends ConsumerState<_CardLista> {
+  final _menuKey = GlobalKey<PopupMenuButtonState<String>>();
+
+  @override
+  Widget build(BuildContext context) {
+    final lista = widget.contagem.lista;
     final ehDono = lista.donoId == ref.watch(donoAtualIdProvider);
     return AppCard(
       padding: EdgeInsets.zero,
       child: ListTile(
         onTap: () => context.push('/lista/${lista.id}'),
-        onLongPress: ehDono
-            ? () => _abrirAcoes(context, ref, contagem)
-            : () => context.push('/membros/${lista.id}'),
+        onLongPress: () => _menuKey.currentState?.showButtonMenu(),
         title: Text(
           lista.titulo,
           style: Theme.of(
@@ -161,7 +166,7 @@ class _CardLista extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(contagem.contagem),
+              Text(widget.contagem.contagem),
               Text(
                 '${AppStrings.atualizada} ${tempoRelativo(lista.atualizadoEm, agora: DateTime.now())}',
                 style: Theme.of(context).textTheme.bodySmall,
@@ -169,74 +174,71 @@ class _CardLista extends ConsumerWidget {
             ],
           ),
         ),
+        trailing: PopupMenuButton<String>(
+          key: _menuKey,
+          tooltip: AppStrings.menu,
+          icon: const Icon(Icons.more_vert),
+          onSelected: _acaoMenu,
+          itemBuilder: (context) =>
+              ehDono ? _itensDono(context) : _itensMembro(),
+        ),
       ),
     );
   }
 
-  void _abrirAcoes(
-    BuildContext context,
-    WidgetRef ref,
-    ListaComContagem contagem,
-  ) {
-    final esquema = Theme.of(context).colorScheme;
-    AppSheet.mostrar<void>(
-      context,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.edit_outlined),
-            title: const Text(AppStrings.renomear),
-            onTap: () {
-              Navigator.pop(context);
-              _abrirSheetRenomear(context, ref, contagem);
-            },
-          ),
-          ListTile(
-            leading: Icon(Icons.delete_outline, color: esquema.error),
-            title: Text(
-              AppStrings.excluir,
-              style: TextStyle(color: esquema.error),
-            ),
-            onTap: () {
-              Navigator.pop(context);
-              _confirmarExclusao(context, ref, contagem);
-            },
-          ),
-        ],
+  List<PopupMenuEntry<String>> _itensDono(BuildContext context) => [
+    const PopupMenuItem(value: 'renomear', child: Text(AppStrings.renomear)),
+    PopupMenuItem(
+      value: 'excluir',
+      child: Text(
+        AppStrings.excluir,
+        style: TextStyle(color: Theme.of(context).colorScheme.error),
       ),
-    );
+    ),
+  ];
+
+  List<PopupMenuEntry<String>> _itensMembro() => const [
+    PopupMenuItem(value: 'membros', child: Text(AppStrings.membros)),
+    PopupMenuItem(value: 'sair', child: Text(AppStrings.sairDaLista)),
+  ];
+
+  void _acaoMenu(String acao) {
+    final listaId = widget.contagem.lista.id;
+    switch (acao) {
+      case 'renomear':
+        _abrirSheetRenomear();
+      case 'excluir':
+        _confirmarExclusao();
+      case 'membros':
+        context.push('/membros/$listaId');
+      case 'sair':
+        confirmarSairDaLista(context, ref, listaId);
+    }
   }
 
-  void _abrirSheetRenomear(
-    BuildContext context,
-    WidgetRef ref,
-    ListaComContagem contagem,
-  ) {
+  void _abrirSheetRenomear() {
     abrirSheetTitulo(
       context,
       titulo: AppStrings.renomearLista,
       rotuloBotao: AppStrings.salvar,
-      valorInicial: contagem.lista.titulo,
+      valorInicial: widget.contagem.lista.titulo,
       mensagemSucesso: AppStrings.listaRenomeada,
       onSalvar: (nome) => ref
           .read(listasRepositoryProvider)
-          .renomearLista(id: contagem.lista.id, titulo: nome),
+          .renomearLista(id: widget.contagem.lista.id, titulo: nome),
     );
   }
 
-  Future<void> _confirmarExclusao(
-    BuildContext context,
-    WidgetRef ref,
-    ListaComContagem contagem,
-  ) async {
+  Future<void> _confirmarExclusao() async {
     final confirmou = await AppDialog.confirmarDestrutivo(
       context,
       titulo: AppStrings.excluirLista,
       mensagem: AppStrings.excluirListaMensagem,
     );
     if (confirmou) {
-      await ref.read(listasRepositoryProvider).excluirLista(contagem.lista.id);
+      await ref
+          .read(listasRepositoryProvider)
+          .excluirLista(widget.contagem.lista.id);
     }
   }
 }

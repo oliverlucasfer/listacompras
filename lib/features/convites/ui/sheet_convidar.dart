@@ -148,26 +148,32 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
             Row(
               children: [
                 Expanded(
-                  child: AppBotao(
-                    rotulo: AppStrings.copiarLink,
-                    variante: AppBotaoVariante.outlined,
-                    icone: Icons.copy_outlined,
-                    onPressed: () => _copiar(
-                      ref
-                          .read(convitesRepositoryProvider)
-                          .linkConvite(convite.token),
-                      AppStrings.linkCopiado,
+                  child: Tooltip(
+                    message: AppStrings.copiarLinkAjuda,
+                    child: AppBotao(
+                      rotulo: AppStrings.copiarLink,
+                      variante: AppBotaoVariante.outlined,
+                      icone: Icons.copy_outlined,
+                      onPressed: () => _copiar(
+                        ref
+                            .read(convitesRepositoryProvider)
+                            .linkConvite(convite.token),
+                        AppStrings.linkCopiado,
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
-                  child: AppBotao(
-                    rotulo: AppStrings.copiarToken,
-                    variante: AppBotaoVariante.outlined,
-                    icone: Icons.copy_outlined,
-                    onPressed: () =>
-                        _copiar(convite.token, AppStrings.tokenCopiado),
+                  child: Tooltip(
+                    message: AppStrings.copiarCodigoAjuda,
+                    child: AppBotao(
+                      rotulo: AppStrings.copiarCodigo,
+                      variante: AppBotaoVariante.outlined,
+                      icone: Icons.copy_outlined,
+                      onPressed: () =>
+                          _copiar(convite.token, AppStrings.codigoCopiado),
+                    ),
                   ),
                 ),
               ],

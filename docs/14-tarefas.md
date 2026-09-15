@@ -366,9 +366,10 @@ Spec: [superpowers/specs/2026-09-14-ux-acessibilidade-design.md](superpowers/spe
   Dep: F14-T00 · Docs: [05 §6](05-app-flutter.md), [08 §5](08-compartilhamento-colaborativo.md)
   CP: SnackBars de reenviar link/compartilhar/papel/remover membro/criar-renomear lista; undo em "limpar concluídos" (restaura `id`/`ordem`); "Sair" com confirmação destrutiva; testes verdes.
   *(reenviar link com "Link reenviado" + erro amigável e botão desabilitado durante o envio; compartilhar convite com "Link compartilhado"; papel/remoção de membro com SnackBar; criar/renomear lista com SnackBar 2s via `mensagemSucesso` do `SheetTituloLista`; `limparConcluidos` devolve os itens removidos e o SnackBar 3s "Desfazer" restaura `id`/`ordem`; "Sair" via `AppDialog.confirmarDestrutivo`; testes novos/ajustados em auth, convites, listas e configurações)*
-- [ ] **F14-T06** — Affordance e rótulos
+- [x] **F14-T06** — Affordance e rótulos
   Dep: F14-T00 · Docs: [10 §2.1/§3](10-wireframes-telas.md), [05 §6.2/§6.3](05-app-flutter.md)
   CP: `⋮` no card com as ações do contexto (long-press abre o mesmo menu); rótulo "Nome do item" no editor; "Copiar link" × "Copiar código" distinguidos; testes verdes.
+  *(card com `PopupMenuButton` `⋮` (Minhas: Renomear/Excluir; Compartilhadas: Membros/Sair) e long-press via `showButtonMenu`; "Sair da lista" extraído para `confirmarSairDaLista` (reuso tela de membros/card); editor de item com "Nome do item" (entrada rápida segue "Adicionar item"); sheet Convidar com "Copiar código" + tooltips nos dois botões e doc 08 §8 atualizado)*
 - [ ] **F14-T07** — Validação visível
   Dep: F14-T00 · Docs: [05 §6](05-app-flutter.md), [15 §3](15-design-system.md)
   CP: erro inline no editor (nome/quantidade) e na edição inline da importação; aviso quando o parser descarta todo o texto; toggle de senha no registro; testes verdes.
@@ -405,8 +406,8 @@ Registrado pela [spec da F14 §16](superpowers/specs/2026-09-14-ux-acessibilidad
 | F11 Import local | 4 | 4 |
 | F12 Correções | 7 | 7 |
 | F13 Identidade visual | 3 | 3 |
-| F14 Acessibilidade & UX | 10 | 6 |
-| **Total** | **97** | **91** |
+| F14 Acessibilidade & UX | 10 | 7 |
+| **Total** | **97** | **92** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

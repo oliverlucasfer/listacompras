@@ -110,6 +110,8 @@ void main() {
       find.widgetWithText(OutlinedButton, AppStrings.compartilhar),
       findsOneWidget,
     );
+    expect(find.byTooltip(AppStrings.copiarLinkAjuda), findsOneWidget);
+    expect(find.byTooltip(AppStrings.copiarCodigoAjuda), findsOneWidget);
     expect(find.text(AppStrings.gerarLink), findsNothing);
 
     final corpo = jsonDecode(servidor.corpoDe(0)) as Map<String, Object?>;
@@ -213,9 +215,7 @@ void main() {
     await fechar(tester);
   });
 
-  testWidgets('deve_copiar_token_cru_quando_tocar_copiar_token', (
-    tester,
-  ) async {
+  testWidgets('deve_copiar_codigo_quando_tocar_copiar_codigo', (tester) async {
     String? copiado;
     final canal = SystemChannels.platform;
     tester.binding.defaultBinaryMessenger.setMockMessageHandler(canal.name, (
@@ -246,13 +246,13 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, AppStrings.gerarLink));
     await tester.pumpAndSettle();
     await tester.tap(
-      find.widgetWithText(OutlinedButton, AppStrings.copiarToken),
+      find.widgetWithText(OutlinedButton, AppStrings.copiarCodigo),
     );
     await tester.pumpAndSettle();
 
-    // Token cru, sem scheme da deep link.
+    // Código cru, sem scheme da deep link.
     expect(copiado, _token);
-    expect(find.text(AppStrings.tokenCopiado), findsOneWidget);
+    expect(find.text(AppStrings.codigoCopiado), findsOneWidget);
 
     await fechar(tester);
   });

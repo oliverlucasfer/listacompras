@@ -121,9 +121,7 @@ void main() {
     await fechar(tester);
   });
 
-  testWidgets('deve_abrir_membros_quando_long_press_em_compartilhada', (
-    tester,
-  ) async {
+  testWidgets('deve_abrir_membros_quando_menu_do_card', (tester) async {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(
       titulo: 'Do parceiro',
@@ -131,10 +129,28 @@ void main() {
     );
 
     await abrirTela(tester);
-    await tester.longPress(find.text('Do parceiro'));
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.membros));
     await tester.pumpAndSettle();
 
     expect(find.text('membros-${lista.id}'), findsOneWidget);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_pedir_confirmacao_ao_sair_pelo_menu_do_card', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    await repo.criarLista(titulo: 'Do parceiro', donoId: 'user-a');
+
+    await abrirTela(tester);
+    await tester.longPress(find.text('Do parceiro'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.sairDaLista));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.sairListaMensagem), findsOneWidget);
     await fechar(tester);
   });
 

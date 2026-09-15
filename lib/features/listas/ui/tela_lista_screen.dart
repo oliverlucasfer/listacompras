@@ -801,7 +801,7 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AppCampoTexto(controller: _nome, label: AppStrings.adicionarItem),
+            AppCampoTexto(controller: _nome, label: AppStrings.nomeDoItem),
             const SizedBox(height: AppSpacing.md),
             Row(
               children: [

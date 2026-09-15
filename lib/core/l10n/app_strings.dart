@@ -96,6 +96,7 @@ abstract final class AppStrings {
   static const itemAtualizado = 'Item atualizado.';
   static const removerItem = 'Remover';
   static const editarItem = 'Editar item';
+  static const nomeDoItem = 'Nome do item';
   static const quantidade = 'Quantidade';
   static const unidade = 'Unidade';
   static const categoria = 'Categoria';
@@ -184,10 +185,14 @@ abstract final class AppStrings {
   static const convidarPapelLeitor = 'Leitor';
   static const gerarLink = 'Gerar link';
   static const copiarLink = 'Copiar link';
-  static const copiarToken = 'Copiar token';
+  static const copiarCodigo = 'Copiar código';
+  static const copiarLinkAjuda =
+      'Copia o endereço completo para enviar por onde quiser.';
+  static const copiarCodigoAjuda =
+      'Copia só o código, para colar em "Entrar com código".';
   static const compartilhar = 'Compartilhar';
   static const linkCopiado = 'Link copiado para a área de transferência.';
-  static const tokenCopiado = 'Token copiado para a área de transferência.';
+  static const codigoCopiado = 'Código copiado para a área de transferência.';
   static const linkCompartilhado = 'Link compartilhado.';
   static const papelAtualizado = 'Papel atualizado.';
   static const membroRemovido = 'Membro removido.';

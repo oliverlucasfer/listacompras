@@ -238,7 +238,7 @@ $$;
 
 | Tela/Modal | Conteúdo |
 | :--- | :--- |
-| Sheet "Convidar" (dono/editor) | Escolha de papel + gerar link (copiar/compartilhar) ou convidar por e-mail |
+| Sheet "Convidar" (dono/editor) | Escolha de papel + gerar link; o link completo e o código têm botões distintos ("Copiar link" × "Copiar código", com tooltip) (F14-T06) |
 | Lista de membros | Nome, papel, ações do dono (mudar papel entre editor↔leitor, remover, transferir dono) |
 | Banner "Você é leitor" | Lista em modo somente leitura para `leitor` (inputs desabilitados com dica) |
 | Painel "Convites pendentes" (Minhas Listas) | Cards: "João convidou você para **Compras da Semana**" → Aceitar/Recusar |

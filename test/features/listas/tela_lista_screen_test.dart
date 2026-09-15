@@ -356,6 +356,27 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_rotular_nome_do_item_quando_abre_editor', (tester) async {
+    await listaComItens(tester);
+
+    // Entrada rápida mantém "Adicionar item".
+    expect(
+      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Arroz'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.editarItem), findsOneWidget);
+    expect(
+      find.widgetWithText(TextField, AppStrings.nomeDoItem),
+      findsOneWidget,
+    );
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_mover_para_concluidos_e_voltar_quando_marcar_checkbox', (
     tester,
   ) async {
