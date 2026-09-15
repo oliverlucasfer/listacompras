@@ -256,4 +256,38 @@ void main() {
 
     await fechar(tester);
   });
+
+  testWidgets('deve_mostrar_snackbar_ao_compartilhar_link', (tester) async {
+    final canal = const MethodChannel('dev.fluttercommunity.plus/share');
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      canal,
+      (call) async => 'ok',
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        canal,
+        null,
+      ),
+    );
+
+    final servidor = ServidorFake((req) {
+      if (req.method == 'POST' && req.url.path.contains('/convites')) {
+        return (200, _linhaConvite(papel: 'editor'));
+      }
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    await abrir(tester, servidor);
+
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.gerarLink));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.widgetWithText(OutlinedButton, AppStrings.compartilhar),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.linkCompartilhado), findsOneWidget);
+
+    await fechar(tester);
+  });
 }

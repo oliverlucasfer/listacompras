@@ -314,6 +314,43 @@ void main() {
     expect(deletes.map((m) => m['registro_id']).toSet(), {i2.id, i3.id});
   });
 
+  test('deve_devolver_itens_removidos_quando_limpar_concluidos', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    final i1 = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    final i2 = await repo.adicionarItem(listaId: lista.id, nome: 'Feijão');
+    final i3 = await repo.adicionarItem(listaId: lista.id, nome: 'Leite');
+    await repo.editarItem(i1.id, concluido: true);
+    await repo.editarItem(i3.id, concluido: true);
+
+    final removidos = await repo.limparConcluidos(lista.id);
+
+    expect(removidos.map((i) => i.id).toSet(), {i1.id, i3.id});
+    expect(removidos.map((i) => i.ordem).toSet(), {i1.ordem, i3.ordem});
+    expect(removidos, hasLength(2));
+    expect(removidos.every((i) => i.listaId == lista.id), isTrue);
+    expect(removidos.map((i) => i.id), isNot(contains(i2.id)));
+  });
+
+  test('deve_restaurar_id_e_ordem_quando_undo_do_limpar', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    final i1 = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    final i2 = await repo.adicionarItem(listaId: lista.id, nome: 'Feijão');
+    final i3 = await repo.adicionarItem(listaId: lista.id, nome: 'Leite');
+    await repo.editarItem(i1.id, concluido: true);
+    await repo.editarItem(i3.id, concluido: true);
+
+    final removidos = await repo.limparConcluidos(lista.id);
+    for (final item in removidos) {
+      await repo.restaurarItem(item.id);
+    }
+
+    final ativos = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.listaId.equals(lista.id) & i.deletadoEm.isNull())).get();
+    final ordens = {for (final i in ativos) i.id: i.ordem};
+    expect(ordens, {i1.id: i1.ordem, i2.id: i2.ordem, i3.id: i3.ordem});
+  });
+
   test('deve_reordenar_e_enfileirar_apenas_mudancas_quando_drag', () async {
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
     final arroz = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');

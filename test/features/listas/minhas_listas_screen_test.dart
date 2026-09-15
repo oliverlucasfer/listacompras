@@ -140,6 +140,7 @@ void main() {
 
     expect(find.text('Churrasco'), findsOneWidget);
     expect(find.text(AppStrings.nenhumaLista), findsNothing);
+    expect(find.text(AppStrings.listaCriada), findsOneWidget);
     await fechar(tester);
   });
 
@@ -178,6 +179,7 @@ void main() {
 
     expect(find.text('Novo'), findsOneWidget);
     expect(find.text('Antigo'), findsNothing);
+    expect(find.text(AppStrings.listaRenomeada), findsOneWidget);
     await fechar(tester);
   });
 

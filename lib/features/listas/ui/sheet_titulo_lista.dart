@@ -5,6 +5,7 @@ import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/app_snack_bar.dart';
 
 /// Bottom sheet de título reutilizável (nova lista / renomear).
 class SheetTituloLista extends StatefulWidget {
@@ -14,12 +15,14 @@ class SheetTituloLista extends StatefulWidget {
     required this.rotuloBotao,
     required this.onSalvar,
     this.valorInicial,
+    this.mensagemSucesso,
   });
 
   final String titulo;
   final String rotuloBotao;
   final Future<void> Function(String nome) onSalvar;
   final String? valorInicial;
+  final String? mensagemSucesso;
 
   @override
   State<SheetTituloLista> createState() => _SheetTituloListaState();
@@ -48,7 +51,13 @@ class _SheetTituloListaState extends State<SheetTituloLista> {
     });
     try {
       await widget.onSalvar(nome);
-      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        final mensagem = widget.mensagemSucesso;
+        if (mensagem != null) {
+          mostrarSnackBar(context, mensagem);
+        }
+        Navigator.pop(context);
+      }
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -107,6 +116,7 @@ Future<void> abrirSheetTitulo(
   required String rotuloBotao,
   required Future<void> Function(String nome) onSalvar,
   String? valorInicial,
+  String? mensagemSucesso,
 }) {
   return AppSheet.mostrar<void>(
     context,
@@ -114,6 +124,7 @@ Future<void> abrirSheetTitulo(
       titulo: titulo,
       rotuloBotao: rotuloBotao,
       valorInicial: valorInicial,
+      mensagemSucesso: mensagemSucesso,
       onSalvar: onSalvar,
     ),
   );

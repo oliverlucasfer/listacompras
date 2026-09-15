@@ -18,6 +18,7 @@ Future<void> inicializarSupabaseTeste() async {
 class FakeAuthRepository extends SupabaseAuthRepository {
   FakeAuthRepository() : super(Supabase.instance.client);
 
+  bool sairChamado = false;
   bool entrarChamado = false;
   bool registrarChamado = false;
   bool recuperacaoChamada = false;
@@ -67,6 +68,11 @@ class FakeAuthRepository extends SupabaseAuthRepository {
     final fn = onReenviar;
     if (fn == null) throw StateError('onReenviar nao configurado');
     return fn(email);
+  }
+
+  @override
+  Future<void> sair() async {
+    sairChamado = true;
   }
 
   @override

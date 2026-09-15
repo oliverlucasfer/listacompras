@@ -246,6 +246,7 @@ void main() {
     expect(filtro, containsPair('lista_id', 'eq.$_listaId'));
     expect(filtro, containsPair('user_id', 'eq.U2'));
     expect(find.text('U2'), findsNothing);
+    expect(find.text(AppStrings.membroRemovido), findsOneWidget);
 
     await fechar(tester);
   });
@@ -276,6 +277,7 @@ void main() {
     final indice = servidor.pedidos.indexWhere((p) => p.method == 'PATCH');
     final corpo = jsonDecode(servidor.corpoDe(indice)) as Map<String, Object?>;
     expect(corpo['papel'], 'leitor');
+    expect(find.text(AppStrings.papelAtualizado), findsOneWidget);
 
     await fechar(tester);
   });

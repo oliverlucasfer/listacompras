@@ -90,6 +90,9 @@ class _TelaMembrosScreenState extends ConsumerState<TelaMembrosScreen> {
         papel: papel,
       );
       ref.invalidate(membrosDaListaProvider(listaId));
+      if (context.mounted) {
+        mostrarSnackBar(context, AppStrings.papelAtualizado);
+      }
     } catch (_) {
       if (context.mounted) {
         mostrarSnackBar(context, AppStrings.erroGenerico);
@@ -113,6 +116,9 @@ class _TelaMembrosScreenState extends ConsumerState<TelaMembrosScreen> {
     try {
       await repo.removerMembro(listaId: listaId, userId: membro.userId);
       ref.invalidate(membrosDaListaProvider(listaId));
+      if (context.mounted) {
+        mostrarSnackBar(context, AppStrings.membroRemovido);
+      }
     } catch (_) {
       if (context.mounted) {
         mostrarSnackBar(context, AppStrings.erroGenerico);

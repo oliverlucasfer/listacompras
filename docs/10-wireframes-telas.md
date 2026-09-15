@@ -281,6 +281,8 @@ Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstad
 └─────────────────────────────────┘
 ```
 
+**Sair** pede confirmação destrutiva antes de encerrar a sessão (F14-T05).
+
 ---
 
 ## 6. Mapa de estados por tela (transversal)

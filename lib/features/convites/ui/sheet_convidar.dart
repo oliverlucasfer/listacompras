@@ -80,6 +80,15 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
     }
   }
 
+  Future<void> _compartilhar(Convite convite) async {
+    await SharePlus.instance.share(
+      ShareParams(
+        text: ref.read(convitesRepositoryProvider).linkConvite(convite.token),
+      ),
+    );
+    if (mounted) mostrarSnackBar(context, AppStrings.linkCompartilhado);
+  }
+
   @override
   Widget build(BuildContext context) {
     final convite = _convite;
@@ -168,13 +177,7 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
               rotulo: AppStrings.compartilhar,
               variante: AppBotaoVariante.outlined,
               icone: Icons.share_outlined,
-              onPressed: () => SharePlus.instance.share(
-                ShareParams(
-                  text: ref
-                      .read(convitesRepositoryProvider)
-                      .linkConvite(convite.token),
-                ),
-              ),
+              onPressed: () => _compartilhar(convite),
             ),
           ],
         ],

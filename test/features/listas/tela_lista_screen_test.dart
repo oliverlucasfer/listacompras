@@ -20,6 +20,7 @@ import 'package:lista_compras/features/ia/data/parse_lista_client.dart';
 import 'package:lista_compras/features/ia/providers/ia_providers.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/domain/categoria.dart';
+import 'package:lista_compras/features/listas/domain/item.dart';
 import 'package:lista_compras/features/listas/domain/lista.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
@@ -478,6 +479,80 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_restaurar_concluidos_quando_desfazer_limpar', (
+    tester,
+  ) async {
+    await listaComItens(tester, comConcluido: true);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.limparConcluidos));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.limpar));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Detergente'), findsNothing);
+    expect(find.text(AppStrings.concluidosRemovidos), findsOneWidget);
+
+    await tester.tap(find.text(AppStrings.desfazer));
+    await tester.pumpAndSettle();
+
+    expect(find.text('${AppStrings.itensConcluidos} (1)'), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_erro_quando_limpar_concluidos_falha', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(
+      titulo: 'Compras da Semana',
+      donoId: 'user-a',
+    );
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      categoria: CategoriaItem.mercearia,
+    );
+    final detergente = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Detergente',
+      categoria: CategoriaItem.limpeza,
+    );
+    await repo.editarItem(detergente.id, concluido: true);
+    final sync = StreamController<SyncStatus>();
+    sync.add(const Sincronizado());
+    addTearDown(sync.close);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          listasRepositoryProvider.overrideWithValue(_RepoLimparFalha(db)),
+          papelRepositoryProvider.overrideWithValue(
+            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
+          ),
+          donoAtualIdProvider.overrideWithValue('user-a'),
+          syncStatusProvider.overrideWith((ref) => sync.stream),
+        ],
+        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.limparConcluidos));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.limpar));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.erroGenerico), findsOneWidget);
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_excluir_lista_e_voltar_ao_painel_quando_confirmar', (
     tester,
   ) async {
@@ -554,6 +629,7 @@ void main() {
 
     expect(find.text('Churrasco'), findsOneWidget);
     expect(find.text('Compras da Semana'), findsNothing);
+    expect(find.text(AppStrings.listaRenomeada), findsOneWidget);
 
     await fechar(tester);
   });
@@ -1131,4 +1207,12 @@ void main() {
 
     await fechar(tester);
   });
+}
+
+class _RepoLimparFalha extends ListasRepository {
+  _RepoLimparFalha(super.db);
+
+  @override
+  Future<List<Item>> limparConcluidos(String listaId) async =>
+      throw Exception('falha simulada');
 }

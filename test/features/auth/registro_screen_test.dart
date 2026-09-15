@@ -121,4 +121,41 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(AppStrings.erroGenerico), findsOneWidget);
   });
+
+  testWidgets('deve_mostrar_snackbar_quando_reenviar_link', (tester) async {
+    final repo = FakeAuthRepository();
+    repo.onRegistrar = (email, senha) => Future.value(AuthResponse());
+    repo.onReenviar = (email) async {};
+    await abrirTela(tester, repo);
+    await preencherFormulario(tester, 'a@b.com', '123456', '123456');
+    await aceitarPolitica(tester);
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.widgetWithText(OutlinedButton, AppStrings.reenviarLink),
+    );
+    await tester.pumpAndSettle();
+
+    expect(repo.reenvioChamado, isTrue);
+    expect(find.text(AppStrings.linkReenviado), findsOneWidget);
+  });
+
+  testWidgets('deve_mostrar_erro_quando_reenviar_link_falha', (tester) async {
+    final repo = FakeAuthRepository();
+    repo.onRegistrar = (email, senha) => Future.value(AuthResponse());
+    repo.onReenviar = (email) async => throw Exception('offline');
+    await abrirTela(tester, repo);
+    await preencherFormulario(tester, 'a@b.com', '123456', '123456');
+    await aceitarPolitica(tester);
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.widgetWithText(OutlinedButton, AppStrings.reenviarLink),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.erroGenerico), findsOneWidget);
+  });
 }

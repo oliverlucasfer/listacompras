@@ -218,6 +218,7 @@ class _CardLista extends ConsumerWidget {
       titulo: AppStrings.renomearLista,
       rotuloBotao: AppStrings.salvar,
       valorInicial: contagem.lista.titulo,
+      mensagemSucesso: AppStrings.listaRenomeada,
       onSalvar: (nome) => ref
           .read(listasRepositoryProvider)
           .renomearLista(id: contagem.lista.id, titulo: nome),
@@ -326,6 +327,7 @@ Future<void> abrirSheetNovaLista(BuildContext context, WidgetRef ref) {
     context,
     titulo: AppStrings.novaLista,
     rotuloBotao: AppStrings.criarLista,
+    mensagemSucesso: AppStrings.listaCriada,
     onSalvar: (nome) async {
       final lista = await ref
           .read(listasRepositoryProvider)

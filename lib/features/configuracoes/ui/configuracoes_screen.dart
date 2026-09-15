@@ -28,6 +28,18 @@ class ConfiguracoesScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _confirmarSair(BuildContext context, WidgetRef ref) async {
+    final confirmou = await AppDialog.confirmarDestrutivo(
+      context,
+      titulo: AppStrings.sairContaTitulo,
+      mensagem: AppStrings.sairContaMensagem,
+      confirmar: AppStrings.sair,
+    );
+    if (!confirmou || !context.mounted) return;
+    await ref.read(authRepositoryProvider).sair();
+    if (context.mounted) context.go('/login');
+  }
+
   Future<void> _confirmarExclusao(BuildContext context, WidgetRef ref) async {
     // Confirmação dupla (doc 06 §3.3.1): 1) senha com reautenticação,
     // 2) diálogo final — "Esta ação é permanente...".
@@ -98,10 +110,7 @@ class ConfiguracoesScreen extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text(AppStrings.sair),
-            onTap: () async {
-              await ref.read(authRepositoryProvider).sair();
-              if (context.mounted) context.go('/login');
-            },
+            onTap: () => _confirmarSair(context, ref),
           ),
           const AppCabecalhoSecao(AppStrings.sobre),
           ListTile(

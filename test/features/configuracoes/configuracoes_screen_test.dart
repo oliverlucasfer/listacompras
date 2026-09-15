@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/features/auth/providers/auth_providers.dart';
 import 'package:lista_compras/features/configuracoes/ui/configuracoes_screen.dart';
 
+import '../auth/fakes.dart';
+
 void main() {
+  setUpAll(inicializarSupabaseTeste);
+
   Future<void> abrir(WidgetTester tester) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -13,6 +18,35 @@ void main() {
           emailUsuarioProvider.overrideWithValue('oliveira@exemplo.com'),
         ],
         child: const MaterialApp(home: ConfiguracoesScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> abrirComRouter(
+    WidgetTester tester,
+    FakeAuthRepository repo,
+  ) async {
+    final router = GoRouter(
+      initialLocation: '/configuracoes',
+      routes: [
+        GoRoute(
+          path: '/configuracoes',
+          builder: (_, _) => const ConfiguracoesScreen(),
+        ),
+        GoRoute(
+          path: '/login',
+          builder: (_, _) => const Scaffold(body: Text('login')),
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          emailUsuarioProvider.overrideWithValue('oliveira@exemplo.com'),
+          authRepositoryProvider.overrideWithValue(repo),
+        ],
+        child: MaterialApp.router(routerConfig: router),
       ),
     );
     await tester.pumpAndSettle();
@@ -57,5 +91,29 @@ void main() {
     expect(estilo, Theme.of(contexto).colorScheme.error);
 
     await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('deve_pedir_confirmacao_quando_sair', (tester) async {
+    final repo = FakeAuthRepository();
+    await abrirComRouter(tester, repo);
+
+    await tester.tap(find.text(AppStrings.sair));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.sairContaMensagem), findsOneWidget);
+    expect(repo.sairChamado, isFalse);
+  });
+
+  testWidgets('deve_sair_da_conta_quando_confirma', (tester) async {
+    final repo = FakeAuthRepository();
+    await abrirComRouter(tester, repo);
+
+    await tester.tap(find.text(AppStrings.sair));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.sair));
+    await tester.pumpAndSettle();
+
+    expect(repo.sairChamado, isTrue);
+    expect(find.text('login'), findsOneWidget);
   });
 }

@@ -91,6 +91,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
           context,
           titulo: AppStrings.renomearLista,
           rotuloBotao: AppStrings.salvar,
+          mensagemSucesso: AppStrings.listaRenomeada,
           onSalvar: (nome) => repo.renomearLista(id: idLista, titulo: nome),
         );
       case 'excluir':
@@ -113,9 +114,34 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
       mensagem: AppStrings.limparConcluidosMensagem,
       confirmar: AppStrings.limpar,
     );
-    if (confirmou) {
-      ref.read(listasRepositoryProvider).limparConcluidos(idLista);
+    if (!confirmou) return;
+    final repo = ref.read(listasRepositoryProvider);
+    final List<Item> removidos;
+    try {
+      removidos = await repo.limparConcluidos(idLista);
+    } catch (_) {
+      if (context.mounted) mostrarSnackBar(context, AppStrings.erroGenerico);
+      return;
     }
+    if (!context.mounted || removidos.isEmpty) return;
+    mostrarSnackBar(
+      context,
+      AppStrings.concluidosRemovidos,
+      rotuloAcao: AppStrings.desfazer,
+      onAcao: () {
+        unawaited(() async {
+          try {
+            for (final item in removidos) {
+              await repo.restaurarItem(item.id);
+            }
+          } catch (_) {
+            if (context.mounted) {
+              mostrarSnackBar(context, AppStrings.erroGenerico);
+            }
+          }
+        }());
+      },
+    );
   }
 
   Future<void> _confirmarExcluirLista(

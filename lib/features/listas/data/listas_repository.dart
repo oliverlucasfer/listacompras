@@ -328,7 +328,9 @@ class ListasRepository {
     }
   }
 
-  Future<void> limparConcluidos(String listaId) async {
+  /// Remove (soft delete) os concluídos e devolve os itens removidos para o
+  /// undo da UI restaurar sem perder `id`/`ordem` (F14-T05).
+  Future<List<Item>> limparConcluidos(String listaId) async {
     final concluidos =
         await (_db.select(_db.itemLocal)..where(
               (i) =>
@@ -353,6 +355,7 @@ class ListasRepository {
         payload: await _payloadItem(item.id),
       );
     }
+    return concluidos.map(Item.fromLocal).toList();
   }
 
   // ---- Internos ----

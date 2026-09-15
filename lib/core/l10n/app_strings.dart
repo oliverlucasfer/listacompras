@@ -23,6 +23,7 @@ abstract final class AppStrings {
   static const verificarEmailMensagem =
       'Enviamos um link de confirmação para o seu e-mail. Clique nele para ativar sua conta.';
   static const reenviarLink = 'Reenviar link';
+  static const linkReenviado = 'Link reenviado.';
   static const linkEnviado =
       'Se o e-mail estiver cadastrado, o link de recuperação foi enviado.';
   static const definirNovaSenha = 'Definir nova senha';
@@ -37,6 +38,9 @@ abstract final class AppStrings {
       'Não foi possível salvar a senha. O link pode ter expirado.';
   static const liPoliticaPrivacidade = 'Li a Política de Privacidade';
   static const sair = 'Sair';
+  static const sairContaTitulo = 'Sair da conta?';
+  static const sairContaMensagem =
+      'Você precisará entrar novamente para acessar suas listas.';
 
   // Erros de autenticação (inline, wireframe 10 §1)
   static const erroEmailInvalido = 'Informe um e-mail válido.';
@@ -76,6 +80,8 @@ abstract final class AppStrings {
   static const nomeDaLista = 'Nome da lista';
   static const criarLista = 'Criar lista';
   static const renomearLista = 'Renomear lista';
+  static const listaCriada = 'Lista criada.';
+  static const listaRenomeada = 'Lista renomeada.';
   static const excluirLista = 'Excluir lista';
   static const excluirListaMensagem =
       'Excluir esta lista? Esta ação não pode ser desfeita.';
@@ -115,6 +121,7 @@ abstract final class AppStrings {
   static const limpar = 'Limpar';
   static const limparConcluidosMensagem =
       'Os itens concluídos serão removidos da lista.';
+  static const concluidosRemovidos = 'Itens concluídos removidos.';
 
   // Importação por IA (doc 04 §2, wireframe 10 §4.1)
   static const fechar = 'Fechar';
@@ -181,6 +188,9 @@ abstract final class AppStrings {
   static const compartilhar = 'Compartilhar';
   static const linkCopiado = 'Link copiado para a área de transferência.';
   static const tokenCopiado = 'Token copiado para a área de transferência.';
+  static const linkCompartilhado = 'Link compartilhado.';
+  static const papelAtualizado = 'Papel atualizado.';
+  static const membroRemovido = 'Membro removido.';
   static const membros = 'Membros';
   static const voce = 'Você';
   static const papelDono = 'Dono';

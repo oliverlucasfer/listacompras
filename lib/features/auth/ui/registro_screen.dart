@@ -8,6 +8,7 @@ import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
+import '../../../core/widgets/app_snack_bar.dart';
 import '../providers/auth_providers.dart';
 
 /// Tela de Registro (wireframe 10 §1.2): e-mail, senha, confirmação,
@@ -181,14 +182,33 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
 }
 
 /// Tela "Verifique seu e-mail" (wireframe 10 §1.2) com reenvio de link.
-class _VerificacaoEmail extends ConsumerWidget {
+class _VerificacaoEmail extends ConsumerStatefulWidget {
   const _VerificacaoEmail({required this.email, this.next});
 
   final String email;
   final String? next;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_VerificacaoEmail> createState() => _VerificacaoEmailState();
+}
+
+class _VerificacaoEmailState extends ConsumerState<_VerificacaoEmail> {
+  bool _reenviando = false;
+
+  Future<void> _reenviar() async {
+    setState(() => _reenviando = true);
+    try {
+      await ref.read(authRepositoryProvider).reenviarVerificacao(widget.email);
+      if (mounted) mostrarSnackBar(context, AppStrings.linkReenviado);
+    } catch (_) {
+      if (mounted) mostrarSnackBar(context, AppStrings.erroGenerico);
+    } finally {
+      if (mounted) setState(() => _reenviando = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text(AppStrings.verificarSeuEmail)),
       body: Center(
@@ -213,7 +233,7 @@ class _VerificacaoEmail extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  email,
+                  widget.email,
                   textAlign: TextAlign.center,
                   style: Theme.of(
                     context,
@@ -223,18 +243,17 @@ class _VerificacaoEmail extends ConsumerWidget {
                 AppBotao(
                   rotulo: AppStrings.reenviarLink,
                   variante: AppBotaoVariante.outlined,
-                  onPressed: () => ref
-                      .read(authRepositoryProvider)
-                      .reenviarVerificacao(email),
+                  carregando: _reenviando,
+                  onPressed: _reenviar,
                 ),
                 AppBotao(
                   rotulo: AppStrings.entrar,
                   variante: AppBotaoVariante.texto,
                   onPressed: () => context.go(
-                    next == null || next!.isEmpty
+                    widget.next == null || widget.next!.isEmpty
                         ? '/login'
                         : Uri.parse('/login')
-                              .replace(queryParameters: {'next': next!})
+                              .replace(queryParameters: {'next': widget.next!})
                               .toString(),
                   ),
                 ),
