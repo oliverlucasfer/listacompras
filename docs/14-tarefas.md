@@ -399,18 +399,22 @@ Spec: [superpowers/specs/2026-09-16-busca-filtro-design.md](superpowers/specs/20
 - [x] **F16-T00** — RF-17 + docs de planejamento
   Dep: — · Docs: spec da fase
   CP: RF-17 no 12 (tabela + matriz); 05 §6.2/§6.3, 10 §2/§3, 00/índice e Fase 16 no 14 consistentes; sem tocar código de app.
-- [ ] **F16-T01** — Helper `contemBusca` + unit tests
+- [x] **F16-T01** — Helper `contemBusca` + unit tests
   Dep: F16-T00 · Docs: [05 §6.2/§6.3](05-app-flutter.md)
   CP: `contemBusca` puro (caixa/acento) com unit tests dos casos da spec §7; `analyze`/`test` verdes.
-- [ ] **F16-T02** — Busca no painel (título)
+  *(`lib/core/texto/busca.dart` reusa `normalizarTexto` e faz `contains`; unit tests em `test/core/texto/busca_test.dart` cobrindo caixa, acento, substring, termo que não casa e termo com espaços)*
+- [x] **F16-T02** — Busca no painel (título)
   Dep: F16-T01 · Docs: [05 §6.2](05-app-flutter.md), [10 §2](10-wireframes-telas.md)
   CP: lupa/campo/filtro por título/vazio de busca no `PainelListas`; widget tests.
-- [ ] **F16-T03** — Busca na tela da lista (item)
+  *(`PainelListas` vira `ConsumerStatefulWidget`; lupa com `tooltip` "Buscar", campo `label` "Buscar lista" e hint "Nome da lista", ✕ limpa/fecha; filtro por `contemBusca(titulo)`; `AppEstadoVazio` "Nenhuma lista encontrada" sem CTA; widget tests nas abas Minhas/Compartilhadas)*
+- [x] **F16-T03** — Busca na tela da lista (item)
   Dep: F16-T01 · Docs: [05 §6.3](05-app-flutter.md), [10 §3](10-wireframes-telas.md)
   CP: lupa/campo/filtro por nome, grupos preservados (vazios escondidos), drag off, concluídos filtrados, limpar-ao-adicionar, vazio; widget tests.
-- [ ] **F16-T04** — Acessibilidade, docs e fechamento
+  *(`_buscando` na tela da lista; campo `label` "Buscar item" e hint "Nome do item"; `_ListaItens` filtra por `contemBusca(nome)`, mantém os grupos de categoria (vazios somem) e a seção de concluídos (contagens filtradas); drag desabilitado com filtro ativo (`SliverList`); adicionar limpa a busca; vazio de busca com ação "Limpar busca"; widget tests)*
+- [x] **F16-T04** — Acessibilidade, docs e fechamento
   Dep: F16-T02, F16-T03 · Docs: [12](12-prd.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [14](14-tarefas.md)
   CP: tooltips/estados conferidos; `format`/`analyze`/`test` verdes; Fase 16 marcada.
+  *(rótulo acessível `label` nos dois campos de busca com `hint` de exemplo; tooltips da lupa/✕ já presentes; 10 §2/§3 e spec §4.2/§4.3/§4.4 ajustados para "label + hint"; 05 §6.2/§6.3 sem divergência; `format`/`analyze`/`test` verdes; Fase 16 marcada 5/5 — F16 encerra a fase 16)*
 
 ---
 
@@ -432,8 +436,8 @@ Spec: [superpowers/specs/2026-09-16-busca-filtro-design.md](superpowers/specs/20
 | F12 Correções | 7 | 7 |
 | F13 Identidade visual | 3 | 3 |
 | F14 Acessibilidade & UX | 10 | 10 |
-| F16 Busca e filtro | 5 | 1 |
-| **Total** | **102** | **96** |
+| F16 Busca e filtro | 5 | 5 |
+| **Total** | **102** | **100** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

@@ -127,7 +127,8 @@ class _PainelListasState extends ConsumerState<PainelListas> {
               ),
               child: AppCampoTexto(
                 controller: _busca,
-                hint: AppStrings.buscarLista,
+                label: AppStrings.buscarLista,
+                hint: AppStrings.nomeDaLista,
                 autofocus: true,
                 onChanged: (_) => setState(() {}),
               ),

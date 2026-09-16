@@ -331,7 +331,8 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                     ),
                     child: AppCampoTexto(
                       controller: _busca,
-                      hint: AppStrings.buscarItem,
+                      label: AppStrings.buscarItem,
+                      hint: AppStrings.nomeDoItem,
                       autofocus: true,
                       onChanged: (_) => setState(() {}),
                     ),

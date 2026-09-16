@@ -42,7 +42,7 @@ Requisito novo: **RF-17** ([12](../../12-prd.md)). Fase nova: **F16 — Busca e 
 ### 4.2 Painel (Minhas Listas / Compartilhadas)
 
 - Ícone de **lupa** na AppBar (à esquerda das ações existentes; na aba Compartilhadas, antes do `person_add`), com `tooltip` "Buscar".
-- Ao tocar, aparece um **campo de busca** (`AppCampoTexto`) no topo do corpo, logo abaixo da AppBar, com `hint` "Buscar lista" e foco automático; o ✕ na AppBar ("Limpar busca") limpa e fecha.
+- Ao tocar, aparece um **campo de busca** (`AppCampoTexto`) no topo do corpo, logo abaixo da AppBar, com `label` "Buscar lista" e `hint` de exemplo "Nome da lista", com foco automático; o ✕ na AppBar ("Limpar busca") limpa e fecha.
 - A lista visível é `listasComContagem` filtrada por `contemBusca(titulo, consulta)`.
 - **Sem resultados:** `AppEstadoVazio` ("Nenhuma lista encontrada" + "Tente outro termo."), sem CTA.
 - **Sem busca:** comportamento atual (vazio real, FAB etc.) inalterado.
@@ -50,7 +50,7 @@ Requisito novo: **RF-17** ([12](../../12-prd.md)). Fase nova: **F16 — Busca e 
 
 ### 4.3 Tela da lista de compras
 
-- Ícone de **lupa** na AppBar (todas as roles — buscar é leitura), com `tooltip` "Buscar"; revela, no topo do corpo, o campo `AppCampoTexto` com `hint` "Buscar item"; ✕ na AppBar limpa e fecha.
+- Ícone de **lupa** na AppBar (todas as roles — buscar é leitura), com `tooltip` "Buscar"; revela, no topo do corpo, o campo `AppCampoTexto` com `label` "Buscar item" e `hint` de exemplo "Nome do item"; ✕ na AppBar limpa e fecha.
 - Itens visíveis = `itensDaLista` filtrados por `contemBusca(nome, consulta)`.
 - **Mantém o agrupamento** por categoria (ordem do enum) e **esconde grupos vazios**; a contagem do header `Categoria (n)` reflete os resultados filtrados.
 - **Concluídos** que casam aparecem na seção "Itens concluídos (n)" (contagem filtrada).
@@ -62,7 +62,7 @@ Requisito novo: **RF-17** ([12](../../12-prd.md)). Fase nova: **F16 — Busca e 
 
 ### 4.4 Acessibilidade (RNF-06, doc [15 §4](../../15-design-system.md))
 
-- Lupa e ✕ com `tooltip`; o campo de busca tem rótulo acessível (hint + `label`).
+- Lupa e ✕ com `tooltip`; o campo de busca tem rótulo acessível (`label`) e `hint` de exemplo.
 - Alvos ≥ 48dp (já garantidos pelo `IconButton`/`AppCampoTexto`).
 - O estado "sem resultados" usa `AppEstadoVazio` (rótulo único já conforme, F14-T01).
 
