@@ -839,6 +839,9 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
                     final atual = _quantidadeLida() ?? 1;
                     if (atual > 1) {
                       _quantidade.text = _formatarQuantidade(atual - 1);
+                      if (_erroQuantidade != null) {
+                        setState(() => _erroQuantidade = null);
+                      }
                     }
                   },
                 ),
@@ -863,6 +866,9 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
                   onPressed: () {
                     final atual = _quantidadeLida() ?? 1;
                     _quantidade.text = _formatarQuantidade(atual + 1);
+                    if (_erroQuantidade != null) {
+                      setState(() => _erroQuantidade = null);
+                    }
                   },
                 ),
               ],

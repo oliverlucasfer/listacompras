@@ -510,6 +510,31 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_limpar_erro_da_quantidade_quando_ajustar_stepper', (
+    tester,
+  ) async {
+    await listaComItens(tester);
+
+    await tester.tap(find.text('Arroz'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.quantidade),
+      '0',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.erroQuantidadeInvalida), findsOneWidget);
+
+    await tester.tap(find.byTooltip(AppStrings.aumentar));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.erroQuantidadeInvalida), findsNothing);
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_desmarcar_todos_quando_menu', (tester) async {
     await listaComItens(tester);
     final repo = ListasRepository(db);
