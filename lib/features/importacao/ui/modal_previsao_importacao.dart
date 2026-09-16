@@ -5,6 +5,8 @@ import '../../../core/importacao/resposta_import.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_banner.dart';
+import '../../../core/widgets/app_campo_texto.dart';
+import '../../../core/widgets/app_dropdown.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_snack_bar.dart';
@@ -291,14 +293,10 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TextField(
+          AppCampoTexto(
             controller: _nome,
+            erro: _erroNome,
             onChanged: (_) => _notificar(),
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              isDense: true,
-              errorText: _erroNome,
-            ),
           ),
           const SizedBox(height: 8),
           Row(
@@ -309,18 +307,11 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
                 onPressed: () => _passo(-1),
               ),
               Expanded(
-                child: TextField(
+                child: AppCampoTexto(
                   controller: _quantidade,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  textAlign: TextAlign.center,
+                  erro: _erroQuantidade,
+                  teclado: const TextInputType.numberWithOptions(decimal: true),
                   onChanged: (_) => _notificar(),
-                  decoration: InputDecoration(
-                    border: const OutlineInputBorder(),
-                    isDense: true,
-                    errorText: _erroQuantidade,
-                  ),
                 ),
               ),
               IconButton(
@@ -330,13 +321,10 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: DropdownButtonFormField<Unidade>(
-                  initialValue: _unidade,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                  items: [
+                child: AppDropdown<Unidade>(
+                  valor: _unidade,
+                  compacto: true,
+                  itens: [
                     for (final u in Unidade.values)
                       DropdownMenuItem(value: u, child: Text(u.valor)),
                   ],
@@ -352,14 +340,11 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
           const SizedBox(height: 8),
           // Categoria (F6-T05, spec §5.2): sugestão da IA editável antes
           // de gravar na lista.
-          DropdownButtonFormField<CategoriaItem>(
-            initialValue: _categoria,
-            decoration: const InputDecoration(
-              labelText: AppStrings.categoria,
-              border: OutlineInputBorder(),
-              isDense: true,
-            ),
-            items: [
+          AppDropdown<CategoriaItem>(
+            label: AppStrings.categoria,
+            valor: _categoria,
+            compacto: true,
+            itens: [
               for (final c in CategoriaItem.values)
                 DropdownMenuItem(value: c, child: Text(c.rotulo)),
             ],

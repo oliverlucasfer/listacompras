@@ -7,6 +7,7 @@ import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/app_botao.dart';
+import '../../../core/widgets/app_campo_texto.dart';
 import '../../ia/domain/contrato_ia.dart';
 import '../../ia/providers/ia_providers.dart';
 import '../../listas/providers/listas_providers.dart';
@@ -153,12 +154,14 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
           const SizedBox(height: AppSpacing.md),
           const Text(AppStrings.iaColeOuDigite),
           const SizedBox(height: AppSpacing.sm),
-          TextField(
+          AppCampoTexto(
             controller: _controller,
+            hint: AppStrings.iaExemplo,
+            teclado: TextInputType.multiline,
+            textInputAction: TextInputAction.newline,
+            maxLength: _limite,
             minLines: 5,
             maxLines: 5,
-            keyboardType: TextInputType.multiline,
-            decoration: const InputDecoration(hintText: AppStrings.iaExemplo),
           ),
           Align(
             alignment: Alignment.centerRight,

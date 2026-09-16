@@ -64,7 +64,7 @@ class AppCampoTexto extends StatelessWidget {
         labelText: label,
         hintText: hint,
         errorText: erro,
-        counterText: maxLength == null ? null : '',
+        counter: maxLength == null ? null : const SizedBox.shrink(),
         suffixIcon: sufixo,
       ),
     );
