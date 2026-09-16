@@ -87,6 +87,8 @@ abstract final class AppStrings {
       'Excluir esta lista? Esta ação não pode ser desfeita.';
   static const atualizada = 'atualizada';
   static const erroNomeVazio = 'Informe um nome.';
+  static const erroQuantidadeInvalida =
+      'Informe uma quantidade maior que zero.';
 
   // Tela da Lista (wireframe 10 §3, doc 05 §6.3)
   static const itens = 'Itens';

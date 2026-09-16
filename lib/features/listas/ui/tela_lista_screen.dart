@@ -773,6 +773,8 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
   );
   late Unidade _unidade = widget.item.unidade;
   late CategoriaItem _categoria = widget.item.categoria;
+  String? _erroNome;
+  String? _erroQuantidade;
 
   @override
   void dispose() {
@@ -791,6 +793,12 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
   Future<void> _salvar() async {
     final nome = _nome.text.trim();
     final quantidade = _quantidadeLida();
+    setState(() {
+      _erroNome = nome.isEmpty ? AppStrings.erroNomeVazio : null;
+      _erroQuantidade = quantidade == null
+          ? AppStrings.erroQuantidadeInvalida
+          : null;
+    });
     if (nome.isEmpty || quantidade == null) return;
     await ref
         .read(listasRepositoryProvider)
@@ -813,7 +821,14 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AppCampoTexto(controller: _nome, label: AppStrings.nomeDoItem),
+            AppCampoTexto(
+              controller: _nome,
+              label: AppStrings.nomeDoItem,
+              erro: _erroNome,
+              onChanged: (_) {
+                if (_erroNome != null) setState(() => _erroNome = null);
+              },
+            ),
             const SizedBox(height: AppSpacing.md),
             Row(
               children: [
@@ -831,9 +846,15 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
                   child: AppCampoTexto(
                     controller: _quantidade,
                     label: AppStrings.quantidade,
+                    erro: _erroQuantidade,
                     teclado: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
+                    onChanged: (_) {
+                      if (_erroQuantidade != null) {
+                        setState(() => _erroQuantidade = null);
+                      }
+                    },
                   ),
                 ),
                 IconButton(

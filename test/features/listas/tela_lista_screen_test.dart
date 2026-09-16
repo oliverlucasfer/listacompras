@@ -482,6 +482,34 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_mostrar_erro_inline_quando_nome_e_quantidade_invalidos', (
+    tester,
+  ) async {
+    await listaComItens(tester);
+
+    await tester.tap(find.text('Arroz'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.nomeDoItem),
+      '',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.quantidade),
+      '0',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.erroNomeVazio), findsOneWidget);
+    expect(find.text(AppStrings.erroQuantidadeInvalida), findsOneWidget);
+    // O diálogo permanece aberto (nada foi salvo).
+    expect(find.text(AppStrings.editarItem), findsOneWidget);
+    expect(find.text('Arroz'), findsOneWidget);
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_desmarcar_todos_quando_menu', (tester) async {
     await listaComItens(tester);
     final repo = ListasRepository(db);
