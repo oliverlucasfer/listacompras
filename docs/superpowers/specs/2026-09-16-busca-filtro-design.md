@@ -29,7 +29,7 @@ Requisito novo: **RF-17** ([12](../../12-prd.md)). Fase nova: **F16 — Busca e 
 | Drag com filtro ativo | **Desabilitado** | Reordenar uma visão filtrada gravaria `ordem` ambígua |
 | Entrada | **Lupa na AppBar** revela um campo de busca; ✕ limpa e fecha | Padrão Material; não ocupa espaço permanente |
 | Adicionar com busca ativa | **Limpa a busca** ao adicionar | O item recém-adicionado aparece (mesmo que não casasse com o termo) |
-| Persistência do termo | **Nenhuma** (estado local da tela) | Busca é tarefa pontual; ao navegar, volta ao normal |
+| Persistência do termo | **Só enquanto a tela está montada** (estado local; nada em disco) | Abrir uma lista e voltar mantém o filtro no painel — o campo aberto deixa claro que há filtro ativo; a tela da lista zera ao voltar (é desmontada). Nada é persistido entre sessões |
 | Acentos/caixa | Normalizados (`normalizarTexto`) | "Café" casa com "cafe" |
 | Provider novo | **Não** | Filtro no `build` sobre os streams existentes (volume não justifica indireção) |
 
@@ -108,7 +108,7 @@ Requisito novo: **RF-17** ([12](../../12-prd.md)). Fase nova: **F16 — Busca e 
 
 - Busca de listas por **nomes de itens** (título + itens).
 - Filtros por categoria/unidade/status (chips) e busca com destaque de termo.
-- Busca global (listas + itens juntos), histórico de buscas e persistência do termo.
+- Busca global (listas + itens juntos), histórico de buscas e persistência do termo entre sessões.
 - Qualquer mudança de schema/RLS/Realtime/sync ou índices no Postgres/Drift.
 - Ordenação alternativa dos resultados (mantém a ordem/grupos atuais).
 

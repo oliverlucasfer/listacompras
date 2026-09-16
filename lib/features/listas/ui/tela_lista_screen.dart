@@ -486,7 +486,7 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
       );
     }
     _controller.clear();
-    widget.onItemAdicionado?.call();
+    if (mounted) widget.onItemAdicionado?.call();
   }
 
   @override

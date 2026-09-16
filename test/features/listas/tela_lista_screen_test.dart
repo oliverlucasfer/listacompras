@@ -1477,6 +1477,42 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_filtrar_concluidos_quando_buscar', (tester) async {
+    await listaComItens(tester, comConcluido: true); // Detergente concluído
+
+    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.buscarItem),
+      'deter',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('${AppStrings.itensConcluidos} (1)'), findsOneWidget);
+    expect(find.text('Arroz'), findsNothing);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_abrir_editor_quando_tocar_item_filtrado', (tester) async {
+    await listaComItens(tester);
+
+    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.buscarItem),
+      'arr',
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Arroz'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.editarItem), findsOneWidget);
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_suportar_escala_de_texto_2x_quando_tela_da_lista', (
     tester,
   ) async {

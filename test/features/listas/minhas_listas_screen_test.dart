@@ -336,4 +336,31 @@ void main() {
 
     await fechar(tester);
   });
+
+  testWidgets('deve_limpar_e_restaurar_quando_fechar_busca', (tester) async {
+    final repo = ListasRepository(db);
+    await repo.criarLista(titulo: 'Compras da Semana', donoId: 'user-a');
+    await repo.criarLista(titulo: 'Churrasco', donoId: 'user-a');
+    await abrirTela(tester);
+
+    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.buscarLista),
+      'chur',
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Compras da Semana'), findsNothing);
+
+    await tester.tap(find.byTooltip(AppStrings.limparBusca));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.widgetWithText(TextField, AppStrings.buscarLista),
+      findsNothing,
+    );
+    expect(find.text('Compras da Semana'), findsOneWidget);
+
+    await fechar(tester);
+  });
 }

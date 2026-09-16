@@ -223,6 +223,7 @@ void main() {
   testWidgets('deve_filtrar_compartilhadas_quando_buscar', (tester) async {
     final repo = ListasRepository(db);
     await repo.criarLista(titulo: 'Do parceiro', donoId: 'user-a');
+    await repo.criarLista(titulo: 'Do chefe', donoId: 'user-a');
     await abrirTela(tester);
 
     await tester.tap(find.byTooltip(AppStrings.buscar));
@@ -234,6 +235,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Do parceiro'), findsOneWidget);
+    expect(find.text('Do chefe'), findsNothing);
     await fechar(tester);
   });
 }

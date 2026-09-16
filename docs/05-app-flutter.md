@@ -145,7 +145,7 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 * Feedback: SnackBar curto "Lista criada" / "Lista renomeada" (F14-T05). As mensagens de exclusão usam **uma única** copy em `AppStrings` (`excluirListaTitulo`/`excluirListaMensagem(nItens, {temMembros})`: o trecho "para todos os participantes" aparece quando há membros conhecidos). A tela da lista consulta `membrosDaListaProvider` em best-effort (sem fetch extra; usa o que já estiver em cache) e o painel assume lista sem membros — F14-T08, [10 §3.4](10-wireframes-telas.md).
 * Estado vazio: ilustração simples + CTA de criação.
 * Lista com `deletado_em` nunca aparece (tombstone invisível).
-* **Busca (F16, RF-17):** a lupa na AppBar revela um campo no topo do corpo que filtra os cards pelo **título** (offline, sem acento/caixa); sem resultado → `AppEstadoVazio` "Nenhuma lista encontrada" (sem CTA); ✕ limpa e fecha.
+* **Busca (F16, RF-17):** a lupa na AppBar revela um campo no topo do corpo que filtra os cards pelo **título** (offline, sem acento/caixa); sem resultado → `AppEstadoVazio` "Nenhuma lista encontrada" (sem CTA); ✕ limpa e fecha; campo com rótulo acessível (label) e hint de exemplo.
 
 ### 6.3. Tela da Lista de Compras
 | Elemento | Comportamento |
@@ -168,7 +168,7 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 * **Rótulo do campo de nome (F14-T06):** no editor, o campo usa "Nome do item" — "Adicionar item" vale só para a entrada rápida.
 * **Erro e vazio (F14-T04):** falha de carga usa `AppEstadoErro` **com retry** (não texto puro, como fazia); "Lista não encontrada" ganha CTA para `/listas`; o vazio do leitor **instrui** ("Peça a um editor para adicionar") em vez de apontar para um campo que ele não tem.
 * **Banner de leitura (F14-T08):** usa `AppBannerTipo.leitura` ([15 §3](15-design-system.md)), não um `Container` manual.
-* **Busca (F16, RF-17):** a lupa na AppBar (todas as roles) revela um campo que filtra os itens pelo **nome** (offline, sem acento/caixa); mantém os grupos de categoria (escondendo vazios) e a seção de concluídos (contagens filtradas); **drag desabilitado** enquanto filtra; ao **adicionar** um item a busca é limpa; sem resultado → `AppEstadoVazio` "Nenhum item encontrado" com "Limpar busca".
+* **Busca (F16, RF-17):** a lupa na AppBar (todas as roles) revela um campo que filtra os itens pelo **nome** (offline, sem acento/caixa); mantém os grupos de categoria (escondendo vazios) e a seção de concluídos (contagens filtradas); **drag desabilitado** enquanto filtra; ao **adicionar** um item a busca é limpa; sem resultado → `AppEstadoVazio` "Nenhum item encontrado" com "Limpar busca"; campo com rótulo acessível (label) e hint de exemplo.
 
 ### 6.4. Modal "Importar lista" (RF-06 + RF-16)
 

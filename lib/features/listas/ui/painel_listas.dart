@@ -54,6 +54,7 @@ class _PainelListasState extends ConsumerState<PainelListas> {
   void _abrirBusca() => setState(() => _buscando = true);
 
   void _fecharBusca() {
+    if (!mounted) return;
     _busca.clear();
     setState(() => _buscando = false);
   }
