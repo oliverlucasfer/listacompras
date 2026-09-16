@@ -1357,6 +1357,76 @@ void main() {
     await fechar(tester);
   });
 
+  // ---- Busca por nome na tela da lista (F16-T03, RF-17) ----
+
+  testWidgets('deve_filtrar_itens_e_manter_grupos_quando_buscar', (
+    tester,
+  ) async {
+    await listaComItens(tester); // Arroz (Mercearia), Leite (Laticínios)
+
+    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.buscarItem),
+      'arr',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Arroz'), findsOneWidget);
+    expect(find.text('Leite'), findsNothing);
+    expect(find.text('Mercearia (1)'), findsOneWidget);
+    expect(find.text('Laticínios (1)'), findsNothing);
+    // Drag desabilitado enquanto filtra.
+    expect(find.byIcon(Icons.drag_handle), findsNothing);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_vazio_de_busca_quando_sem_resultado', (
+    tester,
+  ) async {
+    await listaComItens(tester);
+
+    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.buscarItem),
+      'zzz',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.nenhumItemEncontrado), findsOneWidget);
+    expect(find.text(AppStrings.limparBusca), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_limpar_busca_quando_adicionar_item', (tester) async {
+    await listaComItens(tester);
+
+    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.buscarItem),
+      'arr',
+    );
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      'Café',
+    );
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    // Busca fechada e itens todos visíveis de novo.
+    expect(find.text('Leite'), findsOneWidget);
+    expect(find.text('Café'), findsOneWidget);
+    expect(find.widgetWithText(TextField, AppStrings.buscarItem), findsNothing);
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_suportar_escala_de_texto_2x_quando_tela_da_lista', (
     tester,
   ) async {

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/importacao/parser_lista_local.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/navigation/voltar_para_inicio.dart';
+import '../../../core/texto/busca.dart';
 import '../../../core/texto/normalizar.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_banner.dart';
@@ -48,6 +49,8 @@ class TelaListaScreen extends ConsumerStatefulWidget {
 class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
   PapelRepository? _papelRepo;
   ValueNotifier<String?>? _membroEntrou;
+  final _busca = TextEditingController();
+  bool _buscando = false;
 
   /// Papel efetivo na lista (F7-T03 + correção): o dono é derivado da própria
   /// lista local antes do papel do servidor (editável offline/após reinício).
@@ -74,8 +77,16 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
 
   @override
   void dispose() {
+    _busca.dispose();
     _membroEntrou?.removeListener(_aoMembroEntrar);
     super.dispose();
+  }
+
+  void _abrirBusca() => setState(() => _buscando = true);
+
+  void _fecharBusca() {
+    _busca.clear();
+    if (mounted) setState(() => _buscando = false);
   }
 
   void _acaoMenu(
@@ -235,6 +246,18 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
               leading: botaoVoltarInicio(context, inicio),
               title: Text(lista.titulo),
               actions: [
+                if (_buscando)
+                  IconButton(
+                    tooltip: AppStrings.limparBusca,
+                    icon: const Icon(Icons.close),
+                    onPressed: _fecharBusca,
+                  )
+                else
+                  IconButton(
+                    tooltip: AppStrings.buscar,
+                    icon: const Icon(Icons.search),
+                    onPressed: _abrirBusca,
+                  ),
                 PopupMenuButton<String>(
                   tooltip: AppStrings.menu,
                   onSelected: (acao) => _acaoMenu(context, ref, lista.id, acao),
@@ -291,11 +314,35 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
             body: Column(
               children: [
                 const IndicadorSync(),
+                if (_buscando)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      AppSpacing.sm,
+                      AppSpacing.lg,
+                      0,
+                    ),
+                    child: AppCampoTexto(
+                      controller: _busca,
+                      hint: AppStrings.buscarItem,
+                      autofocus: true,
+                      onChanged: (_) => setState(() {}),
+                    ),
+                  ),
                 if (_papelNaLista(lista.id) == Papel.leitor)
                   const _BannerSomenteLeitura(),
                 if (_papelNaLista(lista.id) != Papel.leitor)
-                  _CampoAdicionar(listaId: listaId),
-                Expanded(child: _ListaItens(listaId: listaId)),
+                  _CampoAdicionar(
+                    listaId: listaId,
+                    onItemAdicionado: _buscando ? _fecharBusca : null,
+                  ),
+                Expanded(
+                  child: _ListaItens(
+                    listaId: listaId,
+                    consulta: _busca.text,
+                    onLimparBusca: _fecharBusca,
+                  ),
+                ),
                 if (_papelNaLista(lista.id) != Papel.leitor)
                   SafeArea(
                     top: false,
@@ -343,9 +390,10 @@ class _BannerSomenteLeitura extends StatelessWidget {
 }
 
 class _CampoAdicionar extends ConsumerStatefulWidget {
-  const _CampoAdicionar({required this.listaId});
+  const _CampoAdicionar({required this.listaId, this.onItemAdicionado});
 
   final String listaId;
+  final VoidCallback? onItemAdicionado;
 
   @override
   ConsumerState<_CampoAdicionar> createState() => _CampoAdicionarState();
@@ -430,6 +478,7 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
       );
     }
     _controller.clear();
+    widget.onItemAdicionado?.call();
   }
 
   @override
@@ -484,9 +533,18 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
 }
 
 class _ListaItens extends ConsumerWidget {
-  const _ListaItens({required this.listaId});
+  const _ListaItens({
+    required this.listaId,
+    required this.consulta,
+    this.onLimparBusca,
+  });
 
   final String listaId;
+  final String consulta;
+  final VoidCallback? onLimparBusca;
+
+  bool _casa(Item item) =>
+      consulta.trim().isEmpty || contemBusca(item.nome, consulta);
 
   void _reordenarGrupo(
     WidgetRef ref,
@@ -528,8 +586,22 @@ class _ListaItens extends ConsumerWidget {
                 : AppStrings.listaVaziaDica,
           );
         }
-        final pendentes = itens.where((i) => !i.concluido).toList();
-        final concluidos = itens.where((i) => i.concluido).toList();
+        final pendentes = itens.where((i) => !i.concluido && _casa(i)).toList();
+        final concluidos = itens.where((i) => i.concluido && _casa(i)).toList();
+        final filtrando = consulta.trim().isNotEmpty;
+        if (filtrando && pendentes.isEmpty && concluidos.isEmpty) {
+          return AppEstadoVazio(
+            icone: Icons.search_off,
+            titulo: AppStrings.nenhumItemEncontrado,
+            descricao: AppStrings.buscaSemResultadoDica,
+            acao: AppBotao(
+              rotulo: AppStrings.limparBusca,
+              variante: AppBotaoVariante.texto,
+              expandido: false,
+              onPressed: onLimparBusca,
+            ),
+          );
+        }
         final slivers = <Widget>[];
         // Grupos na ordem do enum (doc 01 §3.2); exibição = (categoria, ordem,
         // id) — o stream já chega ordenado por (ordem, id).
@@ -548,7 +620,7 @@ class _ListaItens extends ConsumerWidget {
               ),
             )
             ..add(
-              podeEscrever
+              podeEscrever && !filtrando
                   ? SliverReorderableList(
                       itemCount: grupo.length,
                       onReorderItem: (oldIndex, newIndex) => _reordenarGrupo(
