@@ -374,9 +374,10 @@ Spec: [superpowers/specs/2026-09-14-ux-acessibilidade-design.md](superpowers/spe
   Dep: F14-T00 · Docs: [05 §6](05-app-flutter.md), [15 §3](15-design-system.md)
   CP: erro inline no editor (nome/quantidade) e na edição inline da importação; aviso quando o parser descarta todo o texto; toggle de senha no registro; testes verdes.
   *(`_CampoAdicionar` com erro inline `naoEntendiItem` quando o parser descarta o texto, limpo ao digitar; editor de item com `erroNomeVazio`/`erroQuantidadeInvalida` mantendo o diálogo aberto; `_PainelEdicao` da importação com `errorText` de nome/quantidade (migração para `AppCampoTexto` segue na F14-T08); registro com toggle independente por campo (padrão da `RedefinirSenhaScreen`); docs 05 §6.1/§6.3/§6.4 atualizados)*
-- [ ] **F14-T08** — Consistência e dívida visual
+- [x] **F14-T08** — Consistência e dívida visual
   Dep: F14-T00 · Docs: [15 §1/§3](15-design-system.md), [05 §6/§7](05-app-flutter.md)
   CP: uma única copy de exclusão de lista; strings (tempo relativo, fallbacks) no `AppStrings`; `AppBannerTipo.leitura` usado; `AppCampoTexto` com `maxLength`/`minLines`/`textInputAction`/`readOnly` e os `TextField` crus migrados; medidas em tokens; `analyze`/`test` verdes.
+  *(`AppCampoTexto` com `hint`/`maxLength`/`minLines`/`maxLines`/`textInputAction`/`readOnly` (contador embutido oculto, sem truncar; default `maxLines` corrigido para 1); `AppDropdown<T>` novo migrando os 4 dropdowns; `TextField` crus de `modal_importar`/`modal_previsao_importacao`/`sheet_convidar` migrados; `excluirListaTitulo`/`excluirListaMensagem(nItens, temMembros)` única (painel `false`, tela da lista best-effort via `membrosDaListaProvider`); tempo relativo/`progressoLista`/`semValor` no `AppStrings`; banner de leitura via `AppBannerTipo.leitura`; medidas exatas em tokens; docs 15 §3 atualizado)*
 - [ ] **F14-T09** — Skeletons + fechamento
   Dep: F14-T01…T08 · Docs: [15 §3](15-design-system.md), [07 §1](07-qualidade-ci.md)
   CP: `AppEsqueleto` (estático, sem dependência nova) no painel/itens/membros; `format`/`analyze`/`test` verdes; docs sincronizados; APK aos testadores via F5-T05b (opcional).
@@ -407,8 +408,8 @@ Registrado pela [spec da F14 §16](superpowers/specs/2026-09-14-ux-acessibilidad
 | F11 Import local | 4 | 4 |
 | F12 Correções | 7 | 7 |
 | F13 Identidade visual | 3 | 3 |
-| F14 Acessibilidade & UX | 10 | 8 |
-| **Total** | **97** | **93** |
+| F14 Acessibilidade & UX | 10 | 9 |
+| **Total** | **97** | **94** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

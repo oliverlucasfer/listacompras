@@ -42,7 +42,8 @@ Título de tela (AppBar): **24sp bold** aplicado via `appBarTheme.titleTextStyle
 | `AppCabecalhoSecao` | Cabeçalho de seção (`título (n)`) |
 | `AppEstadoVazio` | Vazio com ícone + texto + CTA; rótulo único (título + descrição) para o leitor de tela, com a ação em nó próprio (Fase 14) |
 | `AppEstadoErro` | Erro de carga com retry rotulado |
-| `AppCampoTexto` | Campo de formulário com erro inline; aceita `maxLength`, `minLines`/`maxLines`, `textInputAction` e `readOnly` (Fase 14) |
+| `AppCampoTexto` | Campo de formulário com erro inline; aceita `hint`, `maxLength`, `minLines`/`maxLines`, `textInputAction` e `readOnly` (Fase 14) |
+| `AppDropdown<T>` | Dropdown de formulário padronizado (`label`/`valor`/`itens`/`onChanged`/`compacto`), mesma decoração dos campos (Fase 14) |
 | `AppSheet.mostrar` | Bottom sheet padrão |
 | `mostrarSnackBar` | Snackbar (inclusive undo) com **duração curta**: 2s sem ação e 3s com ação (`duracao` sobrescreve — F12-T07); já anunciado por ser uma live region do próprio `SnackBar` |
 
