@@ -200,6 +200,38 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  testWidgets('deve_mostrar_erro_quando_nome_vazio_na_edicao_inline', (
+    tester,
+  ) async {
+    await abrir(tester, resposta4);
+
+    await tester.tap(find.byIcon(Icons.expand_more).first);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).first, '');
+    await tester.pump();
+
+    expect(find.text(AppStrings.erroNomeVazio), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('deve_mostrar_erro_quando_quantidade_invalida_na_edicao_inline', (
+    tester,
+  ) async {
+    await abrir(tester, resposta4);
+
+    await tester.tap(find.byIcon(Icons.expand_more).first);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).at(1), '0');
+    await tester.pump();
+
+    expect(find.text(AppStrings.erroQuantidadeInvalida), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('deve_gravar_itens_via_repositorio_quando_confirmar', (
     tester,
   ) async {

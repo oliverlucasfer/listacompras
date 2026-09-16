@@ -239,6 +239,8 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
   );
   late Unidade _unidade = widget.linha.unidade;
   late CategoriaItem _categoria = widget.linha.categoria;
+  String? _erroNome;
+  String? _erroQuantidade;
 
   @override
   void dispose() {
@@ -254,9 +256,14 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
   }
 
   void _notificar({double? quantidade}) {
+    final lida = _quantidadeLida();
+    setState(() {
+      _erroNome = _nome.text.trim().isEmpty ? AppStrings.erroNomeVazio : null;
+      _erroQuantidade = lida == null ? AppStrings.erroQuantidadeInvalida : null;
+    });
     widget.onAlterar(
       _nome.text,
-      quantidade ?? _quantidadeLida() ?? widget.linha.quantidade,
+      quantidade ?? lida ?? widget.linha.quantidade,
       _unidade,
       _categoria,
     );
@@ -279,9 +286,10 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
           TextField(
             controller: _nome,
             onChanged: (_) => _notificar(),
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
               isDense: true,
+              errorText: _erroNome,
             ),
           ),
           const SizedBox(height: 8),
@@ -300,9 +308,10 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
                   ),
                   textAlign: TextAlign.center,
                   onChanged: (_) => _notificar(),
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
                     isDense: true,
+                    errorText: _erroQuantidade,
                   ),
                 ),
               ),
