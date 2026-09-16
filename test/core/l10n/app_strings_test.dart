@@ -24,4 +24,19 @@ void main() {
       'Os 3 itens serão removidos para todos os participantes.',
     );
   });
+
+  test('deve_montar_tempo_relativo_centralizado', () {
+    expect(AppStrings.tempoAgora, 'agora');
+    expect(AppStrings.tempoMinutos(5), 'há 5 min');
+    expect(AppStrings.tempoHoras(3), 'há 3 h');
+    expect(AppStrings.tempoOntem, 'ontem');
+    expect(AppStrings.tempoDias(5), 'há 5 dias');
+    expect(AppStrings.tempoMeses(2), 'há 2 meses');
+    expect(AppStrings.tempoAnos(2), 'há 2 anos');
+  });
+
+  test('deve_montar_progresso_da_lista', () {
+    expect(AppStrings.progressoLista(3, 10), '3/10 itens concluídos');
+    expect(AppStrings.progressoLista(0, 1), '0/1 item concluído');
+  });
 }

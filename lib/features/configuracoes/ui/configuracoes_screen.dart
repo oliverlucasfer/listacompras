@@ -125,7 +125,7 @@ class ConfiguracoesScreen extends ConsumerWidget {
             trailing: FutureBuilder<PackageInfo>(
               future: PackageInfo.fromPlatform(),
               builder: (context, snapshot) =>
-                  Text(snapshot.data?.version ?? '—'),
+                  Text(snapshot.data?.version ?? AppStrings.semValor),
             ),
           ),
           const Divider(height: 32),

@@ -1,4 +1,5 @@
-import '../domain/lista.dart';
+import '../../../core/l10n/app_strings.dart';
+import 'lista.dart';
 
 /// Lista com contagem de itens para o card do painel (wireframe 10 §2.1:
 /// "3/10 itens concluídos"). Itens com tombstone ficam fora da contagem.
@@ -13,8 +14,5 @@ class ListaComContagem {
   final int totalItens;
   final int concluidos;
 
-  String get contagem {
-    final palavra = totalItens == 1 ? 'item concluído' : 'itens concluídos';
-    return '$concluidos/$totalItens $palavra';
-  }
+  String get contagem => AppStrings.progressoLista(concluidos, totalItens);
 }

@@ -122,6 +122,20 @@ abstract final class AppStrings {
   static const listaVazia = 'Lista vazia';
   static const listaVaziaDica = 'Ainda não há itens nesta lista.';
 
+  // Tempo relativo dos cards (wireframe 10 §2, F14-T08)
+  static const tempoAgora = 'agora';
+  static String tempoMinutos(int m) => 'há $m min';
+  static String tempoHoras(int h) => 'há $h h';
+  static const tempoOntem = 'ontem';
+  static String tempoDias(int d) => 'há $d dias';
+  static String tempoMeses(int m) => 'há $m meses';
+  static String tempoAnos(int a) => 'há $a anos';
+
+  static String progressoLista(int concluidos, int total) {
+    final palavra = total == 1 ? 'item concluído' : 'itens concluídos';
+    return '$concluidos/$total $palavra';
+  }
+
   // Papel do usuário na lista (doc 08 §1, RF-13, F7-T04)
   static const somenteLeitura = 'Somente leitura';
   static const somenteLeituraDica =
@@ -225,6 +239,7 @@ abstract final class AppStrings {
   static const carregando = 'Carregando...';
   static const tentarNovamente = 'Tentar novamente';
   static const offline = 'Offline — alterações serão sincronizadas';
+  static const semValor = '—';
 
   // Indicador de sync (doc 03 §6, wireframe 10 §3.2)
   static const syncSincronizado = 'Sincronizado';
