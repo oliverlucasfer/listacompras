@@ -42,7 +42,7 @@ Requisito novo: **RF-17** ([12](../../12-prd.md)). Fase nova: **F16 — Busca e 
 ### 4.2 Painel (Minhas Listas / Compartilhadas)
 
 - Ícone de **lupa** na AppBar (à esquerda das ações existentes; na aba Compartilhadas, antes do `person_add`), com `tooltip` "Buscar".
-- Ao tocar, a AppBar passa a exibir um **campo de busca** (`AppCampoTexto`) com `hint` "Buscar lista" e ação ✕ ("Limpar busca"). Focar automaticamente.
+- Ao tocar, aparece um **campo de busca** (`AppCampoTexto`) no topo do corpo, logo abaixo da AppBar, com `hint` "Buscar lista" e foco automático; o ✕ na AppBar ("Limpar busca") limpa e fecha.
 - A lista visível é `listasComContagem` filtrada por `contemBusca(titulo, consulta)`.
 - **Sem resultados:** `AppEstadoVazio` ("Nenhuma lista encontrada" + "Tente outro termo."), sem CTA.
 - **Sem busca:** comportamento atual (vazio real, FAB etc.) inalterado.
@@ -50,7 +50,7 @@ Requisito novo: **RF-17** ([12](../../12-prd.md)). Fase nova: **F16 — Busca e 
 
 ### 4.3 Tela da lista de compras
 
-- Ícone de **lupa** na AppBar (todas as roles — buscar é leitura), com `tooltip` "Buscar"; revela o campo com `hint` "Buscar item" + ✕.
+- Ícone de **lupa** na AppBar (todas as roles — buscar é leitura), com `tooltip` "Buscar"; revela, no topo do corpo, o campo `AppCampoTexto` com `hint` "Buscar item"; ✕ na AppBar limpa e fecha.
 - Itens visíveis = `itensDaLista` filtrados por `contemBusca(nome, consulta)`.
 - **Mantém o agrupamento** por categoria (ordem do enum) e **esconde grupos vazios**; a contagem do header `Categoria (n)` reflete os resultados filtrados.
 - **Concluídos** que casam aparecem na seção "Itens concluídos (n)" (contagem filtrada).
