@@ -155,7 +155,7 @@ class _ModalPrevisaoImportacaoState extends State<ModalPrevisaoImportacao> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.md),
                   Text(
                     AppStrings.iaSeraoAdicionados(
                       selecionados.length,
@@ -298,7 +298,7 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
             erro: _erroNome,
             onChanged: (_) => _notificar(),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
               IconButton(
@@ -319,7 +319,7 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
                 icon: const Icon(Icons.add_circle_outline),
                 onPressed: () => _passo(1),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: AppDropdown<Unidade>(
                   valor: _unidade,
@@ -337,7 +337,7 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           // Categoria (F6-T05, spec §5.2): sugestão da IA editável antes
           // de gravar na lista.
           AppDropdown<CategoriaItem>(

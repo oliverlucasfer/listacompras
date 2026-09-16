@@ -659,7 +659,7 @@ class _LinhaItem extends ConsumerWidget {
             ReorderableDragStartListener(
               index: index,
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 child: Icon(
                   Icons.drag_handle,
                   size: 24,

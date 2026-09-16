@@ -67,7 +67,7 @@ class ConfiguracoesScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             CircularProgressIndicator(),
-            SizedBox(height: 16),
+            SizedBox(height: AppSpacing.lg),
             Text(AppStrings.excluindoConta),
           ],
         ),
@@ -128,7 +128,7 @@ class ConfiguracoesScreen extends ConsumerWidget {
                   Text(snapshot.data?.version ?? AppStrings.semValor),
             ),
           ),
-          const Divider(height: 32),
+          const Divider(height: AppSpacing.xxl),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             child: Column(

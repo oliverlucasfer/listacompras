@@ -252,13 +252,13 @@ class _VerificacaoEmailState extends ConsumerState<_VerificacaoEmail> {
                   size: 64,
                   color: Theme.of(context).colorScheme.primary,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.lg),
                 Text(
                   AppStrings.verificarEmailMensagem,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.sm),
                 Text(
                   widget.email,
                   textAlign: TextAlign.center,
