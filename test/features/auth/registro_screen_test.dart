@@ -167,19 +167,41 @@ void main() {
 
     TextField campo(String label) =>
         tester.widget<TextField>(find.widgetWithText(TextField, label));
+    Finder toggleDe(String label) => find.descendant(
+      of: find.widgetWithText(TextField, label),
+      matching: find.byType(IconButton),
+    );
+    Finder tooltipDe(String label, String tooltip) => find.descendant(
+      of: find.widgetWithText(TextField, label),
+      matching: find.byTooltip(tooltip),
+    );
 
     expect(campo(AppStrings.senha).obscureText, isTrue);
     expect(campo(AppStrings.confirmarSenha).obscureText, isTrue);
+    expect(toggleDe(AppStrings.senha), findsOneWidget);
+    expect(toggleDe(AppStrings.confirmarSenha), findsOneWidget);
 
-    await tester.tap(find.byTooltip(AppStrings.mostrarSenha).first);
+    await tester.tap(toggleDe(AppStrings.senha));
     await tester.pump();
 
     expect(campo(AppStrings.senha).obscureText, isFalse);
     expect(campo(AppStrings.confirmarSenha).obscureText, isTrue);
+    expect(
+      tooltipDe(AppStrings.senha, AppStrings.ocultarSenha),
+      findsOneWidget,
+    );
+    expect(
+      tooltipDe(AppStrings.confirmarSenha, AppStrings.mostrarSenha),
+      findsOneWidget,
+    );
 
-    await tester.tap(find.byTooltip(AppStrings.mostrarSenha));
+    await tester.tap(toggleDe(AppStrings.confirmarSenha));
     await tester.pump();
 
     expect(campo(AppStrings.confirmarSenha).obscureText, isFalse);
+    expect(
+      tooltipDe(AppStrings.confirmarSenha, AppStrings.ocultarSenha),
+      findsOneWidget,
+    );
   });
 }

@@ -232,6 +232,44 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  testWidgets('deve_limpar_erro_quando_corrige_nome_na_edicao_inline', (
+    tester,
+  ) async {
+    await abrir(tester, resposta4);
+
+    await tester.tap(find.byIcon(Icons.expand_more).first);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).first, '');
+    await tester.pump();
+    expect(find.text(AppStrings.erroNomeVazio), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField).first, 'Arroz integral');
+    await tester.pump();
+    expect(find.text(AppStrings.erroNomeVazio), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('deve_limpar_erro_quando_corrige_quantidade_na_edicao_inline', (
+    tester,
+  ) async {
+    await abrir(tester, resposta4);
+
+    await tester.tap(find.byIcon(Icons.expand_more).first);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).at(1), '0');
+    await tester.pump();
+    expect(find.text(AppStrings.erroQuantidadeInvalida), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField).at(1), '3');
+    await tester.pump();
+    expect(find.text(AppStrings.erroQuantidadeInvalida), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('deve_gravar_itens_via_repositorio_quando_confirmar', (
     tester,
   ) async {

@@ -257,10 +257,18 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
 
   void _notificar({double? quantidade}) {
     final lida = _quantidadeLida();
-    setState(() {
-      _erroNome = _nome.text.trim().isEmpty ? AppStrings.erroNomeVazio : null;
-      _erroQuantidade = lida == null ? AppStrings.erroQuantidadeInvalida : null;
-    });
+    final erroNome = _nome.text.trim().isEmpty
+        ? AppStrings.erroNomeVazio
+        : null;
+    final erroQuantidade = lida == null
+        ? AppStrings.erroQuantidadeInvalida
+        : null;
+    if (erroNome != _erroNome || erroQuantidade != _erroQuantidade) {
+      setState(() {
+        _erroNome = erroNome;
+        _erroQuantidade = erroQuantidade;
+      });
+    }
     widget.onAlterar(
       _nome.text,
       quantidade ?? lida ?? widget.linha.quantidade,

@@ -378,7 +378,6 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
       setState(() => _erro = AppStrings.naoEntendiItem);
       return;
     }
-    if (_erro != null) setState(() => _erro = null);
     final repo = ref.read(listasRepositoryProvider);
     final itens =
         ref.read(itensDaListaProvider(widget.listaId)).value ?? const <Item>[];
