@@ -511,10 +511,7 @@ class _ListaItens extends ConsumerWidget {
     final podeEscrever = papel != Papel.leitor;
     final itensAsync = ref.watch(itensDaListaProvider(listaId));
     return itensAsync.when(
-      // Rolável: o esqueleto ocupa altura fixa e `_ListaItens` vive em um
-      // `Expanded` que encolhe com fonte ampliada (F14-T09).
-      loading: () =>
-          const SingleChildScrollView(child: AppEsqueleto(linhas: 5)),
+      loading: () => const AppEsqueleto(linhas: 5),
       error: (_, _) => AppEstadoErro(
         mensagem: AppStrings.erroGenerico,
         onRetentar: () => ref.invalidate(itensDaListaProvider(listaId)),

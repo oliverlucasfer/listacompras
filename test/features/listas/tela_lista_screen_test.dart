@@ -1309,6 +1309,41 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_suportar_escala_de_texto_2x_quando_itens_carregando', (
+    tester,
+  ) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final itens = StreamController<List<Item>>();
+    addTearDown(itens.close);
+    final sync = StreamController<SyncStatus>();
+    sync.add(const Sincronizado());
+    addTearDown(sync.close);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          itensDaListaProvider(lista.id).overrideWith((ref) => itens.stream),
+          papelRepositoryProvider.overrideWithValue(
+            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
+          ),
+          syncStatusProvider.overrideWith((ref) => sync.stream),
+        ],
+        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AppEsqueleto), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_rotular_checkbox_com_o_nome_do_item', (tester) async {
     final handle = tester.ensureSemantics();
     await listaComItens(tester);

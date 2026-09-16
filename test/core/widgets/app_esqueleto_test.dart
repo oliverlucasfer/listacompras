@@ -25,9 +25,29 @@ void main() {
     );
     // Placeholder estático: sem spinner.
     expect(find.byType(CircularProgressIndicator), findsNothing);
-    // Anuncia o carregamento para o leitor de tela.
+    // Rótulo de carregamento exposto ao leitor de tela (sem liveRegion).
     expect(find.bySemanticsLabel(AppStrings.carregando), findsOneWidget);
 
     handle.dispose();
+  });
+
+  testWidgets('deve_usar_defaults_e_cor_do_tema_quando_nao_informado', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.claro,
+        home: const Scaffold(body: AppEsqueleto()),
+      ),
+    );
+
+    final blocos = find.descendant(
+      of: find.byType(AppEsqueleto),
+      matching: find.byType(Container),
+    );
+    expect(blocos, findsNWidgets(4));
+    final decoracao =
+        tester.widget<Container>(blocos.first).decoration! as BoxDecoration;
+    expect(decoracao.color, AppTheme.claro.colorScheme.surfaceContainerHighest);
   });
 }
