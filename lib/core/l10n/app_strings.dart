@@ -94,6 +94,7 @@ abstract final class AppStrings {
   static const itemRemovido = 'Item removido';
   static const itemDuplicadoSomado = 'já está na lista. Quantidade aumentada.';
   static const itemAtualizado = 'Item atualizado.';
+  static const naoEntendiItem = 'Não entendi o item';
   static const removerItem = 'Remover';
   static const editarItem = 'Editar item';
   static const nomeDoItem = 'Nome do item';

@@ -358,6 +358,9 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
   /// Unidade usada quando o texto digitado não traz uma (F12-T06).
   Unidade _unidade = Unidade.un;
 
+  /// Erro inline quando o parser descarta o texto digitado (F14-T07).
+  String? _erro;
+
   @override
   void dispose() {
     _controller.dispose();
@@ -370,7 +373,12 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
     // Reconhece "1kg de banana" → Banana, 1 kg (F12-T06); sem unidade no
     // texto, aplica a unidade escolhida no seletor.
     final extra = interpretarItemAvulso(texto, unidadePadrao: _unidade);
-    if (extra == null) return;
+    if (extra == null) {
+      // Texto só com pontuação/separador: nada foi reconhecido (F14-T07).
+      setState(() => _erro = AppStrings.naoEntendiItem);
+      return;
+    }
+    if (_erro != null) setState(() => _erro = null);
     final repo = ref.read(listasRepositoryProvider);
     final itens =
         ref.read(itensDaListaProvider(widget.listaId)).value ?? const <Item>[];
@@ -438,6 +446,10 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
       child: AppCampoTexto(
         controller: _controller,
         label: AppStrings.adicionarItem,
+        erro: _erro,
+        onChanged: (_) {
+          if (_erro != null) setState(() => _erro = null);
+        },
         onSubmitted: _adicionar,
         sufixo: Row(
           mainAxisSize: MainAxisSize.min,

@@ -218,6 +218,31 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_mostrar_erro_quando_parser_descarta_texto', (tester) async {
+    await listaComItens(tester);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      '.',
+    );
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.naoEntendiItem), findsOneWidget);
+    // Nada foi adicionado.
+    expect(find.text('Mercearia (1)'), findsOneWidget);
+
+    // O erro some ao digitar de novo.
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      'Café',
+    );
+    await tester.pump();
+    expect(find.text(AppStrings.naoEntendiItem), findsNothing);
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_aplicar_sugestao_local_quando_adicionar_rapido_f6t04', (
     tester,
   ) async {
