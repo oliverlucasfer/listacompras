@@ -67,4 +67,17 @@ void main() {
     await tester.pump();
     expect(controller.text, 'abcdefgh');
   });
+
+  testWidgets('deve_manter_max_lines_1_quando_nao_informado', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.claro,
+        home: const Scaffold(body: AppCampoTexto(senha: true)),
+      ),
+    );
+    final campo = tester.widget<TextField>(find.byType(TextField));
+    expect(campo.maxLines, 1);
+    expect(campo.obscureText, isTrue);
+    expect(tester.takeException(), isNull);
+  });
 }

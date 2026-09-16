@@ -55,7 +55,7 @@ class AppCampoTexto extends StatelessWidget {
           ? null
           : MaxLengthEnforcement.none,
       minLines: minLines,
-      maxLines: maxLines,
+      maxLines: maxLines ?? 1,
       textInputAction: textInputAction,
       readOnly: readOnly,
       onChanged: onChanged,
