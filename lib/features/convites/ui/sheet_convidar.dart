@@ -7,6 +7,7 @@ import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/app_botao.dart';
+import '../../../core/widgets/app_campo_texto.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../../sync/providers/sync_providers.dart';
@@ -143,7 +144,7 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
             ),
           ] else ...[
             const SizedBox(height: AppSpacing.lg),
-            TextField(readOnly: true, controller: _linkController!),
+            AppCampoTexto(controller: _linkController, readOnly: true),
             const SizedBox(height: AppSpacing.lg),
             Row(
               children: [

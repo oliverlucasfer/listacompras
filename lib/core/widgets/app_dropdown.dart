@@ -22,11 +22,7 @@ class AppDropdown<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return DropdownButtonFormField<T>(
       initialValue: valor,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        isDense: compacto,
-      ),
+      decoration: InputDecoration(labelText: label, isDense: compacto),
       items: itens,
       onChanged: onChanged,
     );

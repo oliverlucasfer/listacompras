@@ -13,6 +13,7 @@ import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_cabecalho_secao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
 import '../../../core/widgets/app_dialog.dart';
+import '../../../core/widgets/app_dropdown.dart';
 import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_snack_bar.dart';
@@ -873,13 +874,10 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            DropdownButtonFormField<Unidade>(
-              initialValue: _unidade,
-              decoration: InputDecoration(
-                labelText: AppStrings.unidade,
-                border: const OutlineInputBorder(),
-              ),
-              items: [
+            AppDropdown<Unidade>(
+              label: AppStrings.unidade,
+              valor: _unidade,
+              itens: [
                 for (final u in Unidade.values)
                   DropdownMenuItem(value: u, child: Text(u.valor)),
               ],
@@ -889,13 +887,10 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
             ),
             const SizedBox(height: AppSpacing.md),
             // Categoria (F6-T04, spec §6): mudar de grupo via edição.
-            DropdownButtonFormField<CategoriaItem>(
-              initialValue: _categoria,
-              decoration: const InputDecoration(
-                labelText: AppStrings.categoria,
-                border: OutlineInputBorder(),
-              ),
-              items: [
+            AppDropdown<CategoriaItem>(
+              label: AppStrings.categoria,
+              valor: _categoria,
+              itens: [
                 for (final c in CategoriaItem.values)
                   DropdownMenuItem(value: c, child: Text(c.rotulo)),
               ],
