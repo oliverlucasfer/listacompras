@@ -141,6 +141,7 @@ Aplicação multiplataforma para criação, organização e execução de compra
 | **Fase 6** | **Pós-MVP** | Publicação iOS; suporte Desktop (Windows/macOS/Linux); **compartilhamento colaborativo ativado na UI** (planejamento em [08](08-compartilhamento-colaborativo.md)); **agrupamento da lista por categoria** (spec em [superpowers/specs](superpowers/specs/2026-09-08-agrupamento-categorias-design.md)); limpeza de tombstones; avaliação de upgrade Supabase Pro. | — |
 | **Fase 8** | **Revisão Visual e de UX** | Design system (tokens, M3 Expressive, fonte, componentes), refresh das telas e redesign de navegação. | Etapa 1 (fundação) entregue, CI verde — spec em [`superpowers/specs/2026-09-11-revisao-visual-ux-design.md`](superpowers/specs/2026-09-11-revisao-visual-ux-design.md) |
 | **Fase 14** | **Acessibilidade, Fluxos e Polimento de UX** | Conformidade com o RNF-06 (semântica, live regions, alvos ≥48dp, escala de texto), conclusão da recuperação de senha (RF-01) e polimento de estados/feedback/consistência das telas. | Testes de acessibilidade verdes + docs donos atualizados — spec em [`superpowers/specs/2026-09-14-ux-acessibilidade-design.md`](superpowers/specs/2026-09-14-ux-acessibilidade-design.md) |
+| **Fase 16** | **Busca e filtro** | Busca/filtro **local (offline)** por título no painel e por nome na tela da lista (RF-17), sem mudança de schema/RLS/sync. | Busca e vazios de resultado com testes verdes; CI verde — spec em [`superpowers/specs/2026-09-16-busca-filtro-design.md`](superpowers/specs/2026-09-16-busca-filtro-design.md) |
 
 ---
 

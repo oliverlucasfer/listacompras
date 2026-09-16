@@ -75,6 +75,8 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 
 **Navegação (F10):** barra inferior (NavigationBar) com **Minhas**, **Compartilhadas** e **Configurações**; em telas largas vira NavigationRail. O painel abaixo é **Minhas Listas** (listas em que você é dono). A aba **Compartilhadas** usa o mesmo layout, **sem FAB** e com a ação "Entrar com código" no AppBar (o menu `⋮` do card abre Membros e Sair da lista; o long-press abre o mesmo menu). Abrir uma lista/membros é `push` sobre o shell: a tela é cheia (barra some) e o voltar retorna à aba de origem (doc [05 §4](../05-app-flutter.md)).
 
+**Busca (F16):** lupa na AppBar revela um campo no topo do corpo (hint "Buscar lista"); a lista filtrada esconde os cards que não casam; sem resultado → vazio "Nenhuma lista encontrada".
+
 ### 2.1. Estado preenchido
 ```
 ┌─────────────────────────────────┐
@@ -177,6 +179,8 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 │  (🤖 Importar por IA)           │
 └─────────────────────────────────┘
 ```
+
+**Busca (F16):** lupa na AppBar revela um campo (hint "Buscar item"); os grupos de categoria permanecem (vazios somem) e o drag fica desabilitado; sem resultado → vazio "Nenhum item encontrado" + "Limpar busca".
 
 ### 3.2. Estados do indicador de sync (AppBar, [03 §6](03-sincronizacao-offline.md))
 ```

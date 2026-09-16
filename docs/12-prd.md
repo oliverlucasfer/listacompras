@@ -38,6 +38,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-14 | Transferência de dono — **Fase 6** (adiada — [08 §1.1](08-compartilhamento-colaborativo.md)) | 08 §6 | F7 | [08 §9](08-compartilhamento-colaborativo.md) |
 | RF-15 | Agrupamento da lista por categoria (enum fechado [01 §3](01-banco-de-dados.md)) com sugestão local em camadas (memória por nome → dicionário estático → `outros`); IA sugere no import | 05 §6.3 + 01 §4.3 | F6 | [05 §8](05-app-flutter.md) + [03 §8](03-sincronizacao-offline.md) |
 | RF-16 | Importação de lista por texto livre **sem IA** (parser local determinístico, offline) com pré-visualização editável; IA permanece como modo opcional | 05 §6.4 | F11 | [05 §8](05-app-flutter.md) |
+| RF-17 | Busca/filtro **local (offline)** de listas pelo título (painel) e de itens pelo nome (tela da lista) | 05 §6.2 + §6.3 | F16 | [05 §8](05-app-flutter.md) |
 
 ## 3. Requisitos Não-Funcionais
 
@@ -128,6 +129,7 @@ Cada requisito liga story → design → tarefas ([14](14-tarefas.md)) → verif
 | RF-13/14 | US-05, US-06 | F6 | (planejar na F6) | N-11…N-14 |
 | RF-15 | US-07, US-08 | F6 | F6-T01…T06 | Repo + sugestão + widgets + sync |
 | RF-16 | US-02 | F11 | F11-T01…T03 | Unit parser + widgets |
+| RF-17 | US-01 | F16 | F16-T01…T03 | Unit busca + widgets |
 | RNF-06 | — | F8 · F14 | F14-T01…T02 | Guidelines de a11y + escala de fonte |
 
 ## 7. Fora de escopo (MVP)
