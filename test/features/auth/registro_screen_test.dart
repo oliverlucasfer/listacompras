@@ -158,4 +158,28 @@ void main() {
 
     expect(find.text(AppStrings.erroGenerico), findsOneWidget);
   });
+
+  testWidgets('deve_alternar_visualizacao_das_senhas_quando_toca_nos_toggles', (
+    tester,
+  ) async {
+    final repo = FakeAuthRepository();
+    await abrirTela(tester, repo);
+
+    TextField campo(String label) =>
+        tester.widget<TextField>(find.widgetWithText(TextField, label));
+
+    expect(campo(AppStrings.senha).obscureText, isTrue);
+    expect(campo(AppStrings.confirmarSenha).obscureText, isTrue);
+
+    await tester.tap(find.byTooltip(AppStrings.mostrarSenha).first);
+    await tester.pump();
+
+    expect(campo(AppStrings.senha).obscureText, isFalse);
+    expect(campo(AppStrings.confirmarSenha).obscureText, isTrue);
+
+    await tester.tap(find.byTooltip(AppStrings.mostrarSenha));
+    await tester.pump();
+
+    expect(campo(AppStrings.confirmarSenha).obscureText, isFalse);
+  });
 }

@@ -28,6 +28,8 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
   final _senha = TextEditingController();
   final _confirmar = TextEditingController();
   bool _carregando = false;
+  bool _ocultarSenha = true;
+  bool _ocultarConfirmar = true;
   bool _aceitouPolitica = false;
   String? _erroEmail;
   String? _erroSenha;
@@ -137,15 +139,40 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
                     controller: _senha,
                     label: AppStrings.senha,
                     erro: _erroSenha,
-                    senha: true,
+                    senha: _ocultarSenha,
+                    sufixo: IconButton(
+                      tooltip: _ocultarSenha
+                          ? AppStrings.mostrarSenha
+                          : AppStrings.ocultarSenha,
+                      icon: Icon(
+                        _ocultarSenha
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+                      onPressed: () =>
+                          setState(() => _ocultarSenha = !_ocultarSenha),
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   AppCampoTexto(
                     controller: _confirmar,
                     label: AppStrings.confirmarSenha,
                     erro: _erroConfirmar,
-                    senha: true,
+                    senha: _ocultarConfirmar,
                     onSubmitted: _registrar,
+                    sufixo: IconButton(
+                      tooltip: _ocultarConfirmar
+                          ? AppStrings.mostrarSenha
+                          : AppStrings.ocultarSenha,
+                      icon: Icon(
+                        _ocultarConfirmar
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                      ),
+                      onPressed: () => setState(
+                        () => _ocultarConfirmar = !_ocultarConfirmar,
+                      ),
+                    ),
                   ),
                   CheckboxListTile(
                     value: _aceitouPolitica,
