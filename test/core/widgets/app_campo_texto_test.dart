@@ -23,7 +23,9 @@ void main() {
     expect(digitado, 'a@b.com');
   });
 
-  testWidgets('deve_aplicar_hint_readonly_linhas_e_action', (tester) async {
+  testWidgets('deve_aplicar_hint_readonly_e_limites_quando_informados', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.claro,
@@ -78,6 +80,19 @@ void main() {
     final campo = tester.widget<TextField>(find.byType(TextField));
     expect(campo.maxLines, 1);
     expect(campo.obscureText, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('deve_permitir_min_lines_quando_sem_max_lines', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.claro,
+        home: const Scaffold(body: AppCampoTexto(minLines: 3)),
+      ),
+    );
+    final campo = tester.widget<TextField>(find.byType(TextField));
+    expect(campo.minLines, 3);
+    expect(campo.maxLines, isNull);
     expect(tester.takeException(), isNull);
   });
 }

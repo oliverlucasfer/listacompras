@@ -35,4 +35,26 @@ void main() {
 
     expect(selecionado, 'b');
   });
+
+  testWidgets('deve_compactar_quando_compacto', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.claro,
+        home: Scaffold(
+          body: AppDropdown<String>(
+            valor: 'a',
+            compacto: true,
+            itens: const [DropdownMenuItem(value: 'a', child: Text('A'))],
+            onChanged: (_) {},
+          ),
+        ),
+      ),
+    );
+    final decoracao = tester
+        .widget<DropdownButtonFormField<String>>(
+          find.byType(DropdownButtonFormField<String>),
+        )
+        .decoration;
+    expect(decoracao.isDense, isTrue);
+  });
 }

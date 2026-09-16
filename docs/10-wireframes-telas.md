@@ -214,6 +214,8 @@ O aviso usa `AppBannerTipo.leitura` ([15 §3](15-design-system.md)), não um `Co
 └─────────────────────────────────┘
 ```
 
+O trecho "para todos os participantes" aparece quando há membros conhecidos (best-effort); o painel assume lista sem membros e a tela da lista usa o que estiver em cache de `membrosDaListaProvider` (F14-T08).
+
 ---
 
 ## 4. Importação de lista (RF-06 + RF-16 — [04 §2](04-ia-edge-function.md))

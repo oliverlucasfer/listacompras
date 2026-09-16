@@ -142,7 +142,7 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 * Cabeçalho das telas de topo exibe a marca (`AppLogo`) à esquerda do título (F13-T02).
 * FAB "Nova lista" → bottom sheet com campo de título.
 * **Ações do card:** botão `⋮` com renomear / excluir (com confirmação) — nas Compartilhadas, membros / sair da lista; o **long-press abre o mesmo menu** (atalho, não mais o único caminho) (F14-T06).
-* Feedback: SnackBar curto "Lista criada" / "Lista renomeada" (F14-T05). As mensagens de exclusão usam **uma única** copy em `AppStrings`, variando se houver membros ([10 §3.4](10-wireframes-telas.md)) — vale para o painel e para a tela da lista (F14-T08).
+* Feedback: SnackBar curto "Lista criada" / "Lista renomeada" (F14-T05). As mensagens de exclusão usam **uma única** copy em `AppStrings` (`excluirListaTitulo`/`excluirListaMensagem(nItens, {temMembros})`: o trecho "para todos os participantes" aparece quando há membros conhecidos). A tela da lista consulta `membrosDaListaProvider` em best-effort (sem fetch extra; usa o que já estiver em cache) e o painel assume lista sem membros — F14-T08, [10 §3.4](10-wireframes-telas.md).
 * Estado vazio: ilustração simples + CTA de criação.
 * Lista com `deletado_em` nunca aparece (tombstone invisível).
 
