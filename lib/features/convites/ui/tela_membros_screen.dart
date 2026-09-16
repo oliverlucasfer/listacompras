@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/navigation/voltar_para_inicio.dart';
 import '../../../core/widgets/app_chip.dart';
+import '../../../core/widgets/app_esqueleto.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_estado_erro.dart';
@@ -156,7 +157,7 @@ class _TelaMembrosScreenState extends ConsumerState<TelaMembrosScreen> {
           ],
         ),
         body: membrosAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const AppEsqueleto(linhas: 4),
           error: (_, _) => AppEstadoErro(
             mensagem: AppStrings.erroGenerico,
             onRetentar: () => ref.invalidate(membrosDaListaProvider(listaId)),

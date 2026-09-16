@@ -9,6 +9,7 @@ import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_dialog.dart';
+import '../../../core/widgets/app_esqueleto.dart';
 import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_logo.dart';
@@ -75,7 +76,7 @@ class PainelListas extends ConsumerWidget {
         ],
       ),
       body: listasAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const AppEsqueleto(linhas: 4),
         error: (_, _) => AppEstadoErro(
           mensagem: AppStrings.erroGenerico,
           onRetentar: () => ref.invalidate(listasComContagemProvider),

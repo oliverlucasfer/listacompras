@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/widgets/app_banner.dart';
+import 'package:lista_compras/core/widgets/app_esqueleto.dart';
 import 'package:lista_compras/core/widgets/app_estado_erro.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/auth/providers/auth_providers.dart';
@@ -1277,6 +1278,35 @@ void main() {
 
     expect(find.byType(AppEstadoErro), findsOneWidget);
     expect(find.text(AppStrings.tentarNovamente), findsOneWidget);
+  });
+
+  testWidgets('deve_mostrar_esqueleto_quando_itens_carregando', (tester) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final itens = StreamController<List<Item>>();
+    addTearDown(itens.close);
+    final sync = StreamController<SyncStatus>();
+    sync.add(const Sincronizado());
+    addTearDown(sync.close);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          itensDaListaProvider(lista.id).overrideWith((ref) => itens.stream),
+          papelRepositoryProvider.overrideWithValue(
+            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
+          ),
+          syncStatusProvider.overrideWith((ref) => sync.stream),
+        ],
+        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AppEsqueleto), findsOneWidget);
+
+    await fechar(tester);
   });
 
   testWidgets('deve_rotular_checkbox_com_o_nome_do_item', (tester) async {
