@@ -370,9 +370,10 @@ Spec: [superpowers/specs/2026-09-14-ux-acessibilidade-design.md](superpowers/spe
   Dep: F14-T00 · Docs: [10 §2.1/§3](10-wireframes-telas.md), [05 §6.2/§6.3](05-app-flutter.md)
   CP: `⋮` no card com as ações do contexto (long-press abre o mesmo menu); rótulo "Nome do item" no editor; "Copiar link" × "Copiar código" distinguidos; testes verdes.
   *(card com `PopupMenuButton` `⋮` (Minhas: Renomear/Excluir; Compartilhadas: Membros/Sair) e long-press via `showButtonMenu`; "Sair da lista" extraído para `confirmarSairDaLista` (reuso tela de membros/card); editor de item com "Nome do item" (entrada rápida segue "Adicionar item"); sheet Convidar com "Copiar código" + tooltips nos dois botões e doc 08 §8 atualizado)*
-- [ ] **F14-T07** — Validação visível
+- [x] **F14-T07** — Validação visível
   Dep: F14-T00 · Docs: [05 §6](05-app-flutter.md), [15 §3](15-design-system.md)
   CP: erro inline no editor (nome/quantidade) e na edição inline da importação; aviso quando o parser descarta todo o texto; toggle de senha no registro; testes verdes.
+  *(`_CampoAdicionar` com erro inline `naoEntendiItem` quando o parser descarta o texto, limpo ao digitar; editor de item com `erroNomeVazio`/`erroQuantidadeInvalida` mantendo o diálogo aberto; `_PainelEdicao` da importação com `errorText` de nome/quantidade (migração para `AppCampoTexto` segue na F14-T08); registro com toggle independente por campo (padrão da `RedefinirSenhaScreen`); docs 05 §6.1/§6.3/§6.4 atualizados)*
 - [ ] **F14-T08** — Consistência e dívida visual
   Dep: F14-T00 · Docs: [15 §1/§3](15-design-system.md), [05 §6/§7](05-app-flutter.md)
   CP: uma única copy de exclusão de lista; strings (tempo relativo, fallbacks) no `AppStrings`; `AppBannerTipo.leitura` usado; `AppCampoTexto` com `maxLength`/`minLines`/`textInputAction`/`readOnly` e os `TextField` crus migrados; medidas em tokens; `analyze`/`test` verdes.
@@ -406,8 +407,8 @@ Registrado pela [spec da F14 §16](superpowers/specs/2026-09-14-ux-acessibilidad
 | F11 Import local | 4 | 4 |
 | F12 Correções | 7 | 7 |
 | F13 Identidade visual | 3 | 3 |
-| F14 Acessibilidade & UX | 10 | 7 |
-| **Total** | **97** | **92** |
+| F14 Acessibilidade & UX | 10 | 8 |
+| **Total** | **97** | **93** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

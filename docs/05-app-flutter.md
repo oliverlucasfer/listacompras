@@ -134,7 +134,7 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 * Provedores sociais (Google) — estrutura pronta, ativação opcional na Fase 5.
 * **Recuperação de senha e verificação de e-mail** obrigatórias no MVP (Fase 3).
 * **Nova senha (F14-T03):** o link de recuperação abre `/redefinir-senha` (nova senha + confirmação, ambas com toggle; mínimo de 6 e igualdade); sucesso → SnackBar "Senha alterada" + `/listas`; link expirado → erro amigável com CTA "Pedir novo link".
-* **Registro:** os dois campos de senha ganham toggle de mostrar/ocultar (paridade com o login) e "Reenviar link" passa a dar retorno (SnackBar) e a desabilitar durante o envio (F14-T05).
+* **Registro:** os dois campos de senha ganham toggle de mostrar/ocultar (paridade com o login; F14-T07) e "Reenviar link" passa a dar retorno (SnackBar) e a desabilitar durante o envio (F14-T05).
 * Estados: carregando (spinner no botão), erro (mensagem inline amigável).
 
 ### 6.2. Painel "Minhas Listas"
@@ -149,7 +149,7 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 ### 6.3. Tela da Lista de Compras
 | Elemento | Comportamento |
 | :--- | :--- |
-| Campo "Adicionar item" | Fixo no topo; Enter salva imediatamente (escrita local + fila) com a categoria sugerida pelas camadas locais (§3, Fase 6). **Reconhece quantidade/unidade no texto** (`1kg de banana` → Banana, 1 kg) via parser local (RF-16); sem unidade no texto, usa a **unidade escolhida no seletor** do campo (menu com o enum, padrão `un`) — F12-T06 |
+| Campo "Adicionar item" | Fixo no topo; Enter salva imediatamente (escrita local + fila) com a categoria sugerida pelas camadas locais (§3, Fase 6). **Reconhece quantidade/unidade no texto** (`1kg de banana` → Banana, 1 kg) via parser local (RF-16); sem unidade no texto, usa a **unidade escolhida no seletor** do campo (menu com o enum, padrão `un`) — F12-T06; texto que o parser descarta (ex.: só pontuação) → erro inline "Não entendi o item" (F14-T07) |
 | Itens pendentes | **Agrupados por categoria** na ordem do enum ([01 §3.2](01-banco-de-dados.md)); header por grupo: `Frios (3)` com contagem de pendentes; grupos vazios não renderizam (Fase 6, RF-15) |
 | Exibição | Ordenação determinística entre dispositivos: `(categoria, ordem, id)` |
 | Item | Nome, quantidade + unidade, checkbox |
@@ -176,7 +176,7 @@ Um único modal com seletor de modo **Rápido** (padrão, local/offline, RF-16) 
 2. Botão "Extrair itens":
    * **Rápido:** parser local puro (`lib/core/importacao/parser_lista_local.dart`), sem rede; categoria pela cadeia local (memória → dicionário → `outros`, [§3](05-app-flutter.md)); disponível offline.
    * **IA:** fluxo atual (Edge Function `parse-lista`, com carregamento e erros do contrato).
-3. **Modal de pré-visualização (comum aos dois modos):** checkboxes para incluir/excluir cada item; edição inline de nome/quantidade/unidade/**categoria** (dropdown com o enum [01 §3.2](01-banco-de-dados.md)); `aviso` exibido como nota.
+3. **Modal de pré-visualização (comum aos dois modos):** checkboxes para incluir/excluir cada item; edição inline de nome/quantidade/unidade/**categoria** (dropdown com o enum [01 §3.2](01-banco-de-dados.md)), com erro inline de nome/quantidade (F14-T07); `aviso` exibido como nota.
 4. "Adicionar N itens à lista" → grava localmente (fila de INSERTs).
 5. Erros da IA exibidos com as mensagens amigáveis do contrato ([04 §2](04-ia-edge-function.md)).
 
