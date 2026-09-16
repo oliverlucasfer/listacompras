@@ -582,7 +582,7 @@ class _ListaItens extends ConsumerWidget {
           slivers.add(
             SliverToBoxAdapter(
               child: ExpansionTile(
-                tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+                tilePadding: AppSpacing.horizontal,
                 title: Text(
                   '${AppStrings.itensConcluidos} (${concluidos.length})',
                 ),
@@ -600,7 +600,9 @@ class _ListaItens extends ConsumerWidget {
             ),
           );
         }
-        slivers.add(const SliverPadding(padding: EdgeInsets.only(bottom: 24)));
+        slivers.add(
+          const SliverPadding(padding: EdgeInsets.only(bottom: AppSpacing.xl)),
+        );
         return CustomScrollView(slivers: slivers);
       },
     );

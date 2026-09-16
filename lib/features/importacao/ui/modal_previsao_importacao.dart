@@ -289,7 +289,12 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(48, 0, 16, 8),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.xxxl,
+        0,
+        AppSpacing.lg,
+        AppSpacing.sm,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
