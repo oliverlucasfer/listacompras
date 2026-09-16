@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/texto/busca.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/utils/tempo_relativo.dart';
 import '../../../core/widgets/app_botao.dart';
@@ -29,16 +30,38 @@ import 'sheet_titulo_lista.dart';
 enum FiltroListas { minhas, compartilhadas }
 
 /// Painel de listas reutilizável (Minhas × Compartilhadas).
-class PainelListas extends ConsumerWidget {
+class PainelListas extends ConsumerStatefulWidget {
   const PainelListas({super.key, required this.filtro});
 
   final FiltroListas filtro;
 
-  bool get _compartilhadas => filtro == FiltroListas.compartilhadas;
+  @override
+  ConsumerState<PainelListas> createState() => _PainelListasState();
+}
+
+class _PainelListasState extends ConsumerState<PainelListas> {
+  final _busca = TextEditingController();
+  bool _buscando = false;
+
+  bool get _compartilhadas => widget.filtro == FiltroListas.compartilhadas;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void dispose() {
+    _busca.dispose();
+    super.dispose();
+  }
+
+  void _abrirBusca() => setState(() => _buscando = true);
+
+  void _fecharBusca() {
+    _busca.clear();
+    setState(() => _buscando = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final usuario = ref.watch(donoAtualIdProvider);
+    final consulta = _busca.text.trim();
     final listasAsync = ref
         .watch(listasComContagemProvider)
         .whenData(
@@ -47,6 +70,10 @@ class PainelListas extends ConsumerWidget {
                 (c) => _compartilhadas
                     ? c.lista.donoId != usuario
                     : c.lista.donoId == usuario,
+              )
+              .where(
+                (c) =>
+                    consulta.isEmpty || contemBusca(c.lista.titulo, consulta),
               )
               .toList(),
         );
@@ -67,34 +94,77 @@ class PainelListas extends ConsumerWidget {
           ],
         ),
         actions: [
-          if (_compartilhadas)
+          if (_buscando)
             IconButton(
-              tooltip: AppStrings.conviteComCodigo,
-              icon: const Icon(Icons.person_add),
-              onPressed: () => abrirDialogoEntrarComCodigo(context, ref),
+              tooltip: AppStrings.limparBusca,
+              icon: const Icon(Icons.close),
+              onPressed: _fecharBusca,
+            )
+          else ...[
+            IconButton(
+              tooltip: AppStrings.buscar,
+              icon: const Icon(Icons.search),
+              onPressed: _abrirBusca,
             ),
+            if (_compartilhadas)
+              IconButton(
+                tooltip: AppStrings.conviteComCodigo,
+                icon: const Icon(Icons.person_add),
+                onPressed: () => abrirDialogoEntrarComCodigo(context, ref),
+              ),
+          ],
         ],
       ),
-      body: listasAsync.when(
-        loading: () => const AppEsqueleto(linhas: 4),
-        error: (_, _) => AppEstadoErro(
-          mensagem: AppStrings.erroGenerico,
-          onRetentar: () => ref.invalidate(listasComContagemProvider),
-        ),
-        data: (listas) => listas.isEmpty
-            ? _vazio(context, ref)
-            : ListView.separated(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.sm,
-                  AppSpacing.lg,
-                  88,
-                ),
-                itemCount: listas.length,
-                separatorBuilder: (_, _) =>
-                    const SizedBox(height: AppSpacing.sm),
-                itemBuilder: (context, i) => _CardLista(contagem: listas[i]),
+      body: Column(
+        children: [
+          if (_buscando)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.sm,
+                AppSpacing.lg,
+                0,
               ),
+              child: AppCampoTexto(
+                controller: _busca,
+                hint: AppStrings.buscarLista,
+                autofocus: true,
+                onChanged: (_) => setState(() {}),
+              ),
+            ),
+          Expanded(
+            child: listasAsync.when(
+              loading: () => const AppEsqueleto(linhas: 4),
+              error: (_, _) => AppEstadoErro(
+                mensagem: AppStrings.erroGenerico,
+                onRetentar: () => ref.invalidate(listasComContagemProvider),
+              ),
+              data: (listas) {
+                if (listas.isEmpty) {
+                  return _buscando && consulta.isNotEmpty
+                      ? const AppEstadoVazio(
+                          icone: Icons.search_off,
+                          titulo: AppStrings.nenhumaListaEncontrada,
+                          descricao: AppStrings.buscaSemResultadoDica,
+                        )
+                      : _vazio(context, ref);
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.sm,
+                    AppSpacing.lg,
+                    88,
+                  ),
+                  itemCount: listas.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: AppSpacing.sm),
+                  itemBuilder: (context, i) => _CardLista(contagem: listas[i]),
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: _compartilhadas
           ? null

@@ -235,6 +235,15 @@ abstract final class AppStrings {
   static String itensExtraidos(int n) =>
       n == 1 ? '1 item extraído.' : '$n itens extraídos.';
 
+  // Busca/filtro local (RF-17, F16)
+  static const buscar = 'Buscar';
+  static const buscarLista = 'Buscar lista';
+  static const buscarItem = 'Buscar item';
+  static const limparBusca = 'Limpar busca';
+  static const nenhumaListaEncontrada = 'Nenhuma lista encontrada';
+  static const nenhumItemEncontrado = 'Nenhum item encontrado';
+  static const buscaSemResultadoDica = 'Tente outro termo.';
+
   // Estados transversais
   static const carregando = 'Carregando...';
   static const tentarNovamente = 'Tentar novamente';

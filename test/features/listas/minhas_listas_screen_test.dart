@@ -298,4 +298,42 @@ void main() {
     expect(find.byTooltip(AppStrings.menu), findsOneWidget);
     await fechar(tester);
   });
+
+  testWidgets('deve_filtrar_listas_quando_buscar_pelo_titulo', (tester) async {
+    final repo = ListasRepository(db);
+    await repo.criarLista(titulo: 'Compras da Semana', donoId: 'user-a');
+    await repo.criarLista(titulo: 'Churrasco', donoId: 'user-a');
+    await abrirTela(tester);
+
+    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.buscarLista),
+      'chur',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Churrasco'), findsOneWidget);
+    expect(find.text('Compras da Semana'), findsNothing);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_vazio_quando_busca_sem_resultado', (tester) async {
+    final repo = ListasRepository(db);
+    await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await abrirTela(tester);
+
+    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.buscarLista),
+      'zzz',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.nenhumaListaEncontrada), findsOneWidget);
+
+    await fechar(tester);
+  });
 }

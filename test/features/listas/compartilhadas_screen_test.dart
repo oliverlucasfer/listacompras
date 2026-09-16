@@ -219,4 +219,21 @@ void main() {
 
     await fechar(tester);
   });
+
+  testWidgets('deve_filtrar_compartilhadas_quando_buscar', (tester) async {
+    final repo = ListasRepository(db);
+    await repo.criarLista(titulo: 'Do parceiro', donoId: 'user-a');
+    await abrirTela(tester);
+
+    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.buscarLista),
+      'parc',
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Do parceiro'), findsOneWidget);
+    await fechar(tester);
+  });
 }
