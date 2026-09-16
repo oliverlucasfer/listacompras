@@ -1427,6 +1427,56 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_manter_edicao_quando_filtrando_item', (tester) async {
+    await listaComItens(tester);
+
+    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.buscarItem),
+      'arr',
+    );
+    await tester.pumpAndSettle();
+
+    // Sem alça de drag, mas o item ainda é editável (checkbox presente).
+    expect(find.byIcon(Icons.drag_handle), findsNothing);
+    final checkbox = find.descendant(
+      of: find.widgetWithText(ListTile, 'Arroz'),
+      matching: find.byType(Checkbox),
+    );
+    expect(checkbox, findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_manter_campo_aberto_quando_limpar_busca_no_vazio', (
+    tester,
+  ) async {
+    await listaComItens(tester);
+
+    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.buscarItem),
+      'zzz',
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.nenhumItemEncontrado), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(TextButton, AppStrings.limparBusca));
+    await tester.pumpAndSettle();
+
+    // Campo segue aberto e a lista volta ao normal.
+    expect(
+      find.widgetWithText(TextField, AppStrings.buscarItem),
+      findsOneWidget,
+    );
+    expect(find.text('Arroz'), findsOneWidget);
+    expect(find.text(AppStrings.nenhumItemEncontrado), findsNothing);
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_suportar_escala_de_texto_2x_quando_tela_da_lista', (
     tester,
   ) async {

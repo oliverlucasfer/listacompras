@@ -85,8 +85,15 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
   void _abrirBusca() => setState(() => _buscando = true);
 
   void _fecharBusca() {
+    if (!mounted) return;
     _busca.clear();
-    if (mounted) setState(() => _buscando = false);
+    setState(() => _buscando = false);
+  }
+
+  void _limparBusca() {
+    if (!mounted) return;
+    _busca.clear();
+    setState(() {});
   }
 
   void _acaoMenu(
@@ -340,7 +347,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                   child: _ListaItens(
                     listaId: listaId,
                     consulta: _busca.text,
-                    onLimparBusca: _fecharBusca,
+                    onLimparBusca: _limparBusca,
                   ),
                 ),
                 if (_papelNaLista(lista.id) != Papel.leitor)
@@ -644,7 +651,7 @@ class _ListaItens extends ConsumerWidget {
                           listaId: listaId,
                           item: grupo[index],
                           index: -1,
-                          podeEscrever: false,
+                          podeEscrever: podeEscrever,
                         ),
                         childCount: grupo.length,
                       ),
