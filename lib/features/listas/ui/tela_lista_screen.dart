@@ -22,6 +22,7 @@ import '../../convites/data/papel_repository.dart';
 import '../../convites/domain/papel.dart';
 import '../../convites/providers/papel_providers.dart';
 import '../../convites/ui/sheet_convidar.dart';
+import '../../convites/ui/tela_membros_screen.dart';
 import '../../importacao/ui/modal_importar.dart';
 import '../../importacao/ui/modal_previsao_importacao.dart';
 import '../../sync/ui/indicador_sync.dart';
@@ -152,13 +153,16 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
   ) async {
     final titulo = ref.read(listaPorIdProvider(idLista)).value?.titulo ?? '';
     final nItens = ref.read(itensDaListaProvider(idLista)).value?.length ?? 0;
-    final mensagem = nItens == 1
-        ? 'O item será removido.'
-        : 'Os $nItens itens serão removidos.';
+    final membros = ref.read(membrosDaListaProvider(idLista)).value;
     final confirmou = await AppDialog.confirmarDestrutivo(
       context,
-      titulo: 'Excluir "$titulo"?',
-      mensagem: mensagem,
+      titulo: AppStrings.excluirListaTitulo(titulo),
+      mensagem: AppStrings.excluirListaMensagem(
+        nItens,
+        // Best-effort: se os membros ainda não foram carregados, assume só o
+        // dono (não bloqueia a exclusão).
+        temMembros: (membros?.length ?? 0) > 1,
+      ),
     );
     if (!confirmou) return;
     await ref.read(listasRepositoryProvider).excluirLista(idLista);

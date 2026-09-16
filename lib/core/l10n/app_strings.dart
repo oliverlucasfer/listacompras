@@ -83,8 +83,16 @@ abstract final class AppStrings {
   static const listaCriada = 'Lista criada.';
   static const listaRenomeada = 'Lista renomeada.';
   static const excluirLista = 'Excluir lista';
-  static const excluirListaMensagem =
-      'Excluir esta lista? Esta ação não pode ser desfeita.';
+
+  static String excluirListaTitulo(String titulo) => 'Excluir "$titulo"?';
+
+  static String excluirListaMensagem(int nItens, {required bool temMembros}) {
+    final sufixo = temMembros ? ' para todos os participantes' : '';
+    if (nItens == 0) return 'A lista será excluída$sufixo.';
+    if (nItens == 1) return 'O item será removido$sufixo.';
+    return 'Os $nItens itens serão removidos$sufixo.';
+  }
+
   static const atualizada = 'atualizada';
   static const erroNomeVazio = 'Informe um nome.';
   static const erroQuantidadeInvalida =

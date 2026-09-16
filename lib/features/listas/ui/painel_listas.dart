@@ -230,15 +230,17 @@ class _CardListaState extends ConsumerState<_CardLista> {
   }
 
   Future<void> _confirmarExclusao() async {
+    final contagem = widget.contagem;
     final confirmou = await AppDialog.confirmarDestrutivo(
       context,
-      titulo: AppStrings.excluirLista,
-      mensagem: AppStrings.excluirListaMensagem,
+      titulo: AppStrings.excluirListaTitulo(contagem.lista.titulo),
+      mensagem: AppStrings.excluirListaMensagem(
+        contagem.totalItens,
+        temMembros: false,
+      ),
     );
     if (confirmou) {
-      await ref
-          .read(listasRepositoryProvider)
-          .excluirLista(widget.contagem.lista.id);
+      await ref.read(listasRepositoryProvider).excluirLista(contagem.lista.id);
     }
   }
 }

@@ -192,7 +192,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text(AppStrings.excluir).first);
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.excluirListaMensagem), findsOneWidget);
+    expect(
+      find.text(AppStrings.excluirListaMensagem(0, temMembros: false)),
+      findsOneWidget,
+    );
 
     await tester.tap(find.widgetWithText(FilledButton, AppStrings.excluir));
     await tester.pumpAndSettle();
