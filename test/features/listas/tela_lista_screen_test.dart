@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
+import 'package:lista_compras/core/widgets/app_banner.dart';
 import 'package:lista_compras/core/widgets/app_estado_erro.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/auth/providers/auth_providers.dart';
@@ -1034,17 +1035,14 @@ void main() {
   ) async {
     await listaComItens(tester, papel: Papel.leitor);
 
-    // Banner fixo de somente leitura (surfaceVariant).
-    final banner = find.text(AppStrings.somenteLeitura);
-    expect(banner, findsOneWidget);
-    expect(find.text(AppStrings.somenteLeituraDica), findsOneWidget);
+    // Banner de leitura pelo componente padrão (F14-T08).
+    final bannerApp = tester.widget<AppBanner>(find.byType(AppBanner).first);
+    expect(bannerApp.tipo, AppBannerTipo.leitura);
     expect(
-      tester
-          .widget<Container>(
-            find.ancestor(of: banner, matching: find.byType(Container)).first,
-          )
-          .color,
-      isNotNull,
+      find.text(
+        '${AppStrings.somenteLeitura}: ${AppStrings.somenteLeituraDica}',
+      ),
+      findsOneWidget,
     );
 
     // Menu do leitor: sem escritas em massa, sem renomear/excluir/convidar.

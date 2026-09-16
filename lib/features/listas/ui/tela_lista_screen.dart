@@ -9,6 +9,7 @@ import '../../../core/l10n/app_strings.dart';
 import '../../../core/navigation/voltar_para_inicio.dart';
 import '../../../core/texto/normalizar.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
+import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_cabecalho_secao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
@@ -326,23 +327,15 @@ class _BannerSomenteLeitura extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      padding: const EdgeInsets.symmetric(
+    return const Padding(
+      padding: EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
-        vertical: AppSpacing.md,
+        vertical: AppSpacing.sm,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            AppStrings.somenteLeitura,
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const Text(AppStrings.somenteLeituraDica),
-        ],
+      child: AppBanner(
+        tipo: AppBannerTipo.leitura,
+        mensagem:
+            '${AppStrings.somenteLeitura}: ${AppStrings.somenteLeituraDica}',
       ),
     );
   }
