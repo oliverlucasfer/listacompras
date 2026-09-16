@@ -6,6 +6,7 @@ import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
+import '../../../core/widgets/app_esqueleto.dart';
 import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_logo.dart';
@@ -134,6 +135,8 @@ class DesignSystemScreen extends StatelessWidget {
                 ],
               ),
             ),
+            const _Titulo('Esqueleto'),
+            const AppCard(child: AppEsqueleto(linhas: 3)),
           ],
         ),
       ),

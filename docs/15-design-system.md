@@ -38,7 +38,7 @@ Título de tela (AppBar): **24sp bold** aplicado via `appBarTheme.titleTextStyle
 | `AppCard` | Superfície padrão com padding/radius (sem margem; o espaçamento entre cards empilhados é do layout — ex.: `AppSpacing.sm`) |
 | `AppLogo` | Marca do app (carrinho de compras) no cabeçalho das telas de topo; 28dp, recortada com `AppRadius.sm` |
 | `AppChip` | Chip com alvo ≥48dp |
-| `AppEsqueleto` | Placeholder estático de carregamento das listas (Fase 14) |
+| `AppEsqueleto` | Placeholder estático de carregamento (blocos da cor de superfície, sem animação, sem pacote novo) — painel, itens da lista e membros (F14-T09) |
 | `AppCabecalhoSecao` | Cabeçalho de seção (`título (n)`) |
 | `AppEstadoVazio` | Vazio com ícone + texto + CTA; rótulo único (título + descrição) para o leitor de tela, com a ação em nó próprio (Fase 14) |
 | `AppEstadoErro` | Erro de carga com retry rotulado |
