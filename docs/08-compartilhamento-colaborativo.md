@@ -29,7 +29,7 @@ Papéis já definidos no enum de `lista_membros.papel` ([01 §4.2](01-banco-de-d
 
 ### 1.1. Decisões da rodada (2026-09-10 — spec [`superpowers/specs/2026-09-10-compartilhamento-link-design.md`](superpowers/specs/2026-09-10-compartilhamento-link-design.md))
 
-Primeira rodada da fase é **link-only**: fluxos `email` (§4) e Edge Function `enviar-convite` ficam para uma rodada futura — o schema as prevê, o app ainda não as usa. Link usa **custom scheme** `br.com.oliverlucas.listacompras://entrar?token=...` (host `entrar`, mais um intent-filter igual ao do login-callback da F3-T03) + opção de colar token cru, enquanto a Web não está publicada (F5-T06 adiada; universal link fica para depois). **Transferência de dono (§6) adiada**: nesta rodada o dono não consegue sair da lista; membros comuns saem normalmente (`sync_dono` não é alterado). Realtime: `lista_membros` e `convites` vão ao publication (§7); o painel de pendências faz fetch ao abrir — o canal de `convites` empurra evento, mas a UI não depende dele nesta rodada (sem e-mail, o painel não tem entradas).
+Primeira rodada da fase é **link-only**: fluxos `email` (§4) e Edge Function `enviar-convite` ficam para uma rodada futura — o schema as prevê, o app ainda não as usa. O **link compartilhável depende da plataforma** (ADR-012, [05 §2.1](05-app-flutter.md)): no **web** é `https://<origem>/entrar?token=...` (URL normal do navegador, graças ao path URL strategy) e no **nativo** é o **custom scheme** `br.com.oliverlucas.listacompras://entrar?token=...` (host `entrar`, mais um intent-filter igual ao do login-callback da F3-T03); em ambos a UI aceita colar o token cru. No web a URL do convite chega direto ao `go_router`; a ponte `deeplinkConviteProvider` só escuta o `app_links` no nativo. Enquanto a hospedagem pública não sai (F5-T06 adiada), a origem do link https é `Uri.base.origin` em dev ou `APP_WEB_URL` no nativo; universal link fica para uma rodada futura. **Transferência de dono (§6) adiada**: nesta rodada o dono não consegue sair da lista; membros comuns saem normalmente (`sync_dono` não é alterado). Realtime: `lista_membros` e `convites` vão ao publication (§7); o painel de pendências faz fetch ao abrir — o canal de `convites` empurra evento, mas a UI não depende dele nesta rodada (sem e-mail, o painel não tem entradas).
 
 ---
 
@@ -81,10 +81,11 @@ create index idx_convites_email on public.convites (lower(email)) where estado =
 [dono] Tela da Lista → Menu → "Convidar"
         │ escolhe papel (editor/leitor) e gera link
         ▼
-INSERT convites (tipo='link') ──► link: br.com.oliverlucas.listacompras://entrar?token=<uuid>
+INSERT convites (tipo='link') ──► link (ADR-012): web = https://<origem>/entrar?token=<uuid>
+                                   nativo = br.com.oliverlucas.listacompras://entrar?token=<uuid>
         │ dono compartilha (WhatsApp, e-mail, etc.)
         ▼
-[convidado] abre deep link (app instalado) ou cole o token em "Entrar com código"
+[convidado] abre o link (navegador no web; app instalado no nativo) ou cola o token cru
         │ rota /entrar?token=... ([05 §4](05-app-flutter.md))
         ▼
         ├─ não autenticado → tela de login/registro com contexto "Você foi

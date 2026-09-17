@@ -91,7 +91,8 @@ Uma fase só está "pronta" quando:
 
 | Canal | Requisito | Observação |
 | :--- | :--- | :--- |
-| Web (Fase 5) | Build `flutter build web` + hosting | Supabase Hosting/Vercel/Netlify; URL pública |
+| Web (Fase 5) | Build `flutter build web` + hosting | App **funcional completo** desde a Fase 18 (banco WASM/OPFS, auth por link, convites, sync e import — ADR-012); hospedagem pública (Supabase Hosting/Vercel/Netlify, URL pública) segue na F5-T06 |
+| Desktop — Windows/Linux/macOS (Fase 18) | Builds `flutter build windows`/`linux`/`macos` | Suportado desde a Fase 18 (ADR-012); builds Windows/Linux validados no CI ([07 §3](07-qualidade-ci.md)); publicação segue o gate do dono (Fase 5 / F5-T06) |
 | Android — teste interno (Fase 5) | APK/AAB na Play Console (closed testing) | Política de privacidade + Declaração de Dados preenchidas |
 | Android — produção | Publicação pública | Depende de validação do MVP; pode ficar para após Fase 5 |
 | iOS (Fase 6) | App Store Connect | Conta Apple Developer; revisão da Apple |

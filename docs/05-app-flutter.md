@@ -27,6 +27,9 @@ lib/
 ├── main.dart
 ├── router.dart                      # go_router (rotas, guards de auth)
 ├── core/
+│   ├── config/                      # links por plataforma (ADR-012)
+│   ├── rede/                        # tratamento de erro de rede (nativo/web)
+│   ├── web/                         # URL strategy (web/nativa)
 │   ├── theme/                       # tema, tokens (Seção 7)
 │   ├── widgets/                     # componentes compartilhados
 │   └── utils/                       # formatação, extensões
@@ -45,10 +48,29 @@ lib/
 │       └── providers/               # syncStatusProvider
 └── drift/
     ├── database.dart                # AppDatabase (tabelas locais)
+    ├── conexao/                     # abrirBancoLocal (nativa/web, ADR-012)
     └── tables/                      # ListaLocal, ItemLocal, MutacaoPendente
 ```
 
 **Regra:** `ui` só fala com `providers`; `providers` só falam com `data` (repositórios). Repositórios de leitura expõem **Streams do Drift** (UI reativa offline-first).
+
+### 2.1. Banco e links por plataforma (ADR-012)
+
+A partir da Fase 18 o app roda em **Android, iOS, Web e Desktop (Windows/Linux/macOS)** a partir do mesmo código Flutter. As diferenças ficam confinadas a imports condicionais — nenhuma regra de negócio muda por plataforma.
+
+* **Banco local — fábrica `abrirBancoLocal()`:** `lib/drift/database.dart` não importa mais `dart:io`; a conexão vem de `lib/drift/conexao/conexao.dart`, que exporta condicionalmente:
+  * `conexao_nativa.dart` (nativo/desktop): `NativeDatabase` em arquivo no diretório de documentos (`lista_compras.sqlite`).
+  * `conexao_web.dart` (navegador): `WasmDatabase.open` com `sqlite3.wasm` + `drift_worker.js`; persistência em **OPFS** quando disponível, **IndexedDB** como fallback. `LazyDatabase` mantém a inicialização fora do caminho de build da UI.
+  * Offline-first inalterado: toda escrita vai ao Drift + fila ([03](03-sincronizacao-offline.md)); a UI nunca bloqueia em rede.
+* **Assets WASM no build web:** `web/sqlite3.wasm` e `web/drift_worker.js` são versionados no repositório (release `drift-2.34.4`) e precisam ser servidos junto do `build/web` — regeneração em [07 §3](07-qualidade-ci.md).
+* **URL strategy:** `usarPathUrlStrategy()` (import condicional em `core/web/`) usa path limpo no web (`/entrar?token=…`, `/login-callback`); no nativo/desktop é no-op. Chamada em `main.dart` antes do `Supabase.initialize`.
+* **Links (`core/config/links.dart`):**
+  * **Origem:** `origemWeb()` devolve `Uri.base.origin` no web e a constante `APP_WEB_URL` (`--dart-define=APP_WEB_URL=https://<domínio>`, default `http://localhost:8080`) no nativo.
+  * **Auth:** `redirectAuth()` devolve `https://<origem>/login-callback` no web e `br.com.oliverlucas.listacompras://login-callback` no nativo — usado no cadastro (verificação de e-mail) e na recuperação de senha.
+  * **Convite:** `linkConviteDe(token)` devolve `https://<origem>/entrar?token=…` no web e `br.com.oliverlucas.listacompras://entrar?token=…` no nativo ([08 §1.1](08-compartilhamento-colaborativo.md)).
+  * No web o deep link de convite chega como URL normal ao `go_router`; a ponte `deeplinkConviteProvider` só escuta o `app_links` no nativo.
+* **Rota `/login-callback`:** rota pública que exibe um indicador de progresso enquanto o `supabase_flutter` processa o retorno do link (o redirect seguinte decide a tela). Registrada no `router.dart` para o web, onde o retorno do Supabase é uma URL https e não um deep link.
+* **Erros de rede:** `core/rede/erro_rede.dart` exporta por plataforma `erro_rede_nativa.dart` (`SocketException`/`TimeoutException`) e `erro_rede_web.dart` (`ClientException`), mantendo o mapeamento para "sem conexão" único para a UI.
 
 ---
 

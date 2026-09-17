@@ -39,14 +39,26 @@ Pipeline único `.github/workflows/ci.yml`, disparado em PR e push em `main`:
 │  1. dart format --set-exit-if-changed .        │
 │  2. flutter analyze                            │
 │  3. flutter test (unit + widget)               │
+│  4. flutter build web --release                │
 ├────────────────────────────────────────────────┤
 │ job: supabase (paralelo)                       │
 │  1. supabase db reset (aplica migrations)      │
 │  2. testes SQL de negação/positivos RLS        │
+├────────────────────────────────────────────────┤
+│ job: desktop (matriz, paralelo)                │
+│  Linux: deps (clang/cmake/ninja/gtk) + build   │
+│  Windows: flutter build windows                │
 └────────────────────────────────────────────────┘
 ```
 
 * PR só mergea com CI verde (branch protection).
+* **Builds de plataforma (F18-T05, ADR-012):** o job `flutter` compila o Web (`flutter build web --release`) e o job `desktop` valida `flutter build linux` (ubuntu-latest, instala `clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev`) e `flutter build windows` (windows-latest) numa matriz com `fail-fast: false`. Os builds usam **valores fictícios** de `--dart-define` (`SUPABASE_URL=https://exemplo.supabase.co`, `SUPABASE_ANON_KEY=teste`) — nenhum segredo real entra no CI.
+* **Assets WASM do Drift versionados (F18-T01):** `web/drift_worker.js` e `web/sqlite3.wasm` são cópias fiéis da release oficial `drift-2.34.4` (mesma versão pinada em `pubspec.lock`), necessárias ao banco no navegador (`WasmDatabase`/OPFS-IndexedDB, [05 §2](05-app-flutter.md), ADR-012). Para regenerar (ex.: subir o Drift), baixar da release correspondente e substituir os dois arquivos:
+  ```bash
+  curl -L -o web/drift_worker.js https://github.com/simolus3/drift/releases/download/drift-2.34.4/drift_worker.js
+  curl -L -o web/sqlite3.wasm    https://github.com/simolus3/drift/releases/download/drift-2.34.4/sqlite3.wasm
+  ```
+  A versão do Drift em `pubspec.lock` e os assets devem andar juntos; validar com `flutter build web --release` (o build falha se os assets não forem servidos corretamente no runtime web).
 * Segurança no CI: secrets do Supabase de **ambiente de teste**, nunca produção; JWTs de teste criados na hora.
 * Flutter **e** CLI do Supabase do CI **pinados** às versões usadas pelo dev (`flutter-version` no `flutter-action`, `version` no `setup-cli`) — o formatter do Dart muda entre versões (quebraria `dart format --set-exit-if-changed`) e o CLI fica pinado ao do dev para paridade.
 * Tempo alvo do pipeline: < 10 min.
@@ -67,6 +79,26 @@ jobs:
       - run: dart format --set-exit-if-changed .
       - run: flutter analyze
       - run: flutter test
+      - run: >-   # valores fictícios (nunca segredos reais)
+          flutter build web --release
+          --dart-define=SUPABASE_URL=https://exemplo.supabase.co
+          --dart-define=SUPABASE_ANON_KEY=teste
+
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest,  comando: flutter build linux }
+          - { os: windows-latest, comando: flutter build windows }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with: { channel: stable, flutter-version: 3.44.5 }
+      - if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+      - run: ${{ matrix.comando }} --dart-define=SUPABASE_URL=https://exemplo.supabase.co --dart-define=SUPABASE_ANON_KEY=teste
 
   supabase:
     runs-on: ubuntu-latest

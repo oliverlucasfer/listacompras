@@ -87,6 +87,18 @@ supabase db push
 - **Correção (dono da lista, 11/09/2026):** migration `0010_dono_automatico.sql` aplicada em produção via `db push` — o trigger `trg_listas_cria_dono` cria a associação do dono em `lista_membros` ao inserir a lista e o backfill conserta as listas existentes sem dono membro. Causa do bug: a associação do dono nunca era criada (nem cliente nem banco), então `papel_na_lista()` retornava null (UI tratava o dono como leitor) e o RLS negava escrita de itens. Docs donos [01 §6](01-banco-de-dados.md) e [02 §1/§3](02-seguranca-rls.md).
 - **Fases 8–11 + correções (11/09/2026):** design system/refresh visual, redesign de navegação (NavigationBar/Rail), importação local sem IA (RF-16) e correção do dono (migration `0011_dono_repair.sql` em produção, idempotente). App `1.2.0+6` distribuído ao grupo `testadores` (App Distribution): navegação abre lista/membros por `push` sobre o shell (voltar para a aba de origem; fallback para `/listas`/`/compartilhadas` sem pilha) e títulos contextualizados (aba/AppBar "Configurações", `Membros · {título}`, fallback "Lista"). Docs donos [05 §4](05-app-flutter.md), [10 §2/§3](10-wireframes-telas.md).
 
+### 2.7. Auth → URL Configuration (web + nativo)
+
+Dashboard Supabase → **Authentication → URL Configuration** (ADR-012, [05 §2.1](05-app-flutter.md)). Necessário para o cadastro (verificação de e-mail), a recuperação de senha e o link de convite funcionarem no web:
+
+| Campo | Valor |
+| :--- | :--- |
+| **Site URL** | Produção: `https://<domínio>` · Dev: `http://localhost:<porta>` |
+| **Redirect URLs** | `http://localhost:<porta>/**` (dev) e `https://<domínio>/**` (produção) |
+| **Nativo (manter)** | `br.com.oliverlucas.listacompras://login-callback` |
+
+O web usa `https://<origem>/login-callback` como `redirectTo` de auth ([05 §2.1](05-app-flutter.md)); o `/**` cobre também `/entrar` (convite). Sem a URL na whitelist, o Supabase recusa o `redirectTo` ("redirect_uri not allowed") e o link de confirmação cai na Site URL errada.
+
 ---
 
 ## 3. Incidentes comuns

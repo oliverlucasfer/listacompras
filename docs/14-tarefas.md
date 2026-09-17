@@ -440,25 +440,25 @@ Spec: [superpowers/specs/2026-09-17-remocao-ia-design.md](superpowers/specs/2026
 
 ## Fase 18 — Suporte a Web e Desktop
 
-Spec: [superpowers/specs/2026-09-17-suporte-web-desktop-design.md](superpowers/specs/2026-09-17-suporte-web-desktop-design.md) · ADR-012 · Docs donos: 00, 05, 06, 07, 09.
+Spec: [superpowers/specs/2026-09-17-suporte-web-desktop-design.md](superpowers/specs/2026-09-17-suporte-web-desktop-design.md) · ADR-012 · Docs donos: 00, 05, 06, 07, 08, 09.
 
-- [ ] **F18-T00** — ADR-012 + planejamento (00, 12, 13, 14)
+- [x] **F18-T00** — ADR-012 + planejamento (00, 12, 13, 14)
   Dep: — · Docs: [00](00-visao-geral.md), [14](14-tarefas.md)
   CP: ADR-012 no 00; Fase 18 no 14; menções de plataforma no 12/13 coerentes; sem tocar código.
-- [ ] **F18-T01** — Banco multi-plataforma (fábrica condicional + assets wasm)
+- [x] **F18-T01** — Banco multi-plataforma (fábrica condicional + assets wasm)
   Dep: F18-T00 · Docs: [05](05-app-flutter.md)
   CP: `database.dart` sem `dart:io`; `conexao_nativa`/`conexao_web`; assets `drift_worker.js`/`sqlite3.wasm` versionados; `analyze`/`test` verdes.
-- [ ] **F18-T02** — Rede, links, auth e URL strategy (web compila)
+- [x] **F18-T02** — Rede, links, auth e URL strategy (web compila)
   Dep: F18-T01 · Docs: [05](05-app-flutter.md), [09](09-runbook-operacoes.md), [12](12-prd.md)
   CP: `erro_rede` sem `dart:io`; `links.dart` (origem/scheme); `/login-callback`; `usePathUrlStrategy`; `flutter build web` compila.
-- [ ] **F18-T03** — Desktop (Windows/Linux/macOS)
+- [x] **F18-T03** — Desktop (Windows/Linux/macOS)
   Dep: F18-T02 · Docs: [05](05-app-flutter.md), [06](06-mvp-entregas.md)
   CP: pastas `windows/`/`linux/`/`macos/`; `flutter build windows` e `flutter build linux`; app abre e persiste no Windows.
-- [ ] **F18-T04** — Ajustes do app web
+- [x] **F18-T04** — Ajustes do app web
   Dep: F18-T02 · Docs: [06](06-mvp-entregas.md)
   CP: manifest sem portrait fixo; `web/version.json`; compartilhar com fallback; smoke no Chrome.
-- [ ] **F18-T05** — CI (build web + desktop) e docs donos; fechamento
-  Dep: F18-T03, F18-T04 · Docs: [07](07-qualidade-ci.md), [09](09-runbook-operacoes.md)
+- [x] **F18-T05** — CI (build web + desktop) e docs donos; fechamento
+  Dep: F18-T03, F18-T04 · Docs: [07](07-qualidade-ci.md), [08](08-compartilhamento-colaborativo.md), [09](09-runbook-operacoes.md)
   CP: CI verde com `build web` + builds desktop; 05/06/07/09 sincronizados; Fase 18 marcada.
 
 ## Progresso por fase (atualize ao concluir)
@@ -480,8 +480,8 @@ Spec: [superpowers/specs/2026-09-17-suporte-web-desktop-design.md](superpowers/s
 | F14 Acessibilidade & UX | 10 | 10 |
 | F16 Busca e filtro | 5 | 5 |
 | F17 Remoção da IA | 5 | 5 |
-| F18 Web e Desktop | 6 | 0 |
-| **Total** | **108** | **100** |
+| F18 Web e Desktop | 6 | 6 |
+| **Total** | **108** | **106** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
