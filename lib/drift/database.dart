@@ -1,10 +1,6 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 
+import 'conexao/conexao.dart';
 import 'tables/item_local.dart';
 import 'tables/lista_local.dart';
 import 'tables/mutacao_pendente.dart';
@@ -59,10 +55,4 @@ class AppDatabase extends _$AppDatabase {
   );
 }
 
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dir.path, 'lista_compras.sqlite'));
-    return NativeDatabase(file);
-  });
-}
+QueryExecutor _openConnection() => abrirBancoLocal();
