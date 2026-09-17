@@ -84,13 +84,13 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
   Dep: F3-T07, F3-T08 · Docs: [07 §1](07-qualidade-ci.md)
   CP: Widgets críticos cobertos; CI verde. *(30 widget tests escritos incrementalmente: auth 15 (F3-T04), painel 6 (F3-T05), lista 10 (F3-T07/08); + 17 de repositório e 7 de util; pipeline local 07 §3 verde — format/analyze/test)*
 
-## Fase 4 — IA + Sincronização
+## Fase 4 — Sincronização
 
-- [x] **F4-T01** — Modal "Importar por IA" (entrada + contador + chamada + erros amigáveis)
-  Dep: F2-T05, F3-T09 · Docs: [05 §6.4](05-app-flutter.md), [04 §2](04-ia-edge-function.md), [10 §4.1](10-wireframes-telas.md) · RF-06
-  CP: Todos os códigos de erro exibem mensagem do contrato; contador bloqueia > 2000. *(cliente HTTP `ParseListaClient` com JWT + timeout 20s; os 8 códigos do contrato mapeados com fallback pt-BR; contador vermelho e botão desabilitado > 2000; sucesso devolve `RespostaParse` para a pré-visualização (F4-T02) — placeholder SnackBar no entretempo; 11 unit + 8 widget + 1 na tela da lista)*
-- [x] **F4-T02** — Modal de pré-visualização (checkboxes, edição inline, aviso da IA)
-  Dep: F4-T01 · Docs: [05 §6.4](05-app-flutter.md), [10 §4.2](10-wireframes-telas.md) · RF-06
+- [x] **F4-T01** — Modal "Importar lista" (entrada + contador + parser local + erro amigável)
+  Dep: F2-T05, F3-T09 · Docs: [05 §6.4](05-app-flutter.md), [04](04-importacao-lista.md), [10 §4.1](10-wireframes-telas.md) · RF-16
+  CP: erro do parser com mensagem amigável; contador bloqueia > 10.000. *(modal de importação com contador e erro amigável; extração pelo parser local (F11); a etapa de IA foi removida na F17)*
+- [x] **F4-T02** — Modal de pré-visualização (checkboxes, edição inline, aviso)
+  Dep: F4-T01 · Docs: [05 §6.4](05-app-flutter.md), [10 §4.2](10-wireframes-telas.md) · RF-16
   CP: Cancelar não grava; incluir/excluir por item; itens gravados via repositório local. *(checkbox por item + contador "N de M serão adicionados"; painel ▾ edita nome/quantidade/unidade inline; aviso em destaque; "Adicionar N" grava via `ListasRepository.adicionarItem`; 6 widget + 2 de integração com Drift)*
 - [x] **F4-T03** — Sync Engine: flush da fila (coalescing, ordenação por lista, retry/backoff)
   Dep: F3-T06 · Docs: [03 §3–4](03-sincronizacao-offline.md) · RF-08
@@ -157,10 +157,10 @@ Spec do agrupamento por categoria: [superpowers/specs/2026-09-08-agrupamento-cat
 - [x] **F6-T04** — UI: grupos por categoria, contagem, drag interno, dropdown no editar
   Dep: F6-T02, F6-T03 · Docs: [05 §6.3](05-app-flutter.md), [10 §3](10-wireframes-telas.md)
   CP: wireframe atualizado atendido; headers `Label (n)` na ordem do enum; drag só dentro do grupo; Enter aplica sugestão; concluídos sem grupos; widget tests.
-- [x] **F6-T05** — IA com categoria (prompt + `responseSchema` + cliente tolerante + pré-visualização)
-  Dep: F6-T02 · Docs: [04](04-ia-edge-function.md)
-  CP: schema exige enum dos 11 valores; cliente sem `categoria` → `outros`; deno/e2e verdes; **deploy da function em produção antes do APK novo** aos testadores.
-  *(Smoke de produção: função responde 401 sem JWT — deploy `5m` após F6-T04; e2e `--sem-gemini` local tem 1 falha pré-existente e ambiental (`.env` com `GEMINI_API_KEY` carregado pelo edge runtime faz o cenário "sem key" não dar 500 — o CI, com env limpo, valida esse cenário)*
+- [x] **F6-T05** — Categoria sugerida no import (cadeia local + pré-visualização editável)
+  Dep: F6-T02 · Docs: [04](04-importacao-lista.md)
+  CP: enum dos 11 valores na pré-visualização; sugestão local em camadas; testes verdes.
+  *(A etapa de servidor/IA desta tarefa foi removida na F17.)*
 - [x] **F6-T06** — Checklist sync [03 §8](03-sincronizacao-offline.md) com categoria + distribuição nova
   Dep: F6-T02, F6-T05 · Docs: [03 §8](03-sincronizacao-offline.md), [07 §1](07-qualidade-ci.md)
   CP: cenário de categoria entre 2 dispositivos (servidor fake) verde; CI verde; APK `1.1.0+3` distribuído ao grupo `testadores` (história em [09 §2.5](09-runbook-operacoes.md)).
@@ -238,7 +238,7 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 - [x] **F9-T04** — Tela da lista (banners, estados, destrutivo, strings/cores)
   Dep: F9-T02, F9-T03 · Docs: [15](15-design-system.md), [10](10-wireframes-telas.md)
   CP: banners/estados/cores/strings padronizados; testes verdes.
-- [x] **F9-T05** — Modais de IA (aviso, botões, strings)
+- [x] **F9-T05** — Modal de importação (aviso, botões, strings)
   Dep: F9-T01 · Docs: [15](15-design-system.md)
   CP: aviso via `AppBanner`; botões/strings padronizados; testes verdes.
 - [x] **F9-T06** — Configurações (cabeçalho, destrutivo, sheet)
@@ -277,7 +277,7 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 
 ---
 
-## Fase 11 — Importação local sem IA (spec em [superpowers/specs](superpowers/specs/2026-09-11-importacao-local-design.md))
+## Fase 11 — Importação de lista (spec em [superpowers/specs](superpowers/specs/2026-09-11-importacao-local-design.md))
 
 - [x] **F11-T00** — RF-16 + docs de planejamento
   Dep: F10-T04 · Docs: spec da fase
@@ -285,9 +285,9 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 - [x] **F11-T01** — Tipos de importação, normalizador e parser local
   Dep: F11-T00 · Docs: [05 §3/§6.4](05-app-flutter.md), [01 §3](01-banco-de-dados.md)
   CP: parser puro com unit tests dos casos da spec §8; imports atualizados; `analyze`/`test` verdes.
-- [x] **F11-T02** — Modal com seletor Rápido/IA + pré-visualização (nomes genéricos)
+- [x] **F11-T02** — Modal de importação + pré-visualização (nomes genéricos)
   Dep: F11-T01 · Docs: [05 §6.4](05-app-flutter.md), [10 §4](10-wireframes-telas.md)
-  CP: modo Rápido offline e modo IA preservado; botão "Importar lista"; testes verdes.
+  CP: modo local offline (RF-16); botão "Importar lista"; testes verdes.
 - [x] **F11-T03** — Verificação final, docs e CI
   Dep: F11-T02 · Docs: [07 §1](07-qualidade-ci.md)
   CP: `format`/`analyze`/`test` verdes; fase marcada.
