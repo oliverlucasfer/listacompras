@@ -91,7 +91,7 @@ Aplicação multiplataforma para criação, organização e execução de compra
 | :--- | :--- | :--- | :--- |
 | R-01 | **Supabase free tier pausa o projeto após ~1 semana sem atividade** — sincronização fica indisponível até reativação (cold start de minutos) | Alto em produção pública | Aceito no MVP (contexto pessoal/familiar). **Gatilho documentado:** upgrade para Supabase Pro (~US$ 25/mês) antes de lançamento público. Sem keep-alive no código |
 | R-03 | Conflitos de sincronização com relógio de dispositivo errado | Médio | Last-write-wins com desempate pelo timestamp do servidor (ver [03](03-sincronizacao-offline.md)) |
-| R-05 | Escopo das 6 plataformas atrasar o MVP | Médio | MVP restrito a Android/iOS/Web (ADR-001) |
+| R-05 | Escopo das 6 plataformas atrasar o MVP | Médio | MVP restrito a Android/iOS/Web (ADR-001); Desktop entra na Fase 18 (ADR-012) |
 | R-06 | Usuário exclui conta; dados retidos indevidamente | Legal (LGPD) | Delete físico em cascata; exclusão de conta na Fase 5 (ver [06 MVP & Entregas](06-mvp-entregas.md)) |
 
 ---
@@ -100,7 +100,7 @@ Aplicação multiplataforma para criação, organização e execução de compra
 
 | # | Data | Decisão | Alternativas consideradas | Justificativa |
 | :--- | :--- | :--- | :--- | :--- |
-| ADR-001 | 02/09/2026 | MVP restrito a **Android, iOS e Web**; Desktop na Fase 6 | Todas as plataformas na v1 | Onde está o uso real (supermercado + casa); reduz tempo de build/teste |
+| ADR-001 | 02/09/2026 | MVP restrito a **Android, iOS e Web (SPA)**; **Desktop suportado a partir da Fase 18** (ver ADR-012) | Todas as plataformas na v1 | Onde está o uso real (supermercado + casa); reduz tempo de build/teste |
 | ADR-002 | 02/09/2026 | **Riverpod** como state management | Bloc, Provider + ChangeNotifier | Compile-safe, testável, ideal para orquestrar cache local + Realtime |
 | ADR-003 | 02/09/2026 | **Drift/SQLite** como banco local | Isar, Hive | Relacional espelhando o Postgres; queries complexas de sync; migrações versionadas |
 | ADR-004 | 02/09/2026 | Conflitos de sync via **last-write-wins** (`updated_at` + tombstones) | Modal de conflito manual | Simples e suficiente para o domínio; listas de compras toleram LWW |
@@ -111,8 +111,7 @@ Aplicação multiplataforma para criação, organização e execução de compra
 | ADR-009 | 02/09/2026 | **Sentry** (plano free) como observabilidade no MVP | Crashlytics, nada | Cobertura Flutter/Web; integração simples; decisão mínima viável |
 | ADR-010 | 02/09/2026 | **GitHub Actions** como CI desde a Fase 1 | Nenhum CI, GitLab CI | Já hospedamos no GitHub; pipeline simples (analyze + format + test) |
 | ADR-011 | 08/09/2026 | `categoria` do item como **enum fechado** (11 valores) com sugestão local em camadas — memória por nome → dicionário estático → `outros` | Texto livre; sugestão manual | Consistência de dados ("Frios" × "frios"); preserva o offline-first |
-
-- **ADR-012 — Suporte a Web e Desktop (Fase 18):** o banco local passa a ser aberto por uma fábrica com import condicional — `WasmDatabase` (Drift, persistência OPFS/IndexedDB) no web e `NativeDatabase` (arquivo) no nativo/desktop; auth e convites usam URL https no web (`Uri.base.origin`) e scheme custom no nativo; CI valida `flutter build web` e builds desktop. Hospedagem pública permanece na F5-T06.
+| ADR-012 | 17/09/2026 | Suporte a **Web completo** e **Desktop (Windows/Linux/macOS)** (Fase 18): banco local por fábrica com import condicional (`WasmDatabase`/OPFS-IndexedDB no web, `NativeDatabase` no nativo/desktop); auth e convites via URL https no web (`Uri.base.origin`) e scheme custom no nativo; CI valida `flutter build web` e builds desktop | Web só SPA/leitura; adiar desktop indefinidamente | A base Flutter já cobre as plataformas; preserva o offline-first com o mesmo Drift; hospedagem pública segue na F5-T06 |
 
 ---
 
