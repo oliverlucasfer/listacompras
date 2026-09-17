@@ -2,7 +2,7 @@
 
 > Navegação: [← 08 Compartilhamento](08-compartilhamento-colaborativo.md) · [10 Wireframes →](10-wireframes-telas.md)
 
-**Este documento é o dono dos procedimentos operacionais** pós-lançamento: incidentes, manutenção do Supabase, cota do Gemini, migrations, secrets e hotfixes. Guia prático — cada procedimento em passos copiáveis.
+**Este documento é o dono dos procedimentos operacionais** pós-lançamento: incidentes, manutenção do Supabase, migrations, secrets e hotfixes. Guia prático — cada procedimento em passos copiáveis.
 
 ---
 
@@ -11,13 +11,11 @@
 | Recurso | Onde está | Acesso usado para |
 | :--- | :--- | :--- |
 | Dashboard Supabase | https://supabase.com/dashboard | Banco, auth, logs, backup, billing |
-| `GEMINI_API_KEY` | Supabase Secrets (`supabase secrets list`) | Edge Function de IA |
 | Service role key | Dashboard Supabase → Settings → API | RPCs admin, exclusão de conta |
-| Sentry | https://sentry.io | Erros de app e Edge Function |
+| Sentry | https://sentry.io | Erros do app |
 | Play Console | https://play.google.com/console | Publicação/rollout Android |
-| Google AI Studio | https://aistudio.google.com | Cota e nova API key |
 
-> Nunca colar secrets em issues, chat ou código. Rotação: Seção 6.
+> Nunca colar secrets em issues, chat ou código.
 
 ---
 
@@ -53,7 +51,6 @@
 | :--- | :--- | :--- |
 | Uso de banco/storage/egress | Dashboard → Reports | > 70% do free tier |
 | Realtime (conexões/mensagens) | Dashboard → Realtime | mensagens/mês > 70% |
-| Edge Function invocations | Dashboard → Edge Functions | crescimento anômalo (possível abuso) |
 | Auth users | Dashboard → Auth | — |
 
 ### 2.4. Aplicar migrations em produção
@@ -77,78 +74,39 @@ supabase db push
 
 1. Gatilho: lançamento público próximo OU pausa incomodando usuários ativos.
 2. Billing → Upgrade → Pro (~US$ 25/mês): projeto não pausa, backups diários, 8 GB banco.
-3. Após upgrade: revalidar Realtime e Edge Functions (sem mudança de URL/keys).
+3. Após upgrade: revalidar Realtime (sem mudança de URL/keys).
 
 ### 2.5. Histórico de operações em produção
 
 **2026-09-08 — Provisionamento inicial** (F5-T05b):
 - `supabase db push` — migrations 0001–0005 aplicadas (`migration list` local = remote).
-- `supabase functions deploy parse-lista` + `supabase secrets set --env-file` (`GEMINI_API_KEY`).
 - Auth → URL Configuration → Redirect URLs: `br.com.oliverlucas.listacompras://login-callback` (dashboard).
-- Validação: anon bloqueado por RLS (`GET /rest/v1/listas` → `200 []`), `RPC excluir_conta` → `401`, contrato da function (`401` sem JWT) e e2e real do dono (conta → confirmação por deep link → lista → itens → importação IA).
+- Validação: anon bloqueado por RLS (`GET /rest/v1/listas` → `200 []`), `RPC excluir_conta` → `401` e e2e real do dono (conta → confirmação por deep link → lista → itens).
 - Canal de distribuição de teste: Firebase App Distribution — build `1.0.0+2` para o grupo `testadores` ([06 §4](06-mvp-entregas.md)).
-- **Fase 6 (agrupamento por categoria, 08/09/2026):** migration `0006_categorias.sql` em produção (`db push`, aditiva); Edge Function `parse-lista` redeployada **antes** do APK novo (campo `categoria` no contrato, [04 §2](04-ia-edge-function.md)); app `1.1.0+3` (smoke: 401 sem JWT na function + "E-mail ou senha incorretos." do Auth de produção) distribuído ao grupo `testadores` (App Distribution). Rollout especificado no spec F6 §7 (docs/superpowers/specs).
-- **Correção (dono da lista, 11/09/2026):** migration `0010_dono_automatico.sql` aplicada em produção via `db push` — o trigger `trg_listas_cria_dono` cria a associação do dono em `lista_membros` ao inserir a lista e o backfill conserta as listas existentes sem dono membro. Causa do bug: a associação do dono nunca era criada (nem cliente nem banco), então `papel_na_lista()` retornava null (UI tratava o dono como leitor) e o RLS negava escrita de itens. Docs donos [01 §6](01-banco-de-dados.md) e [02 §1/§3](02-seguranca-rls.md); sem mudanças na Edge Function.
+- **Fase 6 (agrupamento por categoria, 08/09/2026):** migration `0006_categorias.sql` em produção (`db push`, aditiva); app `1.1.0+3` (smoke: "E-mail ou senha incorretos." do Auth de produção) distribuído ao grupo `testadores` (App Distribution). Rollout especificado no spec F6 §7 (docs/superpowers/specs).
+- **Correção (dono da lista, 11/09/2026):** migration `0010_dono_automatico.sql` aplicada em produção via `db push` — o trigger `trg_listas_cria_dono` cria a associação do dono em `lista_membros` ao inserir a lista e o backfill conserta as listas existentes sem dono membro. Causa do bug: a associação do dono nunca era criada (nem cliente nem banco), então `papel_na_lista()` retornava null (UI tratava o dono como leitor) e o RLS negava escrita de itens. Docs donos [01 §6](01-banco-de-dados.md) e [02 §1/§3](02-seguranca-rls.md).
 - **Fases 8–11 + correções (11/09/2026):** design system/refresh visual, redesign de navegação (NavigationBar/Rail), importação local sem IA (RF-16) e correção do dono (migration `0011_dono_repair.sql` em produção, idempotente). App `1.2.0+6` distribuído ao grupo `testadores` (App Distribution): navegação abre lista/membros por `push` sobre o shell (voltar para a aba de origem; fallback para `/listas`/`/compartilhadas` sem pilha) e títulos contextualizados (aba/AppBar "Configurações", `Membros · {título}`, fallback "Lista"). Docs donos [05 §4](05-app-flutter.md), [10 §2/§3](10-wireframes-telas.md).
 
 ---
 
-## 3. Gemini / Edge Function
+## 3. Incidentes comuns
 
-### 3.1. Cota excedida (R-02)
-
-**Sintoma:** Edge Function responde 429 `cota_ia`; app mostra "Limite diário atingido".
-
-**Procedimento:**
-1. Confirmar em https://aistudio.google.com o consumo do dia.
-2. Curto prazo: nada a fazer — cota reseta diariamente; o app já degrada bem (importação manual continua 100%).
-3. Se recorrente e o uso cresceu: avaliar plano pago do Gemini **ou** reduzir rate limit por usuário ([04 §3](04-ia-edge-function.md)).
-
-### 3.2. Edge Function com erro
-
-1. Sentry → issue da função; log completo no Dashboard → Edge Functions → Logs.
-2. Reproduzir local: `supabase functions serve parse-lista`.
-3. Corrigir → deploy: `supabase functions deploy parse-lista`.
-
-### 3.3. Rotação da `GEMINI_API_KEY`
-
-```bash
-# 1. Gerar nova key no Google AI Studio
-# 2. Atualizar secret
-supabase secrets set GEMINI_API_KEY=<novo_valor>
-# 3. Redeploy das funções que usam
-supabase functions deploy parse-lista
-# 4. Revogar a key antiga no AI Studio
-```
-
-Tempo total: ~5 min, sem downtime perceptível.
-
----
-
-## 4. Incidentes comuns
-
-### 4.1. "Sincronização parou" (usuários reportam listas desatualizadas)
+### 3.1. "Sincronização parou" (usuários reportam listas desatualizadas)
 
 1. Verificar status Supabase (https://status.supabase.com) e se o projeto não está pausado (2.1).
 2. Sentry: `syncStatus = Erro` persistente? Erro de auth (token expirado) ou de rede?
 3. Testar manualmente: 2 dispositivos, mesma conta, marcar item — verificar < 1s.
 4. Se fila travada (mutação com muitas tentativas): checar erros no log do Postgres (violations de RLS/unique) — erro de negócio na fila deve aparecer no `Erro` da UI ([03 §6](03-sincronizacao-offline.md)).
 
-### 4.2. "Meus itens desapareceram"
+### 3.2. "Meus itens desapareceram"
 
 1. Confirmar que não é tombstone legítimo: `select * from itens_lista where lista_id = '...'` (deletado_em preenchido = remoção válida em algum dispositivo).
 2. Checar Sentry por erro de flush no período.
 3. Último recurso: restaurar backup (2.2) — **nunca** editar dados de produção manualmente sem backup prévio.
 
-### 4.3. Suspeita de abuso da Edge Function
-
-1. Dashboard → Edge Functions → invocations anômalas por horário.
-2. Reduzir temporariamente `LIMITE_POR_MINUTO` e redeploy.
-3. Verificar `ia_rate_limit` para identificar user_id anômalo; bloqueio manual: UPDATE do papel do membro ou remoção da lista.
-
 ---
 
-## 5. Hotfix do app publicado
+## 4. Hotfix do app publicado
 
 **Android (Play Store):**
 1. Correção em branch `hotfix/...` a partir da tag de release.
@@ -160,14 +118,14 @@ Tempo total: ~5 min, sem downtime perceptível.
 1. Merge do hotfix → `flutter build web` → deploy no hosting.
 2. Rollback = redeploy do commit anterior (hosting mantém histórico).
 
-**Dados/backend:** correções de schema/RLS seguem 2.4; Edge Function segue 3.2.
+**Dados/backend:** correções de schema/RLS seguem 2.4.
 
 ---
 
-## 6. Checklist mensal de operação
+## 5. Checklist mensal de operação
 
 - [ ] Backup manual (`supabase db dump`) baixado e guardado.
-- [ ] Uso de quotas Supabase/Gemini revisado (< 70%).
+- [ ] Uso de quotas Supabase revisado (< 70%).
 - [ ] Sentry: issues abertas triadas; sem erro crítico antigo.
 - [ ] Migrations locais = produção (`supabase db push --dry-run` vazio).
 - [ ] Secrets listados e válidos (`supabase secrets list`).
@@ -176,6 +134,6 @@ Tempo total: ~5 min, sem downtime perceptível.
 ---
 
 ## Documentos relacionados
-- [00 Visão Geral](00-visao-geral.md) — riscos R-01/R-02 que este runbook endereça
+- [00 Visão Geral](00-visao-geral.md) — risco R-01 que este runbook endereça
 - [03 Sincronização](03-sincronizacao-offline.md) — diagnóstico de sync parada
 - [07 Qualidade & CI](07-qualidade-ci.md) — pipeline exigido antes de qualquer hotfix

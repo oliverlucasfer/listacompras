@@ -1,6 +1,6 @@
 # AGENTS.md — Instruções para Agentes de IA
 
-Projeto: app de lista de compras inteligente e colaborativa (Flutter + Supabase + Gemini). Documentação em `docs/` e índice em `planejamento_lista_compras.md`.
+Projeto: app de lista de compras inteligente e colaborativa (Flutter + Supabase). Documentação em `docs/` e índice em `planejamento_lista_compras.md`.
 
 ## Fluxo de trabalho obrigatório
 
@@ -13,11 +13,11 @@ Projeto: app de lista de compras inteligente e colaborativa (Flutter + Supabase 
 
 ## Regras não negociáveis
 
-- **Doc dono é autoridade:** schema em `01`, RLS em `02`, sync em `03`, IA em `04`, app/UX em `05`, design system em `15`, entregas/LGPD em `06`, qualidade em `07`, compartilhamento em `08`, operação em `09`, layout em `10`, usabilidade em `11`, requisitos em `12`. Mudança de comportamento exige atualizar o doc dono **no mesmo PR**. `13` é resumo — nunca sobrepõe o dono.
-- **Nenhuma chave/segredo** em código, commit ou log. `GEMINI_API_KEY` só via `supabase secrets set`.
+- **Doc dono é autoridade:** schema em `01`, RLS em `02`, sync em `03`, importação em `04`, app/UX em `05`, design system em `15`, entregas/LGPD em `06`, qualidade em `07`, compartilhamento em `08`, operação em `09`, layout em `10`, usabilidade em `11`, requisitos em `12`. Mudança de comportamento exige atualizar o doc dono **no mesmo PR**. `13` é resumo — nunca sobrepõe o dono.
+- **Nenhuma chave/segredo** em código, commit ou log.
 - **RLS é sagrado:** qualquer dado acessado deve passar pelas policies de `02`. Nunca use a service_role key no client.
 - **Offline-first:** UI nunca bloqueia em rede; escrita vai sempre ao Drift + fila ([03](docs/03-sincronizacao-offline.md)); IDs UUID v4 gerados no cliente.
-- **Enum de unidades fechado:** `un, kg, g, l, ml, caixa, pacote, pct, dz` — mantenha idêntico no Postgres (`01`), Dart e `responseSchema` (`04`).
+- **Enum de unidades fechado:** `un, kg, g, l, ml, caixa, pacote, pct, dz` — mantenha idêntico no Postgres (`01`), Dart (`05`) e no parser local (`04`).
 - **CI verde obrigatório** antes de considerar qualquer tarefa concluída ([07](docs/07-qualidade-ci.md)).
 
 ## Comandos
@@ -27,7 +27,6 @@ flutter test                          # testes
 dart format . && flutter analyze      # estilo e lint (CI exige)
 supabase db reset                     # aplica migrations local
 supabase db push                      # aplica em produção (só via CLI)
-supabase functions deploy parse-lista # deploy Edge Function
 ```
 
 ## Convenções

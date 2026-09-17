@@ -1,6 +1,6 @@
 # 03 — Sincronização Offline-First
 
-> Navegação: [← 02 Segurança RLS](02-seguranca-rls.md) · [04 IA / Edge Function →](04-ia-edge-function.md)
+> Navegação: [← 02 Segurança RLS](02-seguranca-rls.md) · [04 Importação →](04-importacao-lista.md)
 
 **Este documento é o dono das regras de sincronização e resolução de conflitos.**
 
@@ -134,7 +134,7 @@ Ao aplicar uma mudança remota sobre um registro local pendente:
 | **Relógio do dispositivo minutos/anos adiantado** | O dispositivo "vence" injustamente até o flush; após isso o servidor registra seu `updated_at`. Risco aceito (ADR-004); desempate de empates pelo servidor |
 | **Relógio adiantado + servidor rejeita ts futuro?** | Servidor **aceita** o ts do cliente (não rejeita). Na dúvida, a divergência grosseira é detectada por `ts_local` vs `now()` do servidor no flush e logada no Sentry ([07](07-qualidade-ci.md)) |
 | **Lista removida em A enquanto B adiciona itens offline** | Tombstone da lista vence; itens de B são criados mas a lista `deletado_em IS NOT NULL` some de todas as UIs. Aceitável no domínio |
-| **Duplicação de nome** | `UNIQUE (lista_id, lower(nome)) WHERE deletado_em IS NULL` rejeita; o sync converte em "aumento de quantidade" quando unidades coincidem ([04 §Deduplicação](04-ia-edge-function.md)) |
+| **Duplicação de nome** | `UNIQUE (lista_id, lower(nome)) WHERE deletado_em IS NULL` rejeita; o sync converte em "aumento de quantidade" quando unidades coincidem |
 
 ---
 

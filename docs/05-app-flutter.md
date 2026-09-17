@@ -1,6 +1,6 @@
 # 05 — App Flutter (Arquitetura, Telas, UX e Design)
 
-> Navegação: [← 04 IA / Edge Function](04-ia-edge-function.md) · [06 MVP & Entregas →](06-mvp-entregas.md)
+> Navegação: [← 04 Importação](04-importacao-lista.md) · [06 MVP & Entregas →](06-mvp-entregas.md)
 
 **Este documento é o dono da arquitetura do app, da navegação/UX e do design system.** Regras de negócio de sync moram em [03](03-sincronizacao-offline.md); schema em [01](01-banco-de-dados.md).
 
@@ -40,9 +40,6 @@ lib/
 │   │   ├── domain/                  # modelos Lista, Item; enums Unidade, CategoriaItem
 │   │   ├── providers/               # listasProvider, itensProvider(consulta)
 │   │   └── ui/                      # MinhasListas, TelaLista, modais
-│   ├── ia/
-│   │   ├── data/                    # EdgeFunctionClient
-│   │   └── ui/                      # ModalImportarTexto, ModalPrevisualizacao
 │   └── sync/
 │       ├── data/                    # SyncEngine, fila (Drift)
 │       └── providers/               # syncStatusProvider
@@ -64,7 +61,6 @@ lib/
 | `listasProvider` | StreamProvider | Listas ativas do usuário (Drift → UI) |
 | `itensDaListaProvider(listaId)` | StreamProvider.family | Itens ativos; ordenação de exibição por categoria e `ordem` (Fase 6) |
 | `syncStatusProvider` | StreamProvider | Estado de sync ([03 §6](03-sincronizacao-offline.md)) |
-| `importacaoIaProvider` | NotifierProvider | Estados do modal IA (idle/carregando/erro/prévia) |
 | `conectividadeProvider` | StreamProvider | Online/offline (dispara flush) |
 | `sugestaoCategoriasProvider` | Provider | Cadeia de sugestão local (Fase 6/RF-15) |
 | `redefinindoSenhaProvider` | NotifierProvider (bool) | true no evento `passwordRecovery`: força o redirect a `/redefinir-senha` até `concluir()` (F14-T03) — assinado antes do refresh do router (ordem de listeners) |
@@ -75,7 +71,7 @@ lib/
 2. **Dicionário estático** (`core/categorias/dicionario_categorias.dart`, ~230 termos pt-BR versionados no repo): casa quando **todas** as palavras do termo aparecem no nome; multi-palavra casa antes de palavra única ("leite condensado" → Mercearia antes de "leite" → Laticínios), empate por ordem alfabética.
 3. **Fallback:** `outros`.
 
-A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado pela memória (a cadeia "aprende" pelo uso, sem tabela nova). Proteínas frescas (carne, frango, peixe, ovos) ficam em **Frios** por convenção do dicionário.
+O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado pela memória (a cadeia "aprende" pelo uso, sem tabela nova). Proteínas frescas (carne, frango, peixe, ovos) ficam em **Frios** por convenção do dicionário.
 
 ---
 
@@ -119,8 +115,8 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
           ├───► [Entrada Manual Direta]:
           │     Digita o nome -> Ajusta quantidade -> Salva imediatamente
           │
-          ├───► [Entrada por Texto Inteligente (IA)]:
-          │     Clica em "Importar por IA" -> Cola frase livre ->
+          ├───► [Importação de lista (parser local)]:
+          │     Clica em "Importar lista" -> Cola frase livre ->
           │     Abre Modal de Pré-visualização -> Confirma e insere na lista
           │
           └───► [Uso no Supermercado]:
@@ -157,7 +153,7 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 | Checkbox marcada | Item move para seção dobrável "Itens Concluídos (n)" — **sem divisão por categoria** (Fase 6) |
 | Tocar no item | Abre o editor (mesmo diálogo do swipe): nome, quantidade, unidade, categoria e ação **Remover** com undo (F12-T06); nome vazio/quantidade inválida geram erro inline no campo (F14-T07) |
 | Swipe direita/esquerda | Editar / Remover (com undo via SnackBar); edição inclui **dropdown de categoria** ao lado das unidades (Fase 6) |
-| Botão de importação IA | Abre modal (6.4) |
+| Botão de importação | Abre modal (6.4) |
 | Menu (⋮) | "Desmarcar todos", "Limpar concluídos", "Renomear lista", "Excluir lista" |
 | Ações em massa | Reaproveitar lista (desmarcar todos) e limpar concluídos — confirmação para destrutivas; "desmarcar" devolve o item ao seu grupo; **limpar concluídos tem undo** (SnackBar 3s, restaura `id`/`ordem` originais — F14-T05) |
 | Indicador de sync | Estado de [03 §6](03-sincronizacao-offline.md) no AppBar |
@@ -170,17 +166,15 @@ A IA **não** entra nesta cadeia — apenas refina o import (§6.4). O dicionár
 * **Banner de leitura (F14-T08):** usa `AppBannerTipo.leitura` ([15 §3](15-design-system.md)), não um `Container` manual.
 * **Busca (F16, RF-17):** a lupa na AppBar (todas as roles) revela um campo que filtra os itens pelo **nome** (offline, sem acento/caixa); mantém os grupos de categoria (escondendo vazios) e a seção de concluídos (contagens filtradas); **drag desabilitado** enquanto filtra; ao **adicionar** um item a busca é limpa; sem resultado → `AppEstadoVazio` "Nenhum item encontrado" com "Limpar busca"; campo com rótulo acessível (label) e hint de exemplo.
 
-### 6.4. Modal "Importar lista" (RF-06 + RF-16)
+### 6.4. Modal "Importar lista" (RF-16)
 
-Um único modal com seletor de modo **Rápido** (padrão, local/offline, RF-16) e **IA** (RF-06):
+Um único modal de importação local (padrão, offline, RF-16):
 
-1. Textarea + contador de caracteres (Rápido ≤ 10.000; IA ≤ 2.000 — [04 §2](04-ia-edge-function.md)).
-2. Botão "Extrair itens":
-   * **Rápido:** parser local puro (`lib/core/importacao/parser_lista_local.dart`), sem rede; categoria pela cadeia local (memória → dicionário → `outros`, [§3](05-app-flutter.md)); disponível offline.
-   * **IA:** fluxo atual (Edge Function `parse-lista`, com carregamento e erros do contrato).
-3. **Modal de pré-visualização (comum aos dois modos):** checkboxes para incluir/excluir cada item; edição inline de nome/quantidade/unidade/**categoria** (dropdown com o enum [01 §3.2](01-banco-de-dados.md)), com erro inline de nome/quantidade (F14-T07); `aviso` exibido como nota.
+1. Textarea + contador de caracteres (≤ 10.000 — [04 §2](04-importacao-lista.md)).
+2. Botão "Extrair itens": parser local puro (`lib/core/importacao/parser_lista_local.dart`), sem rede; categoria pela cadeia local (memória → dicionário → `outros`, [§3](05-app-flutter.md)); disponível offline.
+3. **Modal de pré-visualização:** checkboxes para incluir/excluir cada item; edição inline de nome/quantidade/unidade/**categoria** (dropdown com o enum [01 §3.2](01-banco-de-dados.md)), com erro inline de nome/quantidade (F14-T07); `aviso` exibido como nota.
 4. "Adicionar N itens à lista" → grava localmente (fila de INSERTs).
-5. Erros da IA exibidos com as mensagens amigáveis do contrato ([04 §2](04-ia-edge-function.md)).
+5. Erros do parser exibidos com as mensagens amigáveis do contrato ([04 §2](04-importacao-lista.md)).
 
 ---
 
@@ -209,7 +203,7 @@ Plus Jakarta Sans bundlada. Aqui ficam apenas os estados transversais:
 - [ ] Guard de rotas redireciona corretamente (autenticado/não autenticado).
 - [ ] CRUD manual funciona offline (avião) e reflete ao reconectar.
 - [ ] Checkbox concluída move item para seção dobrável; "Desmarcar todos" reaproveita lista.
-- [ ] Importação IA: pré-visualização editável; cancelar não grava nada.
+- [ ] Importação de lista: pré-visualização editável; cancelar não grava nada.
 - [ ] Tema escuro aplicado em todas as telas (sem tela esquecida).
 - [ ] Estados vazio/erro/carregando implementados em todas as telas.
 - [ ] Acessibilidade (RNF-06): semântica/live region, alvos ≥48dp e escala de texto verificados por teste ([15 §4](15-design-system.md)).
@@ -220,5 +214,5 @@ Plus Jakarta Sans bundlada. Aqui ficam apenas os estados transversais:
 
 ## Documentos relacionados
 - [03 Sincronização Offline-First](03-sincronizacao-offline.md) — engine que os repositórios implementam
-- [04 IA / Edge Function](04-ia-edge-function.md) — contrato consumido pelo modal de importação
+- [04 Importação](04-importacao-lista.md) — contrato do parser local consumido pelo modal de importação
 - [06 MVP & Entregas](06-mvp-entregas.md) — critérios de aceite destas telas

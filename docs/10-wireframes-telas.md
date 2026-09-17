@@ -17,7 +17,7 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 ┌─────────────────────────────────┐
 │                                 │
 │           🛒 Logo               │
-│     Lista de Compras IA         │
+│     Lista de Compras            │
 │                                 │
 │  E-mail                         │
 │  [________________________ ]    │
@@ -111,7 +111,7 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 │   Nenhuma lista por aqui        │
 │                                 │
 │   Crie sua primeira lista ou    │
-│   importe por texto com IA.     │
+│   importe por texto.            │
 │                                 │
 │   (  ＋ Criar primeira lista )  │
 │                                 │
@@ -176,7 +176,7 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 │    ☑ Detergente     2 un        │
 │    ☑ Macarrão       500 g       │ ← desmarcar devolve ao seu grupo
 │                                 │
-│  (🤖 Importar por IA)           │
+│  (Importar lista)               │
 └─────────────────────────────────┘
 ```
 
@@ -222,25 +222,24 @@ O trecho "para todos os participantes" aparece quando há membros conhecidos (be
 
 ---
 
-## 4. Importação de lista (RF-06 + RF-16 — [04 §2](04-ia-edge-function.md))
+## 4. Importação de lista (RF-16 — [04](04-importacao-lista.md))
 
 ### 4.1. Modal de entrada
 ```
 ┌─────────────────────────────────┐
 │  Importar lista              ✕  │
 ├─────────────────────────────────┤
-│  ( Rápido | IA )                │ ← seletor; Rápido = local/offline (padrão)
 │  Cole ou digite sua lista:      │
 │  ┌───────────────────────────┐  │
 │  │ 1kg de arroz, 2 leites,   │ │
 │  │ 500g de queijo prato...    │ │
 │  │                           │ │
 │  └───────────────────────────┘  │
-│                        128/2000 │ ← contador; Rápido ≤ 10.000; vermelho > limite
+│                       128/10000 │ ← contador ≤ 10.000; vermelho > limite
 │                                 │
-│  (     ✨ Extrair itens    )    │ ← Rápido: sem rede; IA: spinner + "Lendo..."
+│  (     ✨ Extrair itens    )    │ ← sem rede; spinner + "Lendo..."
 └─────────────────────────────────┘
-   (erro → mensagem amigável; no modo IA, do contrato [04 §2])
+   (erro → mensagem amigável do parser [04])
 ```
 
 ### 4.2. Modal de pré-visualização
@@ -248,7 +247,7 @@ O trecho "para todos os participantes" aparece quando há membros conhecidos (be
 ┌─────────────────────────────────┐
 │  Confirme os itens           ✕  │
 ├─────────────────────────────────┤
-│  ⚠ "Interpretei 'pct' como      │ ← aviso da IA ([04 §2])
+│  ⚠ "Interpretei 'pct' como      │ ← aviso do parser ([04])
 │     pacote de café"             │
 │                                 │
 │  ☑ Arroz          1  kg         │ ← desmarcar = não incluir
@@ -298,7 +297,7 @@ Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstad
 | Minhas Listas | `AppEsqueleto` (F14-T09) | 2.2 | `AppEstadoErro` com retry | Banner global + lista local (usável) |
 | Tela da Lista | `AppEsqueleto` (F14-T09) | 3.1 — vazio instrui por papel (F14-T04) | `AppEstadoErro` com retry (F14-T04) | 3.2 — funcional |
 | Membros | `AppEsqueleto` (F14-T09) | `AppEstadoVazio` com orientação (F14-T04) | `AppEstadoErro` com retry | — |
-| Importar lista | Botão com spinner (IA) | "Nada foi reconhecido" (4.2, F14-T04) | Mensagem amigável (4.1) | Botão desabilitado c/ dica |
+| Importar lista | Botão com spinner | "Nada foi reconhecido" (4.2, F14-T04) | Mensagem amigável (4.1) | Botão desabilitado c/ dica |
 | Login | Spinner no botão | — | Inline por campo | Banner |
 | Redefinir senha | Spinner no botão | — | Erro + "Pedir novo link" (1.3) | — |
 

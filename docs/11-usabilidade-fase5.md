@@ -41,9 +41,9 @@ Cada tarefa registra: **sucesso (S/F/A-ajudado)**, **tempo**, **erros/hesitaçõ
 | Tempo | < 2 min |
 | Erros típicos a observar | não acha o FAB; não percebe Enter salva |
 
-### T2 — Importação por IA
+### T2 — Importação de lista (parser local)
 > "Eu anotei de um amigo: '10 pães, 5 carvão, 2 refri de 2 litros, gelo'. Use o app para transformar isso em itens da sua lista."
-* Observar: descobre o botão IA sozinho? Entende a pré-visualização? Corrige um item errado antes de confirmar?
+* Observar: descobre o botão **Importar lista** sozinho? Entende a pré-visualização? Corrige um item errado antes de confirmar?
 * Meta: sucesso sem ajuda; tempo < 90s do paste ao save (métrica de produto [06 §5](06-mvp-entregas.md) — alvo < 30s em uso maduro).
 
 ### T3 — Uso offline e reconexão

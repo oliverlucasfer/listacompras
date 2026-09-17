@@ -13,11 +13,10 @@
 - [ ] Usuário consegue registrar, autenticar (com verificação de e-mail) e recuperar senha. *(RF-01)*
 - [ ] Criar, renomear e excluir listas. *(RF-02)*
 - [ ] Adicionar, editar, marcar como concluído, reordenar e remover itens com quantidade e unidade. *(RF-03, RF-04, RF-05)*
-- [ ] Importar lista via texto livre com pré-visualização e confirmação. *(RF-06)*
+- [ ] Importar lista via texto livre com pré-visualização e confirmação. *(RF-16)*
 - [ ] Alterações refletem em tempo real entre Web e Mobile (mesma conta). *(RF-07, RNF-01)*
 - [ ] App funciona 100% offline (leitura, escrita, marcação de itens) e sincroniza pendências ao reconectar, sem duplicar nem perder itens. *(RF-08, RNF-02)*
 - [ ] RLS validado: um usuário não consegue ler/escrever listas de outro (testes de negação N-01…N-10 de [02 §5](02-seguranca-rls.md)). *(RNF-03)*
-- [ ] Edge Function protegida: exige sessão válida, respeita rate limit e trata erros do Gemini com mensagem amigável. *(RNF-04)*
 - [ ] **Exclusão de conta disponível no app** (ver Seção 3). *(RF-11, RNF-05)*
 - [ ] Publicado: Web acessível por URL + APK/AAB disponível para teste interno.
 
@@ -30,9 +29,8 @@ Uma fase só está "pronta" quando:
 | Fase | Definition of Done |
 | :--- | :--- |
 | **1 — Infra & BD** | Migrations aplicam em `supabase db reset` do zero; checklist de [01 §8](01-banco-de-dados.md) e testes de negação de [02 §5](02-seguranca-rls.md) passam; Realtime ativo |
-| **2 — IA** | Contrato de [04 §2](04-ia-edge-function.md) validado com exemplos reais; rate limit e todos os códigos de erro testados; prompt versionado |
 | **3 — App Core** | CRUD manual funciona online; telas de auth completas (login/registro/recuperação/verificação); widget tests do core no CI ([07](07-qualidade-ci.md)) |
-| **4 — IA + Sync** | Checklists de [03 §8](03-sincronizacao-offline.md) e [05 §8](05-app-flutter.md) passam; sync validado com 2 dispositivos simultâneos |
+| **4 — Sincronização** | Checklists de [03 §8](03-sincronizacao-offline.md) e [05 §8](05-app-flutter.md) passam; sync validado com 2 dispositivos simultâneos |
 | **5 — Publicação** | Critérios de aceite da Seção 1 deste doc 100%; **testes de usabilidade aprovados** (roteiro e critério em [11](11-usabilidade-fase5.md)); política de privacidade publicada; exclusão de conta funcionando; Sentry sem erros críticos abertos |
 | **6 — Pós-MVP** | Cada item definido com DoD próprio na época (compartilhamento — planejamento em [08](08-compartilhamento-colaborativo.md); iOS, desktop) |
 
@@ -56,7 +54,6 @@ Uma fase só está "pronta" quando:
 | Serviço | Dado exposto | Local |
 | :--- | :--- | :--- |
 | Supabase (AWS) | Todos os dados do app | A definir na criação do projeto (preferir região `sa-east-1` — São Paulo) |
-| Google Gemini API | Apenas o texto colado para extração (sem identificadores do usuário) | EUA |
 | Sentry | Stack traces e contexto técnico de erros | Conforme plano |
 
 ### 3.3. Direitos do titular — implementação
@@ -108,9 +105,8 @@ Uma fase só está "pronta" quando:
 ## 5. Métricas de sucesso (pós-lançamento, opcional)
 
 * Taxa de sincronização sem conflitos > 99% das sessões.
-* Tempo médio de criação de lista via IA < 30s (do paste ao save).
+* Tempo médio de criação de lista via importação por texto < 30s (do paste ao save).
 * Retenção semanal (listas criadas por semana por usuário ativo).
-* Taxa de erro da Edge Function < 2% das chamadas (Sentry, [07](07-qualidade-ci.md)).
 
 ---
 

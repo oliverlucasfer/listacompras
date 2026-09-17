@@ -79,7 +79,7 @@ n = btrim(nome).toLowerCase()
 
 `INSERT`/`UPDATE` de `itens_lista` passam a incluir `"categoria"` no payload completo (snake_case), além de existing `nome/quantidade/unidade/ordem/concluido`. Coalescing, LWW e dedup **sem regra nova**: no merge de duplicado, o vencedor por `updated_at` traz a sua categoria.
 
-### 5.2. Edge Function `parse-lista` ([04](../../04-ia-edge-function.md))
+### 5.2. Edge Function `parse-lista` ([04](../../04-importacao-lista.md))
 
 Resposta passa a:
 
@@ -138,7 +138,7 @@ Rollout: T01 (migration local + `db push`) → T02–T04 (app) → T05 (function
 | F6-T02 | Drift v3 + repositório com categoria | [05 §2–3](../../05-app-flutter.md), [03 §3](../../03-sincronizacao-offline.md) |
 | F6-T03 | Cadeia de sugestão (memória + dicionário) | [05 §3](../../05-app-flutter.md) |
 | F6-T04 | UI de grupos + drag interno + dropdown | [05 §6.3](../../05-app-flutter.md), [10 §3](../../10-wireframes-telas.md) |
-| F6-T05 | IA com categoria + deploy | [04](../../04-ia-edge-function.md) |
+| F6-T05 | IA com categoria + deploy | [04](../../04-importacao-lista.md) |
 | F6-T06 | Checklist sync com categoria + distribuição | [03 §8](../../03-sincronizacao-offline.md) |
 
 Sem mudança: [02](../../02-seguranca-rls.md) (coluna aditiva não afeta policies), [06](../../06-mvp-entregas.md) (pós-MVP), [07](../../07-qualidade-ci.md) (padrões existentes), [08](../../08-compartilhamento-colaborativo.md), [09](../../09-runbook-operacoes.md) (deploy segue §3.2).

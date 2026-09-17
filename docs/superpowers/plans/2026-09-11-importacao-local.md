@@ -47,13 +47,13 @@
 - `lib/features/ia/data/parse_lista_client.dart`, `lib/features/ia/providers/ia_providers.dart`
 - `lib/features/listas/ui/tela_lista_screen.dart`
 - `lib/core/l10n/app_strings.dart`
-- `docs/12-prd.md`, `docs/05-app-flutter.md`, `docs/10-wireframes-telas.md`, `docs/04-ia-edge-function.md`, `docs/14-tarefas.md`
+- `docs/12-prd.md`, `docs/05-app-flutter.md`, `docs/10-wireframes-telas.md`, `docs/04-importacao-lista.md`, `docs/14-tarefas.md`
 
 ---
 
 ## Task F11-T00: RF-16 e docs de planejamento
 
-**Files:** `docs/12-prd.md`, `docs/05-app-flutter.md`, `docs/10-wireframes-telas.md`, `docs/04-ia-edge-function.md`, `docs/14-tarefas.md`
+**Files:** `docs/12-prd.md`, `docs/05-app-flutter.md`, `docs/10-wireframes-telas.md`, `docs/04-importacao-lista.md`, `docs/14-tarefas.md`
 
 - [ ] **Step 1: RF-16 no PRD**
 
@@ -78,7 +78,7 @@ Substituir o início do §6.4 por:
 
 Um único modal com seletor de modo **Rápido** (padrão, local/offline, RF-16) e **IA** (RF-06):
 
-1. Textarea + contador de caracteres (Rápido ≤ 10.000; IA ≤ 2.000 — [04 §2](04-ia-edge-function.md)).
+1. Textarea + contador de caracteres (Rápido ≤ 10.000; IA ≤ 2.000 — [04 §2](04-importacao-lista.md)).
 2. Botão "Extrair itens":
    - **Rápido:** parser local puro (`lib/core/importacao/parser_lista_local.dart`), sem rede; categoria pela cadeia local (memória → dicionário → `outros`, [§3](05-app-flutter.md)); disponível offline.
    - **IA:** fluxo atual (Edge Function `parse-lista`, loading e erros do contrato).
@@ -96,7 +96,7 @@ Após o título `### 4.1. Modal de entrada`, adicionar:
 
 - [ ] **Step 4: doc 04 §1 (IA opcional)**
 
-Após o fluxo de UX em `docs/04-ia-edge-function.md §1`, adicionar:
+Após o fluxo de UX em `docs/04-importacao-lista.md §1`, adicionar:
 
 ```markdown
 > **IA é opcional (RF-16):** o app oferece um modo de importação **local** (parser determinístico, offline) como padrão; a Edge Function é acionada apenas no modo IA.
@@ -128,7 +128,7 @@ Atualizar a tabela de progresso: nova linha `| F11 Import local | 4 | 0 |` e tot
 - [ ] **Step 6: Commit**
 
 ```bash
-git add docs/12-prd.md docs/05-app-flutter.md docs/10-wireframes-telas.md docs/04-ia-edge-function.md docs/14-tarefas.md
+git add docs/12-prd.md docs/05-app-flutter.md docs/10-wireframes-telas.md docs/04-importacao-lista.md docs/14-tarefas.md
 git commit -m "F11-T00: RF-16 e planejamento da importacao local sem IA"
 ```
 

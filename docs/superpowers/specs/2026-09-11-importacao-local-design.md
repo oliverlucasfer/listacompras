@@ -49,7 +49,7 @@ Normalização de texto (acento/caixa/espaços) é extraída para `lib/core/text
 
 - **`ModalImportar`** (era `ModalImportarIa`): textarea + contador + `SegmentedButton<ModoImportacao>{ rapido, ia }` (padrão `rapido`) + botão "Extrair itens".
   - **Rápido** (offline): `analisarListaLocal` → enriquece categorias com `SugestaoCategorias.sugerirCategoria` (por item) → devolve `RespostaParse` (mesma rota da pré-visualização). Sem estado de carregamento.
-  - **IA**: fluxo atual (`ParseListaClient`, loading/erros do contrato [04 §2](../../04-ia-edge-function.md)). Se offline, a chamada devolve erro amigável (`iaSemConexao`).
+  - **IA**: fluxo atual (`ParseListaClient`, loading/erros do contrato [04 §2](../../04-importacao-lista.md)). Se offline, a chamada devolve erro amigável (`iaSemConexao`).
   - Limite de caracteres por modo: Rápido 10.000; IA 2.000 (contador e bloqueio do botão).
 - **`ModalPrevisaoImportacao`** (era `ModalPrevisaoIa`): inalterado em comportamento; `confirmarItensImportados` (já genérico) grava os itens no repositório local.
 - **Tela da lista**: o botão "Importar por IA" passa a **"Importar lista"** (`abrirModalImportar`).
@@ -83,7 +83,7 @@ Normalização de texto (acento/caixa/espaços) é extraída para `lib/core/text
 ## 7. Erros e estados
 
 - Rápido: nunca falha por rede; texto vazio → `iaTextoVazio`; acima de 10.000 → `importLocalTextoLongo`.
-- IA: inalterado (contrato [04 §2](../../04-ia-edge-function.md)).
+- IA: inalterado (contrato [04 §2](../../04-importacao-lista.md)).
 - Pré-visualização: editável (nome/quantidade/unidade/categoria), cancelar não grava.
 
 ## 8. Testes

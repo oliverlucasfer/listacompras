@@ -1,15 +1,15 @@
 # ListaCompras
 
-App de lista de compras inteligente e colaborativa (Flutter + Supabase + Gemini).
+App de lista de compras inteligente e colaborativa (Flutter + Supabase).
 
 - **Offline-first**: escrita local (Drift/SQLite) + fila de sincronização (LWW)
-- **IA**: importação de listas por texto livre (Edge Function + Gemini, JSON mode)
+- **Importação de lista**: parser local determinístico e offline (texto livre, RF-16)
 - **Realtime**: sincronização multi-dispositivo via WebSockets (Supabase Realtime)
 - **Segurança**: Row Level Security em todas as tabelas
 
 ## Stack
 
-Flutter · Riverpod · Drift · Supabase (Postgres, Auth, Realtime, Edge Functions) · Gemini 2.0 Flash · GitHub Actions
+Flutter · Riverpod · Drift · Supabase (Postgres, Auth, Realtime, Edge Functions) · GitHub Actions
 
 ## Documentação
 

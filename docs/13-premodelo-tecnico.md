@@ -56,7 +56,7 @@ UI → Repositório → **Drift aplica + enfileira mutação** → (online?) flu
 Drena por lista, em ordem; **coalescing** (múltiplas mutações do mesmo registro = envia só a última); upsert com comparação **LWW por `updated_at`**; empate → servidor; retry exponencial (máx 10 → estado `Erro` na UI). [03 §4–5](03-sincronizacao-offline.md)
 
 ### F3 — Importação de lista (parser local)
-App → parser local determinístico (`lib/core/importacao/parser_lista_local.dart`, offline, sem rede) sobre o texto colado (≤ `maxCaracteresImportLocal`) → sugestão de categoria local em camadas (memória → dicionário → `outros`) → `{itens:[{nome,quantidade,unidade,categoria}], aviso}` → **pré-visualização editável** → grava local. Erros amigáveis ([04 §2](04-ia-edge-function.md)). Item sem `categoria` → `outros`.
+App → parser local determinístico (`lib/core/importacao/parser_lista_local.dart`, offline, sem rede) sobre o texto colado (≤ `maxCaracteresImportLocal`) → sugestão de categoria local em camadas (memória → dicionário → `outros`) → `{itens:[{nome,quantidade,unidade,categoria}], aviso}` → **pré-visualização editável** → grava local. Erros amigáveis ([04 §2](04-importacao-lista.md)). Item sem `categoria` → `outros`.
 
 ### F4 — Realtime
 WebSocket Supabase → mudanças remotas → aplicar no Drift **se vencerem LWW** → Stream notifica UI (< 1s). RLS filtra o que cada usuário recebe. [03 §4](03-sincronizacao-offline.md)
@@ -66,7 +66,7 @@ Configurações → confirmação dupla → RPC `excluir_conta()` → `delete fr
 
 ## 5. Contratos rápidos
 
-**Importação local (resumo — [04 §2](04-ia-edge-function.md)):**
+**Importação local (resumo — [04 §2](04-importacao-lista.md)):**
 ```
 parser local determinístico — offline, sem rede
 entrada: texto colado, até maxCaracteresImportLocal (10.000)

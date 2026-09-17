@@ -22,7 +22,7 @@ Mix validado: ☐ 1–2 fresh eyes (nunca viram o app) · ☐ ≥ 1 Web + ≥ 1 
 | Tarefa | P1 | P2 | P3 | P4 | P5 | Sem ajuda | Meta |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | T1 — criar lista + itens manuais |  |  |  |  |  | __/5 (___%) | ≥ 80% global · tempo < 2 min |
-| T2 — importação por IA |  |  |  |  |  | __/5 (___%) | tempo médio: ___s (< 90s) |
+| T2 — importação de lista (parser local) |  |  |  |  |  | __/5 (___%) | tempo médio: ___s (< 90s) |
 | **T3 — offline + reconexão** |  |  |  |  |  | __/5 (___%) | **100% obrigatório** |
 | T4 — sync multi-dispositivo (< 1s) |  |  |  |  |  | __/5 (___%) | perceptível sem refresh |
 | T5 — ações em massa (opcional) |  |  |  |  |  | __/5 | quick win |
