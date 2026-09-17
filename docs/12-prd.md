@@ -27,7 +27,6 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-03 | CRUD de itens com quantidade, unidade (enum [01 §3](01-banco-de-dados.md)) e checkbox | 05 §6.3 | F3 | [06 §1](06-mvp-entregas.md) |
 | RF-04 | Item concluído move para seção dobrável; ações em massa (desmarcar todos, limpar concluídos) | 05 §6.3 | F3 | [06 §1](06-mvp-entregas.md) |
 | RF-05 | Reordenar itens via drag-and-drop (coluna `ordem`) | 05 §6.3 | F3–F4 | [05 §8](05-app-flutter.md) |
-| RF-06 | Importação por texto livre via IA com pré-visualização editável e confirmação | 04 + 05 §6.4 | F4 | [06 §1](06-mvp-entregas.md) |
 | RF-07 | Sincronização em tempo real entre dispositivos (Realtime) | 03 §4 | F4 | [06 §1](06-mvp-entregas.md) |
 | RF-08 | Funcionamento 100% offline com sincronização automática ao reconectar | 03 | F4 | [06 §1](06-mvp-entregas.md) + [11 §3.1](11-usabilidade-fase5.md) (T3 bloqueante) |
 | RF-09 | Indicador de status de sincronização na UI | 03 §6 + 10 §3.2 | F4 | [03 §8](03-sincronizacao-offline.md) |
@@ -36,8 +35,8 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-12 | Observabilidade: Sentry com privacidade (sem conteúdo de listas em logs) | 07 §4 | F5 | [07](07-qualidade-ci.md) |
 | RF-13 | Compartilhamento por convite (link/e-mail) com papéis — **Fase 6** (1ª rodada: link-only, [08 §1.1](08-compartilhamento-colaborativo.md)) | 08 | F7 | [08 §9](08-compartilhamento-colaborativo.md) |
 | RF-14 | Transferência de dono — **Fase 6** (adiada — [08 §1.1](08-compartilhamento-colaborativo.md)) | 08 §6 | F7 | [08 §9](08-compartilhamento-colaborativo.md) |
-| RF-15 | Agrupamento da lista por categoria (enum fechado [01 §3](01-banco-de-dados.md)) com sugestão local em camadas (memória por nome → dicionário estático → `outros`); IA sugere no import | 05 §6.3 + 01 §4.3 | F6 | [05 §8](05-app-flutter.md) + [03 §8](03-sincronizacao-offline.md) |
-| RF-16 | Importação de lista por texto livre **sem IA** (parser local determinístico, offline) com pré-visualização editável; IA permanece como modo opcional | 05 §6.4 | F11 | [05 §8](05-app-flutter.md) |
+| RF-15 | Agrupamento da lista por categoria (enum fechado [01 §3](01-banco-de-dados.md)) com sugestão local em camadas (memória por nome → dicionário estático → `outros`) | 05 §6.3 + 01 §4.3 | F6 | [05 §8](05-app-flutter.md) + [03 §8](03-sincronizacao-offline.md) |
+| RF-16 | Importação de lista por texto livre (parser local determinístico, offline) com pré-visualização editável | 05 §6.4 + 10 §4 | F11 | [05 §8](05-app-flutter.md) |
 | RF-17 | Busca/filtro **local (offline)** de listas pelo título (painel) e de itens pelo nome (tela da lista) | 05 §6.2 + §6.3 | F16 | [05 §8](05-app-flutter.md) |
 
 ## 3. Requisitos Não-Funcionais
@@ -47,10 +46,9 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RNF-01 | Latência de sync (online) | Mudança visível < 1s em outro dispositivo | Teste T4 de [11](11-usabilidade-fase5.md) |
 | RNF-02 | Offline completo | Leitura/escrita/marcação sem rede; zero perda ao reconectar | Checklist [03 §8](03-sincronizacao-offline.md) |
 | RNF-03 | Segurança | Usuário não acessa lista alheia (RLS) | Negações N-01…N-10 de [02 §5](02-seguranca-rls.md) |
-| RNF-04 | Proteção da IA | Sem API key no client; rate limit 10/min; erros amigáveis | Checklist [04 §9](04-ia-edge-function.md) |
 | RNF-05 | Privacidade (LGPD) | Exclusão de conta funcional; logs sem dados de conteúdo | [06 §3](06-mvp-entregas.md) |
 | RNF-06 | Acessibilidade | Alvos ≥ 48dp, contraste AA, escala de fonte respeitada | Testes de a11y ([15 §4](15-design-system.md)) |
-| RNF-07 | Custo | R$ 0 no MVP (free tiers) | Riscos R-01/R-02 com gatilho definido ([00 §4](00-visao-geral.md)) |
+| RNF-07 | Custo | R$ 0 no MVP (free tiers) | Riscos R-01 com gatilho definido ([00 §4](00-visao-geral.md)) |
 | RNF-08 | Qualidade | CI verde obrigatório; sync e RLS com prioridade máxima de testes | [07 §1](07-qualidade-ci.md) |
 
 ## 4. User Stories
@@ -91,9 +89,9 @@ Como P2, quero dar acesso só de leitura ao filho, para que ele acompanhe sem al
 Como P1, quero os itens pendentes agrupados por categoria (Hortifrúti, Mercearia, Frios…), para comprar por setor sem voltar atrás na loja.
 - Given a lista tem leite e queijo, when adiciono "arroz", then os pendentes aparecem em grupos fixos (Laticínios, Frios, Mercearia) com contagem em cada header.
 
-**US-08 — Sugestão automática sem IA**
-Como P1 sem plano de IA, quero que itens comuns já venham categorizados mesmo offline, para não classificar manualmente.
-- Given o app não usa IA, when digito "detergente" e pressiono Enter, then o item entra em Limpeza via dicionário local; nomes fora do dicionário entram em Outros e passam a ser lembrados (memória por nome).
+**US-08 — Sugestão automática local**
+Como P1, quero que itens comuns já venham categorizados mesmo offline, para não classificar manualmente.
+- Given o app usa um dicionário local, when digito "detergente" e pressiono Enter, then o item entra em Limpeza; nomes fora do dicionário entram em Outros e passam a ser lembrados (memória por nome).
 
 ## 5. Mapa do Design (o "SDD" — onde cada decisão vive)
 
@@ -104,7 +102,7 @@ Como P1 sem plano de IA, quero que itens comuns já venham categorizados mesmo o
 | Schema, migrations, triggers | [01](01-banco-de-dados.md) | Tabelas, enum de unidades, LWW cols, cascades |
 | Segurança de acesso | [02](02-seguranca-rls.md) | `is_member`, policies, testes de negação |
 | Sincronização e conflitos | [03](03-sincronizacao-offline.md) | Fila, flush, LWW, tombstones |
-| IA e contrato serverless | [04](04-ia-edge-function.md) | Prompt, responseSchema, rate limit |
+| Importação de lista (parser local) | [04](04-importacao-lista.md) | Parser determinístico RF-16, limites, enum, sugestão de categoria |
 | Arquitetura do app e UX | [05](05-app-flutter.md) | Riverpod, rotas, telas, Material 3 |
 | Layout visual | [10](10-wireframes-telas.md) | Wireframes de todas as telas |
 | Design System (tokens, componentes) | [15](15-design-system.md) | Material 3 Expressive, componentes, acessibilidade |
@@ -121,14 +119,13 @@ Cada requisito liga story → design → tarefas ([14](14-tarefas.md)) → verif
 | RF-01 | — | F3 · F14 | F3-T04…T07; F14-T03 | Widget auth + fluxo de nova senha |
 | RF-02/03/04 | US-01 | F3 | F3-T08…T12 | Repositórios + widgets |
 | RF-05 | US-01 | F3–F4 | F4-T05 | Widget reordenar |
-| RF-06 | US-02 | F4 | F2-T01…T05, F4-T01…T02 | Edge Function integração |
 | RF-07/08/09 | US-03, US-04 | F4 | F4-T03…T08 | Sync Engine (máxima) |
 | RF-10 | US-02 | F4 | F4-T06 | Sync + SQL |
 | RF-11 | — | F5 | F5-T02, F5-T03 | Integração RPC |
 | RF-12 | — | F5 | F5-T04 | Sentry smoke |
 | RF-13/14 | US-05, US-06 | F6 | (planejar na F6) | N-11…N-14 |
 | RF-15 | US-07, US-08 | F6 | F6-T01…T06 | Repo + sugestão + widgets + sync |
-| RF-16 | US-02 | F11 | F11-T01…T03 | Unit parser + widgets |
+| RF-16 | US-02 | F11 | F11-T01…T03; F17-T01…T03 | Unit parser + widgets |
 | RF-17 | US-01 | F16 | F16-T01…T03 | Unit busca + widgets |
 | RNF-06 | — | F8 · F14 | F14-T01…T02 | Guidelines de a11y + escala de fonte |
 

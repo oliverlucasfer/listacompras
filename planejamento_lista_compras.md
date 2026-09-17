@@ -14,34 +14,34 @@ Sistema multiplataforma (MVP: Android, iOS e Web) para gerenciamento de listas d
 | [01](docs/01-banco-de-dados.md) | **Banco de Dados** | Schema completo, SQL das migrations, enum de unidades, triggers, índices, Realtime | Schema e enum de unidades |
 | [02](docs/02-seguranca-rls.md) | **Segurança RLS** | Funções auxiliares, `CREATE POLICY`, matriz de acesso, testes de negação | Políticas de acesso |
 | [03](docs/03-sincronizacao-offline.md) | **Sincronização Offline-First** | Sync Engine, fila de mutações, LWW, tombstones, casos-limite, estados de sync | Regras de sync e conflitos |
-| [04](docs/04-ia-edge-function.md) | **IA / Edge Function** | Contrato HTTP, prompt de sistema, `responseSchema`, rate limit, códigos de erro | Integração com Gemini |
+| [04](docs/04-ia-edge-function.md) | **Importação de lista (parser local)** | Contrato RF-16, limites, enum, sugestão de categoria | Importação de lista |
 | [05](docs/05-app-flutter.md) | **App Flutter** | Arquitetura, providers, rotas, telas, UX e design system | UI/UX e arquitetura do app |
 | [06](docs/06-mvp-entregas.md) | **MVP & Entregas** | Critérios de aceite, DoD por fase, LGPD/privacidade, publicação, métricas | Aceite, LGPD, publicação |
 | [07](docs/07-qualidade-ci.md) | **Qualidade & CI** | Estratégia de testes, GitHub Actions, Sentry/observabilidade | Testes, CI, observabilidade |
 | [08](docs/08-compartilhamento-colaborativo.md) | **Compartilhamento (Fase 6)** | Convites (link/e-mail), papéis, transferência de dono, RPCs, Realtime | Compartilhamento colaborativo |
-| [09](docs/09-runbook-operacoes.md) | **Runbook de Operações** | Incidentes, pausa/backup Supabase, cota Gemini, migrations, hotfix | Operação pós-lançamento |
+| [09](docs/09-runbook-operacoes.md) | **Runbook de Operações** | Incidentes, pausa/backup Supabase, migrations, hotfix | Operação pós-lançamento |
 | [10](docs/10-wireframes-telas.md) | **Wireframes** | Layout ASCII de todas as telas, estados, modais | Layout visual (comportamento no 05) |
 | [11](docs/11-usabilidade-fase5.md) | **Usabilidade (Fase 5)** | Roteiro, tarefas, métricas, critério de aprovação | Testes de usabilidade |
 | [12](docs/12-prd.md) | **PRD** | Requisitos funcionais/não-funcionais com IDs, user stories, matriz de rastreabilidade | Requisitos de produto |
 | [13](docs/13-premodelo-tecnico.md) | **Pré-modelo Técnico** | Contexto condensado para implementação (ler primeiro) | Resumo — nunca sobrepõe o doc dono |
-| [14](docs/14-tarefas.md) | **Tarefas** | Breakdown executável por fase (F1–F16) com dependências e critério de pronto | Execução e progresso |
+| [14](docs/14-tarefas.md) | **Tarefas** | Breakdown executável por fase (F1–F17) com dependências e critério de pronto | Execução e progresso |
 | [15](docs/15-design-system.md) | **Design System** | Tokens, tema M3 Expressive, componentes, motion e acessibilidade | Design system (tokens, componentes, acessibilidade) |
 
 ---
 
 ## Stack em uma linha
 
-**Flutter + Riverpod + Drift** (cliente offline-first) · **Supabase** (Postgres + Auth + Realtime + Edge Functions + RLS) · **Gemini 2.0 Flash** (parser de texto livre, JSON mode) · **GitHub Actions + Sentry**.
+**Flutter + Riverpod + Drift** (cliente offline-first) · **Supabase** (Postgres + Auth + Realtime + Edge Functions + RLS) · **GitHub Actions + Sentry**.
 
 ## Cronograma (resumo)
 
-1. **Infraestrutura & BD** → 2. **Edge Function de IA** → 3. **App Flutter core** → 4. **IA + Sync offline-first** → 5. **Publicação MVP (Web + Android)** → 6. **Pós-MVP** (iOS, Desktop, compartilhamento) → 7. **Revisão visual e UX** (design system, refresh das telas e navegação — Fase 8+, spec em `docs/superpowers/specs/2026-09-11-revisao-visual-ux-design.md`) → 8. **Acessibilidade, fluxos e polimento de UX** (RNF-06 + recuperação de senha — Fase 14, spec em `docs/superpowers/specs/2026-09-14-ux-acessibilidade-design.md`) → 9. **Busca e filtro** (busca local por título no painel e por nome na lista — Fase 16/RF-17, spec em `docs/superpowers/specs/2026-09-16-busca-filtro-design.md`).
+1. **Infraestrutura & BD** → 2. **Importação local (parser)** → 3. **App Flutter core** → 4. **IA + Sync offline-first** → 5. **Publicação MVP (Web + Android)** → 6. **Pós-MVP** (iOS, Desktop, compartilhamento) → 7. **Revisão visual e UX** (design system, refresh das telas e navegação — Fase 8+, spec em `docs/superpowers/specs/2026-09-11-revisao-visual-ux-design.md`) → 8. **Acessibilidade, fluxos e polimento de UX** (RNF-06 + recuperação de senha — Fase 14, spec em `docs/superpowers/specs/2026-09-14-ux-acessibilidade-design.md`) → 9. **Busca e filtro** (busca local por título no painel e por nome na lista — Fase 16/RF-17, spec em `docs/superpowers/specs/2026-09-16-busca-filtro-design.md`).
 
 Detalhes e DoD por fase: [00 §6](docs/00-visao-geral.md) · Breakdown executável: [14](docs/14-tarefas.md).
 
 ## Fluxo spec-driven
 
-> Como usar esta documentação para implementar (com IA ou pessoas):
+> Como usar esta documentação para implementar:
 > **`AGENTS.md`** (fluxo de trabalho) → **`13`** (contexto em 1 leitura) → **`14`** (tarefa com critério de pronto) → **doc dono** (como implementar) → **`12`** (requisito/ID) → **`07`** (como verificar).
 
 ## Decisões-chave (resumo)

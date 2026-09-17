@@ -36,7 +36,7 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
   Dep: F1-T06 · Docs: [07 §3](07-qualidade-ci.md)
   CP: Pipeline verde em PR; branch protection exige CI.
 
-## Fase 2 — Serviço de IA (Edge Function)
+## Fase 2 — Serviço de IA (Edge Function) — **removida na F17**
 
 - [x] **F2-T01** — Migration tabela `ia_rate_limit` + função de janela
   Dep: F1-T08 · Docs: [04 §4](04-ia-edge-function.md)
@@ -418,14 +418,33 @@ Spec: [superpowers/specs/2026-09-16-busca-filtro-design.md](superpowers/specs/20
 
 ---
 
+## Fase 17 — Remoção da IA
+
+Spec: [superpowers/specs/2026-09-17-remocao-ia-design.md](superpowers/specs/2026-09-17-remocao-ia-design.md) · Requisito: RF-16 (import local permanece); RF-06/RNF-04 removidos.
+
+- [ ] **F17-T00** — PRD + planejamento (RF-06/RNF-04 fora do 12; Fase 17 no 14)
+  Dep: — · Docs: [12](12-prd.md), [14](14-tarefas.md)
+  CP: RF-06 e RNF-04 removidos do 12 (tabela + matriz); RF-15/RF-16 sem cláusulas de IA; Fase 17 no 14; sem tocar código.
+- [ ] **F17-T01** — Migration `0013` + `excluir_conta` sem `ia_rate_limit`
+  Dep: F17-T00 · Docs: [01](01-banco-de-dados.md), [06 §3.3.1](06-mvp-entregas.md)
+  CP: `supabase db reset` aplica 0004+0013; `ia_rate_limit`/`registrar_requisicao_ia` inexistentes; `excluir_conta_tests.sql` E-01…E-05 verde.
+- [ ] **F17-T02** — Remover Edge Function `parse-lista` e passos Deno/e2e do CI
+  Dep: F17-T01 · Docs: [04](04-importacao-lista.md), [07](07-qualidade-ci.md)
+  CP: pasta `supabase/functions/parse-lista/` e `parse_lista_e2e.mjs` removidos; CI sem setup-deno/deno test/e2e; pipeline verde.
+- [ ] **F17-T03** — App: import local como único modo (+ testes Flutter)
+  Dep: F17-T00 · Docs: [05 §6.4](05-app-flutter.md), [10 §4](10-wireframes-telas.md)
+  CP: `lib/features/ia/` e `test/features/ia/` removidos; `ErroImportacao` no core; modal sem seletor de modo; strings sem prefixo `ia`; privacidade sem Gemini; `format`/`analyze`/`test` verdes.
+- [ ] **F17-T04** — Docs donos, 04 reaproveitado e fechamento
+  Dep: F17-T01, F17-T02, F17-T03 · Docs: [00](00-visao-geral.md), [04](04-importacao-lista.md), [12](12-prd.md), [14](14-tarefas.md)
+  CP: `04-importacao-lista.md` dono do import local; ~34 links repontados; 00/03/05/06/09/10/11/13/README/AGENTS/planejamento sem IA/Gemini; guarda de grep da spec §6 vazia; Fase 17 na tabela de progresso.
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
 | :--- | :--- | :--- |
 | F1 Infra & BD | 8 | 8 |
-| F2 IA | 5 | 5 |
 | F3 App Core | 9 | 9 |
-| F4 IA + Sync | 9 | 9 |
+| F4 Sincronização | 9 | 9 |
 | F5 Publicação | 7 | 5 |
 | F6 Pós-MVP | 7 | 7 |
 | F7 Compartilhamento | 8 | 8 |
@@ -437,7 +456,8 @@ Spec: [superpowers/specs/2026-09-16-busca-filtro-design.md](superpowers/specs/20
 | F13 Identidade visual | 3 | 3 |
 | F14 Acessibilidade & UX | 10 | 10 |
 | F16 Busca e filtro | 5 | 5 |
-| **Total** | **102** | **100** |
+| F17 Remoção da IA | 5 | 0 |
+| **Total** | **102** | **95** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

@@ -10,7 +10,7 @@
 
 1. **Ordem de leitura:** este arquivo → [14 Tarefas](14-tarefas.md) → **doc dono** da tarefa → código.
 2. **Doc dono é autoridade:** se este resumo divergir do doc dono, vale o doc dono.
-3. **Proibido alterar comportamento** documentado (schema, sync, RLS, contrato de IA) **sem atualizar o doc dono no mesmo PR**.
+3. **Proibido alterar comportamento** documentado (schema, sync, RLS) **sem atualizar o doc dono no mesmo PR**.
 4. Requisitos têm ID (`RF-xx`, [12 §2](12-prd.md)) — mencione o ID no commit/PR.
 5. Toda tarefa tem critério de pronto em [14](14-tarefas.md) — não marque concluído sem ele.
 6. Nenhuma chave/segredo em código; CI verde obrigatório ([07](07-qualidade-ci.md)).
@@ -21,8 +21,7 @@
 | :--- | :--- | :--- |
 | App | Flutter + Riverpod + go_router | UI reativa; UI nunca bloqueia em rede |
 | Cache local | Drift/SQLite | **Fonte de verdade local**; leitura via Streams |
-| Backend | Supabase (Postgres, Auth, Realtime, Edge Functions, RLS) | Persistência, sync, IA intermediada |
-| IA | Gemini 2.0 Flash, JSON mode | Extrai itens de texto livre |
+| Backend | Supabase (Postgres, Auth, Realtime, Edge Functions, RLS) | Persistência, sync |
 | Ops | GitHub Actions + Sentry | CI obrigatório; erros sem conteúdo de listas |
 
 ## 3. Entidades e relacionamentos
@@ -44,9 +43,9 @@ App local (Drift): ListaLocal, ItemLocal, MutacaoPendente (fila)
 | `convites` (F6) | token, tipo link/email, papel_oferecido ≠ dono, estado, expira_em | [08 §2](08-compartilhamento-colaborativo.md) |
 | `mutacoes_pendentes` (local) | tabela, operacao, registro_id, payload JSON, ts_local, tentativas | [03 §3](03-sincronizacao-offline.md) |
 
-**Enum de unidades (fechado):** `un, kg, g, l, ml, caixa, pacote, pct, dz` — mesma lista no Postgres, no Dart e no `responseSchema` do Gemini.
+**Enum de unidades (fechado):** `un, kg, g, l, ml, caixa, pacote, pct, dz` — mesma lista no Postgres e no Dart.
 
-**Enum de categorias (fechado, ADR-011):** `hortifruti, mercearia, frios, laticinios, congelados, padaria, bebidas, pet, limpeza, higiene, outros` — mesma lista no Postgres, no Dart e no `responseSchema`; a ordem do enum define a ordem dos grupos na UI. Sugestão **local em camadas** (memória por nome → dicionário estático → `outros`); IA só refina o import.
+**Enum de categorias (fechado, ADR-011):** `hortifruti, mercearia, frios, laticinios, congelados, padaria, bebidas, pet, limpeza, higiene, outros` — mesma lista no Postgres e no Dart; a ordem do enum define a ordem dos grupos na UI. Sugestão **local em camadas** (memória por nome → dicionário estático → `outros`).
 
 ## 4. Fluxos essenciais
 
@@ -56,8 +55,8 @@ UI → Repositório → **Drift aplica + enfileira mutação** → (online?) flu
 ### F2 — Flush da fila
 Drena por lista, em ordem; **coalescing** (múltiplas mutações do mesmo registro = envia só a última); upsert com comparação **LWW por `updated_at`**; empate → servidor; retry exponencial (máx 10 → estado `Erro` na UI). [03 §4–5](03-sincronizacao-offline.md)
 
-### F3 — Importação IA
-App → `POST /functions/v1/parse-lista` (JWT) → rate limit 10/min + ≤2000 chars → Gemini (JSON mode, temp 0.1, timeout 15s) → `{itens:[{nome,quantidade,unidade,categoria}], aviso}` → **pré-visualização editável** → grava local. Erros amigáveis por código ([04 §2](04-ia-edge-function.md)). Cliente tolerante: item sem `categoria` → `outros`.
+### F3 — Importação de lista (parser local)
+App → parser local determinístico (`lib/core/importacao/parser_lista_local.dart`, offline, sem rede) sobre o texto colado (≤ `maxCaracteresImportLocal`) → sugestão de categoria local em camadas (memória → dicionário → `outros`) → `{itens:[{nome,quantidade,unidade,categoria}], aviso}` → **pré-visualização editável** → grava local. Erros amigáveis ([04 §2](04-ia-edge-function.md)). Item sem `categoria` → `outros`.
 
 ### F4 — Realtime
 WebSocket Supabase → mudanças remotas → aplicar no Drift **se vencerem LWW** → Stream notifica UI (< 1s). RLS filtra o que cada usuário recebe. [03 §4](03-sincronizacao-offline.md)
@@ -67,11 +66,11 @@ Configurações → confirmação dupla → RPC `excluir_conta()` → `delete fr
 
 ## 5. Contratos rápidos
 
-**Edge Function (resumo — [04 §2](04-ia-edge-function.md)):**
+**Importação local (resumo — [04 §2](04-ia-edge-function.md)):**
 ```
-POST parse-lista  Authorization: Bearer <jwt>  { "texto": "..." }
-200 → { "itens": [...], "aviso": null }
-4xx/5xx → { code: unauthorized|texto_vazio|texto_longo|resposta_invalida|rate_limit|cota_ia|timeout_ia|erro_interno }
+parser local determinístico — offline, sem rede
+entrada: texto colado, até maxCaracteresImportLocal (10.000)
+saída: { "itens": [...], "aviso": null }
 ```
 
 **Estados de sync (UI):** `Sincronizado → Pendente(n) → Sincronizando → Sincronizado | Offline | Erro` ([03 §6](03-sincronizacao-offline.md)).
@@ -87,7 +86,7 @@ POST parse-lista  Authorization: Bearer <jwt>  { "texto": "..." }
 | 003 | Drift/SQLite local |
 | 004 | LWW + tombstones (sem modal de conflito) |
 | 005 | Enum fechado de unidades |
-| 011 | Categoria do item: enum fechado (11 valores) + sugestão local em camadas (memória → dicionário → outros); IA só refina o import |
+| 011 | Categoria do item: enum fechado (11 valores) + sugestão local em camadas (memória → dicionário → outros) |
 | 006 | IDs UUID v4 gerados no cliente |
 | 007 | Free tier aceito; Supabase Pro = gatilho de lançamento público |
 | 008 | Exclusão de conta: delete físico em cascata (F5) |
@@ -101,7 +100,6 @@ flutter test                          # testes (obrigatório verde)
 dart format . && flutter analyze      # estilo e lint
 supabase db reset                     # aplica migrations local
 supabase db push                      # aplica em produção
-supabase functions deploy parse-lista # deploy Edge Function
 ```
 
 ## 8. Design System (doc 15)
