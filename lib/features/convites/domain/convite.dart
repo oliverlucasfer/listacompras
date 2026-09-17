@@ -3,7 +3,7 @@ import 'papel.dart';
 
 /// Erro amigável do domínio de convites (doc 08 §3): `code` identifica a
 /// causa; `message` já vem pronta para a UI — nunca vaza JSON bruto
-/// (padrão de `ErroIa`, doc 04 §2).
+/// (padrão de erro com code + mensagem amigável).
 class ErroConvite implements Exception {
   const ErroConvite(this.code, this.message);
 

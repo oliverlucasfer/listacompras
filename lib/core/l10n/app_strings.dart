@@ -149,37 +149,25 @@ abstract final class AppStrings {
       'Os itens concluídos serão removidos da lista.';
   static const concluidosRemovidos = 'Itens concluídos removidos.';
 
-  // Importação por IA (doc 04 §2, wireframe 10 §4.1)
+  // Importação de lista (RF-16, doc 04): parser local offline
   static const fechar = 'Fechar';
-  static const iaColeOuDigite = 'Cole ou digite sua lista:';
-  static const iaExemplo = '1kg de arroz, 2 leites, 500g de queijo prato...';
-  static const iaExtrairItens = 'Extrair itens';
-  static const iaLendo = 'Lendo...';
-  static const iaConfirmeItens = 'Confirme os itens';
-
-  static String iaAdicionarN(int n) => 'Adicionar $n';
-  static String iaSeraoAdicionados(int n, int total) =>
-      '$n de $total serão adicionados';
-
-  // Mensagens amigáveis do contrato de IA (doc 04 §2) — fallback quando o
-  // servidor não envia `message` (ex.: rejeição do gateway).
-  static const iaSessaoExpirada = 'Sessão expirada. Faça login novamente.';
-  static const iaTextoVazio = 'Digite ou cole um texto com os itens.';
-  static const iaTextoLongo = 'Texto muito longo. Envie até 2.000 caracteres.';
-  static const iaRespostaInvalida =
+  static const importColeOuDigite = 'Cole ou digite sua lista:';
+  static const importExemplo =
+      '1kg de arroz, 2 leites, 500g de queijo prato...';
+  static const importExtrairItens = 'Extrair itens';
+  static const importLendo = 'Lendo...';
+  static const importConfirmeItens = 'Confirme os itens';
+  static const importRespostaInvalida =
       'Não consegui entender a lista. Tente reescrever.';
-  static const iaRateLimit = 'Muitas solicitações. Aguarde um instante.';
-  static const iaCotaIa =
-      'Limite diário de importações atingido. Tente amanhã.';
-  static const iaTimeoutIa = 'A IA demorou demais. Tente novamente.';
-  static const iaErroInterno = 'Erro inesperado. Tente novamente.';
-  static const iaSemConexao =
+  static const erroSemConexao =
       'Sem conexão. Verifique sua internet e tente novamente.';
+
+  static String importAdicionarN(int n) => 'Adicionar $n';
+  static String importSeraoAdicionados(int n, int total) =>
+      '$n de $total serão adicionados';
 
   // Importação de lista (RF-16): modo local sem IA
   static const importarLista = 'Importar lista';
-  static const modoRapido = 'Rápido';
-  static const modoIa = 'IA';
   static const importLocalAvisoPadrao =
       'Itens sem quantidade entraram com 1 un.';
   static const importLocalTextoLongo =

@@ -81,7 +81,7 @@ void main() {
     expect(find.text(AppStrings.nadaReconhecido), findsOneWidget);
     expect(find.text(AppStrings.separarItensDica), findsOneWidget);
     // Sem rodapé/ação de adicionar quando não há nada a adicionar.
-    expect(find.text(AppStrings.iaAdicionarN(0)), findsNothing);
+    expect(find.text(AppStrings.importAdicionarN(0)), findsNothing);
   });
 
   testWidgets('deve_voltar_e_editar_quando_nada_reconhecido', (tester) async {
@@ -110,8 +110,8 @@ void main() {
     expect(find.text('Queijo prato'), findsOneWidget);
     expect(find.text('Café'), findsOneWidget);
     expect(find.text('Interpretei pct como pacote'), findsOneWidget);
-    expect(find.text(AppStrings.iaSeraoAdicionados(4, 4)), findsOneWidget);
-    expect(find.text(AppStrings.iaAdicionarN(4)), findsOneWidget);
+    expect(find.text(AppStrings.importSeraoAdicionados(4, 4)), findsOneWidget);
+    expect(find.text(AppStrings.importAdicionarN(4)), findsOneWidget);
     expect(checkboxDe(tester, 'Arroz').value, isTrue);
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -122,10 +122,10 @@ void main() {
     await abrir(tester, resposta4);
 
     await alternar(tester, 'Café');
-    expect(find.text(AppStrings.iaSeraoAdicionados(3, 4)), findsOneWidget);
+    expect(find.text(AppStrings.importSeraoAdicionados(3, 4)), findsOneWidget);
 
     await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.iaAdicionarN(3)),
+      find.widgetWithText(FilledButton, AppStrings.importAdicionarN(3)),
     );
     await tester.pumpAndSettle();
 
@@ -145,9 +145,9 @@ void main() {
     for (final nome in ['Arroz', 'Leite', 'Queijo prato', 'Café']) {
       await alternar(tester, nome);
     }
-    expect(find.text(AppStrings.iaSeraoAdicionados(0, 4)), findsOneWidget);
+    expect(find.text(AppStrings.importSeraoAdicionados(0, 4)), findsOneWidget);
     final botao = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, AppStrings.iaAdicionarN(0)),
+      find.widgetWithText(FilledButton, AppStrings.importAdicionarN(0)),
     );
     expect(botao.onPressed, isNull);
 
@@ -162,7 +162,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(recebida, isNull);
-    expect(find.text(AppStrings.iaConfirmeItens), findsNothing);
+    expect(find.text(AppStrings.importConfirmeItens), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -188,7 +188,7 @@ void main() {
     expect(find.text('3 l'), findsOneWidget);
 
     await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.iaAdicionarN(4)),
+      find.widgetWithText(FilledButton, AppStrings.importAdicionarN(4)),
     );
     await tester.pumpAndSettle();
 
@@ -291,7 +291,7 @@ void main() {
 
     await alternar(tester, 'Café');
     await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.iaAdicionarN(3)),
+      find.widgetWithText(FilledButton, AppStrings.importAdicionarN(3)),
     );
     await tester.pumpAndSettle();
 
@@ -351,7 +351,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.iaAdicionarN(2)),
+      find.widgetWithText(FilledButton, AppStrings.importAdicionarN(2)),
     );
     await tester.pumpAndSettle();
 
@@ -383,7 +383,7 @@ void main() {
     await tester.tap(find.text('abrir'));
     await tester.pumpAndSettle();
     await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.iaAdicionarN(2)),
+      find.widgetWithText(FilledButton, AppStrings.importAdicionarN(2)),
     );
     await tester.pumpAndSettle();
 

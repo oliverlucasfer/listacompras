@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/widgets/app_banner.dart';
 import 'package:lista_compras/core/widgets/app_esqueleto.dart';
@@ -18,8 +16,6 @@ import 'package:lista_compras/features/convites/data/papel_repository.dart';
 import 'package:lista_compras/features/convites/domain/papel.dart';
 import 'package:lista_compras/features/convites/providers/convites_providers.dart';
 import 'package:lista_compras/features/convites/providers/papel_providers.dart';
-import 'package:lista_compras/features/ia/data/parse_lista_client.dart';
-import 'package:lista_compras/features/ia/providers/ia_providers.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/domain/categoria.dart';
 import 'package:lista_compras/features/listas/domain/item.dart';
@@ -735,21 +731,11 @@ void main() {
     await fechar(tester);
   });
 
-  testWidgets('deve_abrir_modal_importar_ia_quando_tocar_botao', (
-    tester,
-  ) async {
+  testWidgets('deve_abrir_modal_importar_quando_tocar_botao', (tester) async {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(
       titulo: 'Compras da Semana',
       donoId: 'user-a',
-    );
-    final clienteIa = ParseListaClient(
-      obterToken: () => 'jwt-teste',
-      obterUri: () =>
-          Uri.parse('https://projeto.supabase.co/functions/v1/parse-lista'),
-      httpClient: MockClient(
-        (_) async => http.Response('{"itens": [], "aviso": null}', 200),
-      ),
     );
     final sync = StreamController<SyncStatus>();
     sync.add(const Sincronizado());
@@ -759,7 +745,6 @@ void main() {
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
-          parseListaClientProvider.overrideWithValue(clienteIa),
           papelRepositoryProvider.overrideWithValue(
             papelRepo(tester, listaId: lista.id, papel: Papel.dono),
           ),
@@ -773,8 +758,8 @@ void main() {
     await tester.tap(find.text(AppStrings.importarLista));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.iaColeOuDigite), findsOneWidget);
-    expect(find.text(AppStrings.iaExtrairItens), findsOneWidget);
+    expect(find.text(AppStrings.importColeOuDigite), findsOneWidget);
+    expect(find.text(AppStrings.importExtrairItens), findsOneWidget);
 
     await fechar(tester);
   });

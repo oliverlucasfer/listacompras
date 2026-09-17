@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/importacao/erro_importacao.dart';
 import '../../../core/importacao/parser_lista_local.dart';
 import '../../../core/importacao/resposta_import.dart';
 import '../../../core/l10n/app_strings.dart';
@@ -8,36 +9,25 @@ import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
-import '../../ia/domain/contrato_ia.dart';
-import '../../ia/providers/ia_providers.dart';
 import '../../listas/providers/listas_providers.dart';
 
-/// Modo de importação (RF-16): Rápido = parser local offline; IA = Edge Function.
-enum ModoImportacao { rapido, ia }
-
-/// Abre o modal de entrada da importação de lista (doc 05 §6.4, RF-06/RF-16).
-/// Retorna os itens extraídos, ou null se cancelado.
+/// Abre o modal de entrada da importação de lista (doc 04, wireframe 10 §4.1,
+/// RF-16). Retorna os itens extraídos, ou null se cancelado.
 Future<RespostaParse?> abrirModalImportar(
   BuildContext context,
   WidgetRef ref,
-  String listaId, {
-  ModoImportacao modoInicial = ModoImportacao.rapido,
-}) {
+  String listaId,
+) {
   return showDialog<RespostaParse>(
     context: context,
-    builder: (_) => ModalImportar(listaId: listaId, modoInicial: modoInicial),
+    builder: (_) => ModalImportar(listaId: listaId),
   );
 }
 
 class ModalImportar extends ConsumerStatefulWidget {
-  const ModalImportar({
-    super.key,
-    required this.listaId,
-    this.modoInicial = ModoImportacao.rapido,
-  });
+  const ModalImportar({super.key, required this.listaId});
 
   final String listaId;
-  final ModoImportacao modoInicial;
 
   @override
   ConsumerState<ModalImportar> createState() => _ModalImportarState();
@@ -45,13 +35,10 @@ class ModalImportar extends ConsumerStatefulWidget {
 
 class _ModalImportarState extends ConsumerState<ModalImportar> {
   final _controller = TextEditingController();
-  late ModoImportacao _modo = widget.modoInicial;
   bool _carregando = false;
   String? _erro;
 
-  int get _limite => _modo == ModoImportacao.rapido
-      ? maxCaracteresImportLocal
-      : maxCaracteresEntradaIa;
+  int get _limite => maxCaracteresImportLocal;
 
   @override
   void initState() {
@@ -78,11 +65,9 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
       _erro = null;
     });
     try {
-      final resposta = _modo == ModoImportacao.rapido
-          ? await _extrairLocal(_controller.text)
-          : await ref.read(parseListaClientProvider).parse(_controller.text);
+      final resposta = await _extrairLocal(_controller.text);
       if (mounted) Navigator.pop(context, resposta);
-    } on ErroIa catch (e) {
+    } on ErroImportacao catch (e) {
       if (mounted) {
         setState(() {
           _carregando = false;
@@ -96,7 +81,7 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
   Future<RespostaParse> _extrairLocal(String texto) async {
     final parse = analisarListaLocal(texto);
     if (parse.itens.isEmpty) {
-      throw const ErroIa('resposta_invalida', AppStrings.iaRespostaInvalida);
+      throw const ErroImportacao(AppStrings.importRespostaInvalida);
     }
     final sugestao = ref.read(sugestaoCategoriasProvider);
     final enriquecidos = <ItemExtraido>[];
@@ -132,31 +117,11 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SegmentedButton<ModoImportacao>(
-            segments: const [
-              ButtonSegment(
-                value: ModoImportacao.rapido,
-                label: Text(AppStrings.modoRapido),
-                icon: Icon(Icons.bolt_outlined),
-              ),
-              ButtonSegment(
-                value: ModoImportacao.ia,
-                label: Text(AppStrings.modoIa),
-                icon: Icon(Icons.auto_awesome),
-              ),
-            ],
-            selected: {_modo},
-            onSelectionChanged: (s) => setState(() {
-              _modo = s.first;
-              _erro = null;
-            }),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          const Text(AppStrings.iaColeOuDigite),
+          const Text(AppStrings.importColeOuDigite),
           const SizedBox(height: AppSpacing.sm),
           AppCampoTexto(
             controller: _controller,
-            hint: AppStrings.iaExemplo,
+            hint: AppStrings.importExemplo,
             teclado: TextInputType.multiline,
             textInputAction: TextInputAction.newline,
             maxLength: _limite,
@@ -179,11 +144,9 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
           const SizedBox(height: AppSpacing.md),
           AppBotao(
             rotulo: _carregando
-                ? AppStrings.iaLendo
-                : AppStrings.iaExtrairItens,
-            icone: _modo == ModoImportacao.ia
-                ? Icons.auto_awesome
-                : Icons.bolt_outlined,
+                ? AppStrings.importLendo
+                : AppStrings.importExtrairItens,
+            icone: Icons.bolt_outlined,
             carregando: _carregando,
             onPressed: _podeExtrair ? _extrair : null,
           ),

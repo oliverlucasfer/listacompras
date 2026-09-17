@@ -132,7 +132,7 @@ void main() {
       throwsA(
         isA<ErroConvite>()
             .having((e) => e.code, 'code', 'sem_conexao')
-            .having((e) => e.message, 'message', AppStrings.iaSemConexao),
+            .having((e) => e.message, 'message', AppStrings.erroSemConexao),
       ),
     );
   });
@@ -155,7 +155,7 @@ void main() {
       throwsA(
         isA<ErroConvite>()
             .having((e) => e.code, 'code', 'sem_conexao')
-            .having((e) => e.message, 'message', AppStrings.iaSemConexao),
+            .having((e) => e.message, 'message', AppStrings.erroSemConexao),
       ),
     );
   });

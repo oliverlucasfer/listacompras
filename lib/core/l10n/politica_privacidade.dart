@@ -16,7 +16,7 @@ Política de Privacidade
 Não coletamos dados pessoais sensíveis. Não usamos seus dados para publicidade e não há rastreamento publicitário.
 
 3. Com quem compartilhamos
-Seus dados ficam hospedados no Supabase (infraestrutura AWS). Para a função de importação por texto, o trecho que você colar é enviado ao Google Gemini para extração dos itens, sem identificadores pessoais. Registros de erro podem ser processados pelo Sentry, sem conteúdo das suas listas. Não vendemos nem compartilhamos seus dados com mais ninguém.
+Seus dados ficam hospedados no Supabase (infraestrutura AWS). A importação por texto acontece inteiramente no seu dispositivo (parser local, offline) — nenhum trecho colado é enviado a terceiros. Registros de erro podem ser processados pelo Sentry, sem conteúdo das suas listas. Não vendemos nem compartilhamos seus dados com mais ninguém.
 
 4. Por quanto tempo guardamos
 Até você excluir sua conta. Ao excluir a conta, todas as suas listas e itens são apagados permanentemente (exclusão física). Registros técnicos de erros podem permanecer pelo período de retenção do serviço de monitoramento.

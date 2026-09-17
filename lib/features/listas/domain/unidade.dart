@@ -1,5 +1,5 @@
 /// Enum fechado de unidades (doc 01 §3, ADR-005) — lista idêntica ao
-/// Postgres (`unidade_item`) e ao `responseSchema` da IA (doc 04 §6).
+/// Postgres (`unidade_item`).
 enum Unidade {
   un('un'),
   kg('kg'),

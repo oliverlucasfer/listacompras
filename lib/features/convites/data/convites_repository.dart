@@ -143,11 +143,11 @@ class ConvitesRepository {
     } on PostgrestException catch (e) {
       throw ErroConvite.fromCodigoDoContrato(e.message);
     } on SocketException {
-      throw const ErroConvite('sem_conexao', AppStrings.iaSemConexao);
+      throw const ErroConvite('sem_conexao', AppStrings.erroSemConexao);
     } on ClientException {
-      throw const ErroConvite('sem_conexao', AppStrings.iaSemConexao);
+      throw const ErroConvite('sem_conexao', AppStrings.erroSemConexao);
     } on TimeoutException {
-      throw const ErroConvite('sem_conexao', AppStrings.iaSemConexao);
+      throw const ErroConvite('sem_conexao', AppStrings.erroSemConexao);
     }
   }
 

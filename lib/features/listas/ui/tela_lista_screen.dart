@@ -189,9 +189,9 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
     if (context.mounted) context.go('/listas');
   }
 
-  /// Importação por IA (doc 05 §6.3/§6.4, RF-06): entrada → pré-visualização
+  /// Importação de lista (doc 05 §6.4, RF-16): entrada → pré-visualização
   /// → gravação local dos itens confirmados.
-  Future<void> _importarPorIa(
+  Future<void> _importarLista(
     BuildContext context,
     WidgetRef ref,
     String idLista,
@@ -364,8 +364,8 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                       child: AppBotao(
                         rotulo: AppStrings.importarLista,
                         variante: AppBotaoVariante.outlined,
-                        icone: Icons.smart_toy_outlined,
-                        onPressed: () => _importarPorIa(context, ref, listaId),
+                        icone: Icons.playlist_add,
+                        onPressed: () => _importarLista(context, ref, listaId),
                       ),
                     ),
                   ),

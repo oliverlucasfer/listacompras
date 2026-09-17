@@ -14,7 +14,7 @@ import '../../listas/domain/categoria.dart';
 import '../../listas/domain/unidade.dart';
 import '../../listas/providers/listas_providers.dart';
 
-/// Abre o modal de pré-visualização (doc 05 §6.4, wireframe 10 §4.2, RF-06)
+/// Abre o modal de pré-visualização (doc 05 §6.4, wireframe 10 §4.2, RF-16)
 /// e grava os itens confirmados via repositório local (fila de INSERTs).
 /// Cancelar não grava nada.
 Future<void> confirmarItensImportados(
@@ -91,7 +91,7 @@ class _ModalPrevisaoImportacaoState extends State<ModalPrevisaoImportacao> {
     return AlertDialog(
       title: Row(
         children: [
-          const Expanded(child: Text(AppStrings.iaConfirmeItens)),
+          const Expanded(child: Text(AppStrings.importConfirmeItens)),
           IconButton(
             tooltip: AppStrings.fechar,
             icon: const Icon(Icons.close),
@@ -157,7 +157,7 @@ class _ModalPrevisaoImportacaoState extends State<ModalPrevisaoImportacao> {
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
-                    AppStrings.iaSeraoAdicionados(
+                    AppStrings.importSeraoAdicionados(
                       selecionados.length,
                       _linhas.length,
                     ),
@@ -173,7 +173,7 @@ class _ModalPrevisaoImportacaoState extends State<ModalPrevisaoImportacao> {
                 child: const Text(AppStrings.cancelar),
               ),
               AppBotao(
-                rotulo: AppStrings.iaAdicionarN(selecionados.length),
+                rotulo: AppStrings.importAdicionarN(selecionados.length),
                 expandido: false,
                 onPressed: selecionados.isEmpty
                     ? null
@@ -343,7 +343,7 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          // Categoria (F6-T05, spec §5.2): sugestão da IA editável antes
+          // Categoria (F6-T05, spec §5.2): sugestão local editável antes
           // de gravar na lista.
           AppDropdown<CategoriaItem>(
             label: AppStrings.categoria,

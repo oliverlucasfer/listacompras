@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/features/listas/domain/categoria.dart';
 
 /// F6-T03/F6-T02 (doc 14): enum fechado de categorias (doc 01 §3.2, ADR-011)
-/// — mesma lista do Postgres (`categoria_item`) e do `responseSchema` (04).
+/// — mesma lista do Postgres (`categoria_item`).
 void main() {
   test('deve_ter_11_valores_na_ordem_dos_grupos_quando_listar_categorias', () {
     final nomes = CategoriaItem.values.map((c) => c.valor).toList();
