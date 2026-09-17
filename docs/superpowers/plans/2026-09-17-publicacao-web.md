@@ -73,7 +73,7 @@ No §1 (L21), trocar:
 ```
 por (os dois itens começam desmarcados; o primeiro é marcado pela F19-T04):
 ```markdown
-- [ ] Publicado: **Web acessível por URL pública** (`https://lista-compras-34f93.web.app`, Fase 19 — ADR-013). *(RF-16)*
+- [ ] Publicado: **Web acessível por URL pública** (`https://lista-compras-34f93.web.app`, Fase 19 — ADR-013).
 - [ ] Publicado: **APK/AAB disponível para teste interno** na Play Console (F5-T06, gate do dono).
 ```
 
