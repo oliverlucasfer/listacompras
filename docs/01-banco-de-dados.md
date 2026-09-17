@@ -2,7 +2,7 @@
 
 > Navegação: [← 00 Visão Geral](00-visao-geral.md) · [02 Segurança RLS →](02-seguranca-rls.md)
 
-**Este documento é o dono do schema.** Outros documentos apenas referenciam este (ex.: o [04 IA](04-ia-edge-function.md) usa o enum de unidades definido aqui).
+**Este documento é o dono do schema.** Outros documentos apenas referenciam este (ex.: o [04 Importação](04-importacao-lista.md) usa o enum de unidades definido aqui).
 
 ---
 
@@ -41,16 +41,17 @@ supabase/
     ├── 0001_init.sql            # enum, tabelas, índices, triggers
     ├── 0002_rls_policies.sql    # políticas RLS (ver 02)
     ├── 0003_realtime.sql        # publication do Realtime
-    ├── 0004_ia_rate_limit.sql   # rate limit da IA (ver 04)
+    ├── 0004_ia_rate_limit.sql   # rate limit da IA — removido na 0013 (F17)
     ├── 0005_excluir_conta.sql   # RPC de exclusão de conta (ver 06)
-    └── 0006_categorias.sql      # enum de categorias + coluna (ver §3.2, ADR-011)
+    ├── 0006_categorias.sql      # enum de categorias + coluna (ver §3.2, ADR-011)
+    └── 0013_remover_ia_rate_limit.sql # remove rate limit da IA (F17)
 ```
 
 ---
 
 ## 3. Enums Fechados
 
-> **Fonte única da verdade.** O [04 IA](04-ia-edge-function.md) replica estes valores no `responseSchema`; o [05 App](05-app-flutter.md) replica no enum Dart.
+> **Fonte única da verdade.** O [04 Importação](04-importacao-lista.md) documenta o parser local; o [05 App](05-app-flutter.md) replica no enum Dart.
 
 ### 3.1. Unidades (`unidade_item`)
 
@@ -165,7 +166,7 @@ create index idx_membros_user on public.lista_membros (user_id);
 | `deletado_em` | `timestamptz` nullable | Soft delete / tombstone |
 
 **Constraints e índices:**
-* `UNIQUE (lista_id, lower(nome)) WHERE deletado_em IS NULL` — deduplicação de itens ativos (a IA e o usuário não criam item repetido na mesma lista).
+* `UNIQUE (lista_id, lower(nome)) WHERE deletado_em IS NULL` — deduplicação de itens ativos (o usuário não cria item repetido na mesma lista).
 * Índice `(lista_id, ordem)` para leitura ordenada.
 
 ```sql

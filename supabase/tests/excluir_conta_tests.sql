@@ -42,10 +42,6 @@ on conflict (lista_id, user_id) do nothing;
 insert into public.itens_lista (id, lista_id, nome)
 values ('aaaaaaa2-0000-0000-0000-000000000000', '99999999-9999-9999-9999-aaaaaaaaaaaa', 'Café');
 
--- Rate limit da IA de E (sem FK — limpeza explícita no RPC).
-insert into public.ia_rate_limit (user_id, janela, count)
-values ('77777777-7777-7777-7777-777777777777', date_trunc('minute', now()), 1);
-
 -- ===== E-01: RPC com role authenticated SEM claims → exceção =====
 do $$
 begin
@@ -88,9 +84,6 @@ begin
 
   select count(*) into c from public.itens_lista where lista_id = '99999999-9999-9999-9999-999999999999';
   if c > 0 then raise exception 'FALHOU E-03: itens da lista do titular sobreviveram'; end if;
-
-  select count(*) into c from public.ia_rate_limit where user_id = '77777777-7777-7777-7777-777777777777';
-  if c > 0 then raise exception 'FALHOU E-03: ia_rate_limit do titular sobreviveu'; end if;
 
   raise notice 'OK E-03: todas as tabelas do titular retornam vazio';
 end $$;
