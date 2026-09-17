@@ -367,7 +367,7 @@ curl.exe -s https://lista-compras-34f93.web.app/robots.txt
 curl.exe -sI https://lista-compras-34f93.web.app/main.dart.js
 ```
 
-Expected: raiz `/` com `200`, `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp` **e** `Cache-Control: no-cache` (a regra `source: "/"` é a que vale para o documento de entrada — com `cleanUrls`, `/index.html` responde `301 → /` e não carrega `no-cache` próprio); `Cache-Control: no-cache` também em `/version.json` e `/flutter_service_worker.js`; `/listas` devolve o `index.html` (rewrite, sem 404); `/privacidade` devolve o HTML estático (200); `robots.txt` com `Disallow: /`; `main.dart.js` continua **cacheável** (não `no-cache`).
+Expected: raiz `/` com `200`, `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp` **e** `Cache-Control: no-cache`; `/index.html` responde `301 → /` (não é 200) e o `no-cache` vem do destino `/`, que carrega a `source: "/"` — é isso que faz o documento de entrada ser `no-cache`; `Cache-Control: no-cache` também em `/version.json` e `/flutter_service_worker.js`; `/listas` devolve o `index.html` (rewrite, sem 404) porém com o `Cache-Control` default `max-age=3600` (os headers seguem o path da requisição, não o destino do rewrite; aceitável pois `/version.json` e o service worker são `no-cache` e o app se atualiza ao carregar); `/privacidade` devolve o HTML estático (200); `robots.txt` com `Disallow: /`; `main.dart.js` continua **cacheável** (não `no-cache`).
 
 - [ ] **Step 14: Registrar no runbook e commitar**
 
