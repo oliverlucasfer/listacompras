@@ -89,11 +89,19 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
         ),
       );
       if (mounted) mostrarSnackBar(context, AppStrings.linkCompartilhado);
-    } catch (_) {
+    } on MissingPluginException catch (_) {
       // Web Share API indisponível (desktop/alguns navegadores): orienta a
       // usar o botão "Copiar link" que já existe no sheet.
       if (mounted) {
         mostrarSnackBar(context, AppStrings.compartilharIndisponivel);
+      }
+    } on UnimplementedError catch (_) {
+      if (mounted) {
+        mostrarSnackBar(context, AppStrings.compartilharIndisponivel);
+      }
+    } catch (_) {
+      if (mounted) {
+        mostrarSnackBar(context, AppStrings.erroGenerico);
       }
     }
   }

@@ -459,7 +459,7 @@ Spec: [superpowers/specs/2026-09-17-suporte-web-desktop-design.md](superpowers/s
   CP: manifest sem portrait fixo; `web/version.json`; compartilhar com fallback; smoke no Chrome.
 - [x] **F18-T05** — CI (build web + desktop) e docs donos; fechamento
   Dep: F18-T03, F18-T04 · Docs: [07](07-qualidade-ci.md), [08](08-compartilhamento-colaborativo.md), [09](09-runbook-operacoes.md)
-  CP: CI verde com `build web` + builds desktop; 05/06/07/09 sincronizados; Fase 18 marcada.
+  CP: CI verde com `build web` + builds desktop; 05/06/07/08/09 sincronizados; Fase 18 marcada.
 
 ## Progresso por fase (atualize ao concluir)
 

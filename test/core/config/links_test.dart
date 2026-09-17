@@ -5,7 +5,7 @@ void main() {
   final base = Uri.parse('https://app.exemplo.com/algum/caminho');
 
   test('deve_usar_app_web_url_quando_nativo', () {
-    expect(origemWeb(web: false, base: base), appWebUrl);
+    expect(origemWeb(web: false, base: base), 'http://localhost:8080');
     expect(
       redirectAuth(web: false, base: base),
       'br.com.oliverlucas.listacompras://login-callback',

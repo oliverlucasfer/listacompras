@@ -92,6 +92,7 @@ saída: { "itens": [...], "aviso": null }
 | 008 | Exclusão de conta: delete físico em cascata (F5) |
 | 009 | Sentry free |
 | 010 | GitHub Actions desde a F1 |
+| 012 | Suporte a Web (Drift/WASM) e Desktop (F18); banco por fábrica com import condicional; auth/links por plataforma |
 
 ## 7. Comandos essenciais
 

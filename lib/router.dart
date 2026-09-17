@@ -92,8 +92,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/login-callback',
-        builder: (context, state) =>
-            const Scaffold(body: Center(child: CircularProgressIndicator())),
+        builder: (context, state) => const _CallbackLoginScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
@@ -143,3 +142,49 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+/// Recebe os tokens do fluxo de auth no web; o `supabase_flutter` processa a
+/// URL e o redirect global navega. Sem isso, mostra um fallback após 10s.
+class _CallbackLoginScreen extends StatefulWidget {
+  const _CallbackLoginScreen();
+
+  @override
+  State<_CallbackLoginScreen> createState() => _CallbackLoginScreenState();
+}
+
+class _CallbackLoginScreenState extends State<_CallbackLoginScreen> {
+  bool _demorou = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.delayed(const Duration(seconds: 10), () {
+      if (mounted) setState(() => _demorou = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_demorou) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Não foi possível concluir a verificação.'),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: () => context.go('/login'),
+                child: const Text('Voltar ao login'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

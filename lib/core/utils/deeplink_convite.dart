@@ -14,13 +14,11 @@ import 'package:lista_compras/router.dart';
 /// chegam aqui, que os traduz na rota `/entrar` do go_router.
 /// No Android (client de convite) o link inicial de cold-start vem no
 /// próprio stream do app_links; Web é tratado como URL normal do browser.
-final deeplinkConviteProvider = Provider<StreamSubscription<Uri>>((ref) {
+final deeplinkConviteProvider = Provider<StreamSubscription<Uri>?>((ref) {
   final router = ref.watch<GoRouter>(routerProvider);
   if (kIsWeb) {
     // No web a URL do convite chega direto ao go_router (/entrar?token=…).
-    final sub = const Stream<Uri>.empty().listen((_) {});
-    ref.onDispose(sub.cancel);
-    return sub;
+    return null;
   }
   final sub = AppLinks().uriLinkStream.listen((uri) {
     if (uri.host != 'entrar') return;

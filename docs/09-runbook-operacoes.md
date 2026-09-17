@@ -97,7 +97,7 @@ Dashboard Supabase → **Authentication → URL Configuration** (ADR-012, [05 §
 | **Redirect URLs** | `http://localhost:<porta>/**` (dev) e `https://<domínio>/**` (produção) |
 | **Nativo (manter)** | `br.com.oliverlucas.listacompras://login-callback` |
 
-O web usa `https://<origem>/login-callback` como `redirectTo` de auth ([05 §2.1](05-app-flutter.md)); o `/**` cobre também `/entrar` (convite). Sem a URL na whitelist, o Supabase recusa o `redirectTo` ("redirect_uri not allowed") e o link de confirmação cai na Site URL errada.
+O web usa `<origem>/login-callback` (http em dev, https em produção) como `redirectTo` de auth ([05 §2.1](05-app-flutter.md)); o `/**` cobre também `/entrar` (convite). Sem a URL na whitelist, o Supabase recusa o `redirectTo` ("redirect_uri not allowed") e o link de confirmação cai na Site URL errada.
 
 ---
 

@@ -1,7 +1,9 @@
 import 'package:flutter/foundation.dart';
 
 /// URL pública do app web (usada pelo nativo para montar links compartilháveis).
-/// Produção: `--dart-define=APP_WEB_URL=https://<dominio>`.
+/// Em builds de release do nativo, definir
+/// `--dart-define=APP_WEB_URL=https://<domínio>`; sem ele, links compartilhados
+/// apontam para o default de dev.
 const appWebUrl = String.fromEnvironment(
   'APP_WEB_URL',
   defaultValue: 'http://localhost:8080',

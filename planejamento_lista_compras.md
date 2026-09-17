@@ -24,7 +24,7 @@ Sistema multiplataforma (MVP: Android, iOS e Web) para gerenciamento de listas d
 | [11](docs/11-usabilidade-fase5.md) | **Usabilidade (Fase 5)** | Roteiro, tarefas, métricas, critério de aprovação | Testes de usabilidade |
 | [12](docs/12-prd.md) | **PRD** | Requisitos funcionais/não-funcionais com IDs, user stories, matriz de rastreabilidade | Requisitos de produto |
 | [13](docs/13-premodelo-tecnico.md) | **Pré-modelo Técnico** | Contexto condensado para implementação (ler primeiro) | Resumo — nunca sobrepõe o doc dono |
-| [14](docs/14-tarefas.md) | **Tarefas** | Breakdown executável por fase (F1–F17) com dependências e critério de pronto | Execução e progresso |
+| [14](docs/14-tarefas.md) | **Tarefas** | Breakdown executável por fase (F1–F18) com dependências e critério de pronto | Execução e progresso |
 | [15](docs/15-design-system.md) | **Design System** | Tokens, tema M3 Expressive, componentes, motion e acessibilidade | Design system (tokens, componentes, acessibilidade) |
 
 ---
@@ -35,7 +35,7 @@ Sistema multiplataforma (MVP: Android, iOS e Web) para gerenciamento de listas d
 
 ## Cronograma (resumo)
 
-1. **Infraestrutura & BD** → 2. **Importação local (parser)** → 3. **App Flutter core** → 4. **Sincronização offline-first** → 5. **Publicação MVP (Web + Android)** → 6. **Pós-MVP** (iOS, Desktop, compartilhamento) → 7. **Revisão visual e UX** (design system, refresh das telas e navegação — Fase 8+, spec em `docs/superpowers/specs/2026-09-11-revisao-visual-ux-design.md`) → 8. **Acessibilidade, fluxos e polimento de UX** (RNF-06 + recuperação de senha — Fase 14, spec em `docs/superpowers/specs/2026-09-14-ux-acessibilidade-design.md`) → 9. **Busca e filtro** (busca local por título no painel e por nome na lista — Fase 16/RF-17, spec em `docs/superpowers/specs/2026-09-16-busca-filtro-design.md`).
+1. **Infraestrutura & BD** → 2. **Importação local (parser)** → 3. **App Flutter core** → 4. **Sincronização offline-first** → 5. **Publicação MVP (Web + Android)** → 6. **Pós-MVP** (iOS, Desktop, compartilhamento) → 7. **Revisão visual e UX** (design system, refresh das telas e navegação — Fase 8+, spec em `docs/superpowers/specs/2026-09-11-revisao-visual-ux-design.md`) → 8. **Acessibilidade, fluxos e polimento de UX** (RNF-06 + recuperação de senha — Fase 14, spec em `docs/superpowers/specs/2026-09-14-ux-acessibilidade-design.md`) → 9. **Busca e filtro** (busca local por título no painel e por nome na lista — Fase 16/RF-17, spec em `docs/superpowers/specs/2026-09-16-busca-filtro-design.md`) → 10. **Suporte a Web e Desktop** (banco por plataforma, auth/links por plataforma e path URL strategy, pastas de desktop — Fase 18/ADR-012, spec em `docs/superpowers/specs/2026-09-17-suporte-web-desktop-design.md`).
 
 Detalhes e DoD por fase: [00 §6](docs/00-visao-geral.md) · Breakdown executável: [14](docs/14-tarefas.md).
 
@@ -48,7 +48,7 @@ Detalhes e DoD por fase: [00 §6](docs/00-visao-geral.md) · Breakdown executáv
 
 | Decisão | ADR |
 | :--- | :--- |
-| MVP = Android/iOS/Web; Desktop na Fase 6 | ADR-001 |
+| MVP = Android/iOS/Web; **Desktop suportado (Fase 18)** e Web completo | ADR-001 / ADR-012 |
 | Riverpod · Drift/SQLite · LWW · IDs client-side | ADR-002/003/004/006 |
 | Enum fechado de unidades · categorias (sugestão local em camadas) | ADR-005 / ADR-011 |
 | Free tier aceito no MVP; Supabase Pro como gatilho de lançamento público | ADR-007 |

@@ -66,7 +66,7 @@ A partir da Fase 18 o app roda em **Android, iOS, Web e Desktop (Windows/Linux/m
 * **URL strategy:** `usarPathUrlStrategy()` (import condicional em `core/web/`) usa path limpo no web (`/entrar?token=…`, `/login-callback`); no nativo/desktop é no-op. Chamada em `main.dart` antes do `Supabase.initialize`.
 * **Links (`core/config/links.dart`):**
   * **Origem:** `origemWeb()` devolve `Uri.base.origin` no web e a constante `APP_WEB_URL` (`--dart-define=APP_WEB_URL=https://<domínio>`, default `http://localhost:8080`) no nativo.
-  * **Auth:** `redirectAuth()` devolve `https://<origem>/login-callback` no web e `br.com.oliverlucas.listacompras://login-callback` no nativo — usado no cadastro (verificação de e-mail) e na recuperação de senha.
+  * **Auth:** `redirectAuth()` devolve `<origem>/login-callback` no web (http em dev, https em produção) e `br.com.oliverlucas.listacompras://login-callback` no nativo — usado no cadastro (verificação de e-mail) e na recuperação de senha.
   * **Convite:** `linkConviteDe(token)` devolve `https://<origem>/entrar?token=…` no web e `br.com.oliverlucas.listacompras://entrar?token=…` no nativo ([08 §1.1](08-compartilhamento-colaborativo.md)).
   * No web o deep link de convite chega como URL normal ao `go_router`; a ponte `deeplinkConviteProvider` só escuta o `app_links` no nativo.
 * **Rota `/login-callback`:** rota pública que exibe um indicador de progresso enquanto o `supabase_flutter` processa o retorno do link (o redirect seguinte decide a tela). Registrada no `router.dart` para o web, onde o retorno do Supabase é uma URL https e não um deep link.

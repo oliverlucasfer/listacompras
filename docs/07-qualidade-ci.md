@@ -58,7 +58,7 @@ Pipeline único `.github/workflows/ci.yml`, disparado em PR e push em `main`:
   curl -L -o web/drift_worker.js https://github.com/simolus3/drift/releases/download/drift-2.34.4/drift_worker.js
   curl -L -o web/sqlite3.wasm    https://github.com/simolus3/drift/releases/download/drift-2.34.4/sqlite3.wasm
   ```
-  A versão do Drift em `pubspec.lock` e os assets devem andar juntos; validar com `flutter build web --release` (o build falha se os assets não forem servidos corretamente no runtime web).
+  A versão do Drift em `pubspec.lock` e os assets devem andar juntos; `flutter build web --release` valida a **compilação** — a corretude dos assets WASM é de **runtime**, não de build.
 * Segurança no CI: secrets do Supabase de **ambiente de teste**, nunca produção; JWTs de teste criados na hora.
 * Flutter **e** CLI do Supabase do CI **pinados** às versões usadas pelo dev (`flutter-version` no `flutter-action`, `version` no `setup-cli`) — o formatter do Dart muda entre versões (quebraria `dart format --set-exit-if-changed`) e o CLI fica pinado ao do dev para paridade.
 * Tempo alvo do pipeline: < 10 min.
