@@ -93,7 +93,7 @@ Uma fase só está "pronta" quando:
 
 | Canal | Requisito | Observação |
 | :--- | :--- | :--- |
-| Web (Fase 19) | Build `flutter build web` + Firebase Hosting ([ADR-013](00-visao-geral.md)) | Publicado em `https://lista-compras-34f93.web.app` pela F19 (deploy automático no CI); domínio próprio fica pós-MVP |
+| Web (Fase 19) | Build `flutter build web` + Firebase Hosting ([ADR-013](00-visao-geral.md)) | Publicação em `https://lista-compras-34f93.web.app` pela F19 (deploy automático no CI); domínio próprio fica pós-MVP |
 | Desktop — Windows/Linux/macOS (Fase 18) | Builds `flutter build windows`/`linux`/`macos` | Suportado desde a Fase 18 (ADR-012); builds Windows/Linux validados no CI ([07 §3](07-qualidade-ci.md)); publicação segue o gate do dono (Fase 5 / F5-T06) |
 | Android — teste interno (Fase 5) | APK/AAB na Play Console (closed testing) | Política de privacidade + Declaração de Dados preenchidas |
 | Android — produção | Publicação pública | Depende de validação do MVP; pode ficar para após Fase 5 |
@@ -101,7 +101,7 @@ Uma fase só está "pronta" quando:
 
 **Antes de lançamento público:** revisar R-01 — avaliar upgrade Supabase Pro (gatilho documentado em [00 §4](00-visao-geral.md)).
 
-**Nota do dono do projeto:** a publicação na Play (teste interno) está **adiada** — o Web foi publicado na Fase 19 — será executada apenas sob solicitação explícita, junto com a F5-T05 ([14-tarefas](14-tarefas.md)). Canal provisório de distribuição de builds de teste: Firebase App Distribution (F5-T05b). Os critérios do DoD (§2) permanecem válidos para o dia do lançamento.
+**Nota do dono do projeto:** a publicação na Play (teste interno) está **adiada** — será executada apenas sob solicitação explícita, junto com a F5-T05 ([14-tarefas](14-tarefas.md)); a publicação do Web entra na Fase 19. Canal provisório de distribuição de builds de teste: Firebase App Distribution (F5-T05b). Os critérios do DoD (§2) permanecem válidos para o dia do lançamento.
 
 ---
 

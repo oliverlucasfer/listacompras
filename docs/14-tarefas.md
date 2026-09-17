@@ -118,7 +118,7 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 
 - [x] **F5-T01** — Tela Configurações (política de privacidade, versão, exclusão de conta)
   Dep: F4-T09 · Docs: [06 §3](06-mvp-entregas.md), [10 §5](10-wireframes-telas.md) · RF-11
-  CP: Wireframe 5; links corretos. *(rota /configuracoes protegida + ícone ⚙ no painel; e-mail da conta (emailUsuarioProvider); Política de Privacidade exibida in-app (texto único do 06 §3.3 em core/l10n/politica_privacidade.dart — a URL pública online entra na F5-T06); versão via package_info_plus; botão vermelho Excluir minha conta + aviso, com fluxo placeholder para F5-T02; 3 widget tests)*
+  CP: Wireframe 5; links corretos. *(rota /configuracoes protegida + ícone ⚙ no painel; e-mail da conta (emailUsuarioProvider); Política de Privacidade exibida in-app (texto único do 06 §3.3 em core/l10n/politica_privacidade.dart — a URL pública online entra na Fase 19 (ADR-013)); versão via package_info_plus; botão vermelho Excluir minha conta + aviso, com fluxo placeholder para F5-T02; 3 widget tests)*
 - [x] **F5-T02** — RPC `excluir_conta()` + fluxo de confirmação dupla
   Dep: F5-T01 · Docs: [06 §3.3.1](06-mvp-entregas.md) · RF-11
   CP: Conta excluída remove todos os dados (cascades verificados); app limpa cache/fila; sessão invalidada. *(migration 0005: RPC security definer apaga auth.users + ia_rate_limit (sem FK) e marca a transação `app.excluindo_conta`; sync_dono v2 reconhece a marca — exceção documentada no doc 01 §6 no mesmo PR; app: repo.excluirConta() (RPC + signOut) e confirmação dupla na tela — senha com reautenticação (erro inline "Senha incorreta") + diálogo final; cache/fila limpos pelo bootstrap ao detectar fim de sessão (F4-T06, testado em deve_limpar_cache_e_fila_quando_logout); 5 widget tests do fluxo)*
@@ -134,9 +134,9 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [x] **F5-T05b** — Distribuição interna via Firebase App Distribution
   Dep: F4-T09 · Docs: [06 §4](06-mvp-entregas.md)
   CP: APK release assinado, instalável por 2+ testadores apontando para o Supabase de produção; keystore via `android/key.properties` (gitignored, template em `key.properties.example`) com fallback para debug quando ausente. *(fora do gate de T05/T06 — é o canal provisório de builds de teste até o lançamento. Build `1.0.0+2` assinado (V2, CN=Lucas Oliveira), URL de produção verificada embutida no libapp.so e smoke no emulador: instala, abre e login com credenciais erradas devolve "E-mail ou senha incorretos" da produção. Distribuído ao grupo "testadores" (2 membros) via `firebase appdistribution:distribute --groups`; dart-defines de produção em `dart_defines_prod.json` (gitignored). Correções de CI no caminho: Flutter 3.44.5 e CLI 2.116.0 pinados, e2e cria usuários via Admin API (confirmations F3) — doc 07 §3 e 04 §8 atualizados)*
-- [ ] **F5-T06** — Publicação Web + Android (teste interno) + política de privacidade online
+- [ ] **F5-T06** — Publicação Android (teste interno) + política de privacidade na Play
   Dep: F5-T05 · Docs: [06 §4](06-mvp-entregas.md)
-  CP: Checklist 06 §1 100% marcado; URL Web pública; AAB no closed testing. *(ADIADA por decisão do dono: executar somente sob solicitação explícita — só quando for lançar na Play Store; Dep F5-T05 permanece)*
+  CP: Checklist 06 §1 100% marcado; AAB no closed testing; Declaração de Dados preenchida. *(ADIADA por decisão do dono: executar somente sob solicitação explícita — só quando for lançar na Play Store; a publicação Web foi entregue pela Fase 19 (ADR-013); Dep F5-T05 permanece)*
 
 ## Fase 6 — Pós-MVP
 
