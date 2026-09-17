@@ -15,7 +15,7 @@ Fase nova: **F19 — Publicação Web**. Decisão de arquitetura: **ADR-013** no
 ## 2. Contexto
 
 - O app web **já é funcional completo** desde a Fase 18 ([ADR-012](../../00-visao-geral.md)): banco Drift/WASM (OPFS com fallback IndexedDB), auth e convites por URL https, sync e import local. Falta apenas hospedar.
-- **Projeto Firebase já existe:** `lista-compras-34f93` (mesmo do App Distribution da F5-T05b, app Android "Lista de Compras"). O site de Hosting também já existe: `https://lista-compras-34f93.web.app`. O site `lista-compras` **não** existe no projeto (nome mais curto: `lista-compras.web.app` — tentar criar; se estiver ocupado por outro projeto, publicar no site atual).
+- **Projeto Firebase já existe:** `lista-compras-34f93` (mesmo do App Distribution da F5-T05b, app Android "Lista de Compras"). O **site default** de Hosting também já existe: `https://lista-compras-34f93.web.app`.
 - `firebase-tools 15.29.0` instalado e autenticado na máquina do dev.
 - **Nada no código precisa mudar por causa do domínio:** `lib/core/config/links.dart` monta as URLs de auth (`<origem>/login-callback`) e de convite (`<origem>/entrar?token=`) a partir de `Uri.base.origin` em runtime.
 - **O banco web exige cross-origin isolation:** `lib/drift/conexao/conexao_web.dart:8` usa `WasmDatabase.open`, que prefere OPFS (`SharedArrayBuffer`) e cai para IndexedDB quando a página não é isolada. Logo a hospedagem precisa enviar `Cross-Origin-Opener-Policy` + `Cross-Origin-Embedder-Policy`.
@@ -31,14 +31,14 @@ Fase nova: **F19 — Publicação Web**. Decisão de arquitetura: **ADR-013** no
 | Decisão | Escolha | Justificativa |
 | :--- | :--- | :--- |
 | Hospedagem | **Firebase Hosting** (ADR-013) | Mesmo projeto/console do App Distribution; CDN + SSL grátis; rewrites, headers por arquivo e histórico de releases nativos |
-| URL pública | `https://lista-compras.web.app` se o site puder ser criado; senão `https://lista-compras-34f93.web.app` | Nome curto e legível; o fallback já existe e funciona igual |
+| URL pública | `https://lista-compras-34f93.web.app` (site default já existente) | Zero configuração e zero risco: a action `FirebaseExtended/action-hosting-deploy` com `channelId: live` publica no site **default**; um segundo site (`lista-compras.web.app`) exigiria deploy targets no `.firebaserc` e a action passaria a publicar em **todos** os targets definidos — complexidade que não se paga por uma URL mais curta |
 | Domínio próprio | Fora de escopo (fica pós-MVP) | Decisão do dono: publicar já com o subdomínio grátis; migrar depois é trocar Site/Redirect URLs, o link da política e o deploy |
 | Estrutura do site | Um único site de Hosting, servindo `build/web` | Sem staging separado; o canal de preview do CI cobre a validação por PR |
 | URLs do app | **Path URL strategy** já vigente (F18-T02) + rewrite `**` → `/index.html` | Sem `#` nas URLs e sem 404 ao recarregar `/listas` ou `/entrar?token=` |
 | Cross-origin isolation | Headers COOP `same-origin` + COEP `require-corp` em todas as respostas | Habilita OPFS/`SharedArrayBuffer` no Drift (performance e durabilidade); sem eles o app funciona, mas cai no IndexedDB |
 | Cache | `no-cache` em `/index.html`, `/version.json` e `/flutter_service_worker.js` | Evita o clássico "service worker velho servindo build velho" após um deploy |
 | Build de release | `flutter build web --release` com `--dart-define` vindos de **secrets do GitHub** | Nada de chave no repositório (regra do AGENTS) |
-| `version.json` | **Gerado no job de deploy** a partir do `pubspec.yaml` + teste-guarda local | Elimina o passo manual e o risco de a versão publicada mentir |
+| `version.json` | Teste-guarda local contra o `pubspec.yaml` (sem geração no CI) | O guard já garante a paridade — gerar no job seria um passo a mais sem ganho (YAGNI) |
 | Gatilho do deploy | Push/merge em `main` publica sozinho (`channelId: live`), **após** `flutter` e `supabase` verdes; PR ganha canal de preview | Publicação contínua com a mesma barreira do merge; preview facilita revisar a UI real |
 | Preview vs produção | Previews usam os **mesmos defines de produção** e o canal expira sozinho (7 dias) | Decisão consciente: o Supabase não tem ambiente de staging; risco aceito é o de criar contas de teste no banco de produção a partir de um PR |
 | Indexação | `robots.txt` com `Disallow: /` até a F5-T05/lançamento | URL acessível por link, fora do Google enquanto a usabilidade não foi validada |
@@ -76,24 +76,24 @@ Fase nova: **F19 — Publicação Web**. Decisão de arquitetura: **ADR-013** no
 
 - Build de release: `flutter build web --release --dart-define=SUPABASE_URL=<secret> --dart-define=SUPABASE_ANON_KEY=<secret>`.
 - Deploy: `firebase deploy --only hosting --project lista-compras-34f93` (ou a action no CI, §4.3).
-- `web/version.json` é reescrito a partir de `pubspec.yaml` (`version: 1.2.0+6` → `{"app_name":…,"version":"1.2.0","build_number":"6",…}`) antes do build; o arquivo versionado continua sendo a referência local e um teste-guarda garante que os dois batem.
+- `web/version.json` continua sendo o arquivo versionado que o `package_info_plus` lê (não é gerado no build); um teste-guarda garante que ele acompanha o `pubspec.yaml`.
 - `build/` segue gitignored — nada de artefato no repositório.
 
 ### 4.3 CI/CD
 
 - Novos **secrets do repositório**: `FIREBASE_SERVICE_ACCOUNT_LISTA_COMPRAS_34F93` (JSON da conta de serviço com papel *Firebase Hosting Admin*), `SUPABASE_URL`, `SUPABASE_ANON_KEY`.
-- Job `deploy` no mesmo workflow do CI, `needs: [flutter, supabase]` (publica só com a barreira verde):
-  - **sem PR** (push em `main`): `channelId: live` → publica na URL pública;
-  - **em PR**: canal de preview via `FirebaseExtended/action-hosting-deploy` (comenta a URL do preview no PR, expira em 7 dias);
-  - permissões mínimas: `contents: read` + `pull-requests: write`; `concurrency` para não sobrepor deploys.
+- Dois jobs novos no mesmo workflow do CI, ambos com `firebaseToolsVersion: 15.29.0` (paridade com o CLI do dev) e `concurrency`:
+  - **`deploy`** (`push` em `main`, `needs: [flutter, supabase]`): monta o web com os defines dos secrets e publica com `channelId: live` — ou seja, só publica com a barreira verde do CI;
+  - **`preview`** (`pull_request` de branch do próprio repositório): publica um canal de preview por PR via `FirebaseExtended/action-hosting-deploy` (URL comentada no PR, expira em 7 dias); `if` exclui fork (sem secrets) e permissões `contents: read` + `pull-requests: write`.
+- Os jobs de publicação **não** fazem parte dos checks obrigatórios de branch protection (a exigência continua `flutter` e `supabase`).
 - O job de deploy **não** faz parte dos checks obrigatórios de branch protection (a exigência continua `flutter` e `supabase`).
 - Custo: plano Spark (grátis) cobre o uso esperado.
 
 ### 4.4 Supabase Auth
 
 - Dashboard → Authentication → URL Configuration ([09 §2.7](../../09-runbook-operacoes.md)):
-  - **Site URL:** `https://<site-publicado>` (o do §3);
-  - **Redirect URLs:** manter `http://localhost:<porta>/**`, o scheme nativo `br.com.oliverlucas.listacompras://login-callback` e **acrescentar** `https://<site-publicado>/**`.
+  - **Site URL:** `https://lista-compras-34f93.web.app` (o do §3);
+  - **Redirect URLs:** manter `http://localhost:<porta>/**`, o scheme nativo `br.com.oliverlucas.listacompras://login-callback` e **acrescentar** `https://lista-compras-34f93.web.app/**`.
 - Sem isso, o `redirectTo` do cadastro/recuperação é recusado ("redirect_uri not allowed") e o convite por link cai na Site URL errada (09 §2.7).
 
 ### 4.5 Política de privacidade
@@ -121,7 +121,7 @@ Fase nova: **F19 — Publicação Web**. Decisão de arquitetura: **ADR-013** no
 - `test/core/config/version_json_test.dart` (paridade `pubspec.yaml` × `web/version.json`)
 
 **Modificar**
-- `.github/workflows/ci.yml` (job `deploy` + geração do `version.json`)
+- `.github/workflows/ci.yml` (job `deploy` + job `preview`)
 - `lib/core/config/links.dart` (URL pública da política)
 - `lib/features/configuracoes/ui/configuracoes_screen.dart` (ação "ver versão online")
 - `lib/features/auth/ui/registro_screen.dart` (rótulo do checkbox abre a URL)
@@ -135,7 +135,7 @@ Fase nova: **F19 — Publicação Web**. Decisão de arquitetura: **ADR-013** no
 
 - **Testes-guarda (VM):** paridade do texto da política com a página pública — o teste normaliza o HTML (remove tags, colapsa espaços em branco) e compara **parágrafo a parágrafo** com `politicaPrivacidadeTexto`, falhando com o trecho divergente; e paridade do `version.json` com o `pubspec.yaml` (versão e build number). Ambos falham o CI quando alguém edita só um lado.
 - **Suíte existente:** intacta; os dois widget tests que tocam a política (Configurações e cadastro) são ajustados ao novo comportamento de abrir a URL.
-- **Configuração validada por comando (manual, no CP):** `curl -sI https://<site>/` confere COOP/COEP e `no-cache`; no console do navegador, `crossOriginIsolated === true`; `/privacidade` e `/robots.txt` respondem 200 sem JS; recarregar `/listas` e `/entrar?token=…` não dá 404 (rewrite).
+- **Configuração validada por comando (manual, no CP):** `curl.exe -sI https://lista-compras-34f93.web.app/` confere COOP/COEP e `no-cache`; no console do navegador, `crossOriginIsolated === true`; `/privacidade` e `/robots.txt` respondem 200 sem JS; recarregar `/listas` e `/entrar?token=…` não dá 404 (rewrite).
 - **Smoke funcional na URL pública:** cadastro → verificação por e-mail → login; criar lista, adicionar/marcar/editar/remover item; import por texto; recarregar a página e manter sessão/dados (OPFS); convite gerado no app e aberto em outro navegador; offline no DevTools → escrita → reconectar → sync.
 - **CI:** `flutter build web` continua sem segredos nos jobs existentes; o job de deploy usa os secrets reais e só publica com `flutter`/`supabase` verdes.
 
@@ -145,7 +145,7 @@ Fase nova: **F19 — Publicação Web**. Decisão de arquitetura: **ADR-013** no
 | :--- | :--- |
 | **00** | **ADR-013** (Firebase Hosting como canal de publicação web); Fase 19 no cronograma/escopo |
 | **06** | §1: item "Publicado" desdobrado (web x Android) com o web marcado; §3.3 nota do contato genérico; §4 hospedagem do web definida e gate do dono preservado |
-| **07** | §3: job `deploy`, secrets, geração do `version.json`, preview por PR |
+| **07** | §3: jobs `deploy` e `preview`, secrets, `firebaseToolsVersion` pinado, preview por PR |
 | **09** | §2.6/§2.7/§4: histórico da publicação, URLs de produção do Auth, deploy/rollback/hotfix do web |
 | **12/13** | Menção de publicação web (sem novos requisitos) |
 | **14** | Fase 19 (F19-T00…T04) + tabela de progresso |
@@ -161,7 +161,7 @@ Fase nova: **F19 — Publicação Web**. Decisão de arquitetura: **ADR-013** no
 
 ## 9. Critério de pronto
 
-- `https://<site-publicado>` responde 200 servindo o app, com HTTPS, COOP/COEP e `crossOriginIsolated === true` no console.
+- `https://lista-compras-34f93.web.app` responde 200 servindo o app, com HTTPS, COOP/COEP e `crossOriginIsolated === true` no console.
 - Rewrite de SPA funcionando (`/listas` e `/entrar?token=…` sobrevivem ao recarregar) e `/privacidade` + `/robots.txt` servidos como estáticos.
 - Smoke funcional completo na URL pública (cadastro/verificação, login, CRUD, import, convite, sync, persistência OPFS).
 - Deploy automático em `main` (após CI verde) e canal de preview em PR; rollback exercitado pelo menos uma vez.
@@ -172,7 +172,7 @@ Fase nova: **F19 — Publicação Web**. Decisão de arquitetura: **ADR-013** no
 
 - Criar a **conta de serviço** no console do Firebase (Configurações do projeto → Contas de serviço → gerar chave privada), com papel *Firebase Hosting Admin*, e cadastrá-la como secret `FIREBASE_SERVICE_ACCOUNT_LISTA_COMPRAS_34F93` no GitHub; cadastrar também `SUPABASE_URL` e `SUPABASE_ANON_KEY`.
 - Confirmar/executar a configuração do **Supabase Auth** (§4.4) no dashboard.
-- Tentar criar o site `lista-compras` (`firebase hosting:sites:create`) e confirmar qual URL vale; se o nome estiver ocupado, seguir com `lista-compras-34f93.web.app`.
+- Confirmar a URL do site default (`https://lista-compras-34f93.web.app`) e a conta de usuário usada no `firebase login` (a mesma que vai gerar a conta de serviço do CI).
 - Rodar `supabase db push --dry-run` — esta fase **não** aplica migration alguma (é só distribuição), então o esperado é diff vazio.
 
 ## 11. Breakdown proposto (Fase 19)
@@ -180,5 +180,5 @@ Fase nova: **F19 — Publicação Web**. Decisão de arquitetura: **ADR-013** no
 - [ ] **F19-T00** — Spec + planejamento: ADR-013 no `00`, Fase 19 no `14`, item de publicação do `06 §1` desdobrado, menções em `12/13` — sem tocar código.
 - [ ] **F19-T01** — Artefatos de hosting: `firebase.json`, `.firebaserc`, `web/robots.txt`, `web/privacidade.html`, testes-guarda de paridade; primeiro deploy manual e URL pública com headers, rewrite e página estática.
 - [ ] **F19-T02** — Supabase Auth (Site URL/Redirect URLs) + smoke funcional completo na URL pública; `09 §2.6/§2.7`.
-- [ ] **F19-T03** — CI/CD: secrets, job `deploy` (preview em PR, `live` em `main`), geração do `version.json`, rollback documentado; `07 §3` e `09 §4`.
+- [ ] **F19-T03** — CI/CD: secrets, jobs `deploy` (live em `main`) e `preview` (PR), `firebaseToolsVersion` pinado, rollback documentado; `07 §3` e `09 §4`.
 - [ ] **F19-T04** — Política no app (link "ver versão online" e no cadastro) + docs donos e fechamento (progresso no `14`, critério de pronto de §9).
