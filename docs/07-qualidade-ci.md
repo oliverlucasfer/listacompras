@@ -61,7 +61,7 @@ jobs:
   flutter:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with: { channel: stable, flutter-version: 3.44.5 }
       - run: dart format --set-exit-if-changed .
@@ -71,8 +71,8 @@ jobs:
   supabase:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v3
       - run: supabase db reset   # valida migrations
       # Fase 1: script de testes de negação RLS contra DB local
 ```
