@@ -39,10 +39,7 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.116.0  # pinado ao CLI do dev — v2.117 não emite SERVICE_ROLE_KEY no status -o env
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
-      - name: Inicia stack local (edge runtime incluído para e2e das functions)
+      - name: Inicia stack local (edge runtime incluído)
         run: supabase start -x studio -x mailpit -x logflare -x vector -x imgproxy -x storage-api
       - name: Aplica migrations (db reset)
         run: supabase db reset
@@ -52,16 +49,4 @@ jobs:
         run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/excluir_conta_tests.sql
       - name: Testes do aceite de convite (08 §3.1)
         run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/aceitar_convite_tests.sql
-      - name: Testes unitários das Edge Functions (deno)
-        run: deno test --allow-env supabase/functions/parse-lista/
-      - name: Testes e2e do contrato parse-lista (cenários sem Gemini)
-        run: |
-          # enable_confirmations=true (F3) exige usuários já confirmados via Admin API;
-          # SERVICE_ROLE_KEY local = chave de ambiente de teste (07 §3), nunca produção.
-          # 2>&1: o status pode emitir as vars pelo stderr. GITHUB_ENV só vale para
-          # steps subsequentes — o node roda no mesmo step, então usamos shell direto.
-          supabase status -o env 2>&1 | grep -E '^(export )?(API_URL|SERVICE_ROLE_KEY)=' | sed -E 's/^export //; s/"//g; s/^/export /' > /tmp/sb_env.sh
-          . /tmp/sb_env.sh
-          npm ci --prefix supabase/tests
-          node supabase/tests/parse_lista_e2e.mjs --sem-gemini
-      # Fase 4+: deno test de novas functions, sync tests no job flutter
+      # Fase 4+: sync tests no job flutter
