@@ -986,6 +986,11 @@ Nas linhas que forem tarefas históricas (14:42/45/48/51) mantêm-se o texto his
 - L20: remover `e \`responseSchema\` (\`04\`)`.
 - L30: apagar a linha `supabase functions deploy parse-lista`.
 
+`planejamento_lista_compras.md`:
+- L5: `...entrada manual e importação por IA (texto livre)...` → `...entrada manual e importação de lista por texto...`.
+- L34: remover `+ Edge Functions` de `Supabase (Postgres + Auth + Realtime + Edge Functions + RLS)` → `Supabase (Postgres + Auth + Realtime + RLS)`.
+- L38: `4. **IA + Sync offline-first**` → `4. **Sincronização offline-first**`.
+
 - [ ] **Step 10: Fechar a Fase 17 em `docs/14-tarefas.md`**
 
 Marcar `- [x]` em `F17-T00`…`F17-T04` e ajustar a tabela de progresso (linha `| F17 Remoção da IA | 5 | 5 |`; Total de volta a `| **Total** | **102** | **100** |`).
@@ -997,7 +1002,7 @@ Run:
 Get-ChildItem -Path lib,test,supabase/tests,.github -Recurse -File | Select-String -Pattern "gemini|GEMINI|parse-lista|parse_lista|ia_rate_limit|registrar_requisicao_ia|features/ia|ErroIa|iaSemConexao|responseSchema" | ForEach-Object { "$($_.Path):$($_.LineNumber)" }
 Get-ChildItem -Path docs -Filter *.md | Select-String -Pattern "Gemini|responseSchema|cota_ia|importa..o por IA" | ForEach-Object { "$($_.Path):$($_.LineNumber): $($_.Line.Trim())" }
 ```
-Expected: somente ocorrências históricas em `supabase/migrations/0004_ia_rate_limit.sql`, `0013_remover_ia_rate_limit.sql` e nos specs/planos anteriores de `docs/superpowers/`. As menções a “Edge Function” em `docs/02`/`docs/08` são do fluxo `enviar-convite` (Fase 7) e **permanecem** — por isso não entram na guarda.
+Expected: somente ocorrências históricas em `supabase/migrations/0004_ia_rate_limit.sql`, `0013_remover_ia_rate_limit.sql` e nos specs/planos anteriores de `docs/superpowers/`. As menções a “Edge Function” em `docs/02`/`docs/08` são do fluxo `enviar-convite` (Fase 7) e **permanecem** — por isso não entram na guarda. A seção `## Fase 2 — Serviço de IA (Edge Function) — **removida na F17**` em `docs/14-tarefas.md` (título + tarefas F2-T01…T05) é registro histórico e fica **fora** da guarda.
 
 - [ ] **Step 12: Verificação final**
 
