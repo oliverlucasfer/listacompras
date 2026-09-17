@@ -30,8 +30,8 @@ Fase nova: **F18 — Suporte a Web e Desktop**. Decisão de arquitetura: **ADR-0
 | :--- | :--- | :--- |
 | Integração do banco web | **Fábrica própria com import condicional** + `WasmDatabase.open` | Sem dependências novas; mantém o caminho nativo intacto; controle explícito |
 | `drift_flutter` | **Não adotar** | Adicionaria 2 dependências e mudaria o comportamento nativo (isolate) sem necessidade |
-| Persistência web | **IndexedDB** (preferir quando suportado; fallback do Drift) | Maior limite e melhor desempenho que o storage padrão; sem arquivo |
-| Assets web | **Versionar** `web/sqlite3.wasm` + `web/drift_worker.dart.js` no repo | `flutter run -d chrome` e o CI funcionam sem passo extra; versões fixadas e documentadas |
+| Persistência web | **Escolhida pelo Drift** (`WasmDatabase.open` prefere OPFS quando disponível, com IndexedDB como fallback) | Sem configurar storage manualmente; usa o melhor mecanismo que o navegador oferecer |
+| Assets web | **Versionar** `web/sqlite3.wasm` + `web/drift_worker.js`, baixados da release `drift-2.34.4` | `flutter run -d chrome` e o CI funcionam sem passo extra; versões fixadas e documentadas |
 | Erros de rede | Helper `ehSemConexao` com import condicional | `SocketException` não existe no web; mantém os testes atuais verdes |
 | Estratégia de URL no web | **Path URL strategy** (`usePathUrlStrategy`) | URLs limpas (`/entrar?token=`) e sem conflito com tokens do Supabase (que vão no fragmento) |
 | Origem base | Web: `Uri.base.origin` em runtime; nativo: `--dart-define=APP_WEB_URL` | Funciona já em localhost e troca só o valor ao publicar |
@@ -48,10 +48,9 @@ Fase nova: **F18 — Suporte a Web e Desktop**. Decisão de arquitetura: **ADR-0
 - `lib/drift/conexao/conexao.dart` — contrato `QueryExecutor abrirBancoLocal()` e o import condicional:
   `import 'conexao_nativa.dart' if (dart.library.js_interop) 'conexao_web.dart';`
 - `conexao_nativa.dart` — o comportamento atual: `path_provider` → `File` → `NativeDatabase(file)` (usado por Android/iOS/desktop).
-- `conexao_web.dart` — `WasmDatabase.open(databaseName: 'lista_compras', sqlite3Uri: Uri.parse('sqlite3.wasm'), driftWorkerUri: Uri.parse('drift_worker.dart.js'))`, preferindo **IndexedDB**; devolve o executor resultante dentro de `LazyDatabase`.
+- `conexao_web.dart` — `WasmDatabase.open(databaseName: 'lista_compras', sqlite3Uri: Uri.parse('sqlite3.wasm'), driftWorkerUri: Uri.parse('drift_worker.js'))`, devolvendo `result.resolvedExecutor` dentro de `LazyDatabase`. A persistência é escolhida pelo Drift (OPFS quando disponível; IndexedDB como fallback).
 - `lib/drift/database.dart` deixa de importar `dart:io`/`drift/native.dart`/`path_provider` e passa a delegar à fábrica. `AppDatabase([executor])`, `schemaVersion`, `migration` e `options` **não mudam** (testes injetam `NativeDatabase.memory()` e seguem iguais).
-- `web/drift_worker.dart` — arquivo-fonte do worker: `void main() => WasmDatabase.workerMainForOpen();`. Gerado para `web/drift_worker.dart.js` com `dart compile js`.
-- `web/sqlite3.wasm` — mesma versão do `sqlite3` resolvido (3.5.2). Ambos os assets ficam versionados; a regeneração é documentada no [05](../../05-app-flutter.md) e no [07](../../07-qualidade-ci.md).
+- `web/drift_worker.js` e `web/sqlite3.wasm` — assets pré-compilados, baixados da release oficial `drift-2.34.4` (`https://github.com/simolus3/drift/releases/download/drift-2.34.4/{drift_worker.js,sqlite3.wasm}`), versionados no repo. A regeneração é documentada no [05](../../05-app-flutter.md) e no [07](../../07-qualidade-ci.md).
 
 ### 4.2 Erros de rede por plataforma
 
@@ -64,19 +63,19 @@ Fase nova: **F18 — Suporte a Web e Desktop**. Decisão de arquitetura: **ADR-0
 
 - `lib/core/config/links.dart`:
   - `String origemWeb()` → `kIsWeb ? Uri.base.origin : const String.fromEnvironment('APP_WEB_URL', defaultValue: 'http://localhost:8080')`.
-  - `String redirectAuth()` → web: `'${Uri.base.origin}/login-callback'`; nativo: `SupabaseAuthRepository.deepLink` (scheme atual).
-  - `String linkConvite(String token)` → web: `'${Uri.base.origin}/entrar?token=…'`; nativo: scheme atual.
+  - `String redirectAuth()` → web: `'${Uri.base.origin}/login-callback'`; nativo: `br.com.oliverlucas.listacompras://login-callback` (constante `deepLinkNativo` em `links.dart`, reusada por `SupabaseAuthRepository`).
+  - `String linkConvite(String token)` → web: `'${Uri.base.origin}/entrar?token=…'`; nativo: `br.com.oliverlucas.listacompras://entrar?token=…`.
 - `SupabaseAuthRepository` passa a usar `redirectAuth()` em `signUp(emailRedirectTo:)` e `resetPasswordForEmail(redirectTo:)`.
 - `ConvitesRepository.linkConvite` passa a usar o helper (web https / nativo scheme).
-- `router.dart` ganha a rota **`/login-callback`** (pública) que apenas devolve para `/` — o `supabase_flutter` processa os tokens da URL e o redirect global decide `/listas` ou `/redefinir-senha`.
+- `router.dart` ganha a rota **`/login-callback`** (pública, com uma tela mínima de carregamento): o `supabase_flutter` processa os tokens da URL e o redirect global leva a `/listas` (sessão) ou `/redefinir-senha` (recuperação).
 - **Path URL strategy no web**: inicialização condicional (`lib/core/web/url_strategy.dart` no-op no nativo; `usePathUrlStrategy()` no web) chamada antes de `runApp`.
 - `deeplink_convite.dart` passa a ser **apenas nativo** (`!kIsWeb`): no web o navegador entrega `/entrar?token=…` direto ao `go_router`.
 
 ### 4.4 Ajustes do app web
 
 - `web/manifest.json`: remover `"orientation": "portrait-primary"`.
-- `version.json`: garantir no build web para o `package_info_plus` (versão no app).
-- `sheet_convidar.dart`: quando a Web Share API não existir (desktop/alguns navegadores), oferecer **“Copiar link”** como fallback (via `Clipboard`).
+- `version.json`: criar `web/version.json` (`app_name`, `version`, `build_number`, `package_name`) para o `package_info_plus` no web.
+- `sheet_convidar.dart`: envolver o compartilhamento em `try/catch` — quando a Web Share API não existir (desktop/alguns navegadores), mostrar mensagem orientando usar o botão **Copiar link** (que já existe no sheet).
 - Sem mudança visual: `AppShell` já responde por largura (Rail ≥ 600).
 
 ### 4.5 Desktop
@@ -93,7 +92,8 @@ Fase nova: **F18 — Suporte a Web e Desktop**. Decisão de arquitetura: **ADR-0
 - `lib/core/rede/erro_rede.dart` (+ variantes condicionais `_nativa`/`_web`)
 - `lib/core/config/links.dart`
 - `lib/core/web/url_strategy.dart` (+ variantes condicionais)
-- `web/drift_worker.dart`, `web/drift_worker.dart.js`, `web/sqlite3.wasm`
+- `web/drift_worker.js`, `web/sqlite3.wasm` (baixados da release `drift-2.34.4`)
+- `web/version.json` (versão para o `package_info_plus` no web)
 - `windows/`, `linux/`, `macos/` (gerados por `flutter create`)
 - `test/core/config/links_test.dart`, `test/core/rede/erro_rede_test.dart`
 
@@ -105,7 +105,7 @@ Fase nova: **F18 — Suporte a Web e Desktop**. Decisão de arquitetura: **ADR-0
 - `lib/core/utils/deeplink_convite.dart` (só nativo)
 - `lib/main.dart` (aplica a URL strategy no web)
 - `lib/features/convites/ui/sheet_convidar.dart` (fallback copiar link)
-- `web/manifest.json`; `pubspec.yaml` só se precisar de `sqlite3_flutter_libs`
+- `web/manifest.json`; `pubspec.yaml` (adicionar `flutter_web_plugins` do SDK e, se algum SO desktop falhar, `sqlite3_flutter_libs`)
 - `.github/workflows/ci.yml` (build web + job desktop linux/windows)
 - `test/features/convites/convites_repository_test.dart` (ajuste do fake de rede, se necessário)
 
