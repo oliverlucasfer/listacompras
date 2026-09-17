@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/config/links.dart';
+
 /// Repositório de autenticação (doc 05 §2, RF-01). UI fala com providers,
 /// providers falam com este repositório.
 class SupabaseAuthRepository {
@@ -7,10 +9,9 @@ class SupabaseAuthRepository {
 
   final SupabaseClient _client;
 
-  /// Deep link do callback de auth (verificação e recuperação de senha).
-  /// Registrado em AndroidManifest/iOS Info.plist e nas redirect urls do
-  /// Supabase (doc 05 §6.1).
-  static const deepLink = 'br.com.oliverlucas.listacompras://login-callback';
+  /// URL de retorno do fluxo de auth (doc 05 §6.1, ADR-012): https no web,
+  /// scheme custom no nativo.
+  String get redirectUrl => redirectAuth();
 
   Stream<AuthState> get onAuthStateChange => _client.auth.onAuthStateChange;
 
@@ -22,7 +23,7 @@ class SupabaseAuthRepository {
   }) => _client.auth.signUp(
     email: email,
     password: senha,
-    emailRedirectTo: deepLink,
+    emailRedirectTo: redirectUrl,
   );
 
   Future<AuthResponse> entrar({required String email, required String senha}) =>
@@ -31,7 +32,7 @@ class SupabaseAuthRepository {
   Future<void> sair() => _client.auth.signOut();
 
   Future<void> enviarRecuperacaoSenha(String email) =>
-      _client.auth.resetPasswordForEmail(email, redirectTo: deepLink);
+      _client.auth.resetPasswordForEmail(email, redirectTo: redirectUrl);
 
   Future<UserResponse> atualizarSenha(String novaSenha) =>
       _client.auth.updateUser(UserAttributes(password: novaSenha));

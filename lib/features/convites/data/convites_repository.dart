@@ -1,10 +1,8 @@
-import 'dart:async' show TimeoutException;
-import 'dart:io' show SocketException;
-
-import 'package:http/http.dart' show ClientException;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/config/links.dart';
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/rede/erro_rede.dart';
 import '../domain/convite.dart';
 import '../domain/papel.dart';
 
@@ -48,12 +46,11 @@ class ConvitesRepository {
         );
       }
       throw const ErroConvite('inesperado', AppStrings.conviteInesperado);
-    } on SocketException {
-      throw const ErroConvite('sem_conexao', AppStrings.conviteSemConexao);
-    } on ClientException {
-      throw const ErroConvite('sem_conexao', AppStrings.conviteSemConexao);
-    } on TimeoutException {
-      throw const ErroConvite('sem_conexao', AppStrings.conviteSemConexao);
+    } catch (e) {
+      if (ehSemConexao(e)) {
+        throw const ErroConvite('sem_conexao', AppStrings.conviteSemConexao);
+      }
+      rethrow;
     }
   }
 
@@ -142,16 +139,14 @@ class ConvitesRepository {
       throw const ErroConvite('inesperado', AppStrings.conviteInesperado);
     } on PostgrestException catch (e) {
       throw ErroConvite.fromCodigoDoContrato(e.message);
-    } on SocketException {
-      throw const ErroConvite('sem_conexao', AppStrings.erroSemConexao);
-    } on ClientException {
-      throw const ErroConvite('sem_conexao', AppStrings.erroSemConexao);
-    } on TimeoutException {
-      throw const ErroConvite('sem_conexao', AppStrings.erroSemConexao);
+    } catch (e) {
+      if (ehSemConexao(e)) {
+        throw const ErroConvite('sem_conexao', AppStrings.erroSemConexao);
+      }
+      rethrow;
     }
   }
 
-  /// Deep link do app (doc 08 §1.1) para compartilhar o token.
-  String linkConvite(String token) =>
-      'br.com.oliverlucas.listacompras://entrar?token=$token';
+  /// Link compartilhável do convite (web: https; nativo: scheme) — doc 08 §1.1.
+  String linkConvite(String token) => linkConviteDe(token);
 }

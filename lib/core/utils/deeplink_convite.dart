@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -15,6 +16,12 @@ import 'package:lista_compras/router.dart';
 /// próprio stream do app_links; Web é tratado como URL normal do browser.
 final deeplinkConviteProvider = Provider<StreamSubscription<Uri>>((ref) {
   final router = ref.watch<GoRouter>(routerProvider);
+  if (kIsWeb) {
+    // No web a URL do convite chega direto ao go_router (/entrar?token=…).
+    final sub = const Stream<Uri>.empty().listen((_) {});
+    ref.onDispose(sub.cancel);
+    return sub;
+  }
   final sub = AppLinks().uriLinkStream.listen((uri) {
     if (uri.host != 'entrar') return;
     final token = uri.queryParameters['token'];

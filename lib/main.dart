@@ -10,6 +10,7 @@ import 'core/l10n/app_strings.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode_provider.dart';
 import 'core/utils/deeplink_convite.dart';
+import 'core/web/url_strategy.dart';
 import 'features/sync/providers/sync_providers.dart';
 import 'router.dart';
 
@@ -19,6 +20,7 @@ const sentryDsn = String.fromEnvironment('SENTRY_DSN', defaultValue: '');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  usarPathUrlStrategy();
   await Supabase.initialize(url: supabaseUrl, publishableKey: supabaseAnonKey);
 
   void app() {

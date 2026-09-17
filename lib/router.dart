@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -40,6 +41,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           rota == '/recuperar-senha' ||
           rota == '/redefinir-senha' ||
           rota == '/entrar' ||
+          rota == '/login-callback' ||
           (kDebugMode && rota == '/design');
 
       // Fluxo do link de recuperação (F14-T03, RF-01): enquanto a nova senha
@@ -87,6 +89,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/entrar',
         builder: (context, state) =>
             EntrarScreen(token: state.uri.queryParameters['token']),
+      ),
+      GoRoute(
+        path: '/login-callback',
+        builder: (context, state) =>
+            const Scaffold(body: Center(child: CircularProgressIndicator())),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
