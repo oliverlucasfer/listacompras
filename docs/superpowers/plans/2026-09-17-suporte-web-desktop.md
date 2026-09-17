@@ -610,7 +610,7 @@ git commit -m "F18-T04: ajustes do app web (manifest, version.json, compartilhar
 ### Task 5 (F18-T05): CI e docs donos
 
 **Files:**
-- Modify: `.github/workflows/ci.yml`, `docs/05-app-flutter.md`, `docs/06-mvp-entregas.md`, `docs/07-qualidade-ci.md`, `docs/09-runbook-operacoes.md`, `docs/14-tarefas.md`
+- Modify: `.github/workflows/ci.yml`, `docs/05-app-flutter.md`, `docs/06-mvp-entregas.md`, `docs/07-qualidade-ci.md`, `docs/08-compartilhamento-colaborativo.md`, `docs/09-runbook-operacoes.md`, `docs/14-tarefas.md`
 
 **Interfaces:**
 - Consumes: builds web/desktop da Task 3-4.
@@ -665,6 +665,7 @@ Adicionar subseção “Banco e links por plataforma (ADR-012)” documentando: 
 - [ ] **Step 5: `docs/06-mvp-entregas.md` e `docs/09-runbook-operacoes.md`**
 
 - `06`: na matriz de distribuição (L94-97), acrescentar os alvos **Desktop (Windows/Linux/macOS)** e registrar que o Web é funcional completo; publicação segue F5-T06.
+- `08`: na seção do link de convite (doc 08 §1.1/§2), registrar que o link compartilhável é **https no web** (`https://<origem>/entrar?token=…`) e **scheme custom no nativo** (`br.com.oliverlucas.listacompras://entrar?token=…`), citando ADR-012.
 - `09`: em §2/secrets ou na seção de auth, documentar a configuração de **Authentication → URL Configuration** do Supabase: *Site URL* + *Redirect URLs* com `http://localhost:<porta>/**` (dev) e `https://<domínio>/**` (produção), mantendo o scheme nativo.
 
 - [ ] **Step 6: Fechar a Fase 18 em `docs/14-tarefas.md`**
