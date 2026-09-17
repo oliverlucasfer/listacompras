@@ -48,7 +48,7 @@ Pipeline único `.github/workflows/ci.yml`, disparado em PR e push em `main`:
 
 * PR só mergea com CI verde (branch protection).
 * Segurança no CI: secrets do Supabase de **ambiente de teste**, nunca produção; JWTs de teste criados na hora.
-* Flutter **e** CLI do Supabase do CI **pinados** às versões usadas pelo dev (`flutter-version` no `flutter-action`, `version` no `setup-cli`) — o formatter do Dart muda entre versões (quebraria `dart format --set-exit-if-changed`) e o CLI v2.117 não emite `SERVICE_ROLE_KEY` no `status -o env` usado pelo e2e.
+* Flutter **e** CLI do Supabase do CI **pinados** às versões usadas pelo dev (`flutter-version` no `flutter-action`, `version` no `setup-cli`) — o formatter do Dart muda entre versões (quebraria `dart format --set-exit-if-changed`) e o CLI fica pinado ao do dev para paridade.
 * Tempo alvo do pipeline: < 10 min.
 
 ### Esqueleto de referência

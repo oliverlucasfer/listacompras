@@ -9,7 +9,7 @@ App de lista de compras inteligente e colaborativa (Flutter + Supabase).
 
 ## Stack
 
-Flutter · Riverpod · Drift · Supabase (Postgres, Auth, Realtime, Edge Functions) · GitHub Actions
+Flutter · Riverpod · Drift · Supabase (Postgres, Auth, Realtime) · GitHub Actions
 
 ## Documentação
 

@@ -168,7 +168,7 @@ O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado
 
 ### 6.4. Modal "Importar lista" (RF-16)
 
-Um único modal de importação local (padrão, offline, RF-16):
+Um único modal de importação local (modo único, offline, RF-16):
 
 1. Textarea + contador de caracteres (≤ 10.000 — [04 §2](04-importacao-lista.md)).
 2. Botão "Extrair itens": parser local puro (`lib/core/importacao/parser_lista_local.dart`), sem rede; categoria pela cadeia local (memória → dicionário → `outros`, [§3](05-app-flutter.md)); disponível offline.

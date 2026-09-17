@@ -87,7 +87,7 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 ## Fase 4 — Sincronização
 
 - [x] **F4-T01** — Modal "Importar lista" (entrada + contador + parser local + erro amigável)
-  Dep: F2-T05, F3-T09 · Docs: [05 §6.4](05-app-flutter.md), [04](04-importacao-lista.md), [10 §4.1](10-wireframes-telas.md) · RF-16
+  Dep: F2-T05 (histórico — removida na F17), F3-T09 · Docs: [05 §6.4](05-app-flutter.md), [04](04-importacao-lista.md), [10 §4.1](10-wireframes-telas.md) · RF-16
   CP: erro do parser com mensagem amigável; contador bloqueia > 10.000. *(modal de importação com contador e erro amigável; extração pelo parser local (F11); a etapa de IA foi removida na F17)*
 - [x] **F4-T02** — Modal de pré-visualização (checkboxes, edição inline, aviso)
   Dep: F4-T01 · Docs: [05 §6.4](05-app-flutter.md), [10 §4.2](10-wireframes-telas.md) · RF-16
@@ -163,7 +163,7 @@ Spec do agrupamento por categoria: [superpowers/specs/2026-09-08-agrupamento-cat
   *(A etapa de servidor/IA desta tarefa foi removida na F17.)*
 - [x] **F6-T06** — Checklist sync [03 §8](03-sincronizacao-offline.md) com categoria + distribuição nova
   Dep: F6-T02, F6-T05 · Docs: [03 §8](03-sincronizacao-offline.md), [07 §1](07-qualidade-ci.md)
-  CP: cenário de categoria entre 2 dispositivos (servidor fake) verde; CI verde; APK `1.1.0+3` distribuído ao grupo `testadores` (história em [09 §2.5](09-runbook-operacoes.md)).
+  CP: cenário de categoria entre 2 dispositivos (servidor fake) verde; CI verde; APK `1.1.0+3` distribuído ao grupo `testadores` (história em [09 §2.6](09-runbook-operacoes.md)).
 
 ### Pós-MVP (Fase 7) — Compartilhamento por link (spec aprovada)
 
@@ -199,7 +199,7 @@ Spec: [superpowers/specs/2026-09-10-compartilhamento-link-design.md](superpowers
   Nota: *(função pura `aplicarEventoMembro` + roteamento por tabela no callback de `_assinarRealtime`: INSERT/UPDATE próprios atualizam o papel, DELETE próprio → flush + limpa cache/fila + re-sync (padrão F4-T06); eventos de `lista_membros` jamais passam pelo motor LWW (sem `updated_at`); migration 0008 replica identity full em `lista_membros` fora do plan — necessária para o `old_record` do DELETE chegar com `user_id` — doc 08 §7 atualizado no mesmo PR; testes com CanalFake + stream de papel; validação física < 5s pendente de 2 dispositivos; commit 3d57d07)*
 - [x] **F7-T07** — Checklist de validação 08 §9 (recorte link-only) + CI verde + distribuição aos testadores
   Dep: F7-T03, F7-T04, F7-T05, F7-T06 · Docs: [08 §9](08-compartilhamento-colaborativo.md), [07 §1](07-qualidade-ci.md)
-  CP: itens 1, 2→(adaptado a link), 4, 5, 6 e 8 do checklist verificados; APK `1.1.1+4` (ou próximo) via App Distribution; histórico em [09 §2.5](09-runbook-operacoes.md).
+  CP: itens 1, 2→(adaptado a link), 4, 5, 6 e 8 do checklist verificados; APK `1.1.1+4` (ou próximo) via App Distribution; histórico em [09 §2.6](09-runbook-operacoes.md).
   Nota: *(itens 1, 2, 3(idempotência), 4, 6 e 8 do recorte verificados por suites SQL (N-01…N-17, E-01…E-05, A-01…A-07) + 223 testes Flutter; itens 1 e 5 físicos pendentes de 2 dispositivos; final review corrigiu RLS faltante (migration 0009: dono muda papel + membro sai — antes eram no-ops silenciosos), whitelist de tabelas no realtime, feedback "membro entrou" e limpeza local no sair; migrations 0007–0009 aplicadas em produção via `db push`; APK `1.1.2+5` distribuído ao grupo `testadores`)*
 
 ### Pós-MVP (Fase 7) — pendente de planejamento

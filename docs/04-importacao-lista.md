@@ -9,7 +9,7 @@
 ## 1. Visão geral
 
 ```
-Texto colado/colado ─► analisarListaLocal()  (lib/core/importacao/parser_lista_local.dart)
+Texto colado ou digitado ─► analisarListaLocal()  (lib/core/importacao/parser_lista_local.dart)
                           │ parser determinístico, offline
                           ▼
                     Sugestão de categoria (memória → dicionário → outros)

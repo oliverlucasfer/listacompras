@@ -21,7 +21,7 @@
 | :--- | :--- | :--- |
 | App | Flutter + Riverpod + go_router | UI reativa; UI nunca bloqueia em rede |
 | Cache local | Drift/SQLite | **Fonte de verdade local**; leitura via Streams |
-| Backend | Supabase (Postgres, Auth, Realtime, Edge Functions, RLS) | Persistência, sync |
+| Backend | Supabase (Postgres, Auth, Realtime, RLS) | Persistência, sync |
 | Ops | GitHub Actions + Sentry | CI obrigatório; erros sem conteúdo de listas |
 
 ## 3. Entidades e relacionamentos

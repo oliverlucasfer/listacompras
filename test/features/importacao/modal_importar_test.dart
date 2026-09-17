@@ -102,6 +102,26 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  testWidgets('deve_limpar_erro_quando_editar_texto_apos_falha', (
+    tester,
+  ) async {
+    await abrir(tester);
+    await tester.enterText(find.byType(TextField), ',,,');
+    await tester.pump();
+    await tester.tap(
+      find.widgetWithText(FilledButton, AppStrings.importExtrairItens),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.importRespostaInvalida), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'arroz e feijão');
+    await tester.pump();
+
+    expect(find.text(AppStrings.importRespostaInvalida), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('deve_retornar_null_quando_fechar', (tester) async {
     RespostaParse? recebida = const RespostaParse(itens: [], aviso: null);
     await abrir(tester, onResultado: (r) => recebida = r);

@@ -70,13 +70,13 @@ supabase db push
 
 **Rollback:** migrations não têm down automático. Estratégia: criar migration **inversa** nova (`0009_rollback_0008.sql`), testar em local, `db push`. Restaurar backup (2.2) só em caso catastrófico.
 
-### 2.4. Upgrade Supabase Pro (quando disparar)
+### 2.5. Upgrade Supabase Pro (quando disparar)
 
 1. Gatilho: lançamento público próximo OU pausa incomodando usuários ativos.
 2. Billing → Upgrade → Pro (~US$ 25/mês): projeto não pausa, backups diários, 8 GB banco.
 3. Após upgrade: revalidar Realtime (sem mudança de URL/keys).
 
-### 2.5. Histórico de operações em produção
+### 2.6. Histórico de operações em produção
 
 **2026-09-08 — Provisionamento inicial** (F5-T05b):
 - `supabase db push` — migrations 0001–0005 aplicadas (`migration list` local = remote).

@@ -44,6 +44,7 @@ supabase/
     ├── 0004_ia_rate_limit.sql   # rate limit da IA — removido na 0013 (F17)
     ├── 0005_excluir_conta.sql   # RPC de exclusão de conta (ver 06)
     ├── 0006_categorias.sql      # enum de categorias + coluna (ver §3.2, ADR-011)
+    ├── ...                      # 0007–0012 (ver histórico de migrations)
     └── 0013_remover_ia_rate_limit.sql # remove rate limit da IA (F17)
 ```
 

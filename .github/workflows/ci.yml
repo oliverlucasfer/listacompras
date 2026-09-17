@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
         with:
-          version: 2.116.0  # pinado ao CLI do dev — v2.117 não emite SERVICE_ROLE_KEY no status -o env
+          version: 2.116.0  # pinado ao CLI do dev
       - name: Inicia stack local (edge runtime incluído)
         run: supabase start -x studio -x mailpit -x logflare -x vector -x imgproxy -x storage-api
       - name: Aplica migrations (db reset)
