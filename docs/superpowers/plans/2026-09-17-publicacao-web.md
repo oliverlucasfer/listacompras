@@ -364,8 +364,10 @@ curl.exe -sI https://lista-compras-34f93.web.app/version.json
 curl.exe -sI https://lista-compras-34f93.web.app/listas
 curl.exe -sI https://lista-compras-34f93.web.app/privacidade
 curl.exe -s https://lista-compras-34f93.web.app/robots.txt
+curl.exe -sI https://lista-compras-34f93.web.app/main.dart.js
 ```
-Expected: `200` em todas; `Cross-Origin-Opener-Policy: same-origin` e `Cross-Origin-Embedder-Policy: require-corp` na resposta da raiz; `Cache-Control: no-cache` em `/index.html` e `/version.json`; `/listas` devolve o `index.html` (rewrite, sem 404); `/privacidade` devolve o HTML estático; `robots.txt` com `Disallow: /`.
+
+Expected: raiz `/` com `200`, `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp` **e** `Cache-Control: no-cache` (a regra `source: "/"` é a que vale para o documento de entrada — com `cleanUrls`, `/index.html` responde `301 → /` e não carrega `no-cache` próprio); `Cache-Control: no-cache` também em `/version.json` e `/flutter_service_worker.js`; `/listas` devolve o `index.html` (rewrite, sem 404); `/privacidade` devolve o HTML estático (200); `robots.txt` com `Disallow: /`; `main.dart.js` continua **cacheável** (não `no-cache`).
 
 - [ ] **Step 14: Registrar no runbook e commitar**
 
