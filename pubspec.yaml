@@ -141,6 +141,13 @@ flutter_launcher_icons:
     image_path: assets/branding/logo.png
     background_color: "#2E7D32"
     theme_color: "#2E7D32"
+  windows:
+    generate: true
+    image_path: assets/branding/logo.png
+    icon_size: 256
+  macos:
+    generate: true
+    image_path: assets/branding/logo.png
 
 # Splash nativo (doc 15 §6): `dart run flutter_native_splash:create`.
 flutter_native_splash:
