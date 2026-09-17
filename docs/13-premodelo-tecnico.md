@@ -81,7 +81,7 @@ saída: { "itens": [...], "aviso": null }
 
 | ADR | Decisão |
 | :--- | :--- |
-| 001 | MVP = Android/iOS/Web; Desktop F6 |
+| 001 | MVP = Android/iOS/Web; **Desktop suportado (F18)** |
 | 002 | Riverpod |
 | 003 | Drift/SQLite local |
 | 004 | LWW + tombstones (sem modal de conflito) |

@@ -10,7 +10,7 @@ Este documento concentra a visão do produto, a stack tecnológica, os pré-requ
 
 Aplicação multiplataforma para criação, organização e execução de compras de supermercado. Combina gerenciamento manual com importação de listas enviadas em texto livre, mantendo tudo sincronizado em tempo real entre dispositivos e usuários.
 
-> **Escopo do MVP (Versão 1):** **Android, iOS e Web (SPA)**. As plataformas Desktop (Windows, macOS, Linux) serão contempladas em fase posterior (Fase 6), aproveitando que a base de código Flutter já as suporta.
+> **Escopo do MVP (Versão 1):** **Android, iOS e Web (SPA)**. A partir da **Fase 18**, o **Web passa a ter funcionalidade completa** (não apenas SPA/leitura — banco, auth por link, convites, sync e import) e o **Desktop (Windows, Linux e macOS) passa a ser suportado**, aproveitando que a base de código Flutter já o suporta (decisão **ADR-012**, §5).
 
 ### Funcionalidades-chave (resumo)
 | Funcionalidade | Descrição resumida | Documento de referência |
@@ -28,7 +28,7 @@ Aplicação multiplataforma para criação, organização e execução de compra
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    FLUTTER (Frontend)                       │
-│         (Android, iOS, Web SPA — MVP; Desktop depois)       │
+│       (Android, iOS, Web completo, Desktop — Fase 18)       │
 │         State management: Riverpod                          │
 │         Importação: parser local (offline, RF-16)           │
 └──────┬──────────────────────────────────────┬───────────────┘
@@ -112,6 +112,8 @@ Aplicação multiplataforma para criação, organização e execução de compra
 | ADR-010 | 02/09/2026 | **GitHub Actions** como CI desde a Fase 1 | Nenhum CI, GitLab CI | Já hospedamos no GitHub; pipeline simples (analyze + format + test) |
 | ADR-011 | 08/09/2026 | `categoria` do item como **enum fechado** (11 valores) com sugestão local em camadas — memória por nome → dicionário estático → `outros` | Texto livre; sugestão manual | Consistência de dados ("Frios" × "frios"); preserva o offline-first |
 
+- **ADR-012 — Suporte a Web e Desktop (Fase 18):** o banco local passa a ser aberto por uma fábrica com import condicional — `WasmDatabase` (Drift, persistência OPFS/IndexedDB) no web e `NativeDatabase` (arquivo) no nativo/desktop; auth e convites usam URL https no web (`Uri.base.origin`) e scheme custom no nativo; CI valida `flutter build web` e builds desktop. Hospedagem pública permanece na F5-T06.
+
 ---
 
 ## 6. Cronograma de Execução por Fases
@@ -122,10 +124,11 @@ Aplicação multiplataforma para criação, organização e execução de compra
 | **Fase 3** | **App Flutter - Core e Entrada Manual** | Configurar projeto Flutter (Riverpod + Drift); telas de Login/Registro (**incluindo recuperação de senha e verificação de e-mail**) e Minhas Listas; interface da lista com adição/edição manual, checkboxes e enum de unidades. **Testes de repositório e widget tests desde esta fase** (ver [07](07-qualidade-ci.md)). | CRUD manual funciona online; CI verde |
 | **Fase 4** | **Integrar Sincronização** | Implementar o **Sync Engine offline-first** (fila de mutações, LWW, tombstones — ver [03](03-sincronizacao-offline.md)); validar sincronização simultânea Web/Mobile. | Sync validado em 2 dispositivos; fila offline esvazia ao reconectar |
 | **Fase 5** | **Polimento e Publicação (MVP)** | Tratar estado offline (indicadores na UI), **testes de usabilidade** (roteiro em [11](11-usabilidade-fase5.md)), **exclusão de conta (LGPD)** e publicação de **Web + Android**. | Critérios de aceite do MVP 100% (ver [06](06-mvp-entregas.md)) |
-| **Fase 6** | **Pós-MVP** | Publicação iOS; suporte Desktop (Windows/macOS/Linux); **compartilhamento colaborativo ativado na UI** (planejamento em [08](08-compartilhamento-colaborativo.md)); **agrupamento da lista por categoria** (spec em [superpowers/specs](superpowers/specs/2026-09-08-agrupamento-categorias-design.md)); limpeza de tombstones; avaliação de upgrade Supabase Pro. | — |
+| **Fase 6** | **Pós-MVP** | Publicação iOS; **compartilhamento colaborativo ativado na UI** (planejamento em [08](08-compartilhamento-colaborativo.md)); **agrupamento da lista por categoria** (spec em [superpowers/specs](superpowers/specs/2026-09-08-agrupamento-categorias-design.md)); limpeza de tombstones; avaliação de upgrade Supabase Pro. | — |
 | **Fase 8** | **Revisão Visual e de UX** | Design system (tokens, M3 Expressive, fonte, componentes), refresh das telas e redesign de navegação. | Etapa 1 (fundação) entregue, CI verde — spec em [`superpowers/specs/2026-09-11-revisao-visual-ux-design.md`](superpowers/specs/2026-09-11-revisao-visual-ux-design.md) |
 | **Fase 14** | **Acessibilidade, Fluxos e Polimento de UX** | Conformidade com o RNF-06 (semântica, live regions, alvos ≥48dp, escala de texto), conclusão da recuperação de senha (RF-01) e polimento de estados/feedback/consistência das telas. | Testes de acessibilidade verdes + docs donos atualizados — spec em [`superpowers/specs/2026-09-14-ux-acessibilidade-design.md`](superpowers/specs/2026-09-14-ux-acessibilidade-design.md) |
 | **Fase 16** | **Busca e filtro** | Busca/filtro **local (offline)** por título no painel e por nome na tela da lista (RF-17), sem mudança de schema/RLS/sync. | Busca e vazios de resultado com testes verdes; CI verde — spec em [`superpowers/specs/2026-09-16-busca-filtro-design.md`](superpowers/specs/2026-09-16-busca-filtro-design.md) |
+| **Fase 18** | **Suporte a Web e Desktop** | Banco local por plataforma (fábrica com import condicional: Drift/Wasm no web, nativo no desktop), auth/links por plataforma e path URL strategy; pastas de desktop; CI validando `flutter build web` e builds desktop. | Web funcional completo e app abrindo/persistindo no Windows; Android/iOS sem regressão; CI verde — spec em [`superpowers/specs/2026-09-17-suporte-web-desktop-design.md`](superpowers/specs/2026-09-17-suporte-web-desktop-design.md) |
 
 ---
 

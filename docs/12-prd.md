@@ -131,7 +131,7 @@ Cada requisito liga story → design → tarefas ([14](14-tarefas.md)) → verif
 
 ## 7. Fora de escopo (MVP)
 
-Receitas/menus, preço/orçamento, histórico de compras, cupons, push notifications, scan de código de barras, importação de foto/nota fiscal, app iOS (F6), desktop (F6), compartilhamento na UI (F6).
+Receitas/menus, preço/orçamento, histórico de compras, cupons, push notifications, scan de código de barras, importação de foto/nota fiscal, app iOS (F6), publicação de desktop (o suporte a Desktop — Windows/Linux/macOS — entra na Fase 18), compartilhamento na UI (F6).
 
 ---
 
