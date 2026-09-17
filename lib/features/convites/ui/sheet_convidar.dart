@@ -82,12 +82,20 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
   }
 
   Future<void> _compartilhar(Convite convite) async {
-    await SharePlus.instance.share(
-      ShareParams(
-        text: ref.read(convitesRepositoryProvider).linkConvite(convite.token),
-      ),
-    );
-    if (mounted) mostrarSnackBar(context, AppStrings.linkCompartilhado);
+    try {
+      await SharePlus.instance.share(
+        ShareParams(
+          text: ref.read(convitesRepositoryProvider).linkConvite(convite.token),
+        ),
+      );
+      if (mounted) mostrarSnackBar(context, AppStrings.linkCompartilhado);
+    } catch (_) {
+      // Web Share API indisponível (desktop/alguns navegadores): orienta a
+      // usar o botão "Copiar link" que já existe no sheet.
+      if (mounted) {
+        mostrarSnackBar(context, AppStrings.compartilharIndisponivel);
+      }
+    }
   }
 
   @override

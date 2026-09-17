@@ -6,7 +6,6 @@
     "background_color": "#2E7D32",
     "theme_color": "#2E7D32",
     "description": "Lista de compras inteligente e colaborativa.",
-    "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
         {
