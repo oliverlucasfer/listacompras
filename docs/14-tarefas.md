@@ -490,13 +490,13 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
 - [x] **F20-T00** — Registrar a revisão geral e a Fase 20
   Dep: — · Docs: [14](14-tarefas.md), [relatório](relatorio-revisao-geral.md)
   CP: relatório com os achados `R-xx` verificados; Fase 20 no 14 com progresso; sem tocar código.
-- [ ] **F20-T01** — Parser: vírgula decimal não pode corromper a quantidade (R-01)
+- [x] **F20-T01** — Parser: vírgula decimal não pode corromper a quantidade (R-01)
   Dep: F20-T00 · Docs: [04 §3](04-importacao-lista.md)
   CP: `1,5 kg de arroz` → `1.5 kg`; segmentação por `,` entre itens preservada; doc 04 §3 sem contradição.
-- [ ] **F20-T02** — Parser e UI: quantidade ≤ 0 tratada como ausente (R-02)
+- [x] **F20-T02** — Parser e UI: quantidade ≤ 0 tratada como ausente (R-02)
   Dep: F20-T01 · Docs: [04 §3](04-importacao-lista.md)
   CP: `0 arroz` → `1 un` + aviso; edição inline rejeita `≤ 0`; nenhuma exceção crua na confirmação.
-- [ ] **F20-T03** — Sync: não perder mutação enfileirada durante o flush (R-03)
+- [x] **F20-T03** — Sync: não perder mutação enfileirada durante o flush (R-03)
   Dep: F20-T00 · Docs: [03 §3/§4](03-sincronizacao-offline.md)
   CP: remoção limitada ao id do lote; teste com edição durante o envio mantém a mutação nova na fila e no servidor.
 - [ ] **F20-T04** — Sync: flush sem reentrância e status correto no bootstrap (R-04, R-05)
@@ -548,8 +548,8 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
 | F17 Remoção da IA | 5 | 5 |
 | F18 Web e Desktop | 6 | 6 |
 | F19 Publicação Web | 5 | 2 |
-| F20 Correções da revisão | 13 | 1 |
-| **Total** | **126** | **109** |
+| F20 Correções da revisão | 13 | 4 |
+| **Total** | **126** | **112** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

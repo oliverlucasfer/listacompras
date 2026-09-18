@@ -21,7 +21,7 @@
 
 ---
 
-### Task 1 (F20-T01): Vírgula decimal no parser — R-01
+### Task 1 (F20-T01) — CONCLUÍDA: Vírgula decimal no parser — R-01
 
 **Files:**
 - Modify: `lib/core/importacao/parser_lista_local.dart:37-56,62-76` (novo helper + uso)
@@ -128,7 +128,7 @@ git commit -m "F20-T01: virgula decimal no parser de importacao (R-01, RF-16)"
 
 ---
 
-### Task 2 (F20-T02): Quantidade ≤ 0 tratada como ausente — R-02
+### Task 2 (F20-T02) — CONCLUÍDA: Quantidade ≤ 0 tratada como ausente — R-02
 
 **Files:**
 - Modify: `lib/core/importacao/parser_lista_local.dart:78-85,138-172` (`_tinhaNumero`, `_qtdInicio`, `_qtdFim`)
@@ -265,7 +265,7 @@ git commit -m "F20-T02: quantidade invalida vira 1 un e nao derruba a importacao
 
 ---
 
-### Task 3 (F20-T03): Preservar mutação enfileirada durante o flush — R-03
+### Task 3 (F20-T03) — CONCLUÍDA: Preservar mutação enfileirada durante o flush — R-03
 
 **Files:**
 - Modify: `lib/features/sync/data/mutacao_sync.dart` (campo `id`)
