@@ -74,6 +74,23 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  testWidgets('deve_extrair_quantidade_valida_quando_usuario_digita_zero', (
+    tester,
+  ) async {
+    RespostaParse? recebida;
+    await abrir(tester, onResultado: (r) => recebida = r);
+    await tester.enterText(find.byType(TextField), '0 arroz, 2 leite');
+    await tester.pump();
+    await tester.tap(
+      find.widgetWithText(FilledButton, AppStrings.importExtrairItens),
+    );
+    await tester.pumpAndSettle();
+    expect(recebida, isNotNull);
+    expect(recebida!.itens.map((i) => i.quantidade), [1, 2]);
+    expect(recebida!.itens.every((i) => i.quantidade > 0), isTrue);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('deve_extrair_multiplos_itens_localmente', (tester) async {
     RespostaParse? recebida;
     await abrir(tester, onResultado: (r) => recebida = r);

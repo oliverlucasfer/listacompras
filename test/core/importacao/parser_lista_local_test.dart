@@ -128,4 +128,28 @@ void main() {
     expect(item!.quantidade, 2.5);
     expect(item.nome, 'Leite');
   });
+
+  test('deve_usar_1_un_e_avisar_quando_quantidade_zero', () {
+    final r = analisarListaLocal('0 arroz');
+    expect(r.itens, hasLength(1));
+    expect(r.itens.single.nome, 'Arroz');
+    expect(r.itens.single.quantidade, 1);
+    expect(r.itens.single.unidade, Unidade.un);
+    expect(r.aviso, isNotNull);
+  });
+
+  test('deve_manter_unidade_explicita_quando_quantidade_zero', () {
+    final r = analisarListaLocal('0 kg de arroz');
+    expect(r.itens.single.quantidade, 1);
+    expect(r.itens.single.unidade, Unidade.kg);
+    expect(r.itens.single.nome, 'Arroz');
+    expect(r.aviso, isNotNull);
+  });
+
+  test('deve_usar_1_un_quando_quantidade_zero_no_fim', () {
+    final r = analisarListaLocal('arroz 0');
+    expect(r.itens.single.nome, 'Arroz');
+    expect(r.itens.single.quantidade, 1);
+    expect(r.aviso, isNotNull);
+  });
 }
