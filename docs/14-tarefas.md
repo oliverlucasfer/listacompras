@@ -508,7 +508,7 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
 - [x] **F20-T06** — Docs donos: publication, cascatas, inventário e CI (R-09, R-17)
   Dep: — · Docs: [01](01-banco-de-dados.md), [02](02-seguranca-rls.md), [06](06-mvp-entregas.md), [07](07-qualidade-ci.md)
   CP: 01 §7 e §4 com `convites`; 02 §2 com `convites`; 06 §4/ADR-013 sem afirmar deploy já entregue; 07 §3 espelhando o `ci.yml`; cascata de `convites.criado_por` na lista do 06 §3.3.1.
-- [ ] **F20-T07** — CI: rodar o teste de Realtime no job `supabase` (R-10)
+- [x] **F20-T07** — CI: rodar o teste de Realtime no job `supabase` (R-10)
   Dep: F20-T06 · Docs: [02 §5](02-seguranca-rls.md), [07 §3](07-qualidade-ci.md)
   CP: `realtime_test.mjs` executado no CI (sem `package.json` stub); CP da F1-T07 validado.
 - [ ] **F20-T08** — Convites: revogar convite pendente pela UI (R-07)
@@ -519,7 +519,7 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
   CP: `Suco de laranja` → Bebidas; casos de teste para compostos.
 - [ ] **F20-T10** — Realtime: limpeza ao perder acesso e status do canal (R-11, R-12)
   Dep: — · Docs: [03 §4/§7](03-sincronizacao-offline.md), [08 §7/§9](08-compartilhamento-colaborativo.md)
-  CP: teste com 2 contas comprovando a limpeza do cache ao ser removido; callback de status com re-sync em erro.
+  CP: teste com 2 contas comprovando a limpeza do cache ao ser removido; callback de status com re-sync em erro; **verificar a publishable key no Realtime** (R-23, cruza com a F19-T02).
 - [ ] **F20-T11** — Banco: defesa em profundidade e higiene (R-18, R-19)
   Dep: F20-T06 · Docs: [01](01-banco-de-dados.md), [02 §4.3](02-seguranca-rls.md)
   CP: `papel='dono'` restrito na policy de insert; trigger de `atualizado_em` em `convites`; testes de negação verdes.
@@ -548,8 +548,8 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
 | F17 Remoção da IA | 5 | 5 |
 | F18 Web e Desktop | 6 | 6 |
 | F19 Publicação Web | 5 | 2 |
-| F20 Correções da revisão | 13 | 7 |
-| **Total** | **126** | **115** |
+| F20 Correções da revisão | 13 | 8 |
+| **Total** | **126** | **116** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
