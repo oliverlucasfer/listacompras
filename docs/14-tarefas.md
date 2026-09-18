@@ -465,13 +465,13 @@ Spec: [superpowers/specs/2026-09-17-suporte-web-desktop-design.md](superpowers/s
 
 Spec: [superpowers/specs/2026-09-17-publicacao-web-design.md](superpowers/specs/2026-09-17-publicacao-web-design.md) · ADR-013 · Docs donos: 00, 06, 07, 09.
 
-- [ ] **F19-T00** — ADR-013 + planejamento (00, 06, 12, 13, 14)
+- [x] **F19-T00** — ADR-013 + planejamento (00, 06, 12, 13, 14)
   Dep: — · Docs: [00](00-visao-geral.md), [06](06-mvp-entregas.md), [14](14-tarefas.md)
-  CP: ADR-013 no 00; Fase 19 no 14; item de publicação do 06 §1 desdobrado; sem tocar código.
-- [ ] **F19-T01** — Artefatos de hosting, política estática e primeiro deploy
+  CP: ADR-013 no 00; Fase 19 no 14; item de publicação do 06 §1 desdobrado; sem tocar código. *(ADR-013 no 00 e no 13; Fase 19 no 14 com progresso; 06 §1 desdobrado, numeração 3.3.2 corrigida e nota do contato genérico; 12 §7 e as descrições da Fase 5/F5-T06 reapontadas para Play-only; nenhum arquivo de código tocado)*
+- [x] **F19-T01** — Artefatos de hosting, política estática e primeiro deploy
   Dep: F19-T00 · Docs: [06 §3.3.2](06-mvp-entregas.md), [09](09-runbook-operacoes.md)
-  CP: `firebase.json`/`.firebaserc`/`robots.txt`/`privacidade.html`; testes-guarda de paridade verdes; URL pública com COOP/COEP, rewrite e `/privacidade`.
-- [ ] **F19-T02** — Supabase Auth e smoke funcional na URL pública
+  CP: `firebase.json`/`.firebaserc`/`robots.txt`/`privacidade.html`; testes-guarda de paridade verdes; URL pública com COOP/COEP, rewrite e `/privacidade`. *(deploy manual no site default `https://lista-compras-34f93.web.app`; `/` com `no-cache` + COOP/COEP; `cleanUrls` serve `/privacidade` estática; rewrite da SPA em `/listas`; `robots.txt` com `Disallow: /`; guardas de paridade da política e do `version.json` verdes — o deploy automático entra na F19-T03)*
+- [ ] **F19-T02** - Supabase Auth e smoke funcional na URL pública
   Dep: F19-T01 · Docs: [09 §2.6/§2.7](09-runbook-operacoes.md)
   CP: Site URL e Redirect URLs de produção no Supabase; cadastro/verificação, login, CRUD, import, convite e sync validados na URL pública.
 - [ ] **F19-T03** — Deploy no CI (preview por PR, live na main) e rollback
@@ -501,8 +501,8 @@ Spec: [superpowers/specs/2026-09-17-publicacao-web-design.md](superpowers/specs/
 | F16 Busca e filtro | 5 | 5 |
 | F17 Remoção da IA | 5 | 5 |
 | F18 Web e Desktop | 6 | 6 |
-| F19 Publicação Web | 5 | 0 |
-| **Total** | **113** | **106** |
+| F19 Publicação Web | 5 | 2 |
+| **Total** | **113** | **108** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
