@@ -514,7 +514,7 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
 - [x] **F20-T08** — Convites: revogar convite pendente pela UI (R-07)
   Dep: — · Docs: [08 §2/§5](08-compartilhamento-colaborativo.md)
   CP: ação "Revogar" no sheet do dono usando `ConvitesRepository.revogar`; token revogado deixa de ser aceito.
-- [ ] **F20-T09** — Categorias: cobertura do termo antes do desempate alfabético (R-08)
+- [x] **F20-T09** — Categorias: cobertura do termo antes do desempate alfabético (R-08)
   Dep: — · Docs: [04 §5](04-importacao-lista.md)
   CP: `Suco de laranja` → Bebidas; casos de teste para compostos.
 - [x] **F20-T10** — Realtime: limpeza ao perder acesso e status do canal (R-11, R-12)
@@ -548,8 +548,8 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
 | F17 Remoção da IA | 5 | 5 |
 | F18 Web e Desktop | 6 | 6 |
 | F19 Publicação Web | 5 | 2 |
-| F20 Correções da revisão | 13 | 10 |
-| **Total** | **126** | **118** |
+| F20 Correções da revisão | 13 | 11 |
+| **Total** | **126** | **119** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
