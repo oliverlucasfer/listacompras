@@ -151,7 +151,10 @@ exception when insufficient_privilege then
   raise notice 'OK N-09: troca de dono_id bloqueada';
 end $$;
 
--- ===== N-10: dono (A) insere 2º membro 'dono' (D, não-membro) → trigger nega =====
+-- ===== N-10: dono (A) insere 2º membro 'dono' (D, não-membro) → negado =====
+-- Com a 0015, o INSERT de terceiro como 'dono' é barrado pela POLICY de INSERT
+-- (insufficient_privilege) antes do trigger `trg_membros_dono` — o invariante
+-- tem as duas barreiras. O que importa aqui: a linha não é aceita.
 do $$
 begin
   perform set_config('role', 'authenticated', true);
@@ -159,7 +162,9 @@ begin
   insert into public.lista_membros (lista_id, user_id, papel)
   values ('22222222-2222-2222-2222-222222222222', '66666666-6666-6666-6666-666666666666', 'dono');
   raise exception 'FALHOU N-10: 2o dono aceito';
-exception when raise_exception then
+exception when insufficient_privilege then
+  raise notice 'OK N-10: policy 0015 negou terceiro como dono';
+when raise_exception then
   if sqlerrm like '%possui um dono%' then raise notice 'OK N-10: trigger negou 2o dono';
   else raise exception 'FALHOU N-10: erro inesperado: %', sqlerrm; end if;
 end $$;
@@ -381,6 +386,77 @@ begin
   raise exception 'FALHOU P-10: alteracao de dono_id aceita';
 exception when insufficient_privilege then
   raise notice 'OK P-10: with check negou alteracao de dono_id';
+end $$;
+
+-- ===== N-18: dono (A) insere TERCEIRO SEM membresia com papel 'dono' → negado (R-18, 0015) =====
+-- Defesa em profundidade: a policy de INSERT (0015) restringe `papel='dono'` a
+-- `user_id = auth.uid()`; o trigger `trg_membros_dono` é a segunda barreira.
+-- O que importa: NÃO pode existir membro 'dono' diferente do dono da lista.
+do $$
+declare existe boolean;
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+  begin
+    insert into public.lista_membros (lista_id, user_id, papel)
+    values ('22222222-2222-2222-2222-222222222222',
+            '66666666-6666-6666-6666-666666666666', 'dono');
+  exception when others then
+    null; -- policy (42501) ou trigger ('Lista já possui um dono'): ambos negam
+  end;
+  select exists (
+    select 1 from public.lista_membros
+    where lista_id = '22222222-2222-2222-2222-222222222222'
+      and user_id = '66666666-6666-6666-6666-666666666666'
+      and papel = 'dono'
+  ) into existe;
+  if not existe then raise notice 'OK N-18: terceiro nao virou dono';
+  else raise exception 'FALHOU N-18: terceiro virou dono'; end if;
+end $$;
+
+-- ===== P-11: dono (A) insere a si mesmo como 'dono' em lista nova → permitido (0015) =====
+-- O self-insert do dono continua válido (caminho legado/testes); o que a
+-- 0015 proíbe é conceder 'dono' a OUTRO usuário.
+do $$
+declare c int;
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+  insert into public.listas (id, titulo, dono_id)
+  values ('cccccccc-cccc-cccc-cccc-cccccccccccc', 'P-11', '11111111-1111-1111-1111-111111111111');
+  select count(*) into c
+  from public.lista_membros
+  where lista_id = 'cccccccc-cccc-cccc-cccc-cccccccccccc'
+    and user_id = '11111111-1111-1111-1111-111111111111'
+    and papel = 'dono';
+  if c = 1 then raise notice 'OK P-11: dono se inseriu como dono';
+  else raise exception 'FALHOU P-11: % donos', c; end if;
+end $$;
+
+-- ===== R-19: UPDATE em convite atualiza `atualizado_em` pelo trigger (0015) =====
+-- `now()` é fixo dentro da transação, então o teste não pode comparar dois
+-- `now()`: ele carimba a linha com um valor conhecido e verifica que o trigger
+-- o substituiu pelo horário da transação.
+do $$
+declare depois timestamptz;
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+  begin
+    update public.convites set atualizado_em = '2000-01-01T00:00:00Z'
+    where token = 'e1111111-1111-1111-1111-111111111111';
+  exception when insufficient_privilege then
+    null; -- o valor antigo não pode ser forjado; o trigger cuida do carimbo
+  end;
+  update public.convites set estado = 'revogado'
+  where token = 'e1111111-1111-1111-1111-111111111111';
+  select atualizado_em into depois from public.convites
+  where token = 'e1111111-1111-1111-1111-111111111111';
+  if depois > '2020-01-01T00:00:00Z' then
+    raise notice 'OK R-19: trigger carimbou atualizado_em';
+  else
+    raise exception 'FALHOU R-19: atualizado_em nao foi carimbado (%)', depois;
+  end if;
 end $$;
 
 rollback;

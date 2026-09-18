@@ -71,43 +71,45 @@ const { error: errLista } = await clienteA.from('listas').insert({
 if (errLista) fail(`insert listas: ${errLista.message}`);
 
 // --- ambos assinam postgres_changes em itens_lista (RLS filtra) ---
-clienteA.realtime.setAuth(sessaoA.session.access_token);
-clienteB.realtime.setAuth(sessaoB.session.access_token);
 let recebeuA = null;
 let recebeuB = null;
 
-const chA = clienteA.channel('t-a').on(
-  'postgres_changes',
-  { event: 'INSERT', schema: 'public', table: 'itens_lista' },
-  (payload) => {
-    recebeuA = payload;
-  },
-);
-const chB = clienteB.channel('t-b').on(
-  'postgres_changes',
-  { event: 'INSERT', schema: 'public', table: 'itens_lista' },
-  (payload) => {
-    recebeuB = payload;
-  },
-);
+// O stack local derruba a primeira conexão WS logo após o `db reset`
+// (R-23). Em vez de falhar de imediato, reabre o canal até 3 vezes.
+async function assinar(nome, cliente, token, aoReceber) {
+  for (let tentativa = 1; tentativa <= 3; tentativa++) {
+    cliente.realtime.setAuth(token);
+    const canal = cliente.channel(`${nome}-${tentativa}`).on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'itens_lista' },
+      aoReceber,
+    );
+    const ok = await new Promise((res) => {
+      canal.subscribe((s) => {
+        if (s === 'SUBSCRIBED') res(canal);
+        if (s === 'CHANNEL_ERROR' || s === 'CLOSED' || s === 'TIMED_OUT') {
+          console.log(`[diag ${nome}] tentativa ${tentativa}: ${s}`);
+          res(null);
+        }
+      });
+      setTimeout(() => res(null), 15000);
+    });
+    if (ok) return ok;
+    cliente.removeChannel(canal);
+  }
+  return null;
+}
 
-const subA = new Promise((res) =>
-  chA.subscribe((s, errCtx) => {
-    if (s !== 'SUBSCRIBED') console.log(`[diag A]`, s, errCtx ?? '');
-    if (s === 'SUBSCRIBED') res(true);
-  }),
-);
-const subB = new Promise((res) =>
-  chB.subscribe((s, errCtx) => {
-    if (s !== 'SUBSCRIBED') console.log(`[diag B]`, s, errCtx ?? '');
-    if (s === 'SUBSCRIBED') res(true);
-  }),
-);
+const subA = assinar('t-a', clienteA, sessaoA.session.access_token, (p) => {
+  recebeuA = p;
+});
+const subB = assinar('t-b', clienteB, sessaoB.session.access_token, (p) => {
+  recebeuB = p;
+});
 console.log('aguardando subscrição...');
-const okA = await Promise.race([subA, sleep(35000).then(() => null)]);
-const okB = await Promise.race([subB, sleep(35000).then(() => null)]);
-if (!okA) fail('canal A não subscreveu');
-if (!okB) fail('canal B não subscreveu');
+const chA = await subA;
+const chB = await subB;
+if (!chA || !chB) fail('canais não subscreveram após 3 tentativas');
 console.log('OK setup: ambos os canais subscritos');
 
 // --- A insere item ---

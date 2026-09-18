@@ -205,8 +205,10 @@ create policy "membros_insert_dono"
   on public.lista_membros for insert
   with check (
     public.is_dono_de(lista_id)
-    -- o dono se insere com papel 'dono'; ninguém insere terceiros como 'dono'
-    and papel in ('editor', 'leitor', 'dono')
+    -- 'dono' só para o próprio usuário; terceiros apenas como editor/leitor
+    -- (migration 0015, R-18: antes aceitava qualquer user_id com papel 'dono'
+    -- e o invariante ficava só com o trigger `sync_dono`)
+    and (papel in ('editor', 'leitor') or user_id = auth.uid())
   );
 
 create policy "membros_delete_dono"
@@ -343,13 +345,15 @@ Casos que **DEVEM falhar** (executados como usuário autenticado sem acesso, via
 | N-07 | Usuário A tenta se remover da lista onde é dono | violação de policy |
 | N-08 | Usuário anônimo (sem JWT) faz SELECT de qualquer tabela | 0 linhas |
 | N-09 | Usuário A tenta UPDATE de `listas.dono_id` para si mesmo | violação de policy |
-| N-10 | Usuário A insere 2º membro `papel='dono'` na própria lista | exceção do trigger `sync_dono` |
+| N-10 | Usuário A insere 2º membro `papel='dono'` na própria lista | violação de policy (`0015`, R-18) ou exceção do trigger `sync_dono` |
 | N-11 | Não-membro faz SELECT de convites da lista de outrem | 0 linhas (F7-T01) |
 | N-13 | `editor` tenta INSERT de convite | violação de policy (F7-T01) |
 | N-14 | `editor` tenta revogar convite (UPDATE) | 0 linhas (policy nega) (F7-T01) |
 | N-15 | `editor` tenta mudar papel de outro membro (UPDATE em `lista_membros`) | 0 linhas (F7-T07) |
 | N-16 | `editor` tenta remover linha de outro membro (DELETE em `lista_membros`) | 0 linhas (F7-T07) |
 | N-17 | Dono tenta promover membro a `dono` via UPDATE | violação de policy (`with check`, F7-T07) |
+| N-18 | Dono insere terceiro **sem membresia** como `papel='dono'` | negado — a linha não existe (`0015`, R-18) |
+| R-19 | UPDATE em `convites` como dono | `atualizado_em` carimbado pelo trigger (`0015`) |
 
 > N-12 é **positivo** apesar do prefixo N (cobria a leitura legítima dos convites pelo dono) — movido para a tabela "DEVEM passar" abaixo.
 
@@ -365,6 +369,10 @@ Casos que **DEVEM passar**:
 | N-12 | Dono faz SELECT dos convites da própria lista | > 0 linhas (F7-T01) |
 | P-06 | Dono muda papel de membro `leitor`→`editor` (UPDATE em `lista_membros`) | 1 linha (F7-T07) |
 | P-07 | Membro comum sai da lista (DELETE da própria linha em `lista_membros`) | sucesso (F7-T07) |
+| P-08 | INSERT em `listas` cria o membro dono automaticamente | 1 dono (`0010`) |
+| P-09 | Dono renomeia lista com >1 lista no banco | 1 linha (F12-T04) |
+| P-10 | Dono tenta mudar `listas.dono_id` via UPDATE | violação de policy (F12-T04) |
+| P-11 | Dono se insere como `dono` em lista nova | sucesso (`0015`, R-18) |
 
 Ferramentas: testes de integração com dois usuários reais (ver [07 Qualidade](07-qualidade-ci.md)) ou script SQL com `set local role authenticated; set local request.jwt.claims = ...` em ambiente dev.
 

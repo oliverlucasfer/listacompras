@@ -203,6 +203,7 @@ create index idx_itens_lista_ordem
 Tabela de convites por link/e-mail: `id`, `lista_id` (CASCADE), `criado_por` (FK `auth.users`), `token` (uuid único), `tipo` (`link`/`email`), `email`, `papel_oferecido` (`editor`/`leitor` — nunca `dono`), `estado` (`pendente`/`aceito`/`expirado`/`revogado`), `expira_em` (7 dias), `created_at`, `atualizado_em`.
 
 * **Dono do detalhe:** [08 §2](08-compartilhamento-colaborativo.md) (tabela e índices) e [02 §4.4](02-seguranca-rls.md) (policies). Migration `0007`; entram no publication (§7).
+* **`atualizado_em`:** carimbado pelo trigger `trg_convites_updated` (`touch_convites_updated_at`, migration `0015`) — mesmo contrato de `listas`/`itens_lista` (§5).
 * **Pendência conhecida (R-17):** `criado_por` não tem `ON DELETE CASCADE` — hoje não bloqueia a exclusão de conta (só o dono cria convite e a lista cai em cascata), mas deve entrar na revisão de cascatas se a transferência de dono (Fase 6) for implementada.
 
 ---
