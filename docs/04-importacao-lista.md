@@ -48,6 +48,8 @@ Fluxo de UX completo (modal, pré-visualização, confirmação) está em [05 §
 
 Cadeia local em camadas (RF-15): memória por nome → dicionário estático → `outros` (`lib/core/categorias/sugestao_categorias.dart`). Não há IA; o usuário pode editar a categoria na pré-visualização.
 
+**Desempate do dicionário (R-08, F20-T09):** quando mais de um termo casa, vence (a) o de **mais palavras** ("leite condensado" → mercearia sobre "leite" → laticínios); depois (b) o **núcleo do nome**, isto é, o termo que aparece **primeiro** na frase ("suco de laranja": "suco" na posição 0 vence "laranja" na posição 2 — antes o desempate era alfabético e dava hortifruti); depois (c) o termo mais longo; (d) ordem alfabética. O match continua exigindo que **todas** as palavras do termo apareçam, em sequência.
+
 ## 6. Estrutura no repositório
 
 ```
