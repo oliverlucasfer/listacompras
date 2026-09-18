@@ -57,12 +57,23 @@ void main() {
     );
     expect(
       analisarListaLocal('3 pct de café').itens.single.unidade,
-      Unidade.pacote,
+      Unidade.pct,
     );
     expect(
       analisarListaLocal('1 dúzia de bananas').itens.single.unidade,
       Unidade.dz,
     );
+  });
+
+  test('deve_mapear_pct_para_o_enum_pct_quando_unidade_abreviada', () {
+    final r = analisarListaLocal('2 pct de ovos');
+    expect(r.itens.single.quantidade, 2);
+    expect(r.itens.single.unidade, Unidade.pct);
+  });
+
+  test('deve_mapear_pct_para_o_enum_pct_quando_colado_ao_numero', () {
+    final r = analisarListaLocal('2pct de ovos');
+    expect(r.itens.single.unidade, Unidade.pct);
   });
 
   test('deve_tolerar_acento_e_caixa', () {

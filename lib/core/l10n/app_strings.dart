@@ -68,14 +68,13 @@ abstract final class AppStrings {
 
   // Itens
   static const adicionarItem = 'Adicionar item';
-  static const importarPorIa = 'Importar por IA';
   static const itensConcluidos = 'Itens concluídos';
   static const reordenar = 'Reordenar';
 
   // Painel Minhas Listas (wireframe 10 §2)
   static const nenhumaLista = 'Nenhuma lista por aqui';
   static const criePrimeiraLista =
-      'Crie sua primeira lista ou importe por texto com IA.';
+      'Crie sua primeira lista ou importe por texto.';
   static const criarPrimeiraLista = 'Criar primeira lista';
   static const nomeDaLista = 'Nome da lista';
   static const criarLista = 'Criar lista';

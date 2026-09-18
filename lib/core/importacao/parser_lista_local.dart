@@ -26,7 +26,7 @@ const Map<String, Unidade> _unidades = {
   'cx': Unidade.caixa,
   'pacote': Unidade.pacote,
   'pacotes': Unidade.pacote,
-  'pct': Unidade.pacote,
+  'pct': Unidade.pct,
   'dz': Unidade.dz,
   'duzia': Unidade.dz,
   'duzias': Unidade.dz,
