@@ -523,7 +523,7 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
 - [x] **F20-T11** — Banco: defesa em profundidade e higiene (R-18, R-19)
   Dep: F20-T06 · Docs: [01](01-banco-de-dados.md), [02 §4.3](02-seguranca-rls.md)
   CP: `papel='dono'` restrito na policy de insert; trigger de `atualizado_em` em `convites`; testes de negação verdes.
-- [ ] **F20-T12** — Privacidade e polimento de UI/a11y (R-13…R-16, R-20, R-21, R-22)
+- [x] **F20-T12** — Privacidade e polimento de UI/a11y (R-13…R-16, R-20, R-21, R-22)
   Dep: — · Docs: [05 §7](05-app-flutter.md), [07 §4](07-qualidade-ci.md), [09 §2.4](09-runbook-operacoes.md), [15 §4](15-design-system.md)
   CP: `beforeSend` sem dados de itens; callback do login no i18n/tokens; comentário da política; deps; ajustes de a11y; CSP documentada como decisão; `seed.sql` existente ou `sql_paths` removido do `config.toml` (sem aviso no `db reset`).
 
@@ -548,8 +548,8 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
 | F17 Remoção da IA | 5 | 5 |
 | F18 Web e Desktop | 6 | 6 |
 | F19 Publicação Web | 5 | 2 |
-| F20 Correções da revisão | 13 | 12 |
-| **Total** | **126** | **120** |
+| F20 Correções da revisão | 13 | 13 |
+| **Total** | **126** | **121** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
