@@ -77,5 +77,5 @@ jobs:
       - if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libcurl4-openssl-dev libssl-dev
       - run: ${{ matrix.comando }} --dart-define=SUPABASE_URL=https://exemplo.supabase.co --dart-define=SUPABASE_ANON_KEY=teste
