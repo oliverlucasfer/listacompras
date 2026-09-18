@@ -499,10 +499,10 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
 - [x] **F20-T03** — Sync: não perder mutação enfileirada durante o flush (R-03)
   Dep: F20-T00 · Docs: [03 §3/§4](03-sincronizacao-offline.md)
   CP: remoção limitada ao id do lote; teste com edição durante o envio mantém a mutação nova na fila e no servidor.
-- [ ] **F20-T04** — Sync: flush sem reentrância e status correto no bootstrap (R-04, R-05)
+- [x] **F20-T04** — Sync: flush sem reentrância e status correto no bootstrap (R-04, R-05)
   Dep: F20-T03 · Docs: [03 §4/§6](03-sincronizacao-offline.md)
   CP: `flush()` em laço (sem ciclo de futures); fila esgotada no restart expõe `Erro` com "tentar de novo".
-- [ ] **F20-T05** — Sync: divergência de relógio medida contra o servidor (R-06)
+- [x] **F20-T05** — Sync: divergência de relógio medida contra o servidor (R-06)
   Dep: F20-T03 · Docs: [03 §5](03-sincronizacao-offline.md), [07 §4](07-qualidade-ci.md)
   CP: `ts_local` comparado ao `now()` do servidor; evento `sync_relogio_adiantado` testado com fonte injetada.
 - [ ] **F20-T06** — Docs donos: publication, cascatas, inventário e CI (R-09, R-17)
@@ -548,8 +548,8 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
 | F17 Remoção da IA | 5 | 5 |
 | F18 Web e Desktop | 6 | 6 |
 | F19 Publicação Web | 5 | 2 |
-| F20 Correções da revisão | 13 | 4 |
-| **Total** | **126** | **112** |
+| F20 Correções da revisão | 13 | 6 |
+| **Total** | **126** | **114** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
