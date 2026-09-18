@@ -66,6 +66,8 @@ supabase db diff -f nome_da_mudanca
 supabase db push
 ```
 
+**Seed local:** `supabase/seed.sql` popula o banco de desenvolvimento (2 usuários `dev-*@local.test`, 1 lista e 3 itens) — roda **somente** no `db reset`, nunca no `db push`. Para logar no app local, crie o usuário pelo próprio app/Studio: as contas do seed não têm senha utilizável.
+
 **Regra:** nenhuma migration direto no SQL editor do dashboard em produção — tudo via CLI versionado ([01 §2](01-banco-de-dados.md)).
 
 **Rollback:** migrations não têm down automático. Estratégia: criar migration **inversa** nova (`0009_rollback_0008.sql`), testar em local, `db push`. Restaurar backup (2.2) só em caso catastrófico.

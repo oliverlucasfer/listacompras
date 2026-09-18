@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/l10n/app_strings.dart';
 import 'core/navigation/app_shell.dart';
+import 'core/theme/tokens/app_spacing.dart';
 import 'core/utils/router_refresh_stream.dart';
 import 'features/auth/providers/auth_providers.dart';
 import 'features/auth/ui/login_screen.dart';
@@ -171,15 +173,18 @@ class _CallbackLoginScreenState extends State<_CallbackLoginScreen> {
     return Scaffold(
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.xl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Não foi possível concluir a verificação.'),
-              const SizedBox(height: 16),
+              const Text(
+                AppStrings.callbackLoginFalhou,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 onPressed: () => context.go('/login'),
-                child: const Text('Voltar ao login'),
+                child: const Text(AppStrings.voltarAoLogin),
               ),
             ],
           ),

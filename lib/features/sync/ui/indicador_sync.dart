@@ -26,8 +26,8 @@ class IndicadorSync extends ConsumerWidget {
       ),
       Sincronizando() => const _LinhaStatus(
         icone: SizedBox(
-          width: 12,
-          height: 12,
+          width: 16,
+          height: 16,
           child: CircularProgressIndicator(strokeWidth: 2),
         ),
         texto: AppStrings.syncSincronizando,

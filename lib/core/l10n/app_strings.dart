@@ -276,4 +276,6 @@ abstract final class AppStrings {
   static const senhaIncorreta = 'Senha incorreta.';
   static const reautenticando = 'Verificando...';
   static const excluindoConta = 'Excluindo conta...';
+  static const callbackLoginFalhou = 'Não foi possível concluir a verificação.';
+  static const voltarAoLogin = 'Voltar ao login';
 }

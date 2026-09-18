@@ -87,6 +87,12 @@ Uma fase só está "pronta" quando:
 
 * Não direcionado a menores de 16 (texto na política). Sem rastreamento publicitário; sem consentimento de cookies no Web MVP (sem cookies de marketing).
 
+### 3.4.1. Cabeçalhos de segurança no Web (F19/F20)
+
+* **COOP `same-origin` + COEP `require-corp`** (F19-T01): exigidos pelo Drift/WASM (SharedArrayBuffer). Aplicados em `firebase.json` para todas as rotas.
+* **CSP: decisão consciente de NÃO adicionar no MVP** (R-21). O Flutter Web gera código inline (loader/`flutter_bootstrap.js`) e o Worker do Drift vem de blob; uma CSP estrita exige `unsafe-inline`/`unsafe-eval` + `worker-src blob:` — anulando boa parte do ganho — e qualquer política mal ajustada quebraria o app em produção sem cobertura de teste automatizada. Fica registrado como endurecimento pós-MVP, acompanhado de um teste de fumaça no Hosting.
+* Reforço que **é** aplicado: `robots.txt` com `Disallow: /` e `noindex` em `/privacidade` (F19-T01, §3.3.2) — o site não é indexado nem divulgado.
+
 ---
 
 ## 4. Publicação

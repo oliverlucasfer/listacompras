@@ -123,7 +123,7 @@ jobs:
 
 * **Sentry (plano free)** no Flutter (ADR-009):
   * Crash nativos, erros não tratados, `syncStatus = Erro` persistente.
-  * **Regra de privacidade:** logs **nunca** contêm nomes de itens nem conteúdo de listas ([06 §3.1](06-mvp-entregas.md)); apenas IDs técnicos.
+  * **Regra de privacidade:** logs **nunca** contêm nomes de itens nem conteúdo de listas ([06 §3.1](06-mvp-entregas.md)); apenas IDs técnicos. No app (`lib/main.dart`), `sendDefaultPii = false` e o `beforeSend` limpa **breadcrumbs e contexts** antes do envio (R-13) — nada de payload de Drift/PostgREST sai do dispositivo.
 * Eventos mínimos monitorados:
   1. Falha de flush com fila > 10 mutações ou mutação com > 5 tentativas.
   2. Divergência grosseira de relógio (`ts_local` vs `now()` do servidor — RPC `agora_servidor`, ver [03 §5](03-sincronizacao-offline.md)).
