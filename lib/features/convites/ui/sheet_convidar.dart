@@ -30,6 +30,7 @@ class SheetConvidar extends ConsumerStatefulWidget {
 class _SheetConvidarState extends ConsumerState<SheetConvidar> {
   Papel _papel = Papel.editor;
   bool _gerando = false;
+  bool _revogando = false;
   String? _erro;
   Convite? _convite;
   TextEditingController? _linkController;
@@ -79,6 +80,29 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
     if (mounted) {
       mostrarSnackBar(context, mensagem);
     }
+  }
+
+  /// Revoga o convite gerado (doc 08 §2, R-07): link vazado deixa de valer
+  /// na hora; o sheet volta ao estado inicial para o dono gerar outro.
+  Future<void> _revogar(Convite convite) async {
+    setState(() {
+      _erro = null;
+      _revogando = true;
+    });
+    try {
+      await ref.read(convitesRepositoryProvider).revogar(convite.id);
+      if (mounted) {
+        setState(() {
+          _convite = null;
+          _linkController?.dispose();
+          _linkController = null;
+        });
+        mostrarSnackBar(context, AppStrings.conviteRevogado);
+      }
+    } on Object {
+      if (mounted) setState(() => _erro = AppStrings.erroGenerico);
+    }
+    if (mounted) setState(() => _revogando = false);
   }
 
   Future<void> _compartilhar(Convite convite) async {
@@ -201,6 +225,14 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
               variante: AppBotaoVariante.outlined,
               icone: Icons.share_outlined,
               onPressed: () => _compartilhar(convite),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppBotao(
+              rotulo: AppStrings.revogarConvite,
+              variante: AppBotaoVariante.texto,
+              icone: Icons.link_off,
+              carregando: _revogando,
+              onPressed: () => _revogar(convite),
             ),
           ],
         ],

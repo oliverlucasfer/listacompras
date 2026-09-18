@@ -207,6 +207,8 @@ abstract final class AppStrings {
   static const linkCopiado = 'Link copiado para a área de transferência.';
   static const codigoCopiado = 'Código copiado para a área de transferência.';
   static const linkCompartilhado = 'Link compartilhado.';
+  static const revogarConvite = 'Revogar link';
+  static const conviteRevogado = 'Convite revogado. O link não funciona mais.';
   static const compartilharIndisponivel =
       'Compartilhamento indisponível aqui. Use "Copiar link".';
   static const papelAtualizado = 'Papel atualizado.';
