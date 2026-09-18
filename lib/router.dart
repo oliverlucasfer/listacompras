@@ -17,6 +17,7 @@ import 'features/convites/ui/entrar_screen.dart';
 import 'features/convites/ui/tela_membros_screen.dart';
 import 'features/design_system/ui/design_system_screen.dart';
 import 'features/listas/ui/compartilhadas_screen.dart';
+import 'features/listas/ui/mercado_screen.dart';
 import 'features/listas/ui/minhas_listas_screen.dart';
 import 'features/listas/ui/tela_lista_screen.dart';
 
@@ -135,6 +136,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/membros/:listaId',
         builder: (context, state) =>
             TelaMembrosScreen(listaId: state.pathParameters['listaId']!),
+      ),
+      GoRoute(
+        path: '/mercado/:listaId',
+        builder: (context, state) =>
+            MercadoScreen(listaId: state.pathParameters['listaId']!),
       ),
       if (kDebugMode)
         GoRoute(

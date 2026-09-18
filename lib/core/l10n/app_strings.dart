@@ -74,6 +74,14 @@ abstract final class AppStrings {
 
   static String adicionarSugerido(String nome) => 'Adicionar $nome';
 
+  // Modo mercado (RF-18, wireframe 10 §3.5)
+  static const modoMercado = 'Modo mercado';
+  static String mercadoProgresso(int marcados, int total) =>
+      '$marcados de $total';
+  static const mercadoMarcados = 'Marcados';
+  static const mercadoTudoComprado = 'Tudo comprado!';
+  static const voltarParaLista = 'Voltar para a lista';
+
   // Painel Minhas Listas (wireframe 10 §2)
   static const nenhumaLista = 'Nenhuma lista por aqui';
   static const criePrimeiraLista =
