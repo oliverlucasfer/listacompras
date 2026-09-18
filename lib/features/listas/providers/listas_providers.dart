@@ -6,6 +6,7 @@ import '../data/listas_repository.dart';
 import '../domain/item.dart';
 import '../domain/lista.dart';
 import '../domain/lista_com_contagem.dart';
+import '../domain/sugestao_item.dart';
 
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
@@ -42,3 +43,10 @@ final itensDaListaProvider = StreamProvider.family<List<Item>, String>((
 ) {
   return ref.watch(listasRepositoryProvider).watchItensDaLista(listaId);
 });
+
+/// Sugestões de itens frequentes da lista (RF-19).
+final itensFrequentesProvider =
+    StreamProvider.family<List<SugestaoItem>, String>(
+      (ref, listaId) =>
+          ref.watch(listasRepositoryProvider).watchItensFrequentes(listaId),
+    );

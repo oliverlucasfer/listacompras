@@ -70,6 +70,9 @@ abstract final class AppStrings {
   static const adicionarItem = 'Adicionar item';
   static const itensConcluidos = 'Itens concluídos';
   static const reordenar = 'Reordenar';
+  static const sugestoes = 'Sugestões';
+
+  static String adicionarSugerido(String nome) => 'Adicionar $nome';
 
   // Painel Minhas Listas (wireframe 10 §2)
   static const nenhumaLista = 'Nenhuma lista por aqui';

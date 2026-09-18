@@ -31,6 +31,7 @@ import '../../importacao/ui/modal_previsao_importacao.dart';
 import '../../sync/ui/indicador_sync.dart';
 import '../domain/categoria.dart';
 import '../domain/item.dart';
+import '../domain/sugestao_item.dart';
 import '../domain/unidade.dart';
 import '../providers/listas_providers.dart';
 import 'sheet_titulo_lista.dart';
@@ -489,8 +490,33 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
     if (mounted) widget.onItemAdicionado?.call();
   }
 
+  /// Adiciona um item a partir do chip de sugestão (RF-19), reaproveitando
+  /// a sugestão local de categoria (F6-T03).
+  Future<void> _adicionarSugerido(String nome) async {
+    final repo = ref.read(listasRepositoryProvider);
+    final categoria = await ref
+        .read(sugestaoCategoriasProvider)
+        .sugerirCategoria(nome);
+    await repo.adicionarItem(
+      listaId: widget.listaId,
+      nome: nome,
+      quantidade: 1,
+      categoria: categoria,
+    );
+    _controller.clear();
+    if (mounted) {
+      setState(() {});
+      widget.onItemAdicionado?.call();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final sugestoes =
+        ref.watch(itensFrequentesProvider(widget.listaId)).value ??
+        const <SugestaoItem>[];
+    final mostrarChips =
+        _controller.text.trim().isEmpty && sugestoes.isNotEmpty;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
@@ -498,43 +524,72 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
         AppSpacing.lg,
         AppSpacing.xs,
       ),
-      child: AppCampoTexto(
-        controller: _controller,
-        label: AppStrings.adicionarItem,
-        erro: _erro,
-        onChanged: (_) {
-          if (_erro != null) setState(() => _erro = null);
-        },
-        onSubmitted: _adicionar,
-        sufixo: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            PopupMenuButton<Unidade>(
-              tooltip: AppStrings.unidade,
-              initialValue: _unidade,
-              onSelected: (u) => setState(() => _unidade = u),
-              itemBuilder: (context) => [
-                for (final u in Unidade.values)
-                  PopupMenuItem(value: u, child: Text(u.valor)),
-              ],
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(_unidade.valor),
-                    const Icon(Icons.arrow_drop_down),
-                  ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (mostrarChips)
+            Semantics(
+              label: AppStrings.sugestoes,
+              child: SizedBox(
+                height: 48,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: sugestoes.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(width: AppSpacing.sm),
+                  itemBuilder: (context, i) {
+                    final s = sugestoes[i];
+                    return Semantics(
+                      button: true,
+                      label: AppStrings.adicionarSugerido(s.nome),
+                      child: ActionChip(
+                        label: Text(s.nome),
+                        onPressed: () => _adicionarSugerido(s.nome),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
-            IconButton(
-              tooltip: AppStrings.adicionarItem,
-              icon: const Icon(Icons.add),
-              onPressed: _adicionar,
+          AppCampoTexto(
+            controller: _controller,
+            label: AppStrings.adicionarItem,
+            erro: _erro,
+            onChanged: (_) => setState(() => _erro = null),
+            onSubmitted: _adicionar,
+            sufixo: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                PopupMenuButton<Unidade>(
+                  tooltip: AppStrings.unidade,
+                  initialValue: _unidade,
+                  onSelected: (u) => setState(() => _unidade = u),
+                  itemBuilder: (context) => [
+                    for (final u in Unidade.values)
+                      PopupMenuItem(value: u, child: Text(u.valor)),
+                  ],
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(_unidade.valor),
+                        const Icon(Icons.arrow_drop_down),
+                      ],
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: AppStrings.adicionarItem,
+                  icon: const Icon(Icons.add),
+                  onPressed: _adicionar,
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/widgets/app_banner.dart';
+import 'package:lista_compras/core/widgets/app_campo_texto.dart';
 import 'package:lista_compras/core/widgets/app_esqueleto.dart';
 import 'package:lista_compras/core/widgets/app_estado_erro.dart';
 import 'package:lista_compras/drift/database.dart';
@@ -120,6 +121,15 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1));
   }
 
+  /// Cria um item frequente fora da lista aberta (peso = 1 por ocorrência).
+  Future<void> criarFrequentesEmOutraLista(String nome, int vezes) async {
+    final repo = ListasRepository(db);
+    final outra = await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
+    for (var i = 0; i < vezes; i++) {
+      await repo.adicionarItem(listaId: outra.id, nome: nome, quantidade: 1);
+    }
+  }
+
   testWidgets('deve_exibir_titulo_itens_e_secao_concluidos_quando_abrir', (
     tester,
   ) async {
@@ -138,7 +148,15 @@ void main() {
 
     await tester.tap(find.text('${AppStrings.itensConcluidos} (1)'));
     await tester.pumpAndSettle();
-    expect(find.text('Detergente'), findsOneWidget);
+    // O nome também aparece como chip de sugestão (RF-19); a asserção é
+    // restrita à linha do item concluído.
+    expect(
+      find.descendant(
+        of: find.byType(ExpansionTile),
+        matching: find.text('Detergente'),
+      ),
+      findsOneWidget,
+    );
 
     await fechar(tester);
   });
@@ -1507,6 +1525,74 @@ void main() {
     await listaComItens(tester, comConcluido: true);
 
     expect(tester.takeException(), isNull);
+
+    await fechar(tester);
+  });
+
+  // ---- Chips de itens frequentes (F22-T03, RF-19) ----
+
+  testWidgets('deve_mostrar_chips_de_sugestoes_quando_ha_frequentes', (
+    tester,
+  ) async {
+    await listaComItens(tester);
+    await criarFrequentesEmOutraLista('Café', 2);
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(ActionChip, 'Café'), findsOneWidget);
+    // Itens pendentes da lista aberta não viram sugestão.
+    expect(find.widgetWithText(ActionChip, 'Arroz'), findsNothing);
+    expect(find.widgetWithText(ActionChip, 'Leite'), findsNothing);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_esconder_chips_quando_campo_tem_texto', (tester) async {
+    await listaComItens(tester);
+    await criarFrequentesEmOutraLista('Café', 2);
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(ActionChip, 'Café'), findsOneWidget);
+
+    await tester.enterText(find.byType(AppCampoTexto).first, 'Arr');
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(ActionChip, 'Café'), findsNothing);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_adicionar_item_quando_toca_no_chip', (tester) async {
+    final listaId = await listaComItens(tester);
+    await criarFrequentesEmOutraLista('Café', 2);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(ActionChip, 'Café'));
+    await tester.pumpAndSettle();
+
+    final itens = await db.select(db.itemLocal).get();
+    expect(
+      itens.where((i) => i.nome == 'Café' && i.listaId == listaId).length,
+      1,
+    );
+    expect(find.text('Café'), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_ordenar_chips_por_peso_quando_pesos_distintos', (
+    tester,
+  ) async {
+    await listaComItens(tester);
+    await criarFrequentesEmOutraLista('Feijão', 3);
+    await criarFrequentesEmOutraLista('Café', 2);
+    await tester.pumpAndSettle();
+
+    final dxFeijao = tester
+        .getTopLeft(find.widgetWithText(ActionChip, 'Feijão'))
+        .dx;
+    final dxCafe = tester
+        .getTopLeft(find.widgetWithText(ActionChip, 'Café'))
+        .dx;
+    expect(dxFeijao, lessThan(dxCafe));
 
     await fechar(tester);
   });
