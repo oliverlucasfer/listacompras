@@ -115,7 +115,9 @@ jobs:
       - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/aceitar_convite_tests.sql
 ```
 
-> `$DB` = `postgresql://postgres:postgres@127.0.0.1:54322/postgres` (stack local do CI); os três scripts rodam com `ON_ERROR_STOP=1` e falham o job em qualquer negação indevida. O teste de Realtime (`supabase/tests/realtime_test.mjs`) entra no job na **F20-T07**.
+> `$DB` = `postgresql://postgres:postgres@127.0.0.1:54322/postgres` (stack local do CI); os três scripts rodam com `ON_ERROR_STOP=1` e falham o job em qualquer negação indevida.
+>
+> **Teste de Realtime (`supabase/tests/realtime_test.mjs`, F20-T07):** `npm ci && npm test` no mesmo job, com as chaves do stack exportadas (`supabase status -o env`). O step tenta o teste **2 vezes**: logo após `supabase start`/`db reset` o tenant do Realtime ainda está reconectando ao banco e a 1ª execução cai com `CLOSED` (flake de infraestrutura local, R-23 — não do app). Falha só se as duas tentativas caírem.
 
 ---
 

@@ -57,11 +57,17 @@ jobs:
       - name: Teste de Realtime (01 §7, 02 §5 P-05)
         working-directory: supabase/tests
         run: |
-          # Chaves do stack local (o teste usa a ANON JWT — a publishable nova
-          # ainda não entrega eventos no Realtime local, achado R-23).
+          # Chaves do stack local (o app/CI usam a ANON JWT).
           supabase status -o env | grep -E '^(ANON_KEY|SERVICE_ROLE_KEY|API_URL)=' | sed 's/"//g' >> "$GITHUB_ENV"
           npm ci
-          npm test
+          # O tenant do Realtime reconecta ao banco por alguns segundos após o
+          # `supabase start`/reset — a 1ª roda cai com CLOSED (R-23, infra do
+          # stack local, não do app). Aguarda o tenant e tenta 2 vezes.
+          for i in 1 2; do
+            sleep $((i * 15))
+            npm test && break
+            if [ "$i" = "2" ]; then echo "Realtime falhou 2x"; exit 1; fi
+          done
       # Fase 4+: sync tests no job flutter
 
   desktop:
