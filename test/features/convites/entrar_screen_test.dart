@@ -177,6 +177,42 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_suportar_escala_de_texto_2x_quando_sem_sessao', (
+    tester,
+  ) async {
+    // R-20: corpo do convite sem sessão era Center > Column sem scroll.
+    tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    final auth = _SessaoFakeRepository();
+    final convites = _ConvitesFake()..retorno = _listaId;
+
+    await abrir(tester, auth, convites);
+
+    expect(find.text(AppStrings.conviteConvidadoMensagem), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_suportar_escala_de_texto_2x_quando_erro_de_convite', (
+    tester,
+  ) async {
+    // R-20: corpo de erro do convite era Center > Column sem scroll.
+    tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    final auth = _SessaoFakeRepository()..logado = true;
+    final convites = _ConvitesFake()
+      ..erro = const ErroConvite(
+        'convite_invalido',
+        AppStrings.conviteInvalido,
+      );
+
+    await abrir(tester, auth, convites);
+
+    expect(find.text(AppStrings.conviteInvalido), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await fechar(tester);
+  });
+
   testWidgets('deve_aceitar_quando_volta_do_login_pelo_next', (tester) async {
     final auth = _SessaoFakeRepository();
     auth.onEntrar = (email, senha) async {

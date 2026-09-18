@@ -14,6 +14,7 @@ import 'package:lista_compras/features/convites/providers/papel_providers.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
+import 'package:lista_compras/features/sync/ui/indicador_sync.dart';
 
 import '../auth/fakes.dart';
 
@@ -265,6 +266,16 @@ void main() {
     await abrirTela(tester);
 
     expect(tester.takeException(), isNull);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_indicador_de_sync_quando_painel', (tester) async {
+    // R-20 / wireframe 10 §3.2: o estado de sync aparece no topo do painel,
+    // não só dentro da tela da lista.
+    await abrirTela(tester);
+
+    expect(find.byType(IndicadorSync), findsOneWidget);
 
     await fechar(tester);
   });

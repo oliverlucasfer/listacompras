@@ -527,9 +527,9 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
 
 Achados da revisão de fechamento que **não** deveriam ser marcados como concluídos na F20 (ver `relatorio-revisao-geral.md`).
 
-- [ ] **F21-T01** — A11y pendente do R-20
+- [x] **F21-T01** — A11y pendente do R-20
   Dep: — · Docs: [10](10-wireframes-telas.md), [11](11-usabilidade-fase5.md), [15 §4](15-design-system.md)
-  CP: `SeletorTema` sem overflow em tela estreita/escala 2x; telas de verificação/login com scroll; decisão registrada sobre o indicador de sync no painel (código ou wireframe ajustado).
+  CP: `SeletorTema` sem overflow em tela estreita/escala 2x; telas de verificação/login com scroll; decisão registrada sobre o indicador de sync no painel (código ou wireframe ajustado). *(`seletor_tema.dart` adaptativo por largura/escala com função pura `usarSeletorSegmentado` + dropdown; `SingleChildScrollView` nos 3 corpos (`_VerificacaoEmail` e os 2 estados do `entrar_screen`); `IndicadorSync` no topo do painel de listas, seguindo o wireframe 10 §3.2 e alinhando o 05; 9 testes novos — inclui o RED real `RenderFlex overflowed by 120 pixels`)*
 - [ ] **F21-T02** — Sentry: limpar `event.extra` e alinhar `07 §3`/`02 §3`
   Dep: — · Docs: [02 §3](02-seguranca-rls.md), [07 §3/§4](07-qualidade-ci.md)
   CP: `beforeSend` limpa `breadcrumbs`, `extra` e `contexts`; esqueleto do CI espelha o `ci.yml` (step de Realtime + pin do CLI); matriz de INSERT de `lista_membros` no 02 §3 cita `user_id = auth.uid()`.
@@ -562,8 +562,8 @@ Achados da revisão de fechamento que **não** deveriam ser marcados como conclu
 | F18 Web e Desktop | 6 | 6 |
 | F19 Publicação Web — **cancelada** | 5 | 5 |
 | F20 Correções da revisão | 13 | 13 |
-| F21 Pendências do fechamento | 4 | 0 |
-| **Total** | **130** | **124** |
+| F21 Pendências do fechamento | 4 | 1 |
+| **Total** | **130** | **125** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

@@ -26,7 +26,7 @@ Título de tela (AppBar): **24sp bold** aplicado via `appBarTheme.titleTextStyle
 - `ColorScheme.fromSeed` + component themes (appBar, card, input, botões, chip, sheet, dialog, snackbar, navigationBar, etc.).
 - Cores semânticas via `ThemeExtension<AppSemanticColors>` (`lib/core/theme/app_semantic_colors.dart`), lidas com `Theme.of(context).extension<AppSemanticColors>()!`.
 - `TextTheme` derivado do `ColorScheme`/brilho (`app_typography.dart`, F12-T01): o claro usa cores escuras (`onSurface`) e o escuro, claras — um `TextTheme` fixo em `.black` sobrepõe o default do `ThemeData` e deixa texto preto no fundo escuro (viola §4).
-- Modo: Claro / Escuro / Sistema (padrão Sistema), persistido em SharedPreferences (`theme_mode_provider.dart`), seletor em Configurações (`seletor_tema.dart`).
+- Modo: Claro / Escuro / Sistema (padrão Sistema), persistido em SharedPreferences (`theme_mode_provider.dart`), seletor em Configurações (`seletor_tema.dart`). **Adaptativo (F21-T01):** em telas com ≥ 360dp e fonte normal usa `SegmentedButton` (ícone + rótulo); abaixo disso ou com `textScaler ≥ 1.3` vira dropdown, que nunca estoura (R-20).
 
 ## 3. Componentes (`lib/core/widgets/`)
 

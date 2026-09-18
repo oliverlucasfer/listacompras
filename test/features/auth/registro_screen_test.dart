@@ -95,6 +95,26 @@ void main() {
     expect(find.text('a@b.com'), findsOneWidget);
   });
 
+  testWidgets('deve_suportar_escala_de_texto_2x_quando_tela_verificacao', (
+    tester,
+  ) async {
+    // R-20: o corpo de _VerificacaoEmail era Center > Column sem scroll e
+    // estourava com fonte ampliada.
+    tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    final repo = FakeAuthRepository();
+    repo.onRegistrar = (email, senha) => Future.value(AuthResponse());
+    await abrirTela(tester, repo);
+    await preencherFormulario(tester, 'a@b.com', '123456', '123456');
+    await aceitarPolitica(tester);
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.verificarSeuEmail), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('deve_exibir_email_ja_cadastrado_quando_supabase_rejeita', (
     tester,
   ) async {

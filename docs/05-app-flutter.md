@@ -178,7 +178,7 @@ O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado
 | Botão de importação | Abre modal (6.4) |
 | Menu (⋮) | "Desmarcar todos", "Limpar concluídos", "Renomear lista", "Excluir lista" |
 | Ações em massa | Reaproveitar lista (desmarcar todos) e limpar concluídos — confirmação para destrutivas; "desmarcar" devolve o item ao seu grupo; **limpar concluídos tem undo** (SnackBar 3s, restaura `id`/`ordem` originais — F14-T05) |
-| Indicador de sync | Estado de [03 §6](03-sincronizacao-offline.md) no AppBar |
+| Indicador de sync | Estado de [03 §6](03-sincronizacao-offline.md) no **topo da tela da lista** e no **topo do painel de listas** (Minhas Listas e Compartilhadas — F21-T01, alinhado ao wireframe [10 §3.2](10-wireframes-telas.md)) |
 
 * **Reordenar (Fase 6):** drag-and-drop restrito **ao grupo da categoria** — reordena só os itens do grupo (grava `ordem` local + fila); mudar de categoria é pelo dropdown do editar. Exibição continua `(categoria, ordem, id)` — sem coluna nova.
 * Quantidades: stepper + input direto; unidades restritas ao enum ([01 §3.1](01-banco-de-dados.md)).

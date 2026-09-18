@@ -14,6 +14,7 @@ import '../../../core/widgets/app_esqueleto.dart';
 import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_logo.dart';
+import '../../sync/ui/indicador_sync.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../convites/domain/convite.dart';
@@ -118,6 +119,15 @@ class _PainelListasState extends ConsumerState<PainelListas> {
       ),
       body: Column(
         children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.sm,
+              AppSpacing.lg,
+              0,
+            ),
+            child: IndicadorSync(),
+          ),
           if (_buscando)
             Padding(
               padding: const EdgeInsets.fromLTRB(

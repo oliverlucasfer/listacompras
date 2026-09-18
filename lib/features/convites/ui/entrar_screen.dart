@@ -89,43 +89,46 @@ class _EntrarScreenState extends ConsumerState<EntrarScreen> {
       return Scaffold(
         appBar: AppBar(title: const Text(AppStrings.conviteConvidadoTitulo)),
         body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.person_add,
-                  size: 64,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xl,
+          child: SingleChildScrollView(
+            padding: AppSpacing.tela,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.person_add,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
-                  child: Text(
-                    AppStrings.conviteConvidadoMensagem,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                  const SizedBox(height: AppSpacing.lg),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xl,
+                    ),
+                    child: Text(
+                      AppStrings.conviteConvidadoMensagem,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                AppBotao(
-                  rotulo: AppStrings.conviteConvidadoEntrar,
-                  expandido: false,
-                  onPressed: () =>
-                      context.go(_rotaLogin(base: '/login').toString()),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                AppBotao(
-                  rotulo: AppStrings.conviteConvidadoRegistrar,
-                  variante: AppBotaoVariante.outlined,
-                  expandido: false,
-                  onPressed: () =>
-                      context.go(_rotaLogin(base: '/registro').toString()),
-                ),
-              ],
+                  const SizedBox(height: AppSpacing.xl),
+                  AppBotao(
+                    rotulo: AppStrings.conviteConvidadoEntrar,
+                    expandido: false,
+                    onPressed: () =>
+                        context.go(_rotaLogin(base: '/login').toString()),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  AppBotao(
+                    rotulo: AppStrings.conviteConvidadoRegistrar,
+                    variante: AppBotaoVariante.outlined,
+                    expandido: false,
+                    onPressed: () =>
+                        context.go(_rotaLogin(base: '/registro').toString()),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -141,34 +144,37 @@ class _EntrarScreenState extends ConsumerState<EntrarScreen> {
       return Scaffold(
         appBar: AppBar(title: const Text(AppStrings.conviteConvidadoTitulo)),
         body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 64,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xl,
+          child: SingleChildScrollView(
+            padding: AppSpacing.tela,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.error,
                   ),
-                  child: Text(
-                    _erro!.message,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium,
+                  const SizedBox(height: AppSpacing.lg),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xl,
+                    ),
+                    child: Text(
+                      _erro!.message,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                AppBotao(
-                  rotulo: AppStrings.tentarNovamente,
-                  expandido: false,
-                  onPressed: _processar,
-                ),
-              ],
+                  const SizedBox(height: AppSpacing.xl),
+                  AppBotao(
+                    rotulo: AppStrings.tentarNovamente,
+                    expandido: false,
+                    onPressed: _processar,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

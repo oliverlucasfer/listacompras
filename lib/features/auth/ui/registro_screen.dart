@@ -239,7 +239,7 @@ class _VerificacaoEmailState extends ConsumerState<_VerificacaoEmail> {
     return Scaffold(
       appBar: AppBar(title: const Text(AppStrings.verificarSeuEmail)),
       body: Center(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: AppSpacing.tela,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
