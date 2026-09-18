@@ -37,13 +37,19 @@ const _conectivos = {'de', 'do', 'da', 'em', 'dos', 'das'};
 final _separadores = RegExp(r'[\n,;]+|\s+e\s+', caseSensitive: false);
 final _soNumero = RegExp(r'^(\d+(?:[.,]\d+)?)$');
 final _numeroColado = RegExp(r'^(\d+(?:[.,]\d+)?)([a-zA-ZÀ-ÿ]+)$');
+final _decimalComVirgula = RegExp(r'(\d),(\d)');
+
+/// Vírgula **entre dígitos** é decimal (`1,5`), não separador de itens — o
+/// texto é normalizado antes de segmentar (doc 04 §3, R-01).
+String _protegerDecimais(String texto) =>
+    texto.replaceAllMapped(_decimalComVirgula, (m) => '${m[1]}.${m[2]}');
 
 /// Parser local determinístico (RF-16): extrai itens de texto livre, offline.
 /// Devolve itens + `aviso` quando algum item entrou com quantidade padrão.
 RespostaParse analisarListaLocal(String texto) {
   final itens = <ItemExtraido>[];
   var algumSemNumero = false;
-  for (final parte in texto.split(_separadores)) {
+  for (final parte in _protegerDecimais(texto).split(_separadores)) {
     final lido = _lerSegmento(parte);
     if (lido == null) continue;
     itens.add(lido.item);
@@ -63,7 +69,7 @@ ItemExtraido? interpretarItemAvulso(
   String texto, {
   Unidade unidadePadrao = Unidade.un,
 }) {
-  final partes = texto.split(_separadores);
+  final partes = _protegerDecimais(texto).split(_separadores);
   final lido = _lerSegmento(partes.first);
   if (lido == null) return null;
   return lido.unidadeExplicita

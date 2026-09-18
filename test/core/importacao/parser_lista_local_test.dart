@@ -109,4 +109,23 @@ void main() {
   test('deve_retornar_null_quando_item_avulso_vazio', () {
     expect(interpretarItemAvulso('   '), isNull);
   });
+
+  test('deve_converter_virgula_decimal_quando_1_5_kg', () {
+    final r = analisarListaLocal('1,5 kg de arroz');
+    expect(r.itens, hasLength(1));
+    expect(r.itens.single.nome, 'Arroz');
+    expect(r.itens.single.quantidade, 1.5);
+    expect(r.itens.single.unidade, Unidade.kg);
+  });
+
+  test('deve_segmentar_por_virgula_entre_itens_quando_arroz_leite', () {
+    final r = analisarListaLocal('arroz, leite');
+    expect(r.itens.map((i) => i.nome), ['Arroz', 'Leite']);
+  });
+
+  test('deve_converter_virgula_decimal_no_item_avulso_quando_2_5_leite', () {
+    final item = interpretarItemAvulso('2,5 leite');
+    expect(item!.quantidade, 2.5);
+    expect(item.nome, 'Leite');
+  });
 }

@@ -33,7 +33,7 @@ Fluxo de UX completo (modal, pré-visualização, confirmação) está em [05 §
 
 `analisarListaLocal(texto)`:
 
-1. Segmenta o texto por `,`, `;`, quebra de linha e o conectivo ` e `.
+1. Normaliza a vírgula **entre dígitos** como decimal (`1,5` → `1.5`) e só então segmenta o texto por `,`, `;`, quebra de linha e o conectivo ` e ` — vírgula entre itens continua separador (`arroz, leite` → 2 itens).
 2. Para cada segmento, lê quantidade/unidade no **início** ou no **fim** (`1kg de arroz`, `arroz 1kg`, `2 leites`, `leite 2`).
 3. Sem quantidade → `1 un` e marca `aviso`.
 4. Converte quantidade com vírgula (`1,5` → `1.5`); capitaliza o nome; ignora segmentos vazios.
