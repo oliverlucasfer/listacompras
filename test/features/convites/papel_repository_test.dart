@@ -4,6 +4,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/drift/database.dart';
+import 'package:lista_compras/features/convites/data/papel_realtime.dart';
 import 'package:lista_compras/features/convites/data/papel_repository.dart';
 import 'package:lista_compras/features/convites/domain/papel.dart';
 import 'package:lista_compras/features/convites/providers/papel_providers.dart';
@@ -29,6 +30,22 @@ SupabaseClient _cliente(ServidorFake servidor) {
     httpClient: servidor,
   );
 }
+
+/// Payload de `lista_membros` como o realtime entrega (F7-T06): montado à
+/// mão porque `PostgresChangePayload` não tem construtor público.
+PostgresChangePayload _payloadMembro({
+  required PostgresChangeEvent evento,
+  Map<String, Object?> newRecord = const {},
+  Map<String, Object?> oldRecord = const {},
+}) => PostgresChangePayload(
+  eventType: evento,
+  commitTimestamp: DateTime.now().toUtc(),
+  newRecord: newRecord,
+  oldRecord: oldRecord,
+  schema: 'public',
+  table: 'lista_membros',
+  errors: null,
+);
 
 void main() {
   test('deve_carregar_papeis_quando_bootstrap_carrega', () async {
@@ -227,5 +244,65 @@ void main() {
     await pumpEventQueue();
 
     expect(eventos.last.value, Papel.editor);
+  });
+
+  test('deve_perder_acesso_quando_delete_de_membro_e_do_proprio_usuario', () {
+    // R-11 (doc 08 §9): o DELETE chega com `old_record` (replica identity
+    // full na 0008) e precisa disparar a limpeza do cache do removido.
+    final papelRepository = PapelRepository(
+      _cliente(ServidorFake((req) => (200, []))),
+    );
+    var perdeu = false;
+
+    aplicarEventoMembro(
+      usuarioAtual: 'user-a',
+      payload: _payloadMembro(
+        evento: PostgresChangeEvent.delete,
+        oldRecord: {'lista_id': 'l1', 'user_id': 'user-a', 'papel': 'editor'},
+      ),
+      papelRepository: papelRepository,
+      onPerdaAcesso: () => perdeu = true,
+    );
+
+    expect(perdeu, isTrue);
+  });
+
+  test('deve_ignorar_delete_de_membro_quando_e_de_outro_usuario', () {
+    final papelRepository = PapelRepository(
+      _cliente(ServidorFake((req) => (200, []))),
+    );
+    var perdeu = false;
+
+    aplicarEventoMembro(
+      usuarioAtual: 'user-a',
+      payload: _payloadMembro(
+        evento: PostgresChangeEvent.delete,
+        oldRecord: {'lista_id': 'l1', 'user_id': 'user-b', 'papel': 'editor'},
+      ),
+      papelRepository: papelRepository,
+      onPerdaAcesso: () => perdeu = true,
+    );
+
+    expect(perdeu, isFalse);
+    expect(papelRepository.papelDe('l1'), isNull);
+  });
+
+  test('deve_ignorar_evento_quando_usuario_atual_e_nulo', () {
+    final papelRepository = PapelRepository(
+      _cliente(ServidorFake((req) => (200, []))),
+    );
+    var perdeu = false;
+
+    aplicarEventoMembro(
+      usuarioAtual: null,
+      payload: _payloadMembro(
+        evento: PostgresChangeEvent.delete,
+        oldRecord: {'lista_id': 'l1', 'user_id': 'user-a', 'papel': 'editor'},
+      ),
+      papelRepository: papelRepository,
+      onPerdaAcesso: () => perdeu = true,
+    );
+
+    expect(perdeu, isFalse);
   });
 }

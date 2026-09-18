@@ -250,13 +250,41 @@ $$;
 * Vazio e feedback (F14-T04/T05): a lista de membros vazia (só acontece sem cache local, ex.: cache apagado) mostra `AppEstadoVazio` **sem ações** — o papel não é confiável nesse estado (o dono é sempre mesclado por `membrosDaListaProvider`); trocar papel, remover membro e compartilhar o convite dão SnackBar (F14-T05, [05 §6](05-app-flutter.md)).
 * Identificador de membros: enquanto não há perfis/e-mails expostos (rodada futura), membros exibem o UUID prefixado (8 primeiros caracteres). A identificação por nome/e-mail exige RPC `security definer` + policy (docs 01/02) e fica para a **Fase 15** ([spec F14 §16](superpowers/specs/2026-09-14-ux-acessibilidade-design.md)).
 
-## 9. Checklist de validação (Fase 6)
+## 9. Perda de acesso e limpeza do cache (R-11, F20-T10)
+
+**O problema:** o Cronograma original (acima, §7) supunha que `replica identity full` bastaria
+para o app saber *quem* perdeu acesso no `DELETE` de `lista_membros`. **Medido em 18/09/2026
+(F20-T10) contra o stack local: não basta.** O evento chega ao membro removido, mas com
+`old_record` **vazio** — então o app não se reconhece e o cache local **não é limpo**; os dados da
+lista (que o RLS já escondeu no servidor) permanecem no Drift do removido. Isso contraria o
+checklist §9 ("perde acesso em < 5s").
+
+**Causa:** o serviço Realtime (v2.34) decide se emite o `old_record` pela coluna
+`_realtime.tenants.private_only`, não por `relreplident`. O stack local sobe com
+`private_only = false` e a configuração **não é exposta** no `supabase/config.toml` (2.116.0).
+
+**Consequência para o produto:** o DELETE de `lista_membros` **não é confiável** como gatilho de
+limpeza. A perda de acesso deve ser decidida por outros caminhos:
+
+1. **Re-sync em reconexão** (§7, doc 03 §7) e **bootstrap por troca de usuário** — confiáveis.
+2. **`sairDaLista` local** (F7-T07) — já limpa cache + fila de quem sai voluntariamente.
+3. **Reavaliação local ao voltar ao app:** comparar `lista_membros` remoto com o cache e, se a lista
+   visível já não é acessível (RLS nega `select`), limpar — gatilho proposto para a F20-T10.
+
+**Limite honesto:** sem o `old_record`, a UI **não consegue** exibir "Você foi removido da lista X"
+em tempo real. A copy passa a ser genérica ("Seu acesso a uma lista mudou") e o item fica como
+pendência de acompanhamento junto ao Supabase (a opção `private_only`, se habilitada no futuro,
+resolve). Registrado como `R-11` no [relatório da revisão](relatorio-revisao-geral.md).
+
+---
+
+## 10. Checklist de validação (Fase 6)
 
 - [ ] Convite por link: usuário novo e existente entram com sucesso; expirado/revogado rejeitado.
 - [ ] Convite por e-mail aparece no painel de pendentes do convidado.
 - [ ] `aceitar_convite` é idempotente (2º uso apenas navega).
 - [ ] `leitor` vê banner de somente leitura e não consegue editar (RLS + UI).
-- [ ] Membro removido perde acesso em < 5s em todos os dispositivos.
+- [ ] Membro removido perde acesso em < 5s em todos os dispositivos — **ver §9** (limpeza garantida pelas vias 1–3; tempo medido a partir do re-sync, não do evento).
 - [ ] Itens do membro removido permanecem na lista.
 - [ ] Transferência de dono: novo dono tem poderes completos; antigo vira editor; sem duplicidade de donos.
 - [ ] Testes de negação das policies de `convites` adicionados ao [02 §5](02-seguranca-rls.md) (N-11…N-14).
