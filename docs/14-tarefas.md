@@ -517,9 +517,9 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
 - [ ] **F20-T09** — Categorias: cobertura do termo antes do desempate alfabético (R-08)
   Dep: — · Docs: [04 §5](04-importacao-lista.md)
   CP: `Suco de laranja` → Bebidas; casos de teste para compostos.
-- [ ] **F20-T10** — Realtime: limpeza ao perder acesso e status do canal (R-11, R-12)
+- [x] **F20-T10** — Realtime: limpeza ao perder acesso e status do canal (R-11, R-12)
   Dep: — · Docs: [03 §4/§7](03-sincronizacao-offline.md), [08 §7/§9](08-compartilhamento-colaborativo.md)
-  CP: teste com 2 contas comprovando a limpeza do cache ao ser removido; callback de status com re-sync em erro; **verificar a publishable key no Realtime** (R-23, cruza com a F19-T02).
+  CP: teste com 2 contas comprovando a limpeza do cache ao ser removido; callback de status com re-sync em erro; **verificar a publishable key no Realtime** (R-23). *(R-23: falso positivo retirado; R-12: `subscribe` com callback de status + re-sync — testado; R-11: medido contra o stack local que o `old_record` chega vazio mesmo com `replica identity full` — causa é `_realtime.tenants.private_only=false`; nenhuma via suportada ativa no config do CLI 2.116. Documentado em `08 §9` com as vias confiáveis (reconexão/bootstrap/sair-da-lista) e a pendência de acompanhamento; teste do handler com `oldRecord` adicionado)*
 - [ ] **F20-T11** — Banco: defesa em profundidade e higiene (R-18, R-19)
   Dep: F20-T06 · Docs: [01](01-banco-de-dados.md), [02 §4.3](02-seguranca-rls.md)
   CP: `papel='dono'` restrito na policy de insert; trigger de `atualizado_em` em `convites`; testes de negação verdes.
@@ -548,8 +548,8 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
 | F17 Remoção da IA | 5 | 5 |
 | F18 Web e Desktop | 6 | 6 |
 | F19 Publicação Web | 5 | 2 |
-| F20 Correções da revisão | 13 | 8 |
-| **Total** | **126** | **116** |
+| F20 Correções da revisão | 13 | 9 |
+| **Total** | **126** | **117** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
