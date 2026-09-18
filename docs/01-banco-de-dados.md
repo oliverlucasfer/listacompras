@@ -349,7 +349,8 @@ alter publication supabase_realtime add table public.lista_membros;
 alter publication supabase_realtime add table public.convites;
 ```
 
-* `lista_membros` e `convites` entram no publication desde a **Fase 6** (migration `0007`): o membro removido precisa saber que perdeu acesso para limpar o cache local (< 5 s, [08 §9](08-compartilhamento-colaborativo.md)) e o convite precisa aparecer para o destinatário. `lista_membros` usa `replica identity full` (migration `0008`) para o DELETE carregar `user_id`/`lista_id`.
+* `lista_membros` e `convites` entram no publication desde a **Fase 6** (migration `0007`): o membro removido precisa saber que perdeu acesso para limpar o cache local e o convite precisa aparecer para o destinatário.
+* **Limite medido (R-11, [08 §9](08-compartilhamento-colaborativo.md)):** `replica identity full` (migration `0008`) **não basta** — o serviço Realtime v2.34 só emite o `old_record` quando o tenant está em `private_only`, coluna que o `config.toml` do CLI não expõe. Na prática, o DELETE de `lista_membros` chega com `old_record` vazio; a limpeza do cache do removido acontece por reconexão/bootstrap/`sairDaLista`, não pelo evento.
 * O Realtime respeita as policies RLS — usuários só recebem eventos de listas de que participam (ver [02](02-seguranca-rls.md)).
 
 ---

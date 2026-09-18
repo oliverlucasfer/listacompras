@@ -519,13 +519,27 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
   CP: `Suco de laranja` → Bebidas; casos de teste para compostos.
 - [x] **F20-T10** — Realtime: limpeza ao perder acesso e status do canal (R-11, R-12)
   Dep: — · Docs: [03 §4/§7](03-sincronizacao-offline.md), [08 §7/§9](08-compartilhamento-colaborativo.md)
-  CP: teste com 2 contas comprovando a limpeza do cache ao ser removido; callback de status com re-sync em erro; **verificar a publishable key no Realtime** (R-23). *(R-23: falso positivo retirado; R-12: `subscribe` com callback de status + re-sync — testado; R-11: medido contra o stack local que o `old_record` chega vazio mesmo com `replica identity full` — causa é `_realtime.tenants.private_only=false`; nenhuma via suportada ativa no config do CLI 2.116. Documentado em `08 §9` com as vias confiáveis (reconexão/bootstrap/sair-da-lista) e a pendência de acompanhamento; teste do handler com `oldRecord` adicionado)*
+  CP: comportamento do cache ao ser removido documentado e o caminho testado; callback de status com re-sync em erro (feito); **R-23: flaky do Realtime local mitigado no CI com retry** (ver `R-23` no relatório). *(R-11: medido contra o stack local — o `old_record` do DELETE de `lista_membros` chega vazio mesmo com `replica identity full`; causa é `_realtime.tenants.private_only`, sem opção no CLI. Limpeza garantida por reconexão/bootstrap/sair-da-lista; **não** há limpeza por evento nem reavaliação em resume — o `08 §9` descreve isso como limite conhecido. R-12: re-sync em `SUBSCRIBED` implementado e testado. R-23: flaky de infra local, retry no CI)*
 - [x] **F20-T11** — Banco: defesa em profundidade e higiene (R-18, R-19)
   Dep: F20-T06 · Docs: [01](01-banco-de-dados.md), [02 §4.3](02-seguranca-rls.md)
   CP: `papel='dono'` restrito na policy de insert; trigger de `atualizado_em` em `convites`; testes de negação verdes.
 - [x] **F20-T12** — Privacidade e polimento de UI/a11y (R-13…R-16, R-20, R-21, R-22)
   Dep: — · Docs: [05 §7](05-app-flutter.md), [07 §4](07-qualidade-ci.md), [09 §2.4](09-runbook-operacoes.md), [15 §4](15-design-system.md)
   CP: `beforeSend` sem dados de itens; callback do login no i18n/tokens; comentário da política; deps; ajustes de a11y; CSP documentada como decisão; `seed.sql` existente ou `sql_paths` removido do `config.toml` (sem aviso no `db reset`).
+
+## Fase 21 — Pendências do fechamento da F20
+
+Achados da revisão de fechamento que **não** deveriam ser marcados como concluídos na F20 (ver `relatorio-revisao-geral.md`).
+
+- [ ] **F21-T01** — A11y pendente do R-20
+  Dep: — · Docs: [10](10-wireframes-telas.md), [11](11-usabilidade-fase5.md), [15 §4](15-design-system.md)
+  CP: `SeletorTema` sem overflow em tela estreita/escala 2x; telas de verificação/login com scroll; decisão registrada sobre o indicador de sync no painel (código ou wireframe ajustado).
+- [ ] **F21-T02** — Sentry: limpar `event.extra` e alinhar `07 §3`/`02 §3`
+  Dep: — · Docs: [02 §3](02-seguranca-rls.md), [07 §3/§4](07-qualidade-ci.md)
+  CP: `beforeSend` limpa `breadcrumbs`, `extra` e `contexts`; esqueleto do CI espelha o `ci.yml` (step de Realtime + pin do CLI); matriz de INSERT de `lista_membros` no 02 §3 cita `user_id = auth.uid()`.
+- [ ] **F21-T03** — Convites: revogar também os pendentes anteriores (R-07 parcial)
+  Dep: — · Docs: [08 §2](08-compartilhamento-colaborativo.md)
+  CP: sheet lista os convites pendentes da lista (usando `pendentesDaLista`) com ação de revogar; ou limite documentado no 08.
 
 ## Progresso por fase (atualize ao concluir)
 
@@ -549,7 +563,8 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
 | F18 Web e Desktop | 6 | 6 |
 | F19 Publicação Web | 5 | 2 |
 | F20 Correções da revisão | 13 | 13 |
-| **Total** | **126** | **121** |
+| F21 Pendências do fechamento | 3 | 0 |
+| **Total** | **129** | **121** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

@@ -268,13 +268,9 @@ limpeza. A perda de acesso deve ser decidida por outros caminhos:
 
 1. **Re-sync em reconexão** (§7, doc 03 §7) e **bootstrap por troca de usuário** — confiáveis.
 2. **`sairDaLista` local** (F7-T07) — já limpa cache + fila de quem sai voluntariamente.
-3. **Reavaliação local ao voltar ao app:** comparar `lista_membros` remoto com o cache e, se a lista
-   visível já não é acessível (RLS nega `select`), limpar — gatilho proposto para a F20-T10.
+3. **Reavaliação local ao voltar ao app** — **não implementada** (era a hipótese inicial da F20-T10 e ficou fora do escopo ao medir o limite acima). Se o cache do removido precisar sumir sem reconexão, este é o gatilho a implementar.
 
-**Limite honesto:** sem o `old_record`, a UI **não consegue** exibir "Você foi removido da lista X"
-em tempo real. A copy passa a ser genérica ("Seu acesso a uma lista mudou") e o item fica como
-pendência de acompanhamento junto ao Supabase (a opção `private_only`, se habilitada no futuro,
-resolve). Registrado como `R-11` no [relatório da revisão](relatorio-revisao-geral.md).
+**Limite honesto:** sem o `old_record`, a UI **não consegue** exibir "Você foi removido da lista X" em tempo real. A copy passa a ser genérica ("Seu acesso a uma lista mudou") e o item fica como pendência de acompanhamento junto ao Supabase (a opção `private_only`, se habilitada no futuro, resolve). Registrado como `R-11` no [relatório da revisão](relatorio-revisao-geral.md).
 
 ---
 
