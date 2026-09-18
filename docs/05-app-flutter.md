@@ -206,7 +206,7 @@ Um único modal de importação local (modo único, offline, RF-16):
 
 Tela dedicada `/mercado/:listaId` para usar o celular no mercado, sem a densidade da tela da lista (wireframe [10 §3.5](10-wireframes-telas.md)):
 
-* **AppBar** com título da lista e seta de voltar (sem menu); corpo com `IndicadorSync` no topo.
+* **AppBar** com título da lista e seta de voltar (sem menu); `IndicadorSync` no topo apenas no estado carregado — em carregando/erro/não encontrada o título é "Modo mercado" e o indicador não renderiza.
 * **Contador** `mercadoProgresso(marcados, total)` (ex.: "3 de 12"): marcados **nesta sessão** / total de itens ativos; é uma live region.
 * **Pendentes** em lista de altura generosa, com checkbox de alvo ≥48dp e toque na linha para marcar (`editarItem(concluido: true)`). **Sem** grupos de categoria, busca, drag, swipe, menu ou importação.
 * **Faixa "Marcados (n)"** recolhível no rodapé — é o undo do toque acidental: ao marcar, o item sai da área principal e entra na faixa, que abre automaticamente na primeira marcação da sessão; tocar num item da faixa desmarca e o devolve aos pendentes.

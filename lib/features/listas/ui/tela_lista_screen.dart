@@ -441,10 +441,29 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
       setState(() => _erro = AppStrings.naoEntendiItem);
       return;
     }
+    await _adicionarItemDedup(
+      nome: extra.nome,
+      quantidade: extra.quantidade,
+      unidade: extra.unidade,
+    );
+    _controller.clear();
+    if (mounted) widget.onItemAdicionado?.call();
+  }
+
+  /// Núcleo de escrita compartilhado por `_adicionar` (entrada rápida) e
+  /// `_adicionarSugerido` (chip, RF-19): nunca duplica um nome ativo —
+  /// comparação normalizada. Mesma unidade → soma a quantidade; unidade
+  /// diferente → atualiza para a nova quantidade/unidade (RF-10). Sem
+  /// existente, insere com a categoria da cadeia local (F6-T03).
+  Future<void> _adicionarItemDedup({
+    required String nome,
+    required double quantidade,
+    required Unidade unidade,
+  }) async {
     final repo = ref.read(listasRepositoryProvider);
     final itens =
         ref.read(itensDaListaProvider(widget.listaId)).value ?? const <Item>[];
-    final alvo = normalizarTexto(extra.nome);
+    final alvo = normalizarTexto(nome);
     Item? existente;
     for (final i in itens) {
       if (normalizarTexto(i.nome) == alvo) {
@@ -453,30 +472,24 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
       }
     }
     if (existente != null) {
-      if (existente.unidade == extra.unidade) {
+      if (existente.unidade == unidade) {
         await repo.editarItem(
           existente.id,
-          quantidade: existente.quantidade + extra.quantidade,
+          quantidade: existente.quantidade + quantidade,
         );
         if (mounted) {
-          mostrarSnackBar(
-            context,
-            '${extra.nome} ${AppStrings.itemDuplicadoSomado}',
-          );
+          mostrarSnackBar(context, '$nome ${AppStrings.itemDuplicadoSomado}');
         }
       } else {
         // Unidade diferente: o item é único por nome no servidor, então
         // atualiza para a nova quantidade/unidade (F12-T06).
         await repo.editarItem(
           existente.id,
-          quantidade: extra.quantidade,
-          unidade: extra.unidade,
+          quantidade: quantidade,
+          unidade: unidade,
         );
         if (mounted) {
-          mostrarSnackBar(
-            context,
-            '${extra.nome}: ${AppStrings.itemAtualizado}',
-          );
+          mostrarSnackBar(context, '$nome: ${AppStrings.itemAtualizado}');
         }
       }
     } else {
@@ -484,32 +497,22 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
       // → outros; zero rede.
       final categoria = await ref
           .read(sugestaoCategoriasProvider)
-          .sugerirCategoria(extra.nome);
+          .sugerirCategoria(nome);
       await repo.adicionarItem(
         listaId: widget.listaId,
-        nome: extra.nome,
-        quantidade: extra.quantidade,
-        unidade: extra.unidade,
+        nome: nome,
+        quantidade: quantidade,
+        unidade: unidade,
         categoria: categoria,
       );
     }
-    _controller.clear();
-    if (mounted) widget.onItemAdicionado?.call();
   }
 
   /// Adiciona um item a partir do chip de sugestão (RF-19), reaproveitando
-  /// a sugestão local de categoria (F6-T03).
+  /// a mesma deduplicação da entrada rápida (evita duplicar um nome já
+  /// concluído na lista aberta, que também vira sugestão).
   Future<void> _adicionarSugerido(String nome) async {
-    final repo = ref.read(listasRepositoryProvider);
-    final categoria = await ref
-        .read(sugestaoCategoriasProvider)
-        .sugerirCategoria(nome);
-    await repo.adicionarItem(
-      listaId: widget.listaId,
-      nome: nome,
-      quantidade: 1,
-      categoria: categoria,
-    );
+    await _adicionarItemDedup(nome: nome, quantidade: 1, unidade: Unidade.un);
     _controller.clear();
     if (mounted) {
       setState(() {});

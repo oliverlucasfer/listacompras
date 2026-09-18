@@ -1638,6 +1638,32 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('nao_deve_duplicar_item_quando_chip_de_nome_ja_concluido', (
+    tester,
+  ) async {
+    final listaId = await listaComItens(tester, comConcluido: true);
+
+    // "Detergente" (concluído) conta peso 2 e aparece como chip (RF-19 §4.1.5).
+    expect(find.widgetWithText(ActionChip, 'Detergente'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(ActionChip, 'Detergente'));
+    await tester.pumpAndSettle();
+
+    // Comportamento coerente com _adicionar: mesmo nome ativo e mesma unidade
+    // → soma a quantidade; nunca cria um segundo item ativo (RF-10).
+    final itens =
+        (await (db.select(
+          db.itemLocal,
+        )..where((i) => i.deletadoEm.isNull())).get()).where(
+          (i) => i.listaId == listaId,
+        );
+    final detergentes = itens.where((i) => i.nome == 'Detergente').toList();
+    expect(detergentes, hasLength(1));
+    expect(detergentes.single.quantidade, 2);
+
+    await fechar(tester);
+  });
+
   // ---- Botão do modo mercado (F22-T05, RF-18) ----
 
   testWidgets('deve_mostrar_botao_de_mercado_quando_pode_escrever', (
@@ -1651,6 +1677,12 @@ void main() {
   testWidgets('nao_deve_mostrar_botao_de_mercado_para_leitor', (tester) async {
     await listaComItens(tester, papel: Papel.leitor);
     expect(find.byTooltip(AppStrings.modoMercado), findsNothing);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_botao_de_mercado_quando_editor', (tester) async {
+    await listaComItens(tester, papel: Papel.editor);
+    expect(find.byTooltip(AppStrings.modoMercado), findsOneWidget);
     await fechar(tester);
   });
 }
