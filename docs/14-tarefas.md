@@ -511,7 +511,7 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
 - [x] **F20-T07** — CI: rodar o teste de Realtime no job `supabase` (R-10)
   Dep: F20-T06 · Docs: [02 §5](02-seguranca-rls.md), [07 §3](07-qualidade-ci.md)
   CP: `realtime_test.mjs` executado no CI (sem `package.json` stub); CP da F1-T07 validado.
-- [ ] **F20-T08** — Convites: revogar convite pendente pela UI (R-07)
+- [x] **F20-T08** — Convites: revogar convite pendente pela UI (R-07)
   Dep: — · Docs: [08 §2/§5](08-compartilhamento-colaborativo.md)
   CP: ação "Revogar" no sheet do dono usando `ConvitesRepository.revogar`; token revogado deixa de ser aceito.
 - [ ] **F20-T09** — Categorias: cobertura do termo antes do desempate alfabético (R-08)
@@ -548,8 +548,8 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
 | F17 Remoção da IA | 5 | 5 |
 | F18 Web e Desktop | 6 | 6 |
 | F19 Publicação Web | 5 | 2 |
-| F20 Correções da revisão | 13 | 9 |
-| **Total** | **126** | **117** |
+| F20 Correções da revisão | 13 | 10 |
+| **Total** | **126** | **118** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
