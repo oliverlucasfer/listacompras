@@ -118,7 +118,7 @@ jobs:
   * **Regra de privacidade:** logs **nunca** contêm nomes de itens nem conteúdo de listas ([06 §3.1](06-mvp-entregas.md)); apenas IDs técnicos.
 * Eventos mínimos monitorados:
   1. Falha de flush com fila > 10 mutações ou mutação com > 5 tentativas.
-  2. Divergência grosseira de relógio (`ts_local` vs servidor — ver [03 §5](03-sincronizacao-offline.md)).
+  2. Divergência grosseira de relógio (`ts_local` vs `now()` do servidor — RPC `agora_servidor`, ver [03 §5](03-sincronizacao-offline.md)).
 * Dashboards: Sentry issues + métricas da Seção 5 de [06](06-mvp-entregas.md) (manual no MVP).
 
 ---

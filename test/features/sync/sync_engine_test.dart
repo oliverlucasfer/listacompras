@@ -98,6 +98,16 @@ class RemotoQueEditaAoEnviar implements SyncRemoto {
   }
 }
 
+/// Relógio do servidor injetável (doc 03 §5, R-06).
+class TempoServidorFake implements FonteTempoServidor {
+  TempoServidorFake(this.agora);
+
+  final DateTime agora;
+
+  @override
+  Future<DateTime?> agoraDoServidor() async => agora;
+}
+
 void main() {
   late AppDatabase db;
   late ListasRepository repo;
@@ -825,5 +835,49 @@ void main() {
       remoto.recebidas.map((m) => m.payload['nome']),
       contains('Arroz integral'),
     );
+  });
+
+  test('deve_reportar_relogio_adiantado_quando_servidor_esta_atras', () async {
+    // R-06: a divergência é medida contra o relógio do servidor — o ts local
+    // "normal" do dispositivo é que denuncia o relógio adiantado.
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+
+    final reportes = <String>[];
+    final engine = SyncEngine(
+      db: db,
+      remoto: RemotoFake(),
+      checarConexao: () async => true,
+      fonteTempo: TempoServidorFake(
+        DateTime.now().toUtc().subtract(const Duration(hours: 25)),
+      ),
+      reportar: (codigo, contexto) => reportes.add(codigo),
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+    await aguardarSincronizado(engine);
+
+    expect(reportes, contains('sync_relogio_adiantado'));
+  });
+
+  test('deve_ignorar_relogio_quando_dentro_da_tolerancia', () async {
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+
+    final reportes = <String>[];
+    final engine = SyncEngine(
+      db: db,
+      remoto: RemotoFake(),
+      checarConexao: () async => true,
+      fonteTempo: TempoServidorFake(
+        DateTime.now().toUtc().subtract(const Duration(hours: 1)),
+      ),
+      reportar: (codigo, contexto) => reportes.add(codigo),
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+    await aguardarSincronizado(engine);
+
+    expect(reportes, isNot(contains('sync_relogio_adiantado')));
   });
 }

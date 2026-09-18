@@ -15,9 +15,13 @@ import '../domain/sync_status.dart';
 /// Sync Engine com remoto real (doc 03 §2). Ligado no arranque do app
 /// (main.dart) junto com o bootstrap.
 final syncEngineProvider = Provider<SyncEngine>((ref) {
+  final remoto = SupabaseSyncRemoto(Supabase.instance.client);
   final engine = SyncEngine(
     db: ref.watch(appDatabaseProvider),
-    remoto: SupabaseSyncRemoto(Supabase.instance.client),
+    remoto: remoto,
+    // Observabilidade de relógio (doc 03 §5, R-06): o remoto também responde
+    // pelo `now()` do servidor.
+    fonteTempo: remoto,
     conectividade: Connectivity().onConnectivityChanged,
     checarConexao: () async => (await Connectivity().checkConnectivity()).any(
       (r) => r != ConnectivityResult.none,

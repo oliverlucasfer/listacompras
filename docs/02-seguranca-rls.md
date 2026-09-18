@@ -309,6 +309,19 @@ create policy "convites_delete_dono"
 
 > **Convite por link é "capacidade":** quem tem o token entra via RPC `aceitar_convite` (security definer, [08 §3.1](08-compartilhamento-colaborativo.md)) — contorna RLS por design, pois o convidado não é dono. O dono revoga com UPDATE direto (`estado = 'revogado'`).
 
+### 4.5. RPC `agora_servidor` (relógio do servidor — F20)
+
+```sql
+create or replace function public.agora_servidor()
+returns timestamptz language sql stable set search_path = ''
+as $$ select now(); $$;
+
+revoke execute on function public.agora_servidor() from public, anon;
+grant execute on function public.agora_servidor() to authenticated;
+```
+
+> **Por que existe:** a detecção de relógio de dispositivo adiantado compara `ts_local` com o `now()` do **banco** ([03 §5](03-sincronizacao-offline.md), evento 2 de [07 §4](07-qualidade-ci.md)). Não expõe dado algum — só o horário do servidor — e não precisa de `security definer` (não toca tabelas). Migration `0014`.
+
 ---
 
 ## 5. Testes de Negação (obrigatórios na Fase 1)

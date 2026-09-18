@@ -137,7 +137,7 @@ Ao aplicar uma mudança remota sobre um registro local pendente:
 | **Item criado e removido offline** | Nenhuma mutação sai da fila: o coalescing mantém apenas o `DELETE_SOFT`, que vira delete físico no servidor (ou tombstone remoto). Item nunca existiu para os outros |
 | **Mesmo item marcado como concluído em 2 dispositivos offline** | Ambos geram UPDATE; o maior `updated_at` vence — sem perda além do esperado em LWW |
 | **Relógio do dispositivo minutos/anos adiantado** | O dispositivo "vence" injustamente até o flush; após isso o servidor registra seu `updated_at`. Risco aceito (ADR-004); desempate de empates pelo servidor |
-| **Relógio adiantado + servidor rejeita ts futuro?** | Servidor **aceita** o ts do cliente (não rejeita). Na dúvida, a divergência grosseira é detectada por `ts_local` vs `now()` do servidor no flush e logada no Sentry ([07](07-qualidade-ci.md)) |
+| **Relógio adiantado + servidor rejeita ts futuro?** | Servidor **aceita** o ts do cliente (não rejeita). Na dúvida, a divergência grosseira é detectada por `ts_local` vs `now()` do servidor no flush (RPC `agora_servidor`, [02 §4.5](02-seguranca-rls.md)) e logada no Sentry ([07](07-qualidade-ci.md)) |
 | **Lista removida em A enquanto B adiciona itens offline** | Tombstone da lista vence; itens de B são criados mas a lista `deletado_em IS NOT NULL` some de todas as UIs. Aceitável no domínio |
 | **Duplicação de nome** | `UNIQUE (lista_id, lower(nome)) WHERE deletado_em IS NULL` rejeita; o sync converte em "aumento de quantidade" quando unidades coincidem |
 

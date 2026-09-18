@@ -24,6 +24,7 @@ class SyncEngine {
     AplicadorRemoto? aplicador,
     this._conectividade,
     this._checarConexao,
+    this._fonteTempo,
     Future<void> Function(Duration)? esperar,
     this.maxTentativas = 10,
     this._reportar,
@@ -37,6 +38,7 @@ class SyncEngine {
   late final AplicadorRemoto _aplicador;
   final Stream<List<ConnectivityResult>>? _conectividade;
   final Future<bool> Function()? _checarConexao;
+  final FonteTempoServidor? _fonteTempo;
   final Future<void> Function(Duration) _esperar;
 
   /// Relatórios de observabilidade (doc 07 §4, RF-12): códigos e contagens
@@ -117,6 +119,11 @@ class SyncEngine {
 
   Future<void> _drenar() async {
     _definir(const Sincronizando());
+    // Relógio do servidor uma vez por ciclo (doc 03 §5, R-06): só vale a pena
+    // consultar quando há observabilidade ligada.
+    final agoraServidor = _reportar == null
+        ? null
+        : await _fonteTempo?.agoraDoServidor();
     SyncStatus resultado = const Sincronizado();
     while (_online) {
       final lote = await _proximoLote();
@@ -128,7 +135,7 @@ class SyncEngine {
       }
       try {
         for (final mutacao in lote) {
-          _reportarSeRelogioAdiantado(mutacao);
+          _reportarSeRelogioAdiantado(mutacao, agoraServidor);
           final resultado = await _remoto.enviar(mutacao);
           switch (resultado) {
             case Enviado():
@@ -245,14 +252,19 @@ class SyncEngine {
   );
 
   /// Relatório de relógio adiantado (doc 07 §4 evento 2, 03 §5): ts do
-  /// cliente mais de 24h no futuro em relação ao dispositivo.
-  void _reportarSeRelogioAdiantado(MutacaoSync mutacao) {
+  /// cliente mais de 24h à frente do **relógio do servidor**. Sem o relógio
+  /// do servidor, cai no relógio local (que nunca acusa, já que gerou o ts).
+  void _reportarSeRelogioAdiantado(
+    MutacaoSync mutacao,
+    DateTime? agoraServidor,
+  ) {
     if (_reportar == null) return;
     final ts = DateTime.tryParse(
       mutacao.payload['updated_at'] as String? ?? '',
     );
     if (ts == null) return;
-    final atraso = ts.difference(DateTime.now().toUtc());
+    final referencia = agoraServidor ?? DateTime.now().toUtc();
+    final atraso = ts.difference(referencia);
     if (atraso > const Duration(hours: 24)) {
       _reportar('sync_relogio_adiantado', {'atraso_horas': atraso.inHours});
     }

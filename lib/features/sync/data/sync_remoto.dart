@@ -33,3 +33,12 @@ class Duplicado extends ResultadoEnvio {
 abstract interface class SyncRemoto {
   Future<ResultadoEnvio> enviar(MutacaoSync mutacao);
 }
+
+/// Relógio do servidor (doc 03 §5, R-06): a divergência grosseira de relógio
+/// do dispositivo só é detectável comparando `ts_local` com o `now()` do
+/// banco — nunca com o relógio local, que gerou o próprio `ts_local`.
+abstract interface class FonteTempoServidor {
+  /// `null` quando indisponível (sem rede, sem sessão): o chamador não
+  /// reporta divergência em cima de incerteza.
+  Future<DateTime?> agoraDoServidor();
+}
