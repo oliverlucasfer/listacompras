@@ -57,6 +57,7 @@ class SupabaseBootstrap {
 
   String? _usuarioAtual;
   RealtimeChannel? _canal;
+  bool _disposed = false;
   StreamSubscription<String?>? _subUsuario;
   StreamSubscription<List<ConnectivityResult>>? _subConectividade;
   Future<void> _ultimoTrabalho = Future.value();
@@ -117,6 +118,7 @@ class SupabaseBootstrap {
   }
 
   Future<void> dispose() async {
+    _disposed = true;
     await _subUsuario?.cancel();
     await _subConectividade?.cancel();
     await _desassinarRealtime();
@@ -226,7 +228,17 @@ class SupabaseBootstrap {
           _encadear(() => aplicarRemoto(tabela, registro));
         },
       )
-      ..subscribe();
+      ..subscribe((status, error) => _aoMudarStatusCanal(status));
+  }
+
+  /// Status do canal (doc 03 §7, R-12): em erro/fechamento o cache pode ter
+  /// defasado em silêncio (eventos perdidos); o SDK reconecta sozinho, então
+  /// re-sincroniza no `SUBSCRIBED` seguinte — inclusive o primeiro.
+  void _aoMudarStatusCanal(RealtimeSubscribeStatus status) {
+    if (_disposed || _usuarioAtual == null) return;
+    if (status == RealtimeSubscribeStatus.subscribed) {
+      _encadear(_reSincronizar);
+    }
   }
 
   Future<void> _desassinarRealtime() async {

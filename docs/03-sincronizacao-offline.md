@@ -77,6 +77,11 @@ Tabela local Drift (`mutacoes_pendentes`):
 > descarta o erro de um trabalho para que uma falha de rede não bloqueie os
 > re-syncs seguintes.
 
+> **Coalescing e concorrência (R-03):** a remoção pós-envio apaga apenas as
+> mutações do registro que estavam no lote enviado (id ≤ id do lote). Uma edição
+> feita pelo usuário durante o `await` de rede permanece na fila e sobe no ciclo
+> seguinte — nunca é descartada.
+
 ### Pseudo-código do loop de flush
 
 ```dart
@@ -132,7 +137,7 @@ Ao aplicar uma mudança remota sobre um registro local pendente:
 | **Item criado e removido offline** | Nenhuma mutação sai da fila: o coalescing mantém apenas o `DELETE_SOFT`, que vira delete físico no servidor (ou tombstone remoto). Item nunca existiu para os outros |
 | **Mesmo item marcado como concluído em 2 dispositivos offline** | Ambos geram UPDATE; o maior `updated_at` vence — sem perda além do esperado em LWW |
 | **Relógio do dispositivo minutos/anos adiantado** | O dispositivo "vence" injustamente até o flush; após isso o servidor registra seu `updated_at`. Risco aceito (ADR-004); desempate de empates pelo servidor |
-| **Relógio adiantado + servidor rejeita ts futuro?** | Servidor **aceita** o ts do cliente (não rejeita). Na dúvida, a divergência grosseira é detectada por `ts_local` vs `now()` do servidor no flush e logada no Sentry ([07](07-qualidade-ci.md)) |
+| **Relógio adiantado + servidor rejeita ts futuro?** | Servidor **aceita** o ts do cliente (não rejeita). Na dúvida, a divergência grosseira é detectada por `ts_local` vs `now()` do servidor no flush (RPC `agora_servidor`, [02 §4.5](02-seguranca-rls.md)) e logada no Sentry ([07](07-qualidade-ci.md)) |
 | **Lista removida em A enquanto B adiciona itens offline** | Tombstone da lista vence; itens de B são criados mas a lista `deletado_em IS NOT NULL` some de todas as UIs. Aceitável no domínio |
 | **Duplicação de nome** | `UNIQUE (lista_id, lower(nome)) WHERE deletado_em IS NULL` rejeita; o sync converte em "aumento de quantidade" quando unidades coincidem |
 
@@ -160,6 +165,10 @@ Máquina de estados exposta por provider Riverpod (`syncStatusProvider`):
 | `Pendente(n)` | Badge "N alterações pendentes" |
 | `Offline` | Ícone nuvem cortada + banner discreto |
 | `Erro` | Banner com ação "Tentar novamente" (após esgotar retries) |
+
+> **Bootstrap (R-05):** a fila que já chega ao app com todas as mutações em 10 tentativas expõe `Erro` **já no bootstrap** — o engine deriva o estado da fila ao iniciar, em vez de exibir `Sincronizado`/`Offline` mentindo sobre a fila esgotada.
+
+> **Laço, não reentrância (R-04):** o `flush()` drena em laço (`while`) e nunca chama a si mesmo de dentro do próprio trabalho — a chamada reentrante fazia `_flushAtual` apontar para o próprio futuro e fechava um ciclo de espera que só saía com restart do app.
 
 ---
 

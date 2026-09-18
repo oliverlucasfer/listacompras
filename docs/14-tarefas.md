@@ -118,7 +118,7 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 
 - [x] **F5-T01** — Tela Configurações (política de privacidade, versão, exclusão de conta)
   Dep: F4-T09 · Docs: [06 §3](06-mvp-entregas.md), [10 §5](10-wireframes-telas.md) · RF-11
-  CP: Wireframe 5; links corretos. *(rota /configuracoes protegida + ícone ⚙ no painel; e-mail da conta (emailUsuarioProvider); Política de Privacidade exibida in-app (texto único do 06 §3.3 em core/l10n/politica_privacidade.dart — a URL pública online entra na F5-T06); versão via package_info_plus; botão vermelho Excluir minha conta + aviso, com fluxo placeholder para F5-T02; 3 widget tests)*
+  CP: Wireframe 5; links corretos. *(rota /configuracoes protegida + ícone ⚙ no painel; e-mail da conta (emailUsuarioProvider); Política de Privacidade exibida in-app (texto único do 06 §3.3 em core/l10n/politica_privacidade.dart — a URL pública online entra na Fase 19 (ADR-013)); versão via package_info_plus; botão vermelho Excluir minha conta + aviso, com fluxo placeholder para F5-T02; 3 widget tests)*
 - [x] **F5-T02** — RPC `excluir_conta()` + fluxo de confirmação dupla
   Dep: F5-T01 · Docs: [06 §3.3.1](06-mvp-entregas.md) · RF-11
   CP: Conta excluída remove todos os dados (cascades verificados); app limpa cache/fila; sessão invalidada. *(migration 0005: RPC security definer apaga auth.users + ia_rate_limit (sem FK) e marca a transação `app.excluindo_conta`; sync_dono v2 reconhece a marca — exceção documentada no doc 01 §6 no mesmo PR; app: repo.excluirConta() (RPC + signOut) e confirmação dupla na tela — senha com reautenticação (erro inline "Senha incorreta") + diálogo final; cache/fila limpos pelo bootstrap ao detectar fim de sessão (F4-T06, testado em deve_limpar_cache_e_fila_quando_logout); 5 widget tests do fluxo)*
@@ -134,9 +134,9 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
 - [x] **F5-T05b** — Distribuição interna via Firebase App Distribution
   Dep: F4-T09 · Docs: [06 §4](06-mvp-entregas.md)
   CP: APK release assinado, instalável por 2+ testadores apontando para o Supabase de produção; keystore via `android/key.properties` (gitignored, template em `key.properties.example`) com fallback para debug quando ausente. *(fora do gate de T05/T06 — é o canal provisório de builds de teste até o lançamento. Build `1.0.0+2` assinado (V2, CN=Lucas Oliveira), URL de produção verificada embutida no libapp.so e smoke no emulador: instala, abre e login com credenciais erradas devolve "E-mail ou senha incorretos" da produção. Distribuído ao grupo "testadores" (2 membros) via `firebase appdistribution:distribute --groups`; dart-defines de produção em `dart_defines_prod.json` (gitignored). Correções de CI no caminho: Flutter 3.44.5 e CLI 2.116.0 pinados, e2e cria usuários via Admin API (confirmations F3) — doc 07 §3 e 04 §8 atualizados)*
-- [ ] **F5-T06** — Publicação Web + Android (teste interno) + política de privacidade online
+- [ ] **F5-T06** — Publicação Android (teste interno) + política de privacidade na Play
   Dep: F5-T05 · Docs: [06 §4](06-mvp-entregas.md)
-  CP: Checklist 06 §1 100% marcado; URL Web pública; AAB no closed testing. *(ADIADA por decisão do dono: executar somente sob solicitação explícita — só quando for lançar na Play Store; Dep F5-T05 permanece)*
+  CP: Checklist 06 §1 100% marcado; AAB no closed testing; Declaração de Dados preenchida. *(ADIADA por decisão do dono: executar somente sob solicitação explícita — só quando for lançar na Play Store; a publicação Web foi entregue pela Fase 19 (ADR-013); Dep F5-T05 permanece)*
 
 ## Fase 6 — Pós-MVP
 
@@ -461,6 +461,86 @@ Spec: [superpowers/specs/2026-09-17-suporte-web-desktop-design.md](superpowers/s
   Dep: F18-T03, F18-T04 · Docs: [07](07-qualidade-ci.md), [08](08-compartilhamento-colaborativo.md), [09](09-runbook-operacoes.md)
   CP: CI verde com `build web` + builds desktop; 05/06/07/08/09 sincronizados; Fase 18 marcada.
 
+## Fase 19 — Publicação Web
+
+Spec: [superpowers/specs/2026-09-17-publicacao-web-design.md](superpowers/specs/2026-09-17-publicacao-web-design.md) · ADR-013 · Docs donos: 00, 06, 07, 09.
+
+- [x] **F19-T00** — ADR-013 + planejamento (00, 06, 12, 13, 14)
+  Dep: — · Docs: [00](00-visao-geral.md), [06](06-mvp-entregas.md), [14](14-tarefas.md)
+  CP: ADR-013 no 00; Fase 19 no 14; item de publicação do 06 §1 desdobrado; sem tocar código. *(ADR-013 no 00 e no 13; Fase 19 no 14 com progresso; 06 §1 desdobrado, numeração 3.3.2 corrigida e nota do contato genérico; 12 §7 e as descrições da Fase 5/F5-T06 reapontadas para Play-only; nenhum arquivo de código tocado)*
+- [x] **F19-T01** — Artefatos de hosting, política estática e primeiro deploy
+  Dep: F19-T00 · Docs: [06 §3.3.2](06-mvp-entregas.md), [09](09-runbook-operacoes.md)
+  CP: `firebase.json`/`.firebaserc`/`robots.txt`/`privacidade.html`; testes-guarda de paridade verdes; URL pública com COOP/COEP, rewrite e `/privacidade`. *(deploy manual no site default `https://lista-compras-34f93.web.app`; `/` com `no-cache` + COOP/COEP; `cleanUrls` serve `/privacidade` estática; rewrite da SPA em `/listas`; `robots.txt` com `Disallow: /`; guardas de paridade da política e do `version.json` verdes — o deploy automático entra na F19-T03)*
+- [ ] **F19-T02** - Supabase Auth e smoke funcional na URL pública
+  Dep: F19-T01 · Docs: [09 §2.6/§2.7](09-runbook-operacoes.md)
+  CP: Site URL e Redirect URLs de produção no Supabase; cadastro/verificação, login, CRUD, import, convite e sync validados na URL pública.
+- [ ] **F19-T03** — Deploy no CI (preview por PR, live na main) e rollback
+  Dep: F19-T02 · Docs: [07 §3](07-qualidade-ci.md), [09 §4](09-runbook-operacoes.md)
+  CP: secrets no GitHub; jobs `deploy`/`preview` verdes; publicação automática na `main`; rollback exercitado e documentado.
+- [ ] **F19-T04** — Política no app e fechamento
+  Dep: F19-T03 · Docs: [06 §1/§3.3.2](06-mvp-entregas.md), [14](14-tarefas.md)
+  CP: link "ver versão online" no sheet e no cadastro; `format`/`analyze`/`test` verdes; 06 §1 (web) marcado; Fase 19 marcada.
+
+## Fase 20 — Correções da revisão geral
+
+Fonte: [relatorio-revisao-geral.md](relatorio-revisao-geral.md) · Plano: [superpowers/plans/2026-09-18-correcoes-revisao-geral.md](superpowers/plans/2026-09-18-correcoes-revisao-geral.md) · Docs donos: 01, 02, 03, 04, 06, 07, 08, 15.
+
+Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs donos) → T07…T12 (frentes independentes).
+
+- [x] **F20-T00** — Registrar a revisão geral e a Fase 20
+  Dep: — · Docs: [14](14-tarefas.md), [relatório](relatorio-revisao-geral.md)
+  CP: relatório com os achados `R-xx` verificados; Fase 20 no 14 com progresso; sem tocar código.
+- [x] **F20-T01** — Parser: vírgula decimal não pode corromper a quantidade (R-01)
+  Dep: F20-T00 · Docs: [04 §3](04-importacao-lista.md)
+  CP: `1,5 kg de arroz` → `1.5 kg`; segmentação por `,` entre itens preservada; doc 04 §3 sem contradição.
+- [x] **F20-T02** — Parser e UI: quantidade ≤ 0 tratada como ausente (R-02)
+  Dep: F20-T01 · Docs: [04 §3](04-importacao-lista.md)
+  CP: `0 arroz` → `1 un` + aviso; edição inline rejeita `≤ 0`; nenhuma exceção crua na confirmação.
+- [x] **F20-T03** — Sync: não perder mutação enfileirada durante o flush (R-03)
+  Dep: F20-T00 · Docs: [03 §3/§4](03-sincronizacao-offline.md)
+  CP: remoção limitada ao id do lote; teste com edição durante o envio mantém a mutação nova na fila e no servidor.
+- [x] **F20-T04** — Sync: flush sem reentrância e status correto no bootstrap (R-04, R-05)
+  Dep: F20-T03 · Docs: [03 §4/§6](03-sincronizacao-offline.md)
+  CP: `flush()` em laço (sem ciclo de futures); fila esgotada no restart expõe `Erro` com "tentar de novo".
+- [x] **F20-T05** — Sync: divergência de relógio medida contra o servidor (R-06)
+  Dep: F20-T03 · Docs: [03 §5](03-sincronizacao-offline.md), [07 §4](07-qualidade-ci.md)
+  CP: `ts_local` comparado ao `now()` do servidor; evento `sync_relogio_adiantado` testado com fonte injetada.
+- [x] **F20-T06** — Docs donos: publication, cascatas, inventário e CI (R-09, R-17)
+  Dep: — · Docs: [01](01-banco-de-dados.md), [02](02-seguranca-rls.md), [06](06-mvp-entregas.md), [07](07-qualidade-ci.md)
+  CP: 01 §7 e §4 com `convites`; 02 §2 com `convites`; 06 §4/ADR-013 sem afirmar deploy já entregue; 07 §3 espelhando o `ci.yml`; cascata de `convites.criado_por` na lista do 06 §3.3.1.
+- [x] **F20-T07** — CI: rodar o teste de Realtime no job `supabase` (R-10)
+  Dep: F20-T06 · Docs: [02 §5](02-seguranca-rls.md), [07 §3](07-qualidade-ci.md)
+  CP: `realtime_test.mjs` executado no CI (sem `package.json` stub); CP da F1-T07 validado.
+- [x] **F20-T08** — Convites: revogar convite pendente pela UI (R-07)
+  Dep: — · Docs: [08 §2/§5](08-compartilhamento-colaborativo.md)
+  CP: ação "Revogar" no sheet do dono usando `ConvitesRepository.revogar`; token revogado deixa de ser aceito.
+- [x] **F20-T09** — Categorias: cobertura do termo antes do desempate alfabético (R-08)
+  Dep: — · Docs: [04 §5](04-importacao-lista.md)
+  CP: `Suco de laranja` → Bebidas; casos de teste para compostos.
+- [x] **F20-T10** — Realtime: limpeza ao perder acesso e status do canal (R-11, R-12)
+  Dep: — · Docs: [03 §4/§7](03-sincronizacao-offline.md), [08 §7/§9](08-compartilhamento-colaborativo.md)
+  CP: comportamento do cache ao ser removido documentado e o caminho testado; callback de status com re-sync em erro (feito); **R-23: flaky do Realtime local mitigado no CI com retry** (ver `R-23` no relatório). *(R-11: medido contra o stack local — o `old_record` do DELETE de `lista_membros` chega vazio mesmo com `replica identity full`; causa é `_realtime.tenants.private_only`, sem opção no CLI. Limpeza garantida por reconexão/bootstrap/sair-da-lista; **não** há limpeza por evento nem reavaliação em resume — o `08 §9` descreve isso como limite conhecido. R-12: re-sync em `SUBSCRIBED` implementado e testado. R-23: flaky de infra local, retry no CI)*
+- [x] **F20-T11** — Banco: defesa em profundidade e higiene (R-18, R-19)
+  Dep: F20-T06 · Docs: [01](01-banco-de-dados.md), [02 §4.3](02-seguranca-rls.md)
+  CP: `papel='dono'` restrito na policy de insert; trigger de `atualizado_em` em `convites`; testes de negação verdes.
+- [x] **F20-T12** — Privacidade e polimento de UI/a11y (R-13…R-16, R-20, R-21, R-22)
+  Dep: — · Docs: [05 §7](05-app-flutter.md), [07 §4](07-qualidade-ci.md), [09 §2.4](09-runbook-operacoes.md), [15 §4](15-design-system.md)
+  CP: `beforeSend` sem dados de itens; callback do login no i18n/tokens; comentário da política; deps; ajustes de a11y; CSP documentada como decisão; `seed.sql` existente ou `sql_paths` removido do `config.toml` (sem aviso no `db reset`).
+
+## Fase 21 — Pendências do fechamento da F20
+
+Achados da revisão de fechamento que **não** deveriam ser marcados como concluídos na F20 (ver `relatorio-revisao-geral.md`).
+
+- [ ] **F21-T01** — A11y pendente do R-20
+  Dep: — · Docs: [10](10-wireframes-telas.md), [11](11-usabilidade-fase5.md), [15 §4](15-design-system.md)
+  CP: `SeletorTema` sem overflow em tela estreita/escala 2x; telas de verificação/login com scroll; decisão registrada sobre o indicador de sync no painel (código ou wireframe ajustado).
+- [ ] **F21-T02** — Sentry: limpar `event.extra` e alinhar `07 §3`/`02 §3`
+  Dep: — · Docs: [02 §3](02-seguranca-rls.md), [07 §3/§4](07-qualidade-ci.md)
+  CP: `beforeSend` limpa `breadcrumbs`, `extra` e `contexts`; esqueleto do CI espelha o `ci.yml` (step de Realtime + pin do CLI); matriz de INSERT de `lista_membros` no 02 §3 cita `user_id = auth.uid()`.
+- [ ] **F21-T03** — Convites: revogar também os pendentes anteriores (R-07 parcial)
+  Dep: — · Docs: [08 §2](08-compartilhamento-colaborativo.md)
+  CP: sheet lista os convites pendentes da lista (usando `pendentesDaLista`) com ação de revogar; ou limite documentado no 08.
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -481,7 +561,10 @@ Spec: [superpowers/specs/2026-09-17-suporte-web-desktop-design.md](superpowers/s
 | F16 Busca e filtro | 5 | 5 |
 | F17 Remoção da IA | 5 | 5 |
 | F18 Web e Desktop | 6 | 6 |
-| **Total** | **108** | **106** |
+| F19 Publicação Web | 5 | 2 |
+| F20 Correções da revisão | 13 | 13 |
+| F21 Pendências do fechamento | 3 | 0 |
+| **Total** | **129** | **121** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

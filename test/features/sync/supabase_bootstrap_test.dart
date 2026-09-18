@@ -64,6 +64,8 @@ class HttpPapelFalho implements http.Client {
 /// bootstrap, permitindo simular eventos de realtime no teste.
 class CanalFake implements RealtimeChannel {
   final callbacks = <void Function(PostgresChangePayload)>[];
+  void Function(RealtimeSubscribeStatus status, Object? error)? _aoMudarStatus;
+  RealtimeSubscribeStatus statusInicial = RealtimeSubscribeStatus.subscribed;
 
   @override
   RealtimeChannel onPostgresChanges({
@@ -83,7 +85,17 @@ class CanalFake implements RealtimeChannel {
   RealtimeChannel subscribe([
     void Function(RealtimeSubscribeStatus status, Object? error)? callback,
     Duration? timeout,
-  ]) => this;
+  ]) {
+    _aoMudarStatus = callback;
+    callback?.call(statusInicial, null);
+    return this;
+  }
+
+  /// Simula a queda/retomada do canal (R-12): o SDK avisa o callback.
+  void cairStatus(RealtimeSubscribeStatus status, [Object? error]) {
+    statusInicial = status;
+    _aoMudarStatus?.call(status, error);
+  }
 
   void enviar(PostgresChangePayload payload) {
     for (final callback in [...callbacks]) {
@@ -478,6 +490,32 @@ void main() {
     );
     expect(httpFalho.pedidos, isNotEmpty); // carga de papel foi tentada
     expect(papelRepo.valores, isEmpty); // papéis seguem vazios sem quebrar
+  });
+
+  test('deve_re_sincronizar_quando_canal_de_realtime_volta', () async {
+    // R-12: sem callback de status o erro de stream passava em silêncio e o
+    // cache só se corrigia no próximo bootstrap. Agora o canal avisa e o
+    // bootstrap re-sincroniza quando o SDK reassina (SUBSCRIBED).
+    final cliente = ClienteFake();
+    remotos['listas'] = [listaRemota('l1')];
+    final bootstrap = criarComRealtime(cliente: cliente, usuarioSalvo: 'U1');
+    addTearDown(bootstrap.dispose);
+    await bootstrap.iniciar();
+    await pumpEventQueue();
+    expect((await db.select(db.listaLocal).get()).map((l) => l.id), ['l1']);
+
+    // O servidor ganhou dados enquanto o canal estava fora; o SDK reassina.
+    remotos['listas'] = [listaRemota('l1'), listaRemota('l2')];
+    cliente.canal.cairStatus(RealtimeSubscribeStatus.subscribed);
+
+    for (var i = 0; i < 20; i++) {
+      await pumpEventQueue();
+      final atuais = await db.select(db.listaLocal).get();
+      if (atuais.length > 1) break;
+    }
+
+    final locais = await db.select(db.listaLocal).get();
+    expect(locais.map((l) => l.id), contains('l2'));
   });
 
   test('deve_limpar_cache_quando_membro_removido_sou_eu', () async {

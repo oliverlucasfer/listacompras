@@ -198,6 +198,16 @@ create index idx_itens_lista_ordem
 
 ---
 
+## 4.4. `convites` (Fase 6)
+
+Tabela de convites por link/e-mail: `id`, `lista_id` (CASCADE), `criado_por` (FK `auth.users`), `token` (uuid único), `tipo` (`link`/`email`), `email`, `papel_oferecido` (`editor`/`leitor` — nunca `dono`), `estado` (`pendente`/`aceito`/`expirado`/`revogado`), `expira_em` (7 dias), `created_at`, `atualizado_em`.
+
+* **Dono do detalhe:** [08 §2](08-compartilhamento-colaborativo.md) (tabela e índices) e [02 §4.4](02-seguranca-rls.md) (policies). Migration `0007`; entram no publication (§7).
+* **`atualizado_em`:** carimbado pelo trigger `trg_convites_updated` (`touch_convites_updated_at`, migration `0015`) — mesmo contrato de `listas`/`itens_lista` (§5).
+* **Pendência conhecida (R-17):** `criado_por` não tem `ON DELETE CASCADE` — hoje não bloqueia a exclusão de conta (só o dono cria convite e a lista cai em cascata), mas deve entrar na revisão de cascatas se a transferência de dono (Fase 6) for implementada.
+
+---
+
 ## 5. Trigger de `updated_at`
 
 Todo UPDATE deve atualizar `updated_at` automaticamente (base do LWW):
@@ -335,9 +345,12 @@ where not exists (
 ```sql
 alter publication supabase_realtime add table public.listas;
 alter publication supabase_realtime add table public.itens_lista;
+alter publication supabase_realtime add table public.lista_membros;
+alter publication supabase_realtime add table public.convites;
 ```
 
-* `lista_membros` **não** vai ao publication por enquanto (raramente muda; evita ruído). Reavaliar na Fase 6.
+* `lista_membros` e `convites` entram no publication desde a **Fase 6** (migration `0007`): o membro removido precisa saber que perdeu acesso para limpar o cache local e o convite precisa aparecer para o destinatário.
+* **Limite medido (R-11, [08 §9](08-compartilhamento-colaborativo.md)):** `replica identity full` (migration `0008`) **não basta** — o serviço Realtime v2.34 só emite o `old_record` quando o tenant está em `private_only`, coluna que o `config.toml` do CLI não expõe. Na prática, o DELETE de `lista_membros` chega com `old_record` vazio; a limpeza do cache do removido acontece por reconexão/bootstrap/`sairDaLista`, não pelo evento.
 * O Realtime respeita as policies RLS — usuários só recebem eventos de listas de que participam (ver [02](02-seguranca-rls.md)).
 
 ---

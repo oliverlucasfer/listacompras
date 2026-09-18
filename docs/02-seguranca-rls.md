@@ -89,10 +89,14 @@ Mesma justificativa das demais: `auth.users` não é legível pelo role `authent
 alter table public.listas        enable row level security;
 alter table public.lista_membros enable row level security;
 alter table public.itens_lista   enable row level security;
+alter table public.convites      enable row level security;
 alter table public.listas        force row level security;
 alter table public.lista_membros force row level security;
 alter table public.itens_lista   force row level security;
+alter table public.convites      force row level security;
 ```
+
+> `convites` (Fase 6, migration `0007`) segue as mesmas regras das demais: RLS habilitada e forçada, policies em [§4.4](#44-convites-fase-6--08-2).
 
 ---
 
@@ -201,8 +205,10 @@ create policy "membros_insert_dono"
   on public.lista_membros for insert
   with check (
     public.is_dono_de(lista_id)
-    -- o dono se insere com papel 'dono'; ninguém insere terceiros como 'dono'
-    and papel in ('editor', 'leitor', 'dono')
+    -- 'dono' só para o próprio usuário; terceiros apenas como editor/leitor
+    -- (migration 0015, R-18: antes aceitava qualquer user_id com papel 'dono'
+    -- e o invariante ficava só com o trigger `sync_dono`)
+    and (papel in ('editor', 'leitor') or user_id = auth.uid())
   );
 
 create policy "membros_delete_dono"
@@ -309,6 +315,19 @@ create policy "convites_delete_dono"
 
 > **Convite por link é "capacidade":** quem tem o token entra via RPC `aceitar_convite` (security definer, [08 §3.1](08-compartilhamento-colaborativo.md)) — contorna RLS por design, pois o convidado não é dono. O dono revoga com UPDATE direto (`estado = 'revogado'`).
 
+### 4.5. RPC `agora_servidor` (relógio do servidor — F20)
+
+```sql
+create or replace function public.agora_servidor()
+returns timestamptz language sql stable set search_path = ''
+as $$ select now(); $$;
+
+revoke execute on function public.agora_servidor() from public, anon;
+grant execute on function public.agora_servidor() to authenticated;
+```
+
+> **Por que existe:** a detecção de relógio de dispositivo adiantado compara `ts_local` com o `now()` do **banco** ([03 §5](03-sincronizacao-offline.md), evento 2 de [07 §4](07-qualidade-ci.md)). Não expõe dado algum — só o horário do servidor — e não precisa de `security definer` (não toca tabelas). Migration `0014`.
+
 ---
 
 ## 5. Testes de Negação (obrigatórios na Fase 1)
@@ -326,13 +345,15 @@ Casos que **DEVEM falhar** (executados como usuário autenticado sem acesso, via
 | N-07 | Usuário A tenta se remover da lista onde é dono | violação de policy |
 | N-08 | Usuário anônimo (sem JWT) faz SELECT de qualquer tabela | 0 linhas |
 | N-09 | Usuário A tenta UPDATE de `listas.dono_id` para si mesmo | violação de policy |
-| N-10 | Usuário A insere 2º membro `papel='dono'` na própria lista | exceção do trigger `sync_dono` |
+| N-10 | Usuário A insere 2º membro `papel='dono'` na própria lista | violação de policy (`0015`, R-18) ou exceção do trigger `sync_dono` |
 | N-11 | Não-membro faz SELECT de convites da lista de outrem | 0 linhas (F7-T01) |
 | N-13 | `editor` tenta INSERT de convite | violação de policy (F7-T01) |
 | N-14 | `editor` tenta revogar convite (UPDATE) | 0 linhas (policy nega) (F7-T01) |
 | N-15 | `editor` tenta mudar papel de outro membro (UPDATE em `lista_membros`) | 0 linhas (F7-T07) |
 | N-16 | `editor` tenta remover linha de outro membro (DELETE em `lista_membros`) | 0 linhas (F7-T07) |
 | N-17 | Dono tenta promover membro a `dono` via UPDATE | violação de policy (`with check`, F7-T07) |
+| N-18 | Dono insere terceiro **sem membresia** como `papel='dono'` | negado — a linha não existe (`0015`, R-18) |
+| R-19 | UPDATE em `convites` como dono | `atualizado_em` carimbado pelo trigger (`0015`) |
 
 > N-12 é **positivo** apesar do prefixo N (cobria a leitura legítima dos convites pelo dono) — movido para a tabela "DEVEM passar" abaixo.
 
@@ -348,6 +369,10 @@ Casos que **DEVEM passar**:
 | N-12 | Dono faz SELECT dos convites da própria lista | > 0 linhas (F7-T01) |
 | P-06 | Dono muda papel de membro `leitor`→`editor` (UPDATE em `lista_membros`) | 1 linha (F7-T07) |
 | P-07 | Membro comum sai da lista (DELETE da própria linha em `lista_membros`) | sucesso (F7-T07) |
+| P-08 | INSERT em `listas` cria o membro dono automaticamente | 1 dono (`0010`) |
+| P-09 | Dono renomeia lista com >1 lista no banco | 1 linha (F12-T04) |
+| P-10 | Dono tenta mudar `listas.dono_id` via UPDATE | violação de policy (F12-T04) |
+| P-11 | Dono se insere como `dono` em lista nova | sucesso (`0015`, R-18) |
 
 Ferramentas: testes de integração com dois usuários reais (ver [07 Qualidade](07-qualidade-ci.md)) ou script SQL com `set local role authenticated; set local request.jwt.claims = ...` em ambiente dev.
 

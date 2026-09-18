@@ -67,7 +67,10 @@ Pipeline único `.github/workflows/ci.yml`, disparado em PR e push em `main`:
 
 ```yaml
 name: ci
-on: [pull_request, push]
+on:
+  pull_request:
+  push:
+    branches: [main]
 
 jobs:
   flutter:
@@ -105,9 +108,16 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: supabase/setup-cli@v3
-      - run: supabase db reset   # valida migrations
-      # Fase 1: script de testes de negação RLS contra DB local
+      - run: supabase start -x studio -x mailpit -x logflare -x vector -x imgproxy -x storage-api
+      - run: supabase db reset   # valida migrations (desde 0001 até a última)
+      - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/rls_tests.sql
+      - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/excluir_conta_tests.sql
+      - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/aceitar_convite_tests.sql
 ```
+
+> `$DB` = `postgresql://postgres:postgres@127.0.0.1:54322/postgres` (stack local do CI); os três scripts rodam com `ON_ERROR_STOP=1` e falham o job em qualquer negação indevida.
+>
+> **Teste de Realtime (`supabase/tests/realtime_test.mjs`, F20-T07):** `npm ci && npm test` no mesmo job, com as chaves do stack exportadas (`supabase status -o env`). O step tenta o teste **2 vezes**: logo após `supabase start`/`db reset` o tenant do Realtime ainda está reconectando ao banco e a 1ª execução cai com `CLOSED` (flake de infraestrutura local, R-23 — não do app). Falha só se as duas tentativas caírem.
 
 ---
 
@@ -115,10 +125,10 @@ jobs:
 
 * **Sentry (plano free)** no Flutter (ADR-009):
   * Crash nativos, erros não tratados, `syncStatus = Erro` persistente.
-  * **Regra de privacidade:** logs **nunca** contêm nomes de itens nem conteúdo de listas ([06 §3.1](06-mvp-entregas.md)); apenas IDs técnicos.
+  * **Regra de privacidade:** logs **nunca** contêm nomes de itens nem conteúdo de listas ([06 §3.1](06-mvp-entregas.md)); apenas IDs técnicos. No app (`lib/main.dart`), `sendDefaultPii = false` e o `beforeSend` limpa **breadcrumbs e contexts** antes do envio (R-13) — nada de payload de Drift/PostgREST sai do dispositivo.
 * Eventos mínimos monitorados:
   1. Falha de flush com fila > 10 mutações ou mutação com > 5 tentativas.
-  2. Divergência grosseira de relógio (`ts_local` vs servidor — ver [03 §5](03-sincronizacao-offline.md)).
+  2. Divergência grosseira de relógio (`ts_local` vs `now()` do servidor — RPC `agora_servidor`, ver [03 §5](03-sincronizacao-offline.md)).
 * Dashboards: Sentry issues + métricas da Seção 5 de [06](06-mvp-entregas.md) (manual no MVP).
 
 ---

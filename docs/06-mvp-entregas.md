@@ -18,7 +18,8 @@
 - [ ] App funciona 100% offline (leitura, escrita, marcação de itens) e sincroniza pendências ao reconectar, sem duplicar nem perder itens. *(RF-08, RNF-02)*
 - [ ] RLS validado: um usuário não consegue ler/escrever listas de outro (testes de negação N-01…N-10 de [02 §5](02-seguranca-rls.md)). *(RNF-03)*
 - [ ] **Exclusão de conta disponível no app** (ver Seção 3). *(RF-11, RNF-05)*
-- [ ] Publicado: Web acessível por URL + APK/AAB disponível para teste interno.
+- [ ] Publicado: **Web acessível por URL pública** (`https://lista-compras-34f93.web.app`, Fase 19 — ADR-013).
+- [ ] Publicado: **APK/AAB disponível para teste interno** na Play Console (F5-T06, gate do dono).
 
 ---
 
@@ -70,20 +71,27 @@ Uma fase só está "pronta" quando:
 * Fluxo: Configurações → "Excluir conta" → confirmação dupla (senha + diálogo) → execução.
 * **Estratégia: delete físico em cascata** (ADR-008):
   1. RPC `excluir_conta()` (SECURITY DEFINER) executa: `delete from auth.users where id = auth.uid()`.
-  2. Cascades já existentes propagam: `lista_membros` (participações), `listas` onde `dono_id`, e `itens_lista` por CASCADE de lista.
+  2. Cascades já existentes propagam: `lista_membros` (participações), `listas` onde `dono_id`, `itens_lista` por CASCADE de lista e `convites` por CASCADE de lista. `convites.criado_por` não tem CASCADE: hoje não bloqueia a exclusão (só o dono cria convite e a lista dele cai junto) — entra na revisão de cascatas se a transferência de dono (Fase 6) for implementada.
   3. Sessão invalidada; app limpa cache local e fila de pendências.
 * Listas compartilhadas onde o usuário era apenas membro: sua participação some; a lista do outro dono permanece (dados do titular removidos das membresias).
 * Confirmação final para o usuário: "Esta ação é permanente e apaga todas as suas listas."
 
-### 3.3. Política de privacidade
+### 3.3.2. Política de privacidade
 
 * Texto único e simples (1 página) cobrindo: dados coletados, finalidade, subprocessadores (3.2), retenção (até exclusão da conta), direitos do titular e contato do encarregado.
-* **Onde:** página pública no site do app (Web já publicado na Fase 5) + link no cadastro e nas configurações do app.
+* **Onde:** página pública em `https://lista-compras-34f93.web.app/privacidade` (Fase 19, ADR-013) + link no cadastro e nas configurações do app.
+* **Contato do encarregado:** por decisão do dono (17/09/2026) o texto permanece genérico ("canal informado na página do aplicativo"); preencher com um e-mail dedicado é pendência do lançamento público (F5-T06).
 * **Obrigatória para publicação** na Play Store e App Store (seção "Segurança de dados" do Play Console exige declaração de coleta).
 
 ### 3.4. Menores e consentimento
 
 * Não direcionado a menores de 16 (texto na política). Sem rastreamento publicitário; sem consentimento de cookies no Web MVP (sem cookies de marketing).
+
+### 3.4.1. Cabeçalhos de segurança no Web (F19/F20)
+
+* **COOP `same-origin` + COEP `require-corp`** (F19-T01): exigidos pelo Drift/WASM (SharedArrayBuffer). Aplicados em `firebase.json` para todas as rotas.
+* **CSP: decisão consciente de NÃO adicionar no MVP** (R-21). O Flutter Web gera código inline (loader/`flutter_bootstrap.js`) e o Worker do Drift vem de blob; uma CSP estrita exige `unsafe-inline`/`unsafe-eval` + `worker-src blob:` — anulando boa parte do ganho — e qualquer política mal ajustada quebraria o app em produção sem cobertura de teste automatizada. Fica registrado como endurecimento pós-MVP, acompanhado de um teste de fumaça no Hosting.
+* Reforço que **é** aplicado: `robots.txt` com `Disallow: /` e `noindex` em `/privacidade` (F19-T01, §3.3.2) — o site não é indexado nem divulgado.
 
 ---
 
@@ -91,7 +99,7 @@ Uma fase só está "pronta" quando:
 
 | Canal | Requisito | Observação |
 | :--- | :--- | :--- |
-| Web (Fase 5) | Build `flutter build web` + hosting | App **funcional completo** desde a Fase 18 (banco WASM/OPFS, auth por link, convites, sync e import — ADR-012); hospedagem pública (Supabase Hosting/Vercel/Netlify, URL pública) segue na F5-T06 |
+| Web (Fase 19) | Build `flutter build web` + Firebase Hosting ([ADR-013](00-visao-geral.md)) | Publicado em `https://lista-compras-34f93.web.app` pela F19-T01 (deploy manual); o deploy automático no CI entra na **F19-T03**. Domínio próprio fica pós-MVP |
 | Desktop — Windows/Linux/macOS (Fase 18) | Builds `flutter build windows`/`linux`/`macos` | Suportado desde a Fase 18 (ADR-012); builds Windows/Linux validados no CI ([07 §3](07-qualidade-ci.md)); publicação segue o gate do dono (Fase 5 / F5-T06) |
 | Android — teste interno (Fase 5) | APK/AAB na Play Console (closed testing) | Política de privacidade + Declaração de Dados preenchidas |
 | Android — produção | Publicação pública | Depende de validação do MVP; pode ficar para após Fase 5 |
@@ -99,7 +107,7 @@ Uma fase só está "pronta" quando:
 
 **Antes de lançamento público:** revisar R-01 — avaliar upgrade Supabase Pro (gatilho documentado em [00 §4](00-visao-geral.md)).
 
-**Nota do dono do projeto:** a publicação Web + Play (teste interno) está **adiada** — será executada apenas sob solicitação explícita, junto com a F5-T05 ([14-tarefas](14-tarefas.md)). Canal provisório de distribuição de builds de teste: Firebase App Distribution (F5-T05b). Os critérios do DoD (§2) permanecem válidos para o dia do lançamento.
+**Nota do dono do projeto:** a publicação na Play (teste interno) está **adiada** — será executada apenas sob solicitação explícita, junto com a F5-T05 ([14-tarefas](14-tarefas.md)); a publicação do Web entra na Fase 19. Canal provisório de distribuição de builds de teste: Firebase App Distribution (F5-T05b). Os critérios do DoD (§2) permanecem válidos para o dia do lançamento.
 
 ---
 

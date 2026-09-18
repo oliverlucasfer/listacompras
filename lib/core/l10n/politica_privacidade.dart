@@ -1,6 +1,7 @@
 /// Política de Privacidade do app (doc 06 §3.3): texto único e simples,
-/// exibido in-app (cadastro e Configurações). A versão online pública é
-/// publicada na F5-T06 — mesma fonte, uma página.
+/// exibido in-app (cadastro e Configurações). A versão online é a página
+/// estática `/privacidade` publicada no Hosting (F19-T01) — mesma fonte,
+/// com guarda de paridade em `test/core/l10n/politica_privacidade_publica_test.dart`.
 const politicaPrivacidadeTexto = '''
 Política de Privacidade
 

@@ -290,4 +290,45 @@ void main() {
 
     await fechar(tester);
   });
+
+  testWidgets('deve_revogar_convite_quando_dono_toca_revogar', (tester) async {
+    // R-07: o link gerado é uma "capacidade" — o dono precisa poder
+    // invalidá-la (o repositório tinha `revogar` sem chamador na UI).
+    final servidor = ServidorFake((req) {
+      if (req.method == 'POST' && req.url.path.contains('/convites')) {
+        return (200, _linhaConvite(papel: 'editor'));
+      }
+      if (req.method == 'PATCH' && req.url.path.contains('/convites')) {
+        return (204, const <Object?>[]);
+      }
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    await abrir(tester, servidor);
+
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.gerarLink));
+    await tester.pumpAndSettle();
+    expect(find.text(_link), findsOneWidget);
+
+    await tester.tap(
+      find.widgetWithText(TextButton, AppStrings.revogarConvite),
+    );
+    await tester.pumpAndSettle();
+
+    // Volta ao estado inicial (papel + gerar) e avisa o dono.
+    expect(find.text(AppStrings.conviteRevogado), findsOneWidget);
+    expect(
+      find.widgetWithText(FilledButton, AppStrings.gerarLink),
+      findsOneWidget,
+    );
+    expect(find.text(_link), findsNothing);
+
+    final patch = servidor.pedidos.singleWhere((p) => p.method == 'PATCH');
+    expect(patch.url.query, contains('id=eq.$_token'));
+    expect(jsonDecode(servidor.corpoDe(servidor.pedidos.indexOf(patch))), {
+      'estado': 'revogado',
+    });
+
+    await fechar(tester);
+  });
 }

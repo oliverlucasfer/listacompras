@@ -37,13 +37,19 @@ const _conectivos = {'de', 'do', 'da', 'em', 'dos', 'das'};
 final _separadores = RegExp(r'[\n,;]+|\s+e\s+', caseSensitive: false);
 final _soNumero = RegExp(r'^(\d+(?:[.,]\d+)?)$');
 final _numeroColado = RegExp(r'^(\d+(?:[.,]\d+)?)([a-zA-ZÀ-ÿ]+)$');
+final _decimalComVirgula = RegExp(r'(\d),(\d)');
+
+/// Vírgula **entre dígitos** é decimal (`1,5`), não separador de itens — o
+/// texto é normalizado antes de segmentar (doc 04 §3, R-01).
+String _protegerDecimais(String texto) =>
+    texto.replaceAllMapped(_decimalComVirgula, (m) => '${m[1]}.${m[2]}');
 
 /// Parser local determinístico (RF-16): extrai itens de texto livre, offline.
 /// Devolve itens + `aviso` quando algum item entrou com quantidade padrão.
 RespostaParse analisarListaLocal(String texto) {
   final itens = <ItemExtraido>[];
   var algumSemNumero = false;
-  for (final parte in texto.split(_separadores)) {
+  for (final parte in _protegerDecimais(texto).split(_separadores)) {
     final lido = _lerSegmento(parte);
     if (lido == null) continue;
     itens.add(lido.item);
@@ -63,7 +69,7 @@ ItemExtraido? interpretarItemAvulso(
   String texto, {
   Unidade unidadePadrao = Unidade.un,
 }) {
-  final partes = texto.split(_separadores);
+  final partes = _protegerDecimais(texto).split(_separadores);
   final lido = _lerSegmento(partes.first);
   if (lido == null) return null;
   return lido.unidadeExplicita
@@ -78,10 +84,22 @@ ItemExtraido? interpretarItemAvulso(
 bool _tinhaNumero(String parte) {
   final tokens = parte.trim().split(RegExp(r'\s+'));
   if (tokens.isEmpty) return false;
-  return _soNumero.hasMatch(tokens.first) ||
-      _numeroColado.hasMatch(tokens.first) ||
-      _soNumero.hasMatch(tokens.last) ||
-      _numeroColado.hasMatch(tokens.last);
+  final primeiro = _numeroDoToken(tokens.first);
+  if (primeiro != null && primeiro > 0) return true;
+  final ultimo = _numeroDoToken(tokens.last);
+  return ultimo != null && ultimo > 0;
+}
+
+/// Quantidade bruta do texto: `≤ 0` é inválida e vira ausente (`1`) — o
+/// chamador marca o aviso e o nome perde o número (doc 04 §3, R-02).
+double _quantidadeValida(double bruta) => bruta > 0 ? bruta : 1.0;
+
+double? _numeroDoToken(String token) {
+  final colado = _numeroColado.firstMatch(token);
+  if (colado != null) return _paraDouble(colado.group(1)!);
+  final numero = _soNumero.firstMatch(token);
+  if (numero != null) return _paraDouble(numero.group(1)!);
+  return null;
 }
 
 /// Segmento lido + se a unidade veio **explícita** do texto (o `true`) ou é o
@@ -140,12 +158,17 @@ _Segmento? _lerSegmento(String bruto) {
   if (colado != null) {
     final unidade = _unidades[normalizarTexto(colado.group(2)!)];
     if (unidade != null) {
-      return (_paraDouble(colado.group(1)!), unidade, 1, true);
+      return (
+        _quantidadeValida(_paraDouble(colado.group(1)!)),
+        unidade,
+        1,
+        true,
+      );
     }
   }
   final numero = _soNumero.firstMatch(t.first);
   if (numero == null) return null;
-  final qtd = _paraDouble(numero.group(1)!);
+  final qtd = _quantidadeValida(_paraDouble(numero.group(1)!));
   if (t.length > 1) {
     final unidade = _unidades[normalizarTexto(t[1])];
     if (unidade != null) return (qtd, unidade, 2, true);
@@ -158,12 +181,17 @@ _Segmento? _lerSegmento(String bruto) {
   if (colado != null) {
     final unidade = _unidades[normalizarTexto(colado.group(2)!)];
     if (unidade != null) {
-      return (_paraDouble(colado.group(1)!), unidade, t.length - 1, true);
+      return (
+        _quantidadeValida(_paraDouble(colado.group(1)!)),
+        unidade,
+        t.length - 1,
+        true,
+      );
     }
   }
   final numero = _soNumero.firstMatch(t.last);
   if (numero == null) return null;
-  final qtd = _paraDouble(numero.group(1)!);
+  final qtd = _quantidadeValida(_paraDouble(numero.group(1)!));
   if (t.length > 1) {
     final unidade = _unidades[normalizarTexto(t[t.length - 2])];
     if (unidade != null) return (qtd, unidade, t.length - 2, true);

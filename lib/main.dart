@@ -45,10 +45,13 @@ Future<void> main() async {
     await SentryFlutter.init((options) {
       options.dsn = sentryDsn;
       options.sendDefaultPii = false;
-      // Privacidade (doc 07 §4): logs NUNCA contêm conteúdo de listas —
-      // breadcrumbs podem carregar mensagens de erro com dados; removidos.
+      // Privacidade (doc 07 §4, R-13): logs NUNCA contêm conteúdo de listas.
+      // Além dos breadcrumbs, removemos os `contexts` (que podem carregar o
+      // objeto do Drift/PostgREST) — o tipo/stack da exceção bastam para
+      // triagem, e nenhum dado de item chega ao Sentry.
       options.beforeSend = (event, hint) {
         event.breadcrumbs?.clear();
+        event.contexts.clear();
         return event;
       };
     }, appRunner: app);

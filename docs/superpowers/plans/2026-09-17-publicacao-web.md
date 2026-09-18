@@ -73,7 +73,7 @@ No §1 (L21), trocar:
 ```
 por (os dois itens começam desmarcados; o primeiro é marcado pela F19-T04):
 ```markdown
-- [ ] Publicado: **Web acessível por URL pública** (`https://lista-compras-34f93.web.app`, Fase 19 — ADR-013). *(RF-16)*
+- [ ] Publicado: **Web acessível por URL pública** (`https://lista-compras-34f93.web.app`, Fase 19 — ADR-013).
 - [ ] Publicado: **APK/AAB disponível para teste interno** na Play Console (F5-T06, gate do dono).
 ```
 
@@ -364,8 +364,10 @@ curl.exe -sI https://lista-compras-34f93.web.app/version.json
 curl.exe -sI https://lista-compras-34f93.web.app/listas
 curl.exe -sI https://lista-compras-34f93.web.app/privacidade
 curl.exe -s https://lista-compras-34f93.web.app/robots.txt
+curl.exe -sI https://lista-compras-34f93.web.app/main.dart.js
 ```
-Expected: `200` em todas; `Cross-Origin-Opener-Policy: same-origin` e `Cross-Origin-Embedder-Policy: require-corp` na resposta da raiz; `Cache-Control: no-cache` em `/index.html` e `/version.json`; `/listas` devolve o `index.html` (rewrite, sem 404); `/privacidade` devolve o HTML estático; `robots.txt` com `Disallow: /`.
+
+Expected: raiz `/` com `200`, `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp` **e** `Cache-Control: no-cache`; `/index.html` responde `301 → /` (não é 200) e o `no-cache` vem do destino `/`, que carrega a `source: "/"` — é isso que faz o documento de entrada ser `no-cache`; `Cache-Control: no-cache` também em `/version.json` e `/flutter_service_worker.js`; `/listas` devolve o `index.html` (rewrite, sem 404) porém com o `Cache-Control` default `max-age=3600` (os headers seguem o path da requisição, não o destino do rewrite; aceitável pois `/version.json` e o service worker são `no-cache` e o app se atualiza ao carregar); `/privacidade` devolve o HTML estático (200); `robots.txt` com `Disallow: /`; `main.dart.js` continua **cacheável** (não `no-cache`).
 
 - [ ] **Step 14: Registrar no runbook e commitar**
 

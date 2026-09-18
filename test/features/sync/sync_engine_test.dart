@@ -78,10 +78,39 @@ class RemotoDuplicadoFake implements SyncRemoto {
   }
 }
 
+/// Servidor fake que dispara um callback na primeira mutação de item —
+/// simula uma edição do usuário durante o `await` de rede (R-03).
+class RemotoQueEditaAoEnviar implements SyncRemoto {
+  RemotoQueEditaAoEnviar(this.aoEnviar);
+
+  final Future<void> Function(MutacaoSync mutacao) aoEnviar;
+  final recebidas = <MutacaoSync>[];
+  var _jaEditou = false;
+
+  @override
+  Future<ResultadoEnvio> enviar(MutacaoSync mutacao) async {
+    recebidas.add(mutacao);
+    if (!_jaEditou && mutacao.tabela == 'itens_lista') {
+      _jaEditou = true;
+      await aoEnviar(mutacao);
+    }
+    return const Enviado();
+  }
+}
+
+/// Relógio do servidor injetável (doc 03 §5, R-06).
+class TempoServidorFake implements FonteTempoServidor {
+  TempoServidorFake(this.agora);
+
+  final DateTime agora;
+
+  @override
+  Future<DateTime?> agoraDoServidor() async => agora;
+}
+
 void main() {
   late AppDatabase db;
   late ListasRepository repo;
-
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
     repo = ListasRepository(db);
@@ -713,5 +742,142 @@ void main() {
 
     expect(remoto.recebidas, hasLength(1));
     expect(await mutacoesNaFila(), 0);
+  });
+
+  test('deve_manter_na_fila_mutacao_enfileirada_durante_o_flush', () async {
+    // R-03: uma edição do usuário durante o await de rede não pode ser
+    // apagada junto com o lote enviado.
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+
+    final remoto = RemotoQueEditaAoEnviar(
+      (mutacao) => repo.editarItem(item.id, nome: 'Arroz integral'),
+    );
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+    await aguardarSincronizado(engine);
+
+    final nomesEnviados = remoto.recebidas
+        .where((m) => m.tabela == 'itens_lista')
+        .map((m) => m.payload['nome'])
+        .toList();
+    expect(nomesEnviados, contains('Arroz integral'));
+    expect(await mutacoesNaFila(), 0);
+  });
+
+  test('deve_expor_erro_quando_fila_esgotada_no_bootstrap', () async {
+    // R-05: fila toda em 10 tentativas não pode mascarar como "Sincronizado".
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await db.customUpdate('UPDATE mutacao_pendente SET tentativas = 10');
+    expect(await mutacoesNaFila(), 2);
+
+    final remoto = RemotoFake();
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+
+    final status = await engine.status
+        .firstWhere((s) => s is ErroSync)
+        .timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => engine.statusAtual,
+        );
+    expect(status, isA<ErroSync>());
+    expect(remoto.recebidas, isEmpty);
+  });
+
+  test('deve_concluir_flush_quando_mutacao_chega_durante_a_drenagem', () async {
+    // R-04: guarda de liveness — o encadeamento de flushes não pode fechar um
+    // ciclo de espera, e a edição feita durante a drenagem tem de subir.
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+
+    final remoto = RemotoFake();
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+    );
+    addTearDown(engine.dispose);
+
+    var jaEditou = false;
+    engine.status.listen((status) async {
+      if (status is Sincronizado && !jaEditou) {
+        jaEditou = true;
+        await repo.editarItem(item.id, nome: 'Arroz integral');
+      }
+    });
+
+    await engine.iniciar();
+    await engine.flush().timeout(const Duration(seconds: 5));
+
+    // A edição sobe num flush encadeado depois; espera-a aparecer.
+    for (var i = 0; i < 50; i++) {
+      final enviou = remoto.recebidas.any(
+        (m) => m.payload['nome'] == 'Arroz integral',
+      );
+      if (enviou) break;
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+    }
+
+    expect(await mutacoesNaFila(), 0);
+    expect(
+      remoto.recebidas.map((m) => m.payload['nome']),
+      contains('Arroz integral'),
+    );
+  });
+
+  test('deve_reportar_relogio_adiantado_quando_servidor_esta_atras', () async {
+    // R-06: a divergência é medida contra o relógio do servidor — o ts local
+    // "normal" do dispositivo é que denuncia o relógio adiantado.
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+
+    final reportes = <String>[];
+    final engine = SyncEngine(
+      db: db,
+      remoto: RemotoFake(),
+      checarConexao: () async => true,
+      fonteTempo: TempoServidorFake(
+        DateTime.now().toUtc().subtract(const Duration(hours: 25)),
+      ),
+      reportar: (codigo, contexto) => reportes.add(codigo),
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+    await aguardarSincronizado(engine);
+
+    expect(reportes, contains('sync_relogio_adiantado'));
+  });
+
+  test('deve_ignorar_relogio_quando_dentro_da_tolerancia', () async {
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+
+    final reportes = <String>[];
+    final engine = SyncEngine(
+      db: db,
+      remoto: RemotoFake(),
+      checarConexao: () async => true,
+      fonteTempo: TempoServidorFake(
+        DateTime.now().toUtc().subtract(const Duration(hours: 1)),
+      ),
+      reportar: (codigo, contexto) => reportes.add(codigo),
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+    await aguardarSincronizado(engine);
+
+    expect(reportes, isNot(contains('sync_relogio_adiantado')));
   });
 }

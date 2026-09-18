@@ -33,9 +33,9 @@ Fluxo de UX completo (modal, pré-visualização, confirmação) está em [05 §
 
 `analisarListaLocal(texto)`:
 
-1. Segmenta o texto por `,`, `;`, quebra de linha e o conectivo ` e `.
+1. Normaliza a vírgula **entre dígitos** como decimal (`1,5` → `1.5`) e só então segmenta o texto por `,`, `;`, quebra de linha e o conectivo ` e ` — vírgula entre itens continua separador (`arroz, leite` → 2 itens).
 2. Para cada segmento, lê quantidade/unidade no **início** ou no **fim** (`1kg de arroz`, `arroz 1kg`, `2 leites`, `leite 2`).
-3. Sem quantidade → `1 un` e marca `aviso`.
+3. Sem quantidade → `1 un` e marca `aviso`; quantidade **`≤ 0`** é tratada como ausente (entra `1` com a unidade explícita do texto, ex.: `0 kg de arroz` → `1 kg`) e também marca `aviso` — `ItemExtraido.quantidade` é sempre `> 0`.
 4. Converte quantidade com vírgula (`1,5` → `1.5`); capitaliza o nome; ignora segmentos vazios.
 5. `interpretarItemAvulso(texto, {unidadePadrao})` é usado pelo campo "Adicionar item" (F12-T06): unidade explícita do texto vence; sem unidade, usa a do seletor.
 
@@ -47,6 +47,8 @@ Fluxo de UX completo (modal, pré-visualização, confirmação) está em [05 §
 ## 5. Sugestão de categoria
 
 Cadeia local em camadas (RF-15): memória por nome → dicionário estático → `outros` (`lib/core/categorias/sugestao_categorias.dart`). Não há IA; o usuário pode editar a categoria na pré-visualização.
+
+**Desempate do dicionário (R-08, F20-T09):** quando mais de um termo casa, vence (a) o de **mais palavras** ("leite condensado" → mercearia sobre "leite" → laticínios); depois (b) o **núcleo do nome**, isto é, o termo que aparece **primeiro** na frase ("suco de laranja": "suco" na posição 0 vence "laranja" na posição 2 — antes o desempate era alfabético e dava hortifruti); depois (c) o termo mais longo; (d) ordem alfabética. O match continua exigindo que **todas** as palavras do termo apareçam, em sequência.
 
 ## 6. Estrutura no repositório
 

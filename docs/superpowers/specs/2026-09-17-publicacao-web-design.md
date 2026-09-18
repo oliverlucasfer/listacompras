@@ -36,7 +36,7 @@ Fase nova: **F19 — Publicação Web**. Decisão de arquitetura: **ADR-013** no
 | Estrutura do site | Um único site de Hosting, servindo `build/web` | Sem staging separado; o canal de preview do CI cobre a validação por PR |
 | URLs do app | **Path URL strategy** já vigente (F18-T02) + rewrite `**` → `/index.html` | Sem `#` nas URLs e sem 404 ao recarregar `/listas` ou `/entrar?token=` |
 | Cross-origin isolation | Headers COOP `same-origin` + COEP `require-corp` em todas as respostas | Habilita OPFS/`SharedArrayBuffer` no Drift (performance e durabilidade); sem eles o app funciona, mas cai no IndexedDB |
-| Cache | `no-cache` em `/index.html`, `/version.json` e `/flutter_service_worker.js` | Evita o clássico "service worker velho servindo build velho" após um deploy |
+| Cache | `no-cache` na raiz `/` (documento de entrada), `/index.html`, `/version.json` e `/flutter_service_worker.js`; demais assets seguem cacheáveis | Evita o clássico "service worker velho servindo build velho" após um deploy. Com `cleanUrls`, `/index.html` responde `301 → /`, então é a regra da raiz que efetivamente vale para o documento de entrada (verificado por `curl.exe`). Assets continuam cacheáveis — `main.dart.js` observado com `max-age=3600` — e `**` **não** é usado no `Cache-Control` justamente para não matar o cache de CDN (banda do free tier) |
 | Build de release | `flutter build web --release` com `--dart-define` vindos de **secrets do GitHub** | Nada de chave no repositório (regra do AGENTS) |
 | `version.json` | Teste-guarda local contra o `pubspec.yaml` (sem geração no CI) | O guard já garante a paridade — gerar no job seria um passo a mais sem ganho (YAGNI) |
 | Gatilho do deploy | Push/merge em `main` publica sozinho (`channelId: live`), **após** `flutter` e `supabase` verdes; PR ganha canal de preview | Publicação contínua com a mesma barreira do merge; preview facilita revisar a UI real |
@@ -56,7 +56,7 @@ Fase nova: **F19 — Publicação Web**. Decisão de arquitetura: **ADR-013** no
   - `"public": "build/web"` (o `--dart-define-from-file`/secrets alimenta o build antes do deploy);
   - `"cleanUrls": true`;
   - `"rewrites": [{ "source": "**", "destination": "/index.html" }]` (a SPA resolve as rotas);
-  - `"headers"`: COOP/COEP globais + `Cache-Control: no-cache` para os três arquivos sensíveis do PWA;
+  - `"headers"`: COOP/COEP globais + `Cache-Control: no-cache` para a raiz `/` (documento de entrada) e para os três arquivos sensíveis do PWA;
   - `"ignore"` padrão (`firebase.json`, `**/.*`, `**/node_modules/**`).
 - `.firebaserc`: projeto `default` = `lista-compras-34f93`.
 - `web/robots.txt`: `User-agent: *` + `Disallow: /` (comentário de uma linha apontando a F5-T05).
@@ -66,9 +66,14 @@ Fase nova: **F19 — Publicação Web**. Decisão de arquitetura: **ADR-013** no
 | `source` | Headers |
 | :--- | :--- |
 | `**` | `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp` |
+| `/` | `Cache-Control: no-cache` |
 | `/index.html` | `Cache-Control: no-cache` |
 | `/version.json` | `Cache-Control: no-cache` |
 | `/flutter_service_worker.js` | `Cache-Control: no-cache` |
+
+A regra exata `/` é a que torna o documento de entrada `no-cache` de fato: com `cleanUrls: true`, a requisição a `/index.html` responde `301 → /`, onde só valem os headers do `source` `/` (verificado empiricamente com `curl.exe -sI https://lista-compras-34f93.web.app/`). O `Cache-Control` **não** é aplicado em `**` para preservar o cache de CDN de `main.dart.js` (banda do free tier).
+
+Os headers seguem o **path da requisição**, não o destino do rewrite: por isso rotas profundas da SPA (ex.: `/listas`) servem o shell com o `Cache-Control` default do Hosting (`max-age=3600`), e não `no-cache`. Isso é aceitável porque `/version.json` e `/flutter_service_worker.js` são `no-cache` — o app detecta e aplica a atualização ao carregar. Estender `no-cache` a toda rota profunda exigiria regra por rota (ou rever o `cleanUrls`); não vale o custo agora.
 
 `/privacidade` é servido pelo arquivo estático (`cleanUrls`), sem passar pelo rewrite.
 

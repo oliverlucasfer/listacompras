@@ -42,10 +42,23 @@ Map<String, Object?>? mesclarDuplicado(
 /// e envia `INSERT ... on conflict do nothing` ou upsert — o trigger
 /// `touch_updated_at_lww` (doc 01 §5) preserva o timestamp do cliente.
 /// Autenticação e RLS do Supabase valem aqui (doc 02).
-class SupabaseSyncRemoto implements SyncRemoto {
+class SupabaseSyncRemoto implements SyncRemoto, FonteTempoServidor {
   SupabaseSyncRemoto(this._client);
 
   final SupabaseClient _client;
+
+  /// `now()` do banco via RPC `agora_servidor` (migration 0014, doc 02 §4.5):
+  /// é a única referência honesta para detectar relógio de dispositivo
+  /// adiantado (doc 03 §5, R-06). Falha de rede → `null` (sem relatório).
+  @override
+  Future<DateTime?> agoraDoServidor() async {
+    try {
+      final resposta = await _client.rpc<Object?>('agora_servidor');
+      return resposta is String ? DateTime.tryParse(resposta) : null;
+    } on Object {
+      return null;
+    }
+  }
 
   @override
   Future<ResultadoEnvio> enviar(MutacaoSync mutacao) async {

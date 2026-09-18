@@ -54,6 +54,26 @@ jobs:
         run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/excluir_conta_tests.sql
       - name: Testes do aceite de convite (08 §3.1)
         run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/aceitar_convite_tests.sql
+      - name: Teste de Realtime (01 §7, 02 §5 P-05)
+        working-directory: supabase/tests
+        run: |
+          # Chaves do stack local. `>> $GITHUB_ENV` NÃO vale para este step
+          # (só a partir do próximo), então exportamos no próprio shell.
+          set -a
+          eval "$(supabase status -o env | sed 's/^/export /; s/"//g')"
+          set +a
+          if [ -z "$SERVICE_ROLE_KEY" ] || [ -z "$ANON_KEY" ]; then
+            echo "chaves do stack não encontradas"; supabase status -o env; exit 1
+          fi
+          npm ci
+          # O tenant do Realtime reconecta ao banco por alguns segundos após o
+          # `supabase start`/reset — a 1ª roda cai com CLOSED (R-23, infra do
+          # stack local, não do app). Aguarda o tenant e tenta 2 vezes.
+          for i in 1 2; do
+            sleep $((i * 15))
+            npm test && break
+            if [ "$i" = "2" ]; then echo "Realtime falhou 2x"; exit 1; fi
+          done
       # Fase 4+: sync tests no job flutter
 
   desktop:

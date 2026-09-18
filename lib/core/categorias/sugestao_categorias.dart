@@ -34,27 +34,61 @@ class SugestaoCategorias {
   }
 }
 
-/// Camada pura do dicionário: retorna a categoria da primeira entrada
-/// cujas palavras todas aparecem no nome (ordem: mais palavras primeiro,
-/// empate por ordem alfabética do termo); sem match → `outros`.
+/// Camada pura do dicionário (R-08): entre as entradas cujas palavras todas
+/// aparecem no nome, vence na ordem:
+/// 1. **mais palavras no termo** — o termo mais específico manda ("leite
+///    condensado" → mercearia vence "leite" → laticínios);
+/// 2. **termo que aparece primeiro no nome** — o núcleo costuma vir antes do
+///    qualificador ("suco de laranja": "suco" (pos. 0) vence "laranja" (pos. 2));
+/// 3. **mais palavras do termo casadas com o nome** (empate de posição);
+/// 4. **alfabética** (desempate estável);
+/// sem match → `outros`.
 CategoriaItem categoriaPorDicionario(String nomeNormalizado) {
-  final tokens = nomeNormalizado.split(RegExp(r'\s+')).toSet();
-  if (tokens.isEmpty) return CategoriaItem.outros;
+  final palavrasDoNome = nomeNormalizado.split(RegExp(r'\s+'));
+  if (palavrasDoNome.isEmpty) return CategoriaItem.outros;
 
-  final entradas = dicionarioCategorias.entries.toList()
-    ..sort((a, b) {
-      final pa = normalizarTexto(a.key).split(RegExp(r'\s+')).length;
-      final pb = normalizarTexto(b.key).split(RegExp(r'\s+')).length;
-      if (pa != pb) return pb - pa;
-      return normalizarTexto(a.key).compareTo(normalizarTexto(b.key));
-    });
-
-  for (final entrada in entradas) {
-    if (tokens.containsAll(
-      normalizarTexto(entrada.key).split(RegExp(r'\s+')),
-    )) {
-      return entrada.value;
-    }
+  final frases = <(String, CategoriaItem, int, int, int)>[];
+  for (final entrada in dicionarioCategorias.entries) {
+    final termo = normalizarTexto(entrada.key);
+    final palavrasDoTermo = termo.split(RegExp(r'\s+'));
+    final posicao = _posicaoNoNome(palavrasDoNome, palavrasDoTermo);
+    if (posicao == null) continue;
+    frases.add((
+      termo,
+      entrada.value,
+      palavrasDoTermo.length,
+      posicao,
+      termo.length,
+    ));
   }
-  return CategoriaItem.outros;
+  if (frases.isEmpty) return CategoriaItem.outros;
+
+  frases.sort((a, b) {
+    if (a.$3 != b.$3) return b.$3 - a.$3;
+    if (a.$4 != b.$4) return a.$4 - b.$4;
+    if (a.$5 != b.$5) return b.$5 - a.$5;
+    return a.$1.compareTo(b.$1);
+  });
+  return frases.first.$2;
+}
+
+/// Posição (0-based) das palavras do termo **em sequência** dentro do nome,
+/// ou `null` quando alguma não aparece. Ex.: termo `"suco"` em
+/// `"suco de laranja"` → 0; `"laranja"` → 2; `"banana"` → `null`.
+int? _posicaoNoNome(List<String> palavrasDoNome, List<String> palavrasDoTermo) {
+  for (
+    var inicio = 0;
+    inicio + palavrasDoTermo.length <= palavrasDoNome.length;
+    inicio++
+  ) {
+    var casa = true;
+    for (var i = 0; i < palavrasDoTermo.length; i++) {
+      if (palavrasDoNome[inicio + i] != palavrasDoTermo[i]) {
+        casa = false;
+        break;
+      }
+    }
+    if (casa) return inicio;
+  }
+  return null;
 }

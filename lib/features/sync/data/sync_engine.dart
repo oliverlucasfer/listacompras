@@ -24,6 +24,7 @@ class SyncEngine {
     AplicadorRemoto? aplicador,
     this._conectividade,
     this._checarConexao,
+    this._fonteTempo,
     Future<void> Function(Duration)? esperar,
     this.maxTentativas = 10,
     this._reportar,
@@ -37,6 +38,7 @@ class SyncEngine {
   late final AplicadorRemoto _aplicador;
   final Stream<List<ConnectivityResult>>? _conectividade;
   final Future<bool> Function()? _checarConexao;
+  final FonteTempoServidor? _fonteTempo;
   final Future<void> Function(Duration) _esperar;
 
   /// Relatórios de observabilidade (doc 07 §4, RF-12): códigos e contagens
@@ -73,7 +75,14 @@ class SyncEngine {
         _online = true;
       }
     }
-    if (!_online) _definir(const Offline());
+    if (!_online) {
+      _definir(const Offline());
+    } else if (await _contarFila() > 0 && !await _temEnviaveis()) {
+      // Fila esgotada em tentativas: nenhum flush vai rodar e o status não
+      // pode mentir "Sincronizado" — o usuário precisa do "tentar de novo"
+      // (R-05).
+      _definir(const ErroSync());
+    }
     _subFila = _db
         .select(_db.mutacaoPendente)
         .watch()
@@ -95,11 +104,13 @@ class SyncEngine {
       } on Exception {
         // O erro já foi entregue a quem aguardou o trabalho anterior.
       }
-      if (_disposed || !_online || !await _temEnviaveis()) return;
-      _falhou = false;
-      await _drenar();
-      if (!_falhou && !_disposed && _online && await _temEnviaveis()) {
-        await flush();
+      // Laço, e não reentrância: chamar `flush()` de dentro do próprio
+      // trabalho faz `_flushAtual` apontar para si mesmo e fecha um ciclo de
+      // espera (R-04).
+      while (!_disposed && _online && await _temEnviaveis()) {
+        _falhou = false;
+        await _drenar();
+        if (_falhou || _disposed || !_online) break;
       }
     }();
     _flushAtual = trabalho;
@@ -108,6 +119,11 @@ class SyncEngine {
 
   Future<void> _drenar() async {
     _definir(const Sincronizando());
+    // Relógio do servidor uma vez por ciclo (doc 03 §5, R-06): só vale a pena
+    // consultar quando há observabilidade ligada.
+    final agoraServidor = _reportar == null
+        ? null
+        : await _fonteTempo?.agoraDoServidor();
     SyncStatus resultado = const Sincronizado();
     while (_online) {
       final lote = await _proximoLote();
@@ -119,23 +135,35 @@ class SyncEngine {
       }
       try {
         for (final mutacao in lote) {
-          _reportarSeRelogioAdiantado(mutacao);
+          _reportarSeRelogioAdiantado(mutacao, agoraServidor);
           final resultado = await _remoto.enviar(mutacao);
           switch (resultado) {
             case Enviado():
-              await _removerRegistro(mutacao.tabela, mutacao.registroId);
+              await _removerRegistro(
+                mutacao.tabela,
+                mutacao.registroId,
+                mutacao.id,
+              );
             case RemotoVenceu(:final registro):
               // Remoto venceu no LWW: sobrescreve o Drift (inclusive
               // tombstones) e descarta as mutações do registro — doc 03 §5.
               await _aplicador.aplicar(mutacao.tabela, registro);
-              await _removerRegistro(mutacao.tabela, mutacao.registroId);
+              await _removerRegistro(
+                mutacao.tabela,
+                mutacao.registroId,
+                mutacao.id,
+              );
             case Duplicado(:final registro):
               // Deduplicação (doc 03 §5, RF-10): a linha local vira
               // tombstone e o item remoto absorve a quantidade — nunca
               // há duplicado ativo.
               await _tumbarLocal(mutacao.tabela, mutacao.registroId);
               await _aplicador.aplicar(mutacao.tabela, registro);
-              await _removerRegistro(mutacao.tabela, mutacao.registroId);
+              await _removerRegistro(
+                mutacao.tabela,
+                mutacao.registroId,
+                mutacao.id,
+              );
           }
         }
       } on Exception {
@@ -213,6 +241,7 @@ class SyncEngine {
   }
 
   MutacaoSync _paraSync(MutacaoPendenteData linha) => MutacaoSync(
+    id: linha.id,
     tabela: linha.tabela,
     operacao: linha.operacao,
     registroId: linha.registroId,
@@ -223,14 +252,19 @@ class SyncEngine {
   );
 
   /// Relatório de relógio adiantado (doc 07 §4 evento 2, 03 §5): ts do
-  /// cliente mais de 24h no futuro em relação ao dispositivo.
-  void _reportarSeRelogioAdiantado(MutacaoSync mutacao) {
+  /// cliente mais de 24h à frente do **relógio do servidor**. Sem o relógio
+  /// do servidor, cai no relógio local (que nunca acusa, já que gerou o ts).
+  void _reportarSeRelogioAdiantado(
+    MutacaoSync mutacao,
+    DateTime? agoraServidor,
+  ) {
     if (_reportar == null) return;
     final ts = DateTime.tryParse(
       mutacao.payload['updated_at'] as String? ?? '',
     );
     if (ts == null) return;
-    final atraso = ts.difference(DateTime.now().toUtc());
+    final referencia = agoraServidor ?? DateTime.now().toUtc();
+    final atraso = ts.difference(referencia);
     if (atraso > const Duration(hours: 24)) {
       _reportar('sync_relogio_adiantado', {'atraso_horas': atraso.inHours});
     }
@@ -253,11 +287,15 @@ class SyncEngine {
     }
   }
 
-  /// Sucesso apaga todas as linhas do registro (as sombreadas pelo
-  /// coalescing incluem).
-  Future<void> _removerRegistro(String tabela, String registroId) {
+  /// Sucesso apaga as linhas do registro **até o id do lote** (as sombreadas
+  /// pelo coalescing incluem). Mutações enfileiradas durante o envio (id
+  /// maior) ficam na fila para o próximo ciclo — doc 03 §4, R-03.
+  Future<void> _removerRegistro(String tabela, String registroId, int ateId) {
     return (_db.delete(_db.mutacaoPendente)..where(
-          (m) => m.tabela.equals(tabela) & m.registroId.equals(registroId),
+          (m) =>
+              m.tabela.equals(tabela) &
+              m.registroId.equals(registroId) &
+              m.id.isSmallerOrEqualValue(ateId),
         ))
         .go();
   }

@@ -88,4 +88,22 @@ void main() {
 
     expect(await sugestao.sugerirCategoria('Cafe'), CategoriaItem.mercearia);
   });
+
+  test('deve_preferir_termo_mais_especifico_quando_ha_varios_matches', () {
+    // R-08: "suco de laranja" casa 'laranja' (hortifruti) e 'suco' (bebidas).
+    // O desempate deve dar vitória ao núcleo do nome ('suco', que aparece
+    // primeiro), e não à ordem alfabética ('laranja' < 'suco').
+    expect(categoriaPorDicionario('suco de laranja'), CategoriaItem.bebidas);
+    expect(categoriaPorDicionario('suco de uva'), CategoriaItem.bebidas);
+    expect(categoriaPorDicionario('laranja'), CategoriaItem.hortifruti);
+  });
+
+  test('deve_manter_match_exato_quando_nome_composto_no_dicionario', () {
+    expect(categoriaPorDicionario('leite condensado'), CategoriaItem.mercearia);
+    expect(categoriaPorDicionario('pao frances'), CategoriaItem.padaria);
+  });
+
+  test('deve_cair_em_outros_quando_nenhum_termo_casa', () {
+    expect(categoriaPorDicionario('treco esquisito xyz'), CategoriaItem.outros);
+  });
 }
