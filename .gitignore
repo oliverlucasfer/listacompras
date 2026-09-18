@@ -38,5 +38,5 @@ dart_defines_prod.json
 *.log
 .superpowers/
 
-# Firebase CLI (cache de deploy do hosting — F19-T01)
+# Firebase CLI (cache local, se o CLI for usado por engano)
 .firebase/

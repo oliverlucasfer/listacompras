@@ -79,7 +79,7 @@ Uma fase só está "pronta" quando:
 ### 3.3.2. Política de privacidade
 
 * Texto único e simples (1 página) cobrindo: dados coletados, finalidade, subprocessadores (3.2), retenção (até exclusão da conta), direitos do titular e contato do encarregado.
-* **Onde:** página estática `/privacidade` do app (artefato `web/privacidade.html`, F19-T01) + link no cadastro e nas configurações do app. **Não há URL pública** desde 18/09/2026 (ADR-013): a página acompanha o app servido localmente.
+* **Onde:** texto in-app (cadastro e Configurações), a partir de `politicaPrivacidadeTexto`. A antiga página estática `/privacidade` do web foi **removida** em 18/09/2026, junto com o resto dos artefatos de hosting (ADR-013).
 * **Contato do encarregado:** por decisão do dono (17/09/2026) o texto permanece genérico ("canal informado na página do aplicativo"); preencher com um e-mail dedicado é pendência do lançamento público (F5-T06).
 * **Obrigatória para publicação** na Play Store e App Store (seção "Segurança de dados" do Play Console exige declaração de coleta).
 
@@ -87,11 +87,11 @@ Uma fase só está "pronta" quando:
 
 * Não direcionado a menores de 16 (texto na política). Sem rastreamento publicitário; sem consentimento de cookies no Web MVP (sem cookies de marketing).
 
-### 3.4.1. Cabeçalhos de segurança no Web (F19/F20)
+### 3.4.1. Cabeçalhos de segurança no Web (histórico)
 
-* **COOP `same-origin` + COEP `require-corp`** (F19-T01): exigidos pelo Drift/WASM (SharedArrayBuffer). Aplicados em `firebase.json` para todas as rotas.
-* **CSP: decisão consciente de NÃO adicionar no MVP** (R-21). O Flutter Web gera código inline (loader/`flutter_bootstrap.js`) e o Worker do Drift vem de blob; uma CSP estrita exige `unsafe-inline`/`unsafe-eval` + `worker-src blob:` — anulando boa parte do ganho — e qualquer política mal ajustada quebraria o app em produção sem cobertura de teste automatizada. Fica registrado como endurecimento pós-MVP, acompanhado de um teste de fumaça no Hosting.
-* Reforço que **é** aplicado: `robots.txt` com `Disallow: /` e `noindex` em `/privacidade` (F19-T01, §3.3.2) — o site não é indexado nem divulgado.
+* Os cabeçalhos **COOP `same-origin` + COEP `require-corp`** (exigidos pelo Drift/WASM, que usa SharedArrayBuffer) e o `robots.txt`/`noindex` existiram enquanto o Web era servido pelo Firebase Hosting — **removidos em 18/09/2026** junto com os artefatos de publicação (ADR-013).
+* Em **uso local** os cabeçalhos não são aplicados pelo app: quem serve `build/web` (dev server do `flutter run` ou um static server próprio) deve configurá-los se quiser exercitar os caminhos de WASM/OPFS. O `flutter run -d chrome` já funciona sem configuração extra.
+* Endurecimento futuro (ex.: CSP) só volta a fazer sentido se a publicação for retomada.
 
 ---
 
@@ -99,7 +99,7 @@ Uma fase só está "pronta" quando:
 
 | Canal | Requisito | Observação |
 | :--- | :--- | :--- |
-| Web — **uso local** (Fase 19 suspensa) | Build `flutter build web` servido localmente | **Sem publicação** (18/09/2026, ADR-013): o Hosting foi desabilitado e `https://lista-compras-34f93.web.app` responde 404. Rode com `flutter run -d chrome` ou sirva `build/web`. Os artefatos (`firebase.json`, `.firebaserc`, `/privacidade`) ficam no repo como referência para uma futura reabilitação |
+| Web — **uso local** (Fase 19 cancelada) | Build `flutter build web` servido localmente | **Sem publicação** (18/09/2026, ADR-013): Hosting desabilitado e **artefatos removidos do repo**. Rode com `flutter run -d chrome` ou sirva `build/web` |
 | Desktop — Windows/Linux/macOS (Fase 18) | Builds `flutter build windows`/`linux`/`macos` | Suportado desde a Fase 18 (ADR-012); builds Windows/Linux validados no CI ([07 §3](07-qualidade-ci.md)); publicação segue o gate do dono (Fase 5 / F5-T06) |
 | Android — teste interno (Fase 5) | APK/AAB na Play Console (closed testing) | Política de privacidade + Declaração de Dados preenchidas |
 | Android — produção | Publicação pública | Depende de validação do MVP; pode ficar para após Fase 5 |
