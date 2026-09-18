@@ -49,8 +49,9 @@ class ListasRepository {
   }
 
   /// Sugestões de itens frequentes (RF-19): ranking derivado do histórico
-  /// local. Peso 2 para a lista aberta, 1 para as demais; nomes já ativos
-  /// na lista aberta são excluídos; limiar >= 2 e limite de 8. Zero rede.
+  /// local. Peso 2 para a lista aberta, 1 para as demais; apenas nomes
+  /// **pendentes** da lista aberta são excluídos (concluídos contam com peso
+  /// 2); limiar >= 2 e limite de 8. Zero rede.
   Stream<List<SugestaoItem>> watchItensFrequentes(String listaId) {
     return _db
         .customSelect(
@@ -62,7 +63,7 @@ class ListasRepository {
     WHERE i.deletado_em IS NULL
       AND lower(i.nome) NOT IN (
         SELECT lower(j.nome) FROM item_local j
-        WHERE j.lista_id = ? AND j.deletado_em IS NULL
+        WHERE j.lista_id = ? AND j.deletado_em IS NULL AND j.concluido = 0
       )
     GROUP BY lower(i.nome)
     HAVING SUM(CASE WHEN i.lista_id = ? THEN 2 ELSE 1 END) >= 2

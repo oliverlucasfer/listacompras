@@ -64,20 +64,29 @@ void main() {
   });
 
   test('deve_pesar_2_na_lista_aberta_e_1_nas_demais_quando_ordena', () async {
-    // O design §4.1 item 5 exclui do ranking os nomes ativos na lista
-    // aberta: a ocorrência em `l1` (peso 2) é neutralizada pela exclusão e
-    // só as demais listas contribuem para a ordenação observável.
-    await item('l1', 'Cafe');
+    await lista('l1');
+    final cafe = await repo.adicionarItem(listaId: 'l1', nome: 'Cafe');
+    await repo.editarItem(cafe.id, concluido: true);
     await item('l2', 'Leite');
     await item('l3', 'Leite');
-    await item('l4', 'Leite');
     await item('l2', 'Arroz');
-    await item('l3', 'Arroz');
     final s = await repo.watchItensFrequentes('l1').first;
-    expect(s.map((e) => e.nome), ['Leite', 'Arroz']);
-    expect(s.map((e) => e.peso), [3, 2]);
-    expect(s.map((e) => e.nome), isNot(contains('Cafe')));
+    expect(s.map((e) => e.nome), ['Cafe', 'Leite']);
+    expect(s.map((e) => e.peso), [2, 2]);
+    expect(s.map((e) => e.nome), isNot(contains('Arroz')));
   });
+
+  test(
+    'deve_excluir_pendentes_mas_manter_concluidos_da_lista_aberta_quando_sugere',
+    () async {
+      await item('l1', 'Feijao');
+      final cafe = await repo.adicionarItem(listaId: 'l1', nome: 'Cafe');
+      await repo.editarItem(cafe.id, concluido: true);
+      final s = await repo.watchItensFrequentes('l1').first;
+      expect(s.map((e) => e.nome), isNot(contains('Feijao')));
+      expect(s.map((e) => e.nome), contains('Cafe'));
+    },
+  );
 
   test(
     'deve_descartar_nome_abaixo_do_limiar_quando_peso_menor_que_2',
