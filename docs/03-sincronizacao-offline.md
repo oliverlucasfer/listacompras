@@ -77,6 +77,11 @@ Tabela local Drift (`mutacoes_pendentes`):
 > descarta o erro de um trabalho para que uma falha de rede não bloqueie os
 > re-syncs seguintes.
 
+> **Coalescing e concorrência (R-03):** a remoção pós-envio apaga apenas as
+> mutações do registro que estavam no lote enviado (id ≤ id do lote). Uma edição
+> feita pelo usuário durante o `await` de rede permanece na fila e sobe no ciclo
+> seguinte — nunca é descartada.
+
 ### Pseudo-código do loop de flush
 
 ```dart

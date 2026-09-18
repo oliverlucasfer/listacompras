@@ -78,10 +78,29 @@ class RemotoDuplicadoFake implements SyncRemoto {
   }
 }
 
+/// Servidor fake que dispara um callback na primeira mutação de item —
+/// simula uma edição do usuário durante o `await` de rede (R-03).
+class RemotoQueEditaAoEnviar implements SyncRemoto {
+  RemotoQueEditaAoEnviar(this.aoEnviar);
+
+  final Future<void> Function(MutacaoSync mutacao) aoEnviar;
+  final recebidas = <MutacaoSync>[];
+  var _jaEditou = false;
+
+  @override
+  Future<ResultadoEnvio> enviar(MutacaoSync mutacao) async {
+    recebidas.add(mutacao);
+    if (!_jaEditou && mutacao.tabela == 'itens_lista') {
+      _jaEditou = true;
+      await aoEnviar(mutacao);
+    }
+    return const Enviado();
+  }
+}
+
 void main() {
   late AppDatabase db;
   late ListasRepository repo;
-
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
     repo = ListasRepository(db);
@@ -712,6 +731,32 @@ void main() {
     await aguardarSincronizado(engine);
 
     expect(remoto.recebidas, hasLength(1));
+    expect(await mutacoesNaFila(), 0);
+  });
+
+  test('deve_manter_na_fila_mutacao_enfileirada_durante_o_flush', () async {
+    // R-03: uma edição do usuário durante o await de rede não pode ser
+    // apagada junto com o lote enviado.
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+
+    final remoto = RemotoQueEditaAoEnviar(
+      (mutacao) => repo.editarItem(item.id, nome: 'Arroz integral'),
+    );
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+    await aguardarSincronizado(engine);
+
+    final nomesEnviados = remoto.recebidas
+        .where((m) => m.tabela == 'itens_lista')
+        .map((m) => m.payload['nome'])
+        .toList();
+    expect(nomesEnviados, contains('Arroz integral'));
     expect(await mutacoesNaFila(), 0);
   });
 }

@@ -9,6 +9,7 @@ class MutacaoSync {
     required this.tsLocal,
     required this.payload,
     this.tentativas = 0,
+    this.id = 0,
   });
 
   final String tabela;
@@ -20,4 +21,9 @@ class MutacaoSync {
 
   /// Contador de retry da linha (doc 03 §3) — usado nos relatórios 07 §4.
   final int tentativas;
+
+  /// Id da linha em `mutacao_pendente` (0 quando a mutação não veio da fila):
+  /// é o corte do coalescing — mutações enfileiradas depois do lote (id maior)
+  /// sobrevivem ao flush (doc 03 §4, R-03).
+  final int id;
 }

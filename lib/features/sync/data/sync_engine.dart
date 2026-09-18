@@ -123,19 +123,31 @@ class SyncEngine {
           final resultado = await _remoto.enviar(mutacao);
           switch (resultado) {
             case Enviado():
-              await _removerRegistro(mutacao.tabela, mutacao.registroId);
+              await _removerRegistro(
+                mutacao.tabela,
+                mutacao.registroId,
+                mutacao.id,
+              );
             case RemotoVenceu(:final registro):
               // Remoto venceu no LWW: sobrescreve o Drift (inclusive
               // tombstones) e descarta as mutações do registro — doc 03 §5.
               await _aplicador.aplicar(mutacao.tabela, registro);
-              await _removerRegistro(mutacao.tabela, mutacao.registroId);
+              await _removerRegistro(
+                mutacao.tabela,
+                mutacao.registroId,
+                mutacao.id,
+              );
             case Duplicado(:final registro):
               // Deduplicação (doc 03 §5, RF-10): a linha local vira
               // tombstone e o item remoto absorve a quantidade — nunca
               // há duplicado ativo.
               await _tumbarLocal(mutacao.tabela, mutacao.registroId);
               await _aplicador.aplicar(mutacao.tabela, registro);
-              await _removerRegistro(mutacao.tabela, mutacao.registroId);
+              await _removerRegistro(
+                mutacao.tabela,
+                mutacao.registroId,
+                mutacao.id,
+              );
           }
         }
       } on Exception {
@@ -213,6 +225,7 @@ class SyncEngine {
   }
 
   MutacaoSync _paraSync(MutacaoPendenteData linha) => MutacaoSync(
+    id: linha.id,
     tabela: linha.tabela,
     operacao: linha.operacao,
     registroId: linha.registroId,
@@ -253,11 +266,15 @@ class SyncEngine {
     }
   }
 
-  /// Sucesso apaga todas as linhas do registro (as sombreadas pelo
-  /// coalescing incluem).
-  Future<void> _removerRegistro(String tabela, String registroId) {
+  /// Sucesso apaga as linhas do registro **até o id do lote** (as sombreadas
+  /// pelo coalescing incluem). Mutações enfileiradas durante o envio (id
+  /// maior) ficam na fila para o próximo ciclo — doc 03 §4, R-03.
+  Future<void> _removerRegistro(String tabela, String registroId, int ateId) {
     return (_db.delete(_db.mutacaoPendente)..where(
-          (m) => m.tabela.equals(tabela) & m.registroId.equals(registroId),
+          (m) =>
+              m.tabela.equals(tabela) &
+              m.registroId.equals(registroId) &
+              m.id.isSmallerOrEqualValue(ateId),
         ))
         .go();
   }
