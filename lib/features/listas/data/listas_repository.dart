@@ -8,6 +8,7 @@ import '../domain/categoria.dart';
 import '../domain/item.dart';
 import '../domain/lista.dart';
 import '../domain/lista_com_contagem.dart';
+import '../domain/sugestao_item.dart';
 import '../domain/unidade.dart';
 
 /// Repositório de listas/itens (doc 03 §2, RF-02/RF-03/RF-04): toda
@@ -45,6 +46,47 @@ class ListasRepository {
           ]))
         .watch()
         .map((rows) => rows.map(Item.fromLocal).toList());
+  }
+
+  /// Sugestões de itens frequentes (RF-19): ranking derivado do histórico
+  /// local. Peso 2 para a lista aberta, 1 para as demais; nomes já ativos
+  /// na lista aberta são excluídos; limiar >= 2 e limite de 8. Zero rede.
+  Stream<List<SugestaoItem>> watchItensFrequentes(String listaId) {
+    return _db
+        .customSelect(
+          '''
+    SELECT i.nome AS nome,
+           SUM(CASE WHEN i.lista_id = ? THEN 2 ELSE 1 END) AS peso
+    FROM item_local i
+    JOIN lista_local l ON l.id = i.lista_id AND l.deletado_em IS NULL
+    WHERE i.deletado_em IS NULL
+      AND lower(i.nome) NOT IN (
+        SELECT lower(j.nome) FROM item_local j
+        WHERE j.lista_id = ? AND j.deletado_em IS NULL
+      )
+    GROUP BY lower(i.nome)
+    HAVING SUM(CASE WHEN i.lista_id = ? THEN 2 ELSE 1 END) >= 2
+    ORDER BY peso DESC, i.nome ASC
+    LIMIT 8
+  ''',
+          variables: [
+            Variable.withString(listaId),
+            Variable.withString(listaId),
+            Variable.withString(listaId),
+          ],
+          readsFrom: {_db.itemLocal, _db.listaLocal},
+        )
+        .watch()
+        .map(
+          (rows) => rows
+              .map(
+                (r) => SugestaoItem(
+                  nome: r.read<String>('nome'),
+                  peso: r.read<int>('peso'),
+                ),
+              )
+              .toList(),
+        );
   }
 
   Stream<List<ListaComContagem>> watchListasComContagem() {
