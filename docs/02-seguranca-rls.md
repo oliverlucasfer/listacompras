@@ -89,10 +89,14 @@ Mesma justificativa das demais: `auth.users` não é legível pelo role `authent
 alter table public.listas        enable row level security;
 alter table public.lista_membros enable row level security;
 alter table public.itens_lista   enable row level security;
+alter table public.convites      enable row level security;
 alter table public.listas        force row level security;
 alter table public.lista_membros force row level security;
 alter table public.itens_lista   force row level security;
+alter table public.convites      force row level security;
 ```
+
+> `convites` (Fase 6, migration `0007`) segue as mesmas regras das demais: RLS habilitada e forçada, policies em [§4.4](#44-convites-fase-6--08-2).
 
 ---
 

@@ -71,7 +71,7 @@ Uma fase só está "pronta" quando:
 * Fluxo: Configurações → "Excluir conta" → confirmação dupla (senha + diálogo) → execução.
 * **Estratégia: delete físico em cascata** (ADR-008):
   1. RPC `excluir_conta()` (SECURITY DEFINER) executa: `delete from auth.users where id = auth.uid()`.
-  2. Cascades já existentes propagam: `lista_membros` (participações), `listas` onde `dono_id`, e `itens_lista` por CASCADE de lista.
+  2. Cascades já existentes propagam: `lista_membros` (participações), `listas` onde `dono_id`, `itens_lista` por CASCADE de lista e `convites` por CASCADE de lista. `convites.criado_por` não tem CASCADE: hoje não bloqueia a exclusão (só o dono cria convite e a lista dele cai junto) — entra na revisão de cascatas se a transferência de dono (Fase 6) for implementada.
   3. Sessão invalidada; app limpa cache local e fila de pendências.
 * Listas compartilhadas onde o usuário era apenas membro: sua participação some; a lista do outro dono permanece (dados do titular removidos das membresias).
 * Confirmação final para o usuário: "Esta ação é permanente e apaga todas as suas listas."
@@ -93,7 +93,7 @@ Uma fase só está "pronta" quando:
 
 | Canal | Requisito | Observação |
 | :--- | :--- | :--- |
-| Web (Fase 19) | Build `flutter build web` + Firebase Hosting ([ADR-013](00-visao-geral.md)) | Publicação em `https://lista-compras-34f93.web.app` pela F19 (deploy automático no CI); domínio próprio fica pós-MVP |
+| Web (Fase 19) | Build `flutter build web` + Firebase Hosting ([ADR-013](00-visao-geral.md)) | Publicado em `https://lista-compras-34f93.web.app` pela F19-T01 (deploy manual); o deploy automático no CI entra na **F19-T03**. Domínio próprio fica pós-MVP |
 | Desktop — Windows/Linux/macOS (Fase 18) | Builds `flutter build windows`/`linux`/`macos` | Suportado desde a Fase 18 (ADR-012); builds Windows/Linux validados no CI ([07 §3](07-qualidade-ci.md)); publicação segue o gate do dono (Fase 5 / F5-T06) |
 | Android — teste interno (Fase 5) | APK/AAB na Play Console (closed testing) | Política de privacidade + Declaração de Dados preenchidas |
 | Android — produção | Publicação pública | Depende de validação do MVP; pode ficar para após Fase 5 |

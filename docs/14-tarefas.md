@@ -505,7 +505,7 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
 - [x] **F20-T05** — Sync: divergência de relógio medida contra o servidor (R-06)
   Dep: F20-T03 · Docs: [03 §5](03-sincronizacao-offline.md), [07 §4](07-qualidade-ci.md)
   CP: `ts_local` comparado ao `now()` do servidor; evento `sync_relogio_adiantado` testado com fonte injetada.
-- [ ] **F20-T06** — Docs donos: publication, cascatas, inventário e CI (R-09, R-17)
+- [x] **F20-T06** — Docs donos: publication, cascatas, inventário e CI (R-09, R-17)
   Dep: — · Docs: [01](01-banco-de-dados.md), [02](02-seguranca-rls.md), [06](06-mvp-entregas.md), [07](07-qualidade-ci.md)
   CP: 01 §7 e §4 com `convites`; 02 §2 com `convites`; 06 §4/ADR-013 sem afirmar deploy já entregue; 07 §3 espelhando o `ci.yml`; cascata de `convites.criado_por` na lista do 06 §3.3.1.
 - [ ] **F20-T07** — CI: rodar o teste de Realtime no job `supabase` (R-10)
@@ -548,8 +548,8 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
 | F17 Remoção da IA | 5 | 5 |
 | F18 Web e Desktop | 6 | 6 |
 | F19 Publicação Web | 5 | 2 |
-| F20 Correções da revisão | 13 | 6 |
-| **Total** | **126** | **114** |
+| F20 Correções da revisão | 13 | 7 |
+| **Total** | **126** | **115** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

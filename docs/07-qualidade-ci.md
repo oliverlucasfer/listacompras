@@ -67,7 +67,10 @@ Pipeline único `.github/workflows/ci.yml`, disparado em PR e push em `main`:
 
 ```yaml
 name: ci
-on: [pull_request, push]
+on:
+  pull_request:
+  push:
+    branches: [main]
 
 jobs:
   flutter:
@@ -105,9 +108,14 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: supabase/setup-cli@v3
-      - run: supabase db reset   # valida migrations
-      # Fase 1: script de testes de negação RLS contra DB local
+      - run: supabase start -x studio -x mailpit -x logflare -x vector -x imgproxy -x storage-api
+      - run: supabase db reset   # valida migrations (desde 0001 até a última)
+      - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/rls_tests.sql
+      - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/excluir_conta_tests.sql
+      - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/aceitar_convite_tests.sql
 ```
+
+> `$DB` = `postgresql://postgres:postgres@127.0.0.1:54322/postgres` (stack local do CI); os três scripts rodam com `ON_ERROR_STOP=1` e falham o job em qualquer negação indevida. O teste de Realtime (`supabase/tests/realtime_test.mjs`) entra no job na **F20-T07**.
 
 ---
 
