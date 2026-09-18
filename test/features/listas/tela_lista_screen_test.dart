@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
+import 'package:lista_compras/core/categorias/sugestao_categorias.dart';
 import 'package:lista_compras/core/widgets/app_banner.dart';
 import 'package:lista_compras/core/widgets/app_campo_texto.dart';
 import 'package:lista_compras/core/widgets/app_esqueleto.dart';
@@ -122,11 +123,20 @@ void main() {
   }
 
   /// Cria um item frequente fora da lista aberta (peso = 1 por ocorrência).
-  Future<void> criarFrequentesEmOutraLista(String nome, int vezes) async {
+  Future<void> criarFrequentesEmOutraLista(
+    String nome,
+    int vezes, {
+    CategoriaItem categoria = CategoriaItem.outros,
+  }) async {
     final repo = ListasRepository(db);
     final outra = await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
     for (var i = 0; i < vezes; i++) {
-      await repo.adicionarItem(listaId: outra.id, nome: nome, quantidade: 1);
+      await repo.adicionarItem(
+        listaId: outra.id,
+        nome: nome,
+        quantidade: 1,
+        categoria: categoria,
+      );
     }
   }
 
@@ -1560,20 +1570,51 @@ void main() {
     await fechar(tester);
   });
 
-  testWidgets('deve_adicionar_item_quando_toca_no_chip', (tester) async {
-    final listaId = await listaComItens(tester);
+  testWidgets('deve_mostrar_chips_de_novo_quando_campo_e_limpo', (
+    tester,
+  ) async {
+    await listaComItens(tester);
     await criarFrequentesEmOutraLista('Café', 2);
     await tester.pumpAndSettle();
+    expect(find.widgetWithText(ActionChip, 'Café'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(ActionChip, 'Café'));
+    await tester.enterText(find.byType(AppCampoTexto).first, 'Arr');
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(ActionChip, 'Café'), findsNothing);
+
+    await tester.enterText(find.byType(AppCampoTexto).first, '');
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(ActionChip, 'Café'), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_adicionar_item_quando_toca_no_chip', (tester) async {
+    final listaId = await listaComItens(tester);
+    await criarFrequentesEmOutraLista(
+      'Banana',
+      2,
+      categoria: CategoriaItem.hortifruti,
+    );
+    await tester.pumpAndSettle();
+
+    // Mesma cadeia local usada pelo código ao adicionar pelo chip.
+    final categoriaEsperada = await SugestaoCategorias(
+      db,
+    ).sugerirCategoria('Banana');
+    expect(categoriaEsperada, isNot(CategoriaItem.outros));
+
+    await tester.tap(find.widgetWithText(ActionChip, 'Banana'));
     await tester.pumpAndSettle();
 
     final itens = await db.select(db.itemLocal).get();
-    expect(
-      itens.where((i) => i.nome == 'Café' && i.listaId == listaId).length,
-      1,
+    final adicionado = itens.firstWhere(
+      (i) => i.nome == 'Banana' && i.listaId == listaId,
     );
-    expect(find.text('Café'), findsOneWidget);
+    expect(adicionado.quantidade, 1);
+    expect(adicionado.unidade, 'un');
+    expect(adicionado.categoria, categoriaEsperada.valor);
+    expect(find.text('Banana'), findsOneWidget);
 
     await fechar(tester);
   });
