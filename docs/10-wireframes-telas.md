@@ -158,6 +158,8 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 │  ← Compras da Semana      [⋮]   │ ← [⋮]: desmarcar todos, limpar
 │  ● Sincronizado                 │    concluídos, renomear, excluir lista
 ├─────────────────────────────────┤
+│  [Café] [Pão] [Leite] ...       │ ← chips de itens frequentes (RF-19),
+│                                 │    só com o campo vazio; toque adiciona
 │  Adicionar item                 │
 │  [____________ un▾   (＋) ]     │ ← Enter salva já categorizado (§3 05);
 │                                 │    reconhece "1kg de banana" e a
@@ -181,6 +183,8 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 ```
 
 **Busca (F16):** lupa na AppBar revela um campo (rótulo "Buscar item", hint de exemplo "Nome do item"); campo com rótulo acessível (label) e hint de exemplo; os grupos de categoria permanecem (vazios somem) e o drag fica desabilitado; sem resultado → vazio "Nenhum item encontrado" + "Limpar busca".
+
+**Chips de itens frequentes (F22/RF-19):** faixa horizontal acima do campo "Adicionar item", exibida só quando o campo está vazio e há sugestões; toque adiciona o item (1 `un`, categoria pela cadeia local); o botão do modo mercado (`shopping_cart_checkout`) fica na AppBar, visível a dono/editor.
 
 ### 3.2. Estados do indicador de sync (AppBar, [03 §6](03-sincronizacao-offline.md))
 ```
@@ -219,6 +223,28 @@ O aviso usa `AppBannerTipo.leitura` ([15 §3](15-design-system.md)), não um `Co
 ```
 
 O trecho "para todos os participantes" aparece quando há membros conhecidos (best-effort); o painel assume lista sem membros e a tela da lista usa o que estiver em cache de `membrosDaListaProvider` (F14-T08).
+
+### 3.5. Modo mercado (F22/RF-18 — [05 §6.5](05-app-flutter.md))
+```
+┌─────────────────────────────────┐
+│  ← Compras da Semana            │ ← sem menu/busca/drag/importação
+│  ● Sincronizado                 │
+├─────────────────────────────────┤
+│  3 de 12                        │ ← marcados nesta sessão / total ativo
+│                                 │    (live region)
+│  ☐ Arroz            1 kg        │ ← lista generosa de pendentes;
+│  ☐ Leite            2 un        │    toque na linha marca (alvo ≥48dp)
+│  ☐ Café             1 pacote    │
+│                                 │
+│  ▼ Marcados (3)                 │ ← faixa recolhível = undo: toque
+│    ☑ Banana         1 dz        │    desmarca e devolve aos pendentes
+│    ☑ Queijo prato   500 g       │
+└─────────────────────────────────┘
+```
+Com 0 pendentes, a área principal dá lugar ao vazio "Tudo comprado" com CTA para voltar à lista. A seta de voltar retorna à tela da lista (push); sem pilha (deep link), vai para `/listas`.
+
+### 3.6. Chips de itens frequentes na lista (F22/RF-19)
+Acima do campo de adicionar, uma faixa horizontal rolável de `ActionChip` (alvo ≥48dp, com `Semantics` de ação "Adicionar <nome>") mostra até 8 sugestões quando o campo está vazio; tocar adiciona o item. O ranking vem do histórico local do Drift (peso 2 para a lista aberta, exclui pendentes, limiar ≥2) — nenhum dado de rede.
 
 ---
 

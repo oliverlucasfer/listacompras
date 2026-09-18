@@ -38,6 +38,8 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-15 | Agrupamento da lista por categoria (enum fechado [01 §3](01-banco-de-dados.md)) com sugestão local em camadas (memória por nome → dicionário estático → `outros`) | 05 §6.3 + 01 §4.3 | F6 | [05 §8](05-app-flutter.md) + [03 §8](03-sincronizacao-offline.md) |
 | RF-16 | Importação de lista por texto livre (parser local determinístico, offline) com pré-visualização editável | 05 §6.4 + 10 §4 | F11 | [05 §8](05-app-flutter.md) |
 | RF-17 | Busca/filtro **local (offline)** de listas pelo título (painel) e de itens pelo nome (tela da lista) | 05 §6.2 + §6.3 | F16 | [05 §8](05-app-flutter.md) |
+| RF-18 | Modo mercado: tela focada para comprar no corredor (pendentes em destaque, contador, faixa "Marcados") acessível por botão na tela da lista | 05 §6.5 + 10 §3.5 | F22 | [05 §8](05-app-flutter.md) |
+| RF-19 | Itens frequentes: chips de sugestão derivados do histórico local (offline), com peso por escopo | 05 §3 + §6.3 + 10 §3.1 | F22 | [05 §8](05-app-flutter.md) |
 
 ## 3. Requisitos Não-Funcionais
 
@@ -127,6 +129,8 @@ Cada requisito liga story → design → tarefas ([14](14-tarefas.md)) → verif
 | RF-15 | US-07, US-08 | F6 | F6-T01…T06 | Repo + sugestão + widgets + sync |
 | RF-16 | US-02 | F11 | F11-T01…T03; F17-T01…T03 | Unit parser + widgets |
 | RF-17 | US-01 | F16 | F16-T01…T03 | Unit busca + widgets |
+| RF-18 | US-01 | F22 | F22-T04, F22-T05 | Widget mercado (marcar/desmarcar, faixa, estados) + teste de gate |
+| RF-19 | US-01 | F22 | F22-T02, F22-T03 | Unit frequentes (peso, limiar, limite) + widgets de chips |
 | RNF-06 | — | F8 · F14 | F14-T01…T02 | Guidelines de a11y + escala de fonte |
 
 ## 7. Fora de escopo (MVP)

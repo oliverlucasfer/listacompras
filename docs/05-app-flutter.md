@@ -82,6 +82,7 @@ A partir da Fase 18 o app roda em **Android, iOS, Web e Desktop (Windows/Linux/m
 | `appDatabaseProvider` | Provider | Instância única do Drift |
 | `listasProvider` | StreamProvider | Listas ativas do usuário (Drift → UI) |
 | `itensDaListaProvider(listaId)` | StreamProvider.family | Itens ativos; ordenação de exibição por categoria e `ordem` (Fase 6) |
+| `itensFrequentesProvider(listaId)` | StreamProvider.family | Ranking de sugestões de itens frequentes derivado do Drift (F22/RF-19): agrupa por nome normalizado, peso 2 para ocorrências na lista aberta e 1 para as demais, exclui os **pendentes** da lista aberta, limiar ≥ 2 e limite de 8 |
 | `syncStatusProvider` | StreamProvider | Estado de sync ([03 §6](03-sincronizacao-offline.md)) |
 | `conectividadeProvider` | StreamProvider | Online/offline (dispara flush) |
 | `sugestaoCategoriasProvider` | Provider | Cadeia de sugestão local (Fase 6/RF-15) |
@@ -110,6 +111,7 @@ O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado
 | `/compartilhadas` | Compartilhadas (shell) — listas em que participa (não dono); AppBar "Entrar com código" (`person_add`): colar token → aceite → navega à lista | exige autenticação |
 | `/configuracoes` | Configurações (shell) — aparência, conta, logout, excluir conta | exige autenticação |
 | `/lista/:listaId` | Tela da Lista (fora do shell) | exige autenticação + pertencimento |
+| `/mercado/:listaId` | Modo mercado (fora do shell) — entrada pelo botão `shopping_cart_checkout` da AppBar da lista, visível só a dono/editor (F22/RF-18) | exige autenticação + pertencimento |
 | `/membros/:listaId` | Membros da lista (fora do shell) | exige autenticação + pertencimento |
 | `/design` | Design System (só `kDebugMode`) | público em debug |
 
@@ -179,6 +181,8 @@ O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado
 | Menu (⋮) | "Desmarcar todos", "Limpar concluídos", "Renomear lista", "Excluir lista" |
 | Ações em massa | Reaproveitar lista (desmarcar todos) e limpar concluídos — confirmação para destrutivas; "desmarcar" devolve o item ao seu grupo; **limpar concluídos tem undo** (SnackBar 3s, restaura `id`/`ordem` originais — F14-T05) |
 | Indicador de sync | Estado de [03 §6](03-sincronizacao-offline.md) no **topo da tela da lista** e no **topo do painel de listas** (Minhas Listas e Compartilhadas — F21-T01, alinhado ao wireframe [10 §3.2](10-wireframes-telas.md)) |
+| Chips de itens frequentes | Acima do campo "Adicionar item", em rolagem horizontal, quando o campo está **vazio** e há sugestões (`itensFrequentesProvider`, RF-19): toque adiciona o item com quantidade 1, unidade `un` e categoria pela cadeia local (§3); somem ao digitar o primeiro caractere e voltam ao limpar o campo |
+| Botão do modo mercado | Ícone `shopping_cart_checkout` na AppBar (`tooltip` "Modo mercado"), **antes da lupa**; abre `/mercado/:listaId` via `push`. Visível apenas para dono/editor (papel efetivo com escrita); para `leitor` o botão não existe (RF-18) |
 
 * **Reordenar (Fase 6):** drag-and-drop restrito **ao grupo da categoria** — reordena só os itens do grupo (grava `ordem` local + fila); mudar de categoria é pelo dropdown do editar. Exibição continua `(categoria, ordem, id)` — sem coluna nova.
 * Quantidades: stepper + input direto; unidades restritas ao enum ([01 §3.1](01-banco-de-dados.md)).
@@ -197,6 +201,17 @@ Um único modal de importação local (modo único, offline, RF-16):
 3. **Modal de pré-visualização:** checkboxes para incluir/excluir cada item; edição inline de nome/quantidade/unidade/**categoria** (dropdown com o enum [01 §3.2](01-banco-de-dados.md)), com erro inline de nome/quantidade (F14-T07); `aviso` exibido como nota.
 4. "Adicionar N itens à lista" → grava localmente (fila de INSERTs).
 5. Erros do parser exibidos com as mensagens amigáveis do contrato ([04 §2](04-importacao-lista.md)).
+
+### 6.5. Modo mercado (RF-18)
+
+Tela dedicada `/mercado/:listaId` para usar o celular no mercado, sem a densidade da tela da lista (wireframe [10 §3.5](10-wireframes-telas.md)):
+
+* **AppBar** com título da lista e seta de voltar (sem menu); corpo com `IndicadorSync` no topo.
+* **Contador** `mercadoProgresso(marcados, total)` (ex.: "3 de 12"): marcados **nesta sessão** / total de itens ativos; é uma live region.
+* **Pendentes** em lista de altura generosa, com checkbox de alvo ≥48dp e toque na linha para marcar (`editarItem(concluido: true)`). **Sem** grupos de categoria, busca, drag, swipe, menu ou importação.
+* **Faixa "Marcados (n)"** recolhível no rodapé — é o undo do toque acidental: ao marcar, o item sai da área principal e entra na faixa, que abre automaticamente na primeira marcação da sessão; tocar num item da faixa desmarca e o devolve aos pendentes.
+* **Estados:** carregando (`AppEsqueleto`), erro (`AppEstadoErro` com retry em `itensDaListaProvider`), lista não encontrada e "tudo comprado" (0 pendentes) com CTA para voltar; enquanto o papel não carrega, o default é leitor (somente leitura).
+* O botão de entrada fica na AppBar da tela da lista e é **escondido para leitor** (§6.3).
 
 ---
 

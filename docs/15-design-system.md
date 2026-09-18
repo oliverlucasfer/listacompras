@@ -47,6 +47,8 @@ Título de tela (AppBar): **24sp bold** aplicado via `appBarTheme.titleTextStyle
 | `AppSheet.mostrar` | Bottom sheet padrão |
 | `mostrarSnackBar` | Snackbar (inclusive undo) com **duração curta**: 2s sem ação e 3s com ação (`duracao` sobrescreve — F12-T07); já anunciado por ser uma live region do próprio `SnackBar` |
 
+**Uso de componentes existentes na F22:** os chips de itens frequentes usam o **`ActionChip`** do Material (faixa horizontal rolável, alvo ≥48dp, `Semantics` de ação "Adicionar <nome>" — RF-19); a faixa "Marcados" do modo mercado usa `Material` + `ListTile` com `Semantics(button/expanded)`, sem componente novo (RF-18). Nenhum `App*` novo foi necessário.
+
 ## 4. Acessibilidade (RNF-06)
 
 Regras vinculantes (detalhe e evidência na [spec da Fase 14](superpowers/specs/2026-09-14-ux-acessibilidade-design.md)):

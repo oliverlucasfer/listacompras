@@ -254,6 +254,13 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
               leading: botaoVoltarInicio(context, inicio),
               title: Text(lista.titulo),
               actions: [
+                if (_papelNaLista(lista.id) == Papel.dono ||
+                    _papelNaLista(lista.id) == Papel.editor)
+                  IconButton(
+                    tooltip: AppStrings.modoMercado,
+                    icon: const Icon(Icons.shopping_cart_checkout),
+                    onPressed: () => context.push('/mercado/${lista.id}'),
+                  ),
                 if (_buscando)
                   IconButton(
                     tooltip: AppStrings.limparBusca,

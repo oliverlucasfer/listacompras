@@ -105,10 +105,12 @@ Serviço de consulta puro (`ItensFrequentes`), sem escrita e sem cache próprio:
 3. **Peso por escopo:** ocorrência na lista aberta conta **2**; nas demais listas conta **1**.
    Hábitos da lista vêm primeiro, mas uma lista nova ainda recebe sugestões do histórico geral.
 4. Ordena por peso DESC, depois nome ASC (determinístico).
-5. **Exclui** nomes já ativos na lista aberta (comparação normalizada).
-6. **Limiar:** apenas nomes com peso ≥ **2**. Consequência: um nome que aparece só na
-   lista aberta (peso 2) atinge o limiar, mas é descartado pelo item 5 enquanto estiver
-   ativo nela; ao sair da lista, ele passa a ser sugerido pelo histórico.
+5. **Exclui** nomes **pendentes** na lista aberta (comparação normalizada). Itens já
+   **concluídos** nessa lista **não** são excluídos — é o que dá sentido ao peso 2: "você
+   já comprou isto aqui antes". Não se sugere o que ainda falta comprar.
+6. **Limiar:** apenas nomes com peso ≥ **2**. Consequência: um nome que aparece só como
+   pendente na lista aberta é excluído pelo item 5 (não sugerido); um nome comprado
+   (concluído) nessa lista conta peso 2 e pode aparecer, mesmo sem histórico em outras listas.
 7. **Limite:** **8** sugestões.
 
 Implementação sugerida: `customSelect` com `GROUP BY` sobre `item_local`, usando

@@ -540,6 +540,26 @@ Achados da revisão de fechamento que **não** deveriam ser marcados como conclu
   Dep: — · Docs: [06 §3.3.2](06-mvp-entregas.md)
   CP: link "ver política" no cadastro e em Configurações abrindo o texto in-app (`politicaPrivacidadeTexto`); **sem** versão online (decisão de 18/09/2026).
 
+## Fase 22 — Modo mercado e itens frequentes
+
+Spec: [superpowers/specs/2026-09-18-modo-mercado-frequentes-design.md](superpowers/specs/2026-09-18-modo-mercado-frequentes-design.md) · Requisitos: RF-18 (modo mercado), RF-19 (itens frequentes). · Docs donos: 05, 10, 12, 15.
+
+- [x] **F22-T01** — Limpezas: strings órfãs de IA e parser `pct`
+  Dep: — · Docs: [04 §4](04-importacao-lista.md), [05 §7](05-app-flutter.md)
+  CP: `2 pct` → `Unidade.pct`; `importarPorIa` e demais menções de IA no app removidas; `format`/`analyze`/`test` verdes.
+- [x] **F22-T02** — Itens frequentes: domínio e consulta no repositório
+  Dep: — · Docs: [05 §3](05-app-flutter.md)
+  CP: `SugestaoItem` + `watchItensFrequentes` (agrupa por nome normalizado, peso 2 na lista aberta / 1 nas demais, exclui pendentes da lista aberta, limiar ≥2, limite 8, desempate alfabético); unit tests verdes.
+- [x] **F22-T03** — Chips de itens frequentes na tela da lista (RF-19)
+  Dep: F22-T02 · Docs: [05 §3/§6.3](05-app-flutter.md), [10 §3.1/§3.6](10-wireframes-telas.md), [15 §3](15-design-system.md)
+  CP: `itensFrequentesProvider` + chips `ActionChip` acima do campo, visíveis só com o campo vazio; toque adiciona 1 `un` com categoria sugerida; widget tests verdes.
+- [x] **F22-T04** — Rota e tela do Modo Mercado (RF-18)
+  Dep: — · Docs: [05 §4/§6.5](05-app-flutter.md), [10 §3.5](10-wireframes-telas.md)
+  CP: rota `/mercado/:listaId` + `MercadoScreen` (pendentes em destaque, contador da sessão, faixa "Marcados" como undo, estados de loading/erro/não encontrada/tudo comprado, sem menu/busca/drag/importação); testes de widget incluindo escala 2.0 sem overflow.
+- [x] **F22-T05** — Botão de entrada no modo mercado (gate por papel) e docs donos
+  Dep: F22-T04 · Docs: [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [14](14-tarefas.md), [15](15-design-system.md), [00 §6](00-visao-geral.md)
+  CP: botão `shopping_cart_checkout` na AppBar da lista visível só para dono/editor (testes de gate); RF-18/RF-19 nos docs donos; Fase 22 marcada e tabela de progresso atualizada.
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -563,7 +583,8 @@ Achados da revisão de fechamento que **não** deveriam ser marcados como conclu
 | F19 Publicação Web — **cancelada** | 5 | 5 |
 | F20 Correções da revisão | 13 | 13 |
 | F21 Pendências do fechamento | 4 | 1 |
-| **Total** | **130** | **125** |
+| F22 Modo mercado e itens frequentes | 5 | 5 |
+| **Total** | **135** | **130** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

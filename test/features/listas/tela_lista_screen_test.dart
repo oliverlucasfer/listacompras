@@ -1637,6 +1637,22 @@ void main() {
 
     await fechar(tester);
   });
+
+  // ---- Botão do modo mercado (F22-T05, RF-18) ----
+
+  testWidgets('deve_mostrar_botao_de_mercado_quando_pode_escrever', (
+    tester,
+  ) async {
+    await listaComItens(tester, papel: Papel.dono);
+    expect(find.byTooltip(AppStrings.modoMercado), findsOneWidget);
+    await fechar(tester);
+  });
+
+  testWidgets('nao_deve_mostrar_botao_de_mercado_para_leitor', (tester) async {
+    await listaComItens(tester, papel: Papel.leitor);
+    expect(find.byTooltip(AppStrings.modoMercado), findsNothing);
+    await fechar(tester);
+  });
 }
 
 class _RepoLimparFalha extends ListasRepository {
