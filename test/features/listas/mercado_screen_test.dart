@@ -100,4 +100,75 @@ void main() {
     expect(tester.takeException(), isNull);
     await fechar(tester);
   });
+
+  testWidgets('nao_deve_estourar_quando_faixa_abre_com_muitos_marcados', (
+    tester,
+  ) async {
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    for (var i = 0; i < 10; i++) {
+      final item = await repo.adicionarItem(
+        listaId: lista.id,
+        nome: 'Item $i',
+        quantidade: 1,
+      );
+      await repo.editarItem(item.id, concluido: true);
+    }
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Pendente',
+      quantidade: 1,
+    );
+    await abrir(tester, lista.id);
+
+    // Marcar o pendente abre a faixa com os 11 concluídos.
+    await tester.tap(find.text('Pendente'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('${AppStrings.mercadoMarcados} (11)'), findsOneWidget);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_ignorar_marcado_remoto_quando_conta_progresso', (
+    tester,
+  ) async {
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz', quantidade: 1);
+    await abrir(tester, lista.id);
+
+    await tester.tap(find.text('Arroz'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 de 1'), findsOneWidget);
+
+    // Sync remoto desmarca por baixo (LWW): o stream atualiza e o contador
+    // precisa reconciliar — o id não está mais concluído.
+    final item = (await db.select(db.itemLocal).get()).single;
+    await repo.editarItem(item.id, concluido: false);
+    await tester.pumpAndSettle();
+
+    expect(find.text('0 de 1'), findsOneWidget);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_desmarcar_item_quando_toca_na_faixa_aberta', (
+    tester,
+  ) async {
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz', quantidade: 1);
+    await abrir(tester, lista.id);
+
+    await tester.tap(find.text('Arroz'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 de 1'), findsOneWidget);
+    expect(find.text('${AppStrings.mercadoMarcados} (1)'), findsOneWidget);
+
+    // A faixa abriu sozinha; tocar no item marcado o devolve aos pendentes.
+    await tester.tap(find.text('Arroz'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('0 de 1'), findsOneWidget);
+    expect(find.text(AppStrings.mercadoMarcados), findsNothing);
+    expect(find.text('Arroz'), findsOneWidget);
+    await fechar(tester);
+  });
 }
