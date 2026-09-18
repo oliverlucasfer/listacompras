@@ -481,6 +481,52 @@ Spec: [superpowers/specs/2026-09-17-publicacao-web-design.md](superpowers/specs/
   Dep: F19-T03 · Docs: [06 §1/§3.3.2](06-mvp-entregas.md), [14](14-tarefas.md)
   CP: link "ver versão online" no sheet e no cadastro; `format`/`analyze`/`test` verdes; 06 §1 (web) marcado; Fase 19 marcada.
 
+## Fase 20 — Correções da revisão geral
+
+Fonte: [relatorio-revisao-geral.md](relatorio-revisao-geral.md) · Plano: [superpowers/plans/2026-09-18-correcoes-revisao-geral.md](superpowers/plans/2026-09-18-correcoes-revisao-geral.md) · Docs donos: 01, 02, 03, 04, 06, 07, 08, 15.
+
+Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs donos) → T07…T12 (frentes independentes).
+
+- [x] **F20-T00** — Registrar a revisão geral e a Fase 20
+  Dep: — · Docs: [14](14-tarefas.md), [relatório](relatorio-revisao-geral.md)
+  CP: relatório com os achados `R-xx` verificados; Fase 20 no 14 com progresso; sem tocar código.
+- [ ] **F20-T01** — Parser: vírgula decimal não pode corromper a quantidade (R-01)
+  Dep: F20-T00 · Docs: [04 §3](04-importacao-lista.md)
+  CP: `1,5 kg de arroz` → `1.5 kg`; segmentação por `,` entre itens preservada; doc 04 §3 sem contradição.
+- [ ] **F20-T02** — Parser e UI: quantidade ≤ 0 tratada como ausente (R-02)
+  Dep: F20-T01 · Docs: [04 §3](04-importacao-lista.md)
+  CP: `0 arroz` → `1 un` + aviso; edição inline rejeita `≤ 0`; nenhuma exceção crua na confirmação.
+- [ ] **F20-T03** — Sync: não perder mutação enfileirada durante o flush (R-03)
+  Dep: F20-T00 · Docs: [03 §3/§4](03-sincronizacao-offline.md)
+  CP: remoção limitada ao id do lote; teste com edição durante o envio mantém a mutação nova na fila e no servidor.
+- [ ] **F20-T04** — Sync: flush sem reentrância e status correto no bootstrap (R-04, R-05)
+  Dep: F20-T03 · Docs: [03 §4/§6](03-sincronizacao-offline.md)
+  CP: `flush()` em laço (sem ciclo de futures); fila esgotada no restart expõe `Erro` com "tentar de novo".
+- [ ] **F20-T05** — Sync: divergência de relógio medida contra o servidor (R-06)
+  Dep: F20-T03 · Docs: [03 §5](03-sincronizacao-offline.md), [07 §4](07-qualidade-ci.md)
+  CP: `ts_local` comparado ao `now()` do servidor; evento `sync_relogio_adiantado` testado com fonte injetada.
+- [ ] **F20-T06** — Docs donos: publication, cascatas, inventário e CI (R-09, R-17)
+  Dep: — · Docs: [01](01-banco-de-dados.md), [02](02-seguranca-rls.md), [06](06-mvp-entregas.md), [07](07-qualidade-ci.md)
+  CP: 01 §7 e §4 com `convites`; 02 §2 com `convites`; 06 §4/ADR-013 sem afirmar deploy já entregue; 07 §3 espelhando o `ci.yml`; cascata de `convites.criado_por` na lista do 06 §3.3.1.
+- [ ] **F20-T07** — CI: rodar o teste de Realtime no job `supabase` (R-10)
+  Dep: F20-T06 · Docs: [02 §5](02-seguranca-rls.md), [07 §3](07-qualidade-ci.md)
+  CP: `realtime_test.mjs` executado no CI (sem `package.json` stub); CP da F1-T07 validado.
+- [ ] **F20-T08** — Convites: revogar convite pendente pela UI (R-07)
+  Dep: — · Docs: [08 §2/§5](08-compartilhamento-colaborativo.md)
+  CP: ação "Revogar" no sheet do dono usando `ConvitesRepository.revogar`; token revogado deixa de ser aceito.
+- [ ] **F20-T09** — Categorias: cobertura do termo antes do desempate alfabético (R-08)
+  Dep: — · Docs: [04 §5](04-importacao-lista.md)
+  CP: `Suco de laranja` → Bebidas; casos de teste para compostos.
+- [ ] **F20-T10** — Realtime: limpeza ao perder acesso e status do canal (R-11, R-12)
+  Dep: — · Docs: [03 §4/§7](03-sincronizacao-offline.md), [08 §7/§9](08-compartilhamento-colaborativo.md)
+  CP: teste com 2 contas comprovando a limpeza do cache ao ser removido; callback de status com re-sync em erro.
+- [ ] **F20-T11** — Banco: defesa em profundidade e higiene (R-18, R-19)
+  Dep: F20-T06 · Docs: [01](01-banco-de-dados.md), [02 §4.3](02-seguranca-rls.md)
+  CP: `papel='dono'` restrito na policy de insert; trigger de `atualizado_em` em `convites`; testes de negação verdes.
+- [ ] **F20-T12** — Privacidade e polimento de UI/a11y (R-13…R-16, R-20, R-21)
+  Dep: — · Docs: [05 §7](05-app-flutter.md), [07 §4](07-qualidade-ci.md), [15 §4](15-design-system.md)
+  CP: `beforeSend` sem dados de itens; callback do login no i18n/tokens; comentário da política; deps; ajustes de a11y; CSP documentada como decisão.
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -502,7 +548,8 @@ Spec: [superpowers/specs/2026-09-17-publicacao-web-design.md](superpowers/specs/
 | F17 Remoção da IA | 5 | 5 |
 | F18 Web e Desktop | 6 | 6 |
 | F19 Publicação Web | 5 | 2 |
-| **Total** | **113** | **108** |
+| F20 Correções da revisão | 13 | 1 |
+| **Total** | **126** | **109** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
