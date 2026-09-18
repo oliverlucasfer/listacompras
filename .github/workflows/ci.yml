@@ -54,6 +54,14 @@ jobs:
         run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/excluir_conta_tests.sql
       - name: Testes do aceite de convite (08 §3.1)
         run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/aceitar_convite_tests.sql
+      - name: Teste de Realtime (01 §7, 02 §5 P-05)
+        working-directory: supabase/tests
+        run: |
+          # Chaves do stack local (o teste usa a ANON JWT — a publishable nova
+          # ainda não entrega eventos no Realtime local, achado R-23).
+          supabase status -o env | grep -E '^(ANON_KEY|SERVICE_ROLE_KEY|API_URL)=' | sed 's/"//g' >> "$GITHUB_ENV"
+          npm ci
+          npm test
       # Fase 4+: sync tests no job flutter
 
   desktop:
