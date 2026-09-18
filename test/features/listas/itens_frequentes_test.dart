@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lista_compras/core/texto/normalizar.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 
@@ -36,14 +37,24 @@ void main() {
     await repo.adicionarItem(listaId: listaId, nome: nome);
   }
 
+  test('deve_agrupar_acento_e_caixa_quando_nome_normalizado', () async {
+    await item('l1', 'Café');
+    await item('l2', 'CAFÉ');
+    final s = await repo.watchItensFrequentes('l3').first;
+    expect(s, hasLength(1));
+    expect(normalizarTexto(s.single.nome), 'cafe');
+    expect(s.single.peso, 2);
+  });
+
   test(
     'deve_agrupar_por_nome_normalizado_quando_acento_e_caixa_diferem',
     () async {
-      await item('l1', 'Leite');
-      await item('l2', 'leite');
-      await item('l2', 'LEITE');
+      await item('l1', 'Café');
+      await item('l2', 'café');
+      await item('l2', 'CAFÉ');
       final s = await repo.watchItensFrequentes('l3').first;
-      expect(s.single.nome, 'Leite');
+      expect(s, hasLength(1));
+      expect(normalizarTexto(s.single.nome), 'cafe');
       expect(s.single.peso, 3);
     },
   );

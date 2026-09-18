@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/texto/normalizar.dart';
 import '../../../drift/database.dart';
 import '../domain/categoria.dart';
 import '../domain/item.dart';
@@ -52,42 +53,53 @@ class ListasRepository {
   /// local. Peso 2 para a lista aberta, 1 para as demais; apenas nomes
   /// **pendentes** da lista aberta são excluídos (concluídos contam com peso
   /// 2); limiar >= 2 e limite de 8. Zero rede.
+  ///
+  /// O agrupamento é feito em Dart com [normalizarTexto] (remove acento pt-BR,
+  /// caixa e colapsa espaços): o `lower()` do SQLite é ASCII-only e não
+  /// colapsaria variantes acentuadas como `Café`/`CAFÉ`. O `customSelect`
+  /// apenas lê as linhas candidatas e o `.watch()` mantém a reatividade.
   Stream<List<SugestaoItem>> watchItensFrequentes(String listaId) {
     return _db
         .customSelect(
           '''
-    SELECT i.nome AS nome,
-           SUM(CASE WHEN i.lista_id = ? THEN 2 ELSE 1 END) AS peso
+    SELECT i.nome AS nome, i.lista_id AS lista_id, i.concluido AS concluido
     FROM item_local i
     JOIN lista_local l ON l.id = i.lista_id AND l.deletado_em IS NULL
     WHERE i.deletado_em IS NULL
-      AND lower(i.nome) NOT IN (
-        SELECT lower(j.nome) FROM item_local j
-        WHERE j.lista_id = ? AND j.deletado_em IS NULL AND j.concluido = 0
-      )
-    GROUP BY lower(i.nome)
-    HAVING SUM(CASE WHEN i.lista_id = ? THEN 2 ELSE 1 END) >= 2
-    ORDER BY peso DESC, i.nome ASC
-    LIMIT 8
   ''',
-          variables: [
-            Variable.withString(listaId),
-            Variable.withString(listaId),
-            Variable.withString(listaId),
-          ],
           readsFrom: {_db.itemLocal, _db.listaLocal},
         )
         .watch()
-        .map(
-          (rows) => rows
-              .map(
-                (r) => SugestaoItem(
-                  nome: r.read<String>('nome'),
-                  peso: r.read<int>('peso'),
-                ),
-              )
-              .toList(),
-        );
+        .map((rows) {
+          final pendentesNaListaAberta = <String>{};
+          final pesos = <String, int>{};
+          final representantes = <String, String>{};
+          for (final row in rows) {
+            final nome = row.read<String>('nome');
+            final chave = normalizarTexto(nome);
+            final naListaAberta = row.read<String>('lista_id') == listaId;
+            final concluido = row.read<bool>('concluido');
+            if (naListaAberta && !concluido) {
+              pendentesNaListaAberta.add(chave);
+            }
+            pesos[chave] = (pesos[chave] ?? 0) + (naListaAberta ? 2 : 1);
+            representantes.putIfAbsent(chave, () => nome);
+          }
+          final sugestoes = <SugestaoItem>[];
+          for (final entry in pesos.entries) {
+            if (pendentesNaListaAberta.contains(entry.key)) continue;
+            if (entry.value < 2) continue;
+            sugestoes.add(
+              SugestaoItem(nome: representantes[entry.key]!, peso: entry.value),
+            );
+          }
+          sugestoes.sort((a, b) {
+            final porPeso = b.peso.compareTo(a.peso);
+            if (porPeso != 0) return porPeso;
+            return normalizarTexto(a.nome).compareTo(normalizarTexto(b.nome));
+          });
+          return sugestoes.take(8).toList();
+        });
   }
 
   Stream<List<ListaComContagem>> watchListasComContagem() {
