@@ -759,4 +759,71 @@ void main() {
     expect(nomesEnviados, contains('Arroz integral'));
     expect(await mutacoesNaFila(), 0);
   });
+
+  test('deve_expor_erro_quando_fila_esgotada_no_bootstrap', () async {
+    // R-05: fila toda em 10 tentativas não pode mascarar como "Sincronizado".
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await db.customUpdate('UPDATE mutacao_pendente SET tentativas = 10');
+    expect(await mutacoesNaFila(), 2);
+
+    final remoto = RemotoFake();
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+
+    final status = await engine.status
+        .firstWhere((s) => s is ErroSync)
+        .timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => engine.statusAtual,
+        );
+    expect(status, isA<ErroSync>());
+    expect(remoto.recebidas, isEmpty);
+  });
+
+  test('deve_concluir_flush_quando_mutacao_chega_durante_a_drenagem', () async {
+    // R-04: guarda de liveness — o encadeamento de flushes não pode fechar um
+    // ciclo de espera, e a edição feita durante a drenagem tem de subir.
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+
+    final remoto = RemotoFake();
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+    );
+    addTearDown(engine.dispose);
+
+    var jaEditou = false;
+    engine.status.listen((status) async {
+      if (status is Sincronizado && !jaEditou) {
+        jaEditou = true;
+        await repo.editarItem(item.id, nome: 'Arroz integral');
+      }
+    });
+
+    await engine.iniciar();
+    await engine.flush().timeout(const Duration(seconds: 5));
+
+    // A edição sobe num flush encadeado depois; espera-a aparecer.
+    for (var i = 0; i < 50; i++) {
+      final enviou = remoto.recebidas.any(
+        (m) => m.payload['nome'] == 'Arroz integral',
+      );
+      if (enviou) break;
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+    }
+
+    expect(await mutacoesNaFila(), 0);
+    expect(
+      remoto.recebidas.map((m) => m.payload['nome']),
+      contains('Arroz integral'),
+    );
+  });
 }

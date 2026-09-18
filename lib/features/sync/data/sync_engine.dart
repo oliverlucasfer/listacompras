@@ -73,7 +73,14 @@ class SyncEngine {
         _online = true;
       }
     }
-    if (!_online) _definir(const Offline());
+    if (!_online) {
+      _definir(const Offline());
+    } else if (await _contarFila() > 0 && !await _temEnviaveis()) {
+      // Fila esgotada em tentativas: nenhum flush vai rodar e o status não
+      // pode mentir "Sincronizado" — o usuário precisa do "tentar de novo"
+      // (R-05).
+      _definir(const ErroSync());
+    }
     _subFila = _db
         .select(_db.mutacaoPendente)
         .watch()
@@ -95,11 +102,13 @@ class SyncEngine {
       } on Exception {
         // O erro já foi entregue a quem aguardou o trabalho anterior.
       }
-      if (_disposed || !_online || !await _temEnviaveis()) return;
-      _falhou = false;
-      await _drenar();
-      if (!_falhou && !_disposed && _online && await _temEnviaveis()) {
-        await flush();
+      // Laço, e não reentrância: chamar `flush()` de dentro do próprio
+      // trabalho faz `_flushAtual` apontar para si mesmo e fecha um ciclo de
+      // espera (R-04).
+      while (!_disposed && _online && await _temEnviaveis()) {
+        _falhou = false;
+        await _drenar();
+        if (_falhou || _disposed || !_online) break;
       }
     }();
     _flushAtual = trabalho;

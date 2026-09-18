@@ -166,6 +166,10 @@ Máquina de estados exposta por provider Riverpod (`syncStatusProvider`):
 | `Offline` | Ícone nuvem cortada + banner discreto |
 | `Erro` | Banner com ação "Tentar novamente" (após esgotar retries) |
 
+> **Bootstrap (R-05):** a fila que já chega ao app com todas as mutações em 10 tentativas expõe `Erro` **já no bootstrap** — o engine deriva o estado da fila ao iniciar, em vez de exibir `Sincronizado`/`Offline` mentindo sobre a fila esgotada.
+
+> **Laço, não reentrância (R-04):** o `flush()` drena em laço (`while`) e nunca chama a si mesmo de dentro do próprio trabalho — a chamada reentrante fazia `_flushAtual` apontar para o próprio futuro e fechava um ciclo de espera que só saía com restart do app.
+
 ---
 
 ## 7. Bootstrap e manutenção do cache local
