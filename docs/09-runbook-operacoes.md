@@ -88,7 +88,7 @@ supabase db push
 - **Fase 6 (agrupamento por categoria, 08/09/2026):** migration `0006_categorias.sql` em produção (`db push`, aditiva); app `1.1.0+3` (smoke: "E-mail ou senha incorretos." do Auth de produção) distribuído ao grupo `testadores` (App Distribution). Rollout especificado no spec F6 §7 (docs/superpowers/specs).
 - **Correção (dono da lista, 11/09/2026):** migration `0010_dono_automatico.sql` aplicada em produção via `db push` — o trigger `trg_listas_cria_dono` cria a associação do dono em `lista_membros` ao inserir a lista e o backfill conserta as listas existentes sem dono membro. Causa do bug: a associação do dono nunca era criada (nem cliente nem banco), então `papel_na_lista()` retornava null (UI tratava o dono como leitor) e o RLS negava escrita de itens. Docs donos [01 §6](01-banco-de-dados.md) e [02 §1/§3](02-seguranca-rls.md).
 - **Fases 8–11 + correções (11/09/2026):** design system/refresh visual, redesign de navegação (NavigationBar/Rail), importação local sem IA (RF-16) e correção do dono (migration `0011_dono_repair.sql` em produção, idempotente). App `1.2.0+6` distribuído ao grupo `testadores` (App Distribution): navegação abre lista/membros por `push` sobre o shell (voltar para a aba de origem; fallback para `/listas`/`/compartilhadas` sem pilha) e títulos contextualizados (aba/AppBar "Configurações", `Membros · {título}`, fallback "Lista"). Docs donos [05 §4](05-app-flutter.md), [10 §2/§3](10-wireframes-telas.md).
-- **Fase 19 — Publicação Web (17/09/2026):** F19-T01 publicou o build web no Firebase Hosting (projeto `lista-compras-34f93`, site default) em `https://lista-compras-34f93.web.app` — rewrite de SPA, headers COOP/COEP (Drift/WASM/OPFS) e `/privacidade` estática. Deploy manual nesta entrada; automatizado no CI pela F19-T03 (ADR-013). Documento de entrada servido `Cache-Control: no-cache` (regra `source: "/"` no `firebase.json`; validado por `curl.exe -sI` na raiz, já que, com `cleanUrls`, `/index.html` responde `301 → /`), com assets como `main.dart.js` ainda cacheáveis (observado `max-age=3600`).
+- **Fase 19 — Publicação Web (17/09/2026, suspensa em 18/09/2026):** a F19-T01 publicou o build web no Firebase Hosting (projeto `lista-compras-34f93`, site default) em `https://lista-compras-34f93.web.app` — rewrite de SPA, headers COOP/COEP (Drift/WASM/OPFS) e `/privacidade` estática. **Por decisão do dono (18/09/2026, ADR-013) o Hosting foi desabilitado** (`firebase hosting:disable`): a URL responde **404** e o Web passa a ser de **uso local**. Os artefatos (`firebase.json`, `.firebaserc`, `web/robots.txt`, `web/privacidade.html`) permanecem no repositório; o deploy automático (F19-T03) **não** será implementado. Para rodar local: `flutter run -d chrome` (dev) ou `flutter build web` + servir `build/web`. Reabilitar exige apenas um `firebase deploy --only hosting` (o histórico de releases continua no Console).
 
 ### 2.7. Auth → URL Configuration (web + nativo)
 
@@ -129,9 +129,7 @@ O web usa `<origem>/login-callback` (http em dev, https em produção) como `red
 3. Build AAB → Play Console → produção (se rollout aberto) ou teste interno.
 4. **Rollout gradual** (10% → 50% → 100%) em correções arriscadas.
 
-**Web:**
-1. Merge do hotfix → `flutter build web` → deploy no hosting.
-2. Rollback = redeploy do commit anterior (hosting mantém histórico).
+**Web:** **sem app publicado** desde 18/09/2026 (ADR-013). Rodar local: `flutter run -d chrome` (dev) ou `flutter build web` + servir `build/web`. Se um dia for reabilitado, o hotfix é: merge → `flutter build web` → `firebase deploy --only hosting`; rollback = redeploy do commit anterior (o Console mantém o histórico).
 
 **Dados/backend:** correções de schema/RLS seguem 2.4.
 

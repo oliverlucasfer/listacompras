@@ -18,7 +18,7 @@
 - [ ] App funciona 100% offline (leitura, escrita, marcação de itens) e sincroniza pendências ao reconectar, sem duplicar nem perder itens. *(RF-08, RNF-02)*
 - [ ] RLS validado: um usuário não consegue ler/escrever listas de outro (testes de negação N-01…N-10 de [02 §5](02-seguranca-rls.md)). *(RNF-03)*
 - [ ] **Exclusão de conta disponível no app** (ver Seção 3). *(RF-11, RNF-05)*
-- [ ] Publicado: **Web acessível por URL pública** (`https://lista-compras-34f93.web.app`, Fase 19 — ADR-013).
+- [ ] ~~Publicado: **Web acessível por URL pública**~~ — **cancelado** (18/09/2026): o Web fica para **uso local**; o Hosting foi desabilitado (ADR-013, [00 §5](00-visao-geral.md)).
 - [ ] Publicado: **APK/AAB disponível para teste interno** na Play Console (F5-T06, gate do dono).
 
 ---
@@ -79,7 +79,7 @@ Uma fase só está "pronta" quando:
 ### 3.3.2. Política de privacidade
 
 * Texto único e simples (1 página) cobrindo: dados coletados, finalidade, subprocessadores (3.2), retenção (até exclusão da conta), direitos do titular e contato do encarregado.
-* **Onde:** página pública em `https://lista-compras-34f93.web.app/privacidade` (Fase 19, ADR-013) + link no cadastro e nas configurações do app.
+* **Onde:** página estática `/privacidade` do app (artefato `web/privacidade.html`, F19-T01) + link no cadastro e nas configurações do app. **Não há URL pública** desde 18/09/2026 (ADR-013): a página acompanha o app servido localmente.
 * **Contato do encarregado:** por decisão do dono (17/09/2026) o texto permanece genérico ("canal informado na página do aplicativo"); preencher com um e-mail dedicado é pendência do lançamento público (F5-T06).
 * **Obrigatória para publicação** na Play Store e App Store (seção "Segurança de dados" do Play Console exige declaração de coleta).
 
@@ -99,7 +99,7 @@ Uma fase só está "pronta" quando:
 
 | Canal | Requisito | Observação |
 | :--- | :--- | :--- |
-| Web (Fase 19) | Build `flutter build web` + Firebase Hosting ([ADR-013](00-visao-geral.md)) | Publicado em `https://lista-compras-34f93.web.app` pela F19-T01 (deploy manual); o deploy automático no CI entra na **F19-T03**. Domínio próprio fica pós-MVP |
+| Web — **uso local** (Fase 19 suspensa) | Build `flutter build web` servido localmente | **Sem publicação** (18/09/2026, ADR-013): o Hosting foi desabilitado e `https://lista-compras-34f93.web.app` responde 404. Rode com `flutter run -d chrome` ou sirva `build/web`. Os artefatos (`firebase.json`, `.firebaserc`, `/privacidade`) ficam no repo como referência para uma futura reabilitação |
 | Desktop — Windows/Linux/macOS (Fase 18) | Builds `flutter build windows`/`linux`/`macos` | Suportado desde a Fase 18 (ADR-012); builds Windows/Linux validados no CI ([07 §3](07-qualidade-ci.md)); publicação segue o gate do dono (Fase 5 / F5-T06) |
 | Android — teste interno (Fase 5) | APK/AAB na Play Console (closed testing) | Política de privacidade + Declaração de Dados preenchidas |
 | Android — produção | Publicação pública | Depende de validação do MVP; pode ficar para após Fase 5 |
@@ -107,7 +107,7 @@ Uma fase só está "pronta" quando:
 
 **Antes de lançamento público:** revisar R-01 — avaliar upgrade Supabase Pro (gatilho documentado em [00 §4](00-visao-geral.md)).
 
-**Nota do dono do projeto:** a publicação na Play (teste interno) está **adiada** — será executada apenas sob solicitação explícita, junto com a F5-T05 ([14-tarefas](14-tarefas.md)); a publicação do Web entra na Fase 19. Canal provisório de distribuição de builds de teste: Firebase App Distribution (F5-T05b). Os critérios do DoD (§2) permanecem válidos para o dia do lançamento.
+**Nota do dono do projeto:** a publicação na Play (teste interno) está **adiada** — será executada apenas sob solicitação explícita, junto com a F5-T05 ([14-tarefas](14-tarefas.md)). **O Web não será publicado em URL pública** (decisão de 18/09/2026, ADR-013): fica para execução local. Canal provisório de distribuição de builds de teste: Firebase App Distribution (F5-T05b). Os critérios do DoD (§2) permanecem válidos para o dia do lançamento.
 
 ---
 

@@ -461,7 +461,9 @@ Spec: [superpowers/specs/2026-09-17-suporte-web-desktop-design.md](superpowers/s
   Dep: F18-T03, F18-T04 · Docs: [07](07-qualidade-ci.md), [08](08-compartilhamento-colaborativo.md), [09](09-runbook-operacoes.md)
   CP: CI verde com `build web` + builds desktop; 05/06/07/08/09 sincronizados; Fase 18 marcada.
 
-## Fase 19 — Publicação Web
+## Fase 19 — Publicação Web — **CANCELADA (18/09/2026)**
+
+> **Decisão do dono:** o Web fica para **uso local**; não haverá publicação em URL pública. O Hosting foi desabilitado (`https://lista-compras-34f93.web.app` → 404) e a fase é encerrada sem deploy. ADR-013 revisado em [00 §5](00-visao-geral.md); spec mantida como referência em [superpowers/specs/2026-09-17-publicacao-web-design.md](superpowers/specs/2026-09-17-publicacao-web-design.md). T02/T03/T04 **não serão executadas**; o que foi entregue (T00/T01) permanece no repositório.
 
 Spec: [superpowers/specs/2026-09-17-publicacao-web-design.md](superpowers/specs/2026-09-17-publicacao-web-design.md) · ADR-013 · Docs donos: 00, 06, 07, 09.
 
@@ -470,16 +472,10 @@ Spec: [superpowers/specs/2026-09-17-publicacao-web-design.md](superpowers/specs/
   CP: ADR-013 no 00; Fase 19 no 14; item de publicação do 06 §1 desdobrado; sem tocar código. *(ADR-013 no 00 e no 13; Fase 19 no 14 com progresso; 06 §1 desdobrado, numeração 3.3.2 corrigida e nota do contato genérico; 12 §7 e as descrições da Fase 5/F5-T06 reapontadas para Play-only; nenhum arquivo de código tocado)*
 - [x] **F19-T01** — Artefatos de hosting, política estática e primeiro deploy
   Dep: F19-T00 · Docs: [06 §3.3.2](06-mvp-entregas.md), [09](09-runbook-operacoes.md)
-  CP: `firebase.json`/`.firebaserc`/`robots.txt`/`privacidade.html`; testes-guarda de paridade verdes; URL pública com COOP/COEP, rewrite e `/privacidade`. *(deploy manual no site default `https://lista-compras-34f93.web.app`; `/` com `no-cache` + COOP/COEP; `cleanUrls` serve `/privacidade` estática; rewrite da SPA em `/listas`; `robots.txt` com `Disallow: /`; guardas de paridade da política e do `version.json` verdes — o deploy automático entra na F19-T03)*
-- [ ] **F19-T02** - Supabase Auth e smoke funcional na URL pública
-  Dep: F19-T01 · Docs: [09 §2.6/§2.7](09-runbook-operacoes.md)
-  CP: Site URL e Redirect URLs de produção no Supabase; cadastro/verificação, login, CRUD, import, convite e sync validados na URL pública.
-- [ ] **F19-T03** — Deploy no CI (preview por PR, live na main) e rollback
-  Dep: F19-T02 · Docs: [07 §3](07-qualidade-ci.md), [09 §4](09-runbook-operacoes.md)
-  CP: secrets no GitHub; jobs `deploy`/`preview` verdes; publicação automática na `main`; rollback exercitado e documentado.
-- [ ] **F19-T04** — Política no app e fechamento
-  Dep: F19-T03 · Docs: [06 §1/§3.3.2](06-mvp-entregas.md), [14](14-tarefas.md)
-  CP: link "ver versão online" no sheet e no cadastro; `format`/`analyze`/`test` verdes; 06 §1 (web) marcado; Fase 19 marcada.
+  CP: `firebase.json`/`.firebaserc`/`robots.txt`/`privacidade.html`; testes-guarda de paridade verdes; URL pública com COOP/COEP, rewrite e `/privacidade`. *(deploy manual no site default `https://lista-compras-34f93.web.app`; `/` com `no-cache` + COOP/COEP; `cleanUrls` serve `/privacidade` estática; rewrite da SPA em `/listas`; `robots.txt` com `Disallow: /`; guardas de paridade da política e do `version.json` verdes — **o Hosting foi desabilitado em 18/09/2026 e a URL passou a 404, conforme a decisão de uso local**; os artefatos ficam no repo como referência)*
+- [x] ~~**F19-T02** — Supabase Auth e smoke funcional na URL pública~~ — **cancelada** (Web de uso local)
+- [x] ~~**F19-T03** — Deploy no CI (preview por PR, live na main) e rollback~~ — **cancelada** (não haverá publicação)
+- [x] ~~**F19-T04** — Política no app e fechamento~~ — **cancelada**; a pendência de acessar a política pelo app (link no cadastro/configurações) segue válida **sem** a versão online e fica com a F21 (`F21-T04`)
 
 ## Fase 20 — Correções da revisão geral
 
@@ -540,6 +536,9 @@ Achados da revisão de fechamento que **não** deveriam ser marcados como conclu
 - [ ] **F21-T03** — Convites: revogar também os pendentes anteriores (R-07 parcial)
   Dep: — · Docs: [08 §2](08-compartilhamento-colaborativo.md)
   CP: sheet lista os convites pendentes da lista (usando `pendentesDaLista`) com ação de revogar; ou limite documentado no 08.
+- [ ] **F21-T04** — Política de Privacidade acessível pelo app (herdada da F19-T04)
+  Dep: — · Docs: [06 §3.3.2](06-mvp-entregas.md)
+  CP: link "ver política" no cadastro e em Configurações abrindo o texto in-app (`politicaPrivacidadeTexto`); **sem** versão online (decisão de 18/09/2026).
 
 ## Progresso por fase (atualize ao concluir)
 
@@ -561,10 +560,10 @@ Achados da revisão de fechamento que **não** deveriam ser marcados como conclu
 | F16 Busca e filtro | 5 | 5 |
 | F17 Remoção da IA | 5 | 5 |
 | F18 Web e Desktop | 6 | 6 |
-| F19 Publicação Web | 5 | 2 |
+| F19 Publicação Web — **cancelada** | 5 | 5 |
 | F20 Correções da revisão | 13 | 13 |
-| F21 Pendências do fechamento | 3 | 0 |
-| **Total** | **129** | **121** |
+| F21 Pendências do fechamento | 4 | 0 |
+| **Total** | **130** | **124** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

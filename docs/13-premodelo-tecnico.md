@@ -81,7 +81,7 @@ saída: { "itens": [...], "aviso": null }
 
 | ADR | Decisão |
 | :--- | :--- |
-| 001 | MVP = Android/iOS/Web; **Desktop suportado (F18)**; **Web publicado (F19)** |
+| 001 | MVP = Android/iOS/Web; **Desktop suportado (F18)**; **Web de uso local (F19 suspensa, ADR-013)** |
 | 002 | Riverpod |
 | 003 | Drift/SQLite local |
 | 004 | LWW + tombstones (sem modal de conflito) |
@@ -93,7 +93,7 @@ saída: { "itens": [...], "aviso": null }
 | 009 | Sentry free |
 | 010 | GitHub Actions desde a F1 |
 | 012 | Suporte a Web (Drift/WASM) e Desktop (F18); banco por fábrica com import condicional; auth/links por plataforma |
-| 013 | Publicação do Web: Firebase Hosting (deploy no CI; F19) |
+| 013 | Web: **uso local** (publicação suspensa em 18/09/2026; Hosting desabilitado) |
 
 ## 7. Comandos essenciais
 
