@@ -9,6 +9,7 @@ class Lista {
     required this.criadoEm,
     required this.atualizadoEm,
     this.deletadoEm,
+    this.arquivadaEm,
   });
 
   final String id;
@@ -17,6 +18,7 @@ class Lista {
   final DateTime criadoEm;
   final DateTime atualizadoEm;
   final DateTime? deletadoEm;
+  final DateTime? arquivadaEm;
 
   factory Lista.fromLocal(ListaLocalData d) => Lista(
     id: d.id,
@@ -25,5 +27,6 @@ class Lista {
     criadoEm: d.createdAt,
     atualizadoEm: d.updatedAt,
     deletadoEm: d.deletadoEm,
+    arquivadaEm: d.arquivadaEm,
   );
 }

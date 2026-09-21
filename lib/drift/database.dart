@@ -14,7 +14,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   /// Datas como texto ISO-8601 com microssegundos: o armazenamento padrão
   /// (unix segundos) truncava `updated_at` e criava empates artificiais no
@@ -51,6 +51,10 @@ class AppDatabase extends _$AppDatabase {
         // v3 → v4: coluna preco_centavos (doc 01 §4.3, RF-21, F25) —
         // aditiva e nullable; itens existentes ficam sem preço (null).
         await m.addColumn(itemLocal, itemLocal.precoCentavos);
+      }
+      if (de < 5) {
+        // v4 → v5: coluna arquivada_em (doc 01 §4.1, RF-22, F26).
+        await m.addColumn(listaLocal, listaLocal.arquivadaEm);
       }
     },
     beforeOpen: (details) async {

@@ -9,6 +9,7 @@ class ListaLocal extends Table {
   TextColumn get titulo => text().withLength(min: 1, max: 120)();
   TextColumn get donoId => text()();
   DateTimeColumn get deletadoEm => dateTime().nullable()();
+  DateTimeColumn get arquivadaEm => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

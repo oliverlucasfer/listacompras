@@ -30,6 +30,7 @@ class AplicadorRemoto {
             titulo: r['titulo'] as String,
             donoId: r['dono_id'] as String,
             deletadoEm: Value(_dataOpcional(r['deletado_em'])),
+            arquivadaEm: Value(_dataOpcional(r['arquivada_em'])),
           ),
         );
   }

@@ -298,4 +298,37 @@ void main() {
     )..where((i) => i.id.equals('i-preco-3'))).getSingle();
     expect(linha.precoCentavos, isNull);
   });
+
+  test('deve_mapear_arquivo_ausente_para_null_quando_linha_antiga', () async {
+    final aplicador = AplicadorRemoto(db);
+    await aplicador.aplicar('listas', {
+      'id': 'l-arq-1',
+      'titulo': 'X',
+      'dono_id': 'u',
+      'created_at': '2026-09-21T12:00:00.000Z',
+      'updated_at': '2026-09-21T12:00:00.000Z',
+      'deletado_em': null,
+    });
+    final lista = await (db.select(
+      db.listaLocal,
+    )..where((l) => l.id.equals('l-arq-1'))).getSingle();
+    expect(lista.arquivadaEm, isNull);
+  });
+
+  test('deve_mapear_arquivo_quando_presente', () async {
+    final aplicador = AplicadorRemoto(db);
+    await aplicador.aplicar('listas', {
+      'id': 'l-arq-2',
+      'titulo': 'X',
+      'dono_id': 'u',
+      'arquivada_em': '2026-09-21T12:00:00.000Z',
+      'created_at': '2026-09-21T11:00:00.000Z',
+      'updated_at': '2026-09-21T12:00:00.000Z',
+      'deletado_em': null,
+    });
+    final lista = await (db.select(
+      db.listaLocal,
+    )..where((l) => l.id.equals('l-arq-2'))).getSingle();
+    expect(lista.arquivadaEm, isNotNull);
+  });
 }

@@ -73,6 +73,17 @@ class $ListaLocalTable extends ListaLocal
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _arquivadaEmMeta = const VerificationMeta(
+    'arquivadaEm',
+  );
+  @override
+  late final GeneratedColumn<DateTime> arquivadaEm = GeneratedColumn<DateTime>(
+    'arquivada_em',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -81,6 +92,7 @@ class $ListaLocalTable extends ListaLocal
     titulo,
     donoId,
     deletadoEm,
+    arquivadaEm,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -137,6 +149,15 @@ class $ListaLocalTable extends ListaLocal
         deletadoEm.isAcceptableOrUnknown(data['deletado_em']!, _deletadoEmMeta),
       );
     }
+    if (data.containsKey('arquivada_em')) {
+      context.handle(
+        _arquivadaEmMeta,
+        arquivadaEm.isAcceptableOrUnknown(
+          data['arquivada_em']!,
+          _arquivadaEmMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -170,6 +191,10 @@ class $ListaLocalTable extends ListaLocal
         DriftSqlType.dateTime,
         data['${effectivePrefix}deletado_em'],
       ),
+      arquivadaEm: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}arquivada_em'],
+      ),
     );
   }
 
@@ -186,6 +211,7 @@ class ListaLocalData extends DataClass implements Insertable<ListaLocalData> {
   final String titulo;
   final String donoId;
   final DateTime? deletadoEm;
+  final DateTime? arquivadaEm;
   const ListaLocalData({
     required this.id,
     required this.createdAt,
@@ -193,6 +219,7 @@ class ListaLocalData extends DataClass implements Insertable<ListaLocalData> {
     required this.titulo,
     required this.donoId,
     this.deletadoEm,
+    this.arquivadaEm,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -204,6 +231,9 @@ class ListaLocalData extends DataClass implements Insertable<ListaLocalData> {
     map['dono_id'] = Variable<String>(donoId);
     if (!nullToAbsent || deletadoEm != null) {
       map['deletado_em'] = Variable<DateTime>(deletadoEm);
+    }
+    if (!nullToAbsent || arquivadaEm != null) {
+      map['arquivada_em'] = Variable<DateTime>(arquivadaEm);
     }
     return map;
   }
@@ -218,6 +248,9 @@ class ListaLocalData extends DataClass implements Insertable<ListaLocalData> {
       deletadoEm: deletadoEm == null && nullToAbsent
           ? const Value.absent()
           : Value(deletadoEm),
+      arquivadaEm: arquivadaEm == null && nullToAbsent
+          ? const Value.absent()
+          : Value(arquivadaEm),
     );
   }
 
@@ -233,6 +266,7 @@ class ListaLocalData extends DataClass implements Insertable<ListaLocalData> {
       titulo: serializer.fromJson<String>(json['titulo']),
       donoId: serializer.fromJson<String>(json['donoId']),
       deletadoEm: serializer.fromJson<DateTime?>(json['deletadoEm']),
+      arquivadaEm: serializer.fromJson<DateTime?>(json['arquivadaEm']),
     );
   }
   @override
@@ -245,6 +279,7 @@ class ListaLocalData extends DataClass implements Insertable<ListaLocalData> {
       'titulo': serializer.toJson<String>(titulo),
       'donoId': serializer.toJson<String>(donoId),
       'deletadoEm': serializer.toJson<DateTime?>(deletadoEm),
+      'arquivadaEm': serializer.toJson<DateTime?>(arquivadaEm),
     };
   }
 
@@ -255,6 +290,7 @@ class ListaLocalData extends DataClass implements Insertable<ListaLocalData> {
     String? titulo,
     String? donoId,
     Value<DateTime?> deletadoEm = const Value.absent(),
+    Value<DateTime?> arquivadaEm = const Value.absent(),
   }) => ListaLocalData(
     id: id ?? this.id,
     createdAt: createdAt ?? this.createdAt,
@@ -262,6 +298,7 @@ class ListaLocalData extends DataClass implements Insertable<ListaLocalData> {
     titulo: titulo ?? this.titulo,
     donoId: donoId ?? this.donoId,
     deletadoEm: deletadoEm.present ? deletadoEm.value : this.deletadoEm,
+    arquivadaEm: arquivadaEm.present ? arquivadaEm.value : this.arquivadaEm,
   );
   ListaLocalData copyWithCompanion(ListaLocalCompanion data) {
     return ListaLocalData(
@@ -273,6 +310,9 @@ class ListaLocalData extends DataClass implements Insertable<ListaLocalData> {
       deletadoEm: data.deletadoEm.present
           ? data.deletadoEm.value
           : this.deletadoEm,
+      arquivadaEm: data.arquivadaEm.present
+          ? data.arquivadaEm.value
+          : this.arquivadaEm,
     );
   }
 
@@ -284,14 +324,22 @@ class ListaLocalData extends DataClass implements Insertable<ListaLocalData> {
           ..write('updatedAt: $updatedAt, ')
           ..write('titulo: $titulo, ')
           ..write('donoId: $donoId, ')
-          ..write('deletadoEm: $deletadoEm')
+          ..write('deletadoEm: $deletadoEm, ')
+          ..write('arquivadaEm: $arquivadaEm')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, createdAt, updatedAt, titulo, donoId, deletadoEm);
+  int get hashCode => Object.hash(
+    id,
+    createdAt,
+    updatedAt,
+    titulo,
+    donoId,
+    deletadoEm,
+    arquivadaEm,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -301,7 +349,8 @@ class ListaLocalData extends DataClass implements Insertable<ListaLocalData> {
           other.updatedAt == this.updatedAt &&
           other.titulo == this.titulo &&
           other.donoId == this.donoId &&
-          other.deletadoEm == this.deletadoEm);
+          other.deletadoEm == this.deletadoEm &&
+          other.arquivadaEm == this.arquivadaEm);
 }
 
 class ListaLocalCompanion extends UpdateCompanion<ListaLocalData> {
@@ -311,6 +360,7 @@ class ListaLocalCompanion extends UpdateCompanion<ListaLocalData> {
   final Value<String> titulo;
   final Value<String> donoId;
   final Value<DateTime?> deletadoEm;
+  final Value<DateTime?> arquivadaEm;
   final Value<int> rowid;
   const ListaLocalCompanion({
     this.id = const Value.absent(),
@@ -319,6 +369,7 @@ class ListaLocalCompanion extends UpdateCompanion<ListaLocalData> {
     this.titulo = const Value.absent(),
     this.donoId = const Value.absent(),
     this.deletadoEm = const Value.absent(),
+    this.arquivadaEm = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ListaLocalCompanion.insert({
@@ -328,6 +379,7 @@ class ListaLocalCompanion extends UpdateCompanion<ListaLocalData> {
     required String titulo,
     required String donoId,
     this.deletadoEm = const Value.absent(),
+    this.arquivadaEm = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        createdAt = Value(createdAt),
@@ -341,6 +393,7 @@ class ListaLocalCompanion extends UpdateCompanion<ListaLocalData> {
     Expression<String>? titulo,
     Expression<String>? donoId,
     Expression<DateTime>? deletadoEm,
+    Expression<DateTime>? arquivadaEm,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -350,6 +403,7 @@ class ListaLocalCompanion extends UpdateCompanion<ListaLocalData> {
       if (titulo != null) 'titulo': titulo,
       if (donoId != null) 'dono_id': donoId,
       if (deletadoEm != null) 'deletado_em': deletadoEm,
+      if (arquivadaEm != null) 'arquivada_em': arquivadaEm,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -361,6 +415,7 @@ class ListaLocalCompanion extends UpdateCompanion<ListaLocalData> {
     Value<String>? titulo,
     Value<String>? donoId,
     Value<DateTime?>? deletadoEm,
+    Value<DateTime?>? arquivadaEm,
     Value<int>? rowid,
   }) {
     return ListaLocalCompanion(
@@ -370,6 +425,7 @@ class ListaLocalCompanion extends UpdateCompanion<ListaLocalData> {
       titulo: titulo ?? this.titulo,
       donoId: donoId ?? this.donoId,
       deletadoEm: deletadoEm ?? this.deletadoEm,
+      arquivadaEm: arquivadaEm ?? this.arquivadaEm,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -395,6 +451,9 @@ class ListaLocalCompanion extends UpdateCompanion<ListaLocalData> {
     if (deletadoEm.present) {
       map['deletado_em'] = Variable<DateTime>(deletadoEm.value);
     }
+    if (arquivadaEm.present) {
+      map['arquivada_em'] = Variable<DateTime>(arquivadaEm.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -410,6 +469,7 @@ class ListaLocalCompanion extends UpdateCompanion<ListaLocalData> {
           ..write('titulo: $titulo, ')
           ..write('donoId: $donoId, ')
           ..write('deletadoEm: $deletadoEm, ')
+          ..write('arquivadaEm: $arquivadaEm, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1669,6 +1729,7 @@ typedef $$ListaLocalTableCreateCompanionBuilder =
       required String titulo,
       required String donoId,
       Value<DateTime?> deletadoEm,
+      Value<DateTime?> arquivadaEm,
       Value<int> rowid,
     });
 typedef $$ListaLocalTableUpdateCompanionBuilder =
@@ -1679,6 +1740,7 @@ typedef $$ListaLocalTableUpdateCompanionBuilder =
       Value<String> titulo,
       Value<String> donoId,
       Value<DateTime?> deletadoEm,
+      Value<DateTime?> arquivadaEm,
       Value<int> rowid,
     });
 
@@ -1741,6 +1803,11 @@ class $$ListaLocalTableFilterComposer
 
   ColumnFilters<DateTime> get deletadoEm => $composableBuilder(
     column: $table.deletadoEm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get arquivadaEm => $composableBuilder(
+    column: $table.arquivadaEm,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1808,6 +1875,11 @@ class $$ListaLocalTableOrderingComposer
     column: $table.deletadoEm,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get arquivadaEm => $composableBuilder(
+    column: $table.arquivadaEm,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ListaLocalTableAnnotationComposer
@@ -1836,6 +1908,11 @@ class $$ListaLocalTableAnnotationComposer
 
   GeneratedColumn<DateTime> get deletadoEm => $composableBuilder(
     column: $table.deletadoEm,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get arquivadaEm => $composableBuilder(
+    column: $table.arquivadaEm,
     builder: (column) => column,
   );
 
@@ -1899,6 +1976,7 @@ class $$ListaLocalTableTableManager
                 Value<String> titulo = const Value.absent(),
                 Value<String> donoId = const Value.absent(),
                 Value<DateTime?> deletadoEm = const Value.absent(),
+                Value<DateTime?> arquivadaEm = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ListaLocalCompanion(
                 id: id,
@@ -1907,6 +1985,7 @@ class $$ListaLocalTableTableManager
                 titulo: titulo,
                 donoId: donoId,
                 deletadoEm: deletadoEm,
+                arquivadaEm: arquivadaEm,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -1917,6 +1996,7 @@ class $$ListaLocalTableTableManager
                 required String titulo,
                 required String donoId,
                 Value<DateTime?> deletadoEm = const Value.absent(),
+                Value<DateTime?> arquivadaEm = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ListaLocalCompanion.insert(
                 id: id,
@@ -1925,6 +2005,7 @@ class $$ListaLocalTableTableManager
                 titulo: titulo,
                 donoId: donoId,
                 deletadoEm: deletadoEm,
+                arquivadaEm: arquivadaEm,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

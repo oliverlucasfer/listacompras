@@ -537,4 +537,45 @@ void main() {
     final payload = (await fila()).last['payload'] as Map<String, Object?>;
     expect(payload['preco_centavos'], 0);
   });
+
+  test('deve_gravar_e_enfileirar_arquivo_quando_arquivar', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+
+    await repo.definirArquivada(lista.id, arquivada: true);
+
+    final local = await (db.select(
+      db.listaLocal,
+    )..where((l) => l.id.equals(lista.id))).getSingle();
+    expect(local.arquivadaEm, isNotNull);
+    final payload = (await fila()).last['payload'] as Map<String, Object?>;
+    expect(payload['arquivada_em'], isNotNull);
+  });
+
+  test('deve_limpar_arquivo_quando_desarquivar', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    await repo.definirArquivada(lista.id, arquivada: true);
+
+    await repo.definirArquivada(lista.id, arquivada: false);
+
+    final local = await (db.select(
+      db.listaLocal,
+    )..where((l) => l.id.equals(lista.id))).getSingle();
+    expect(local.arquivadaEm, isNull);
+    final payload = (await fila()).last['payload'] as Map<String, Object?>;
+    expect(payload['arquivada_em'], isNull);
+  });
+
+  test('nao_deve_arquivar_lista_nova_quando_duplicar', () async {
+    final origem = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    await repo.adicionarItem(listaId: origem.id, nome: 'Arroz');
+    await repo.definirArquivada(origem.id, arquivada: true);
+
+    final nova = await repo.duplicarLista(
+      origemId: origem.id,
+      titulo: 'Y',
+      donoId: 'user-a',
+    );
+
+    expect(nova.arquivadaEm, isNull);
+  });
 }
