@@ -23,7 +23,7 @@ Foco: fazer a lista recorrente render mais, tudo **offline-first**, sem schema/R
 
 | ID | Frente | Requisito | Doc dono | Valor | Esforço | Notas |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| A1 | Duplicar lista ("comprar de novo") | RF-20 | 05, 10 | Alto | M | Spec pronto (F23) |
+| A1 | Duplicar lista ("comprar de novo") | RF-20 | 05, 10 | Alto | M | concluído (F23-T01…T03) |
 | A2 | Arquivar/desarquivar listas | novo | 05, 10, 01 | Médio | M | Precisa de estado de "arquivo" (hoje só há `deletado_em`); avaliar schema |
 | A3 | Adicionar itens de outra lista | novo | 05, 10 | Médio | M | Lote a partir de uma lista escolhida; reusa escritas locais |
 | A4 | Reordenar categorias por corredor | novo | 05, 10, 15 | Médio | P | Ordem pessoal das 11 categorias, persistida local |

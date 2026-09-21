@@ -56,6 +56,7 @@ void main() {
   Future<void> abrirTela(
     WidgetTester tester, {
     ConvitesRepository? convites,
+    String usuario = 'user-b',
   }) async {
     final router = GoRouter(
       initialLocation: '/compartilhadas',
@@ -83,7 +84,7 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           authRepositoryProvider.overrideWithValue(FakeAuthRepository()),
-          donoAtualIdProvider.overrideWithValue('user-b'),
+          donoAtualIdProvider.overrideWithValue(usuario),
           if (convites != null)
             convitesRepositoryProvider.overrideWithValue(convites),
         ],
@@ -238,4 +239,42 @@ void main() {
     expect(find.text('Do chefe'), findsNothing);
     await fechar(tester);
   });
+
+  testWidgets('deve_mostrar_comprar_de_novo_quando_membro_e_ha_pendentes', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(
+      titulo: 'Do parceiro',
+      donoId: 'user-b',
+    );
+    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+
+    await abrirTela(tester, usuario: 'user-a');
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.comprarDeNovo), findsOneWidget);
+    await fechar(tester);
+  });
+
+  testWidgets(
+    'nao_deve_mostrar_comprar_de_novo_quando_membro_e_sem_pendentes',
+    (tester) async {
+      final repo = ListasRepository(db);
+      final lista = await repo.criarLista(
+        titulo: 'Do parceiro',
+        donoId: 'user-b',
+      );
+      final item = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+      await repo.editarItem(item.id, concluido: true);
+
+      await abrirTela(tester, usuario: 'user-a');
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.comprarDeNovo), findsNothing);
+      await fechar(tester);
+    },
+  );
 }

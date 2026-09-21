@@ -422,6 +422,15 @@ void main() {
       find.widgetWithText(TextField, AppStrings.nomeDaLista),
       findsOneWidget,
     );
+    expect(
+      tester
+          .widget<TextField>(
+            find.widgetWithText(TextField, AppStrings.nomeDaLista),
+          )
+          .controller
+          ?.text,
+      'Compras',
+    );
 
     await tester.tap(find.widgetWithText(FilledButton, AppStrings.criarLista));
     await tester.pumpAndSettle();
