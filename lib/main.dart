@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/supabase_config.dart';
 import 'core/l10n/app_strings.dart';
+import 'core/observabilidade/sentry_privacidade.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode_provider.dart';
 import 'core/utils/deeplink_convite.dart';
@@ -45,15 +46,10 @@ Future<void> main() async {
     await SentryFlutter.init((options) {
       options.dsn = sentryDsn;
       options.sendDefaultPii = false;
-      // Privacidade (doc 07 §4, R-13): logs NUNCA contêm conteúdo de listas.
-      // Além dos breadcrumbs, removemos os `contexts` (que podem carregar o
-      // objeto do Drift/PostgREST) — o tipo/stack da exceção bastam para
-      // triagem, e nenhum dado de item chega ao Sentry.
-      options.beforeSend = (event, hint) {
-        event.breadcrumbs?.clear();
-        event.contexts.clear();
-        return event;
-      };
+      // Privacidade (doc 07 §4, R-13/F21-T02): logs NUNCA contêm conteúdo de
+      // listas — a limpeza de breadcrumbs/extra/contexts vive em
+      // `limparDadosDoSentry` (testada) e nada de item chega ao Sentry.
+      options.beforeSend = limparDadosDoSentry;
     }, appRunner: app);
   }
 }

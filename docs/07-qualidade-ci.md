@@ -108,11 +108,29 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: supabase/setup-cli@v3
+        with: { version: 2.116.0 }   # pinado ao CLI do dev
       - run: supabase start -x studio -x mailpit -x logflare -x vector -x imgproxy -x storage-api
       - run: supabase db reset   # valida migrations (desde 0001 até a última)
       - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/rls_tests.sql
       - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/excluir_conta_tests.sql
       - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/aceitar_convite_tests.sql
+      - name: Teste de Realtime (01 §7, 02 §5 P-05)
+        working-directory: supabase/tests
+        run: |
+          # Chaves do stack local (export no próprio shell — `>> $GITHUB_ENV`
+          # só vale a partir do próximo step).
+          set -a
+          eval "$(supabase status -o env | sed 's/^/export /; s/"//g')"
+          set +a
+          npm ci
+          # O tenant do Realtime reconecta ao banco por alguns segundos após o
+          # `supabase start`/reset — a 1ª roda cai com CLOSED (R-23, infra do
+          # stack local, não do app). Aguarda e tenta 2 vezes.
+          for i in 1 2; do
+            sleep $((i * 15))
+            npm test && break
+            if [ "$i" = "2" ]; then echo "Realtime falhou 2x"; exit 1; fi
+          done
 ```
 
 > `$DB` = `postgresql://postgres:postgres@127.0.0.1:54322/postgres` (stack local do CI); os três scripts rodam com `ON_ERROR_STOP=1` e falham o job em qualquer negação indevida.
@@ -125,7 +143,7 @@ jobs:
 
 * **Sentry (plano free)** no Flutter (ADR-009):
   * Crash nativos, erros não tratados, `syncStatus = Erro` persistente.
-  * **Regra de privacidade:** logs **nunca** contêm nomes de itens nem conteúdo de listas ([06 §3.1](06-mvp-entregas.md)); apenas IDs técnicos. No app (`lib/main.dart`), `sendDefaultPii = false` e o `beforeSend` limpa **breadcrumbs e contexts** antes do envio (R-13) — nada de payload de Drift/PostgREST sai do dispositivo.
+  * **Regra de privacidade:** logs **nunca** contêm nomes de itens nem conteúdo de listas ([06 §3.1](06-mvp-entregas.md)); apenas IDs técnicos. No app, `sendDefaultPii = false` e o `beforeSend` (`limparDadosDoSentry`, `lib/core/observabilidade/`, com teste unitário) limpa **breadcrumbs, `extra` e `contexts`** antes do envio (R-13/F21-T02) — nada de payload de Drift/PostgREST sai do dispositivo.
 * Eventos mínimos monitorados:
   1. Falha de flush com fila > 10 mutações ou mutação com > 5 tentativas.
   2. Divergência grosseira de relógio (`ts_local` vs `now()` do servidor — RPC `agora_servidor`, ver [03 §5](03-sincronizacao-offline.md)).

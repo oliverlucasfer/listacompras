@@ -530,9 +530,10 @@ Achados da revisão de fechamento que **não** deveriam ser marcados como conclu
 - [x] **F21-T01** — A11y pendente do R-20
   Dep: — · Docs: [10](10-wireframes-telas.md), [11](11-usabilidade-fase5.md), [15 §4](15-design-system.md)
   CP: `SeletorTema` sem overflow em tela estreita/escala 2x; telas de verificação/login com scroll; decisão registrada sobre o indicador de sync no painel (código ou wireframe ajustado). *(`seletor_tema.dart` adaptativo por largura/escala com função pura `usarSeletorSegmentado` + dropdown; `SingleChildScrollView` nos 3 corpos (`_VerificacaoEmail` e os 2 estados do `entrar_screen`); `IndicadorSync` no topo do painel de listas, seguindo o wireframe 10 §3.2 e alinhando o 05; 9 testes novos — inclui o RED real `RenderFlex overflowed by 120 pixels`)*
-- [ ] **F21-T02** — Sentry: limpar `event.extra` e alinhar `07 §3`/`02 §3`
+- [x] **F21-T02** — Sentry: limpar `event.extra` e alinhar `07 §3`/`02 §3`
   Dep: — · Docs: [02 §3](02-seguranca-rls.md), [07 §3/§4](07-qualidade-ci.md)
   CP: `beforeSend` limpa `breadcrumbs`, `extra` e `contexts`; esqueleto do CI espelha o `ci.yml` (step de Realtime + pin do CLI); matriz de INSERT de `lista_membros` no 02 §3 cita `user_id = auth.uid()`.
+  Nota: *(`beforeSend` extraído para `limparDadosDoSentry` em `lib/core/observabilidade/sentry_privacidade.dart` — agora limpa também `extra` — e usado no `main.dart`; 2 unit tests; esqueleto do 07 §3 com `version: 2.116.0` no `setup-cli` e o step do teste de Realtime com retry (R-23); 02 §3 cita `user_id = auth.uid()`/migration 0015)*
 - [x] **F21-T03** — Convites: revogar também os pendentes anteriores (R-07 parcial)
   Dep: — · Docs: [08 §2](08-compartilhamento-colaborativo.md)
   CP: sheet lista os convites pendentes da lista (usando `pendentesDaLista`) com ação de revogar; ou limite documentado no 08.
@@ -584,9 +585,9 @@ Spec: [superpowers/specs/2026-09-18-modo-mercado-frequentes-design.md](superpowe
 | F18 Web e Desktop | 6 | 6 |
 | F19 Publicação Web — **cancelada** | 5 | 5 |
 | F20 Correções da revisão | 13 | 13 |
-| F21 Pendências do fechamento | 4 | 3 |
+| F21 Pendências do fechamento | 4 | 4 |
 | F22 Modo mercado e itens frequentes | 5 | 5 |
-| **Total** | **135** | **132** |
+| **Total** | **135** | **133** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
