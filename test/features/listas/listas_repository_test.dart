@@ -519,4 +519,22 @@ void main() {
     final payload = (await fila()).last['payload'] as Map<String, Object?>;
     expect(payload['preco_centavos'], isNull);
   });
+
+  test('deve_preferir_preco_quando_presente_e_limparPreco_ambos', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    final item = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      precoCentavos: 549,
+    );
+
+    await repo.editarItem(item.id, precoCentavos: 0, limparPreco: true);
+
+    final local = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals(item.id))).getSingle();
+    expect(local.precoCentavos, 0);
+    final payload = (await fila()).last['payload'] as Map<String, Object?>;
+    expect(payload['preco_centavos'], 0);
+  });
 }

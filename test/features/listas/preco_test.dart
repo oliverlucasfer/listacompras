@@ -36,8 +36,17 @@ void main() {
     expect(parsePrecoParaCentavos('5'), 500);
     expect(parsePrecoParaCentavos(r'R$ 1.234,56'), 123456);
     expect(parsePrecoParaCentavos('1.234'), 123400);
-    expect(parsePrecoParaCentavos('1.234.567'), 123456700);
+    expect(parsePrecoParaCentavos('999.999'), 99999900);
     expect(parsePrecoParaCentavos('5.4'), 540);
+  });
+
+  test('deve_aceitar_teto_quando_preco_no_limite', () {
+    // Teto do CHECK do Postgres (01 §4.3): R$ 999.999,99 = 99999999 centavos.
+    expect(parsePrecoParaCentavos('999999,99'), 99999999);
+  });
+
+  test('deve_rejeitar_quando_preco_acima_do_teto', () {
+    expect(() => parsePrecoParaCentavos('1000000'), throwsArgumentError);
   });
 
   test('deve_rejeitar_quando_preco_nao_numerico', () {

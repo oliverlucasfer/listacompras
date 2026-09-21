@@ -1759,10 +1759,7 @@ void main() {
 
   testWidgets('nao_deve_mostrar_total_quando_nada_marcado', (tester) async {
     await abrirListaComPreco(tester, marcado: false);
-    expect(
-      find.textContaining(AppStrings.totalNoCarrinho(formatarReais(549), 0)),
-      findsNothing,
-    );
+    expect(find.textContaining('No carrinho:'), findsNothing);
     await fechar(tester);
   });
 

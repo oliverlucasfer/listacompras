@@ -41,7 +41,11 @@ int? parsePrecoParaCentavos(String? texto) {
   final valor = double.tryParse(normalizado);
   if (valor == null) throw ArgumentError('preço inválido: $texto');
   if (valor < 0) throw ArgumentError('preço negativo: $texto');
-  return (valor * 100).round();
+  final centavos = (valor * 100).round();
+  // Teto do CHECK de `preco_centavos` no Postgres (doc 01 §4.3, RF-21):
+  // R$ 999.999,99. Acima disso o flush falharia com check_violation.
+  if (centavos > 99999999) throw ArgumentError('preço acima do teto: $texto');
+  return centavos;
 }
 
 /// Total dos itens **marcados** com preço; cada subtotal arredonda ao centavo.

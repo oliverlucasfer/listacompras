@@ -308,4 +308,95 @@ void main() {
       expect(item.deletadoEm, isNull);
     },
   );
+
+  test(
+    'deve_migrar_v3_para_v4_adicionando_preco_quando_abrir_banco_antigo',
+    () async {
+      // Banco real na versão v3 (com categoria, sem preco_centavos): DDL
+      // espelhando o schema v3 gerado, dados gravados e user_version = 3.
+      final arquivo = File(
+        '${Directory.systemTemp.path}/v3_para_v4_${DateTime.now().microsecondsSinceEpoch}.sqlite',
+      );
+      addTearDown(() {
+        if (arquivo.existsSync()) arquivo.deleteSync();
+      });
+
+      final antigo = sq3.sqlite3.open(arquivo.path);
+      antigo.execute('''
+        CREATE TABLE lista_local (
+          id TEXT NOT NULL PRIMARY KEY,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          titulo TEXT NOT NULL,
+          dono_id TEXT NOT NULL,
+          deletado_em TEXT NULL,
+          FOREIGN KEY (dono_id) REFERENCES lista_local (id) ON DELETE CASCADE
+        );
+        CREATE TABLE item_local (
+          id TEXT NOT NULL PRIMARY KEY,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          lista_id TEXT NOT NULL REFERENCES lista_local (id) ON DELETE CASCADE,
+          nome TEXT NOT NULL,
+          quantidade REAL NOT NULL DEFAULT 1.0,
+          unidade TEXT NOT NULL DEFAULT 'un',
+          categoria TEXT NOT NULL DEFAULT 'outros',
+          concluido INTEGER NOT NULL DEFAULT 0,
+          ordem INTEGER NOT NULL DEFAULT 0,
+          deletado_em TEXT NULL
+        );
+        CREATE TABLE mutacao_pendente (
+          id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+          tabela TEXT NOT NULL,
+          operacao TEXT NOT NULL,
+          registro_id TEXT NOT NULL,
+          payload TEXT NOT NULL,
+          ts_local TEXT NOT NULL,
+          tentativas INTEGER NOT NULL DEFAULT 0,
+          lista_id TEXT NOT NULL
+        );
+        PRAGMA user_version = 3;
+      ''');
+      antigo.execute(
+        "INSERT INTO lista_local (id, created_at, updated_at, titulo, dono_id) "
+        "VALUES ('99999999-9999-9999-9999-999999999999', "
+        "'2026-01-01T00:00:00.000000Z', '2026-01-01T00:00:00.000000Z', "
+        "'Antiga', 'user-a')",
+      );
+      antigo.execute(
+        "INSERT INTO item_local (id, created_at, updated_at, lista_id, nome, "
+        "quantidade, unidade, categoria, concluido, ordem) VALUES "
+        "('bbbb9999-9999-9999-9999-999999999999', "
+        "'2026-01-01T00:00:00.000000Z', '2026-01-01T00:00:00.000000Z', "
+        "'99999999-9999-9999-9999-999999999999', 'Detergente', 2.0, 'un', "
+        "'outros', 0, 3)",
+      );
+      antigo.close();
+
+      final migrado = AppDatabase(NativeDatabase(arquivo));
+      addTearDown(migrado.close);
+
+      final item =
+          await (migrado.select(migrado.itemLocal)..where(
+                (i) => i.id.equals('bbbb9999-9999-9999-9999-999999999999'),
+              ))
+              .getSingle();
+      expect(item.nome, 'Detergente');
+      expect(item.quantidade, 2.0);
+      expect(item.ordem, 3);
+      expect(item.categoria, 'outros');
+      expect(item.precoCentavos, isNull);
+
+      // Escrita/leitura da coluna nova após a migração.
+      await (migrado.update(migrado.itemLocal)
+            ..where((i) => i.id.equals('bbbb9999-9999-9999-9999-999999999999')))
+          .write(const ItemLocalCompanion(precoCentavos: Value(549)));
+      final atualizado =
+          await (migrado.select(migrado.itemLocal)..where(
+                (i) => i.id.equals('bbbb9999-9999-9999-9999-999999999999'),
+              ))
+              .getSingle();
+      expect(atualizado.precoCentavos, 549);
+    },
+  );
 }
