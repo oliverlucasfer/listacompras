@@ -170,7 +170,7 @@ $$;
 * **Itens criados pelo membro removido permanecem na lista** — decisão de produto (o item pertence à lista, não ao autor; não há coluna de autoria em `itens_lista` e o RLS não depende dela).
 * Membro removido perde acesso no ato (RLS) e o Realtime derruba seus streams; seu cache local é limpo ao detectar perda de acesso (ou no próximo bootstrap).
 * Membro pode **sair voluntariamente** (DELETE da própria linha, exceto dono).
-* Revogar convite pendente: dono marca `estado = 'revogado'`; token deixa de ser aceito.
+* Revogar convite pendente: dono marca `estado = 'revogado'`; token deixa de ser aceito. O sheet "Convidar" lista os convites pendentes já criados nesta lista (não só o recém-gerado) para o dono revogar (F21-T03).
 * **Feedback (F14-T05):** remover membro e trocar papel dão SnackBar ("Membro removido" / "Papel atualizado") e compartilhar o convite dá "Link compartilhado" — antes, essas ações eram silenciosas (só o erro aparecia).
 
 ## 6. Transferência de dono (processo explícito)
@@ -239,7 +239,7 @@ $$;
 
 | Tela/Modal | Conteúdo |
 | :--- | :--- |
-| Sheet "Convidar" (dono/editor) | Escolha de papel + gerar link; o link completo e o código têm botões distintos ("Copiar link" × "Copiar código", com tooltip) (F14-T06) |
+| Sheet "Convidar" (dono/editor) | Escolha de papel + gerar link; o link completo e o código têm botões distintos ("Copiar link" × "Copiar código", com tooltip) (F14-T06); lista os **convites pendentes anteriores** da lista com ação "Revogar" (F21-T03 — `pendentesDaLista`) |
 | Lista de membros | Nome, papel, ações do dono (mudar papel entre editor↔leitor, remover, transferir dono) |
 | Banner "Você é leitor" | Lista em modo somente leitura para `leitor` (inputs desabilitados com dica) |
 | Painel "Convites pendentes" (Minhas Listas) | Cards: "João convidou você para **Compras da Semana**" → Aceitar/Recusar |

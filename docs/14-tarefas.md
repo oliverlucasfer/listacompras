@@ -533,9 +533,10 @@ Achados da revisão de fechamento que **não** deveriam ser marcados como conclu
 - [ ] **F21-T02** — Sentry: limpar `event.extra` e alinhar `07 §3`/`02 §3`
   Dep: — · Docs: [02 §3](02-seguranca-rls.md), [07 §3/§4](07-qualidade-ci.md)
   CP: `beforeSend` limpa `breadcrumbs`, `extra` e `contexts`; esqueleto do CI espelha o `ci.yml` (step de Realtime + pin do CLI); matriz de INSERT de `lista_membros` no 02 §3 cita `user_id = auth.uid()`.
-- [ ] **F21-T03** — Convites: revogar também os pendentes anteriores (R-07 parcial)
+- [x] **F21-T03** — Convites: revogar também os pendentes anteriores (R-07 parcial)
   Dep: — · Docs: [08 §2](08-compartilhamento-colaborativo.md)
   CP: sheet lista os convites pendentes da lista (usando `pendentesDaLista`) com ação de revogar; ou limite documentado no 08.
+  Nota: *(sheet "Convidar" carrega `pendentesDaLista(listaId)` no `initState` e mostra a seção "Convites pendentes" com "Revogar" por item — o recém-gerado não duplica; falha de rede na listagem é silenciosa e não bloqueia gerar/revogar; strings `convitesPendentes`/`revogarConvitePendente`/`convitePendenteAjuda`; 2 widget tests)*
 - [ ] **F21-T04** — Política de Privacidade acessível pelo app (herdada da F19-T04)
   Dep: — · Docs: [06 §3.3.2](06-mvp-entregas.md)
   CP: link "ver política" no cadastro e em Configurações abrindo o texto in-app (`politicaPrivacidadeTexto`); **sem** versão online (decisão de 18/09/2026).
@@ -582,9 +583,9 @@ Spec: [superpowers/specs/2026-09-18-modo-mercado-frequentes-design.md](superpowe
 | F18 Web e Desktop | 6 | 6 |
 | F19 Publicação Web — **cancelada** | 5 | 5 |
 | F20 Correções da revisão | 13 | 13 |
-| F21 Pendências do fechamento | 4 | 1 |
+| F21 Pendências do fechamento | 4 | 2 |
 | F22 Modo mercado e itens frequentes | 5 | 5 |
-| **Total** | **135** | **130** |
+| **Total** | **135** | **131** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

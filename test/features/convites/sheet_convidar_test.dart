@@ -114,7 +114,13 @@ void main() {
     expect(find.byTooltip(AppStrings.copiarCodigoAjuda), findsOneWidget);
     expect(find.text(AppStrings.gerarLink), findsNothing);
 
-    final corpo = jsonDecode(servidor.corpoDe(0)) as Map<String, Object?>;
+    final corpo =
+        jsonDecode(
+              servidor.corpoDe(
+                servidor.pedidos.indexWhere((p) => p.method == 'POST'),
+              ),
+            )
+            as Map<String, Object?>;
     expect(corpo['papel_oferecido'], 'leitor');
     expect(corpo['tipo'], 'link');
     expect(corpo['lista_id'], _listaId);
@@ -321,6 +327,65 @@ void main() {
       find.widgetWithText(FilledButton, AppStrings.gerarLink),
       findsOneWidget,
     );
+    expect(find.text(_link), findsNothing);
+
+    final patch = servidor.pedidos.singleWhere((p) => p.method == 'PATCH');
+    expect(patch.url.query, contains('id=eq.$_token'));
+    expect(jsonDecode(servidor.corpoDe(servidor.pedidos.indexOf(patch))), {
+      'estado': 'revogado',
+    });
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_listar_convites_pendentes_quando_abre', (tester) async {
+    // R-07 (parcial): convites criados antes nesta lista continuam válidos e
+    // precisam aparecer para o dono revogar (F21-T03).
+    final servidor = ServidorFake((req) {
+      if (req.method == 'GET' && req.url.path.contains('/convites')) {
+        return (200, [_linhaConvite(papel: 'editor')]);
+      }
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    await abrir(tester, servidor);
+
+    final get = servidor.pedidos.singleWhere((p) => p.method == 'GET');
+    expect(get.url.query, contains('estado=eq.pendente'));
+    expect(get.url.query, contains('lista_id=eq.$_listaId'));
+    expect(find.text(AppStrings.convitesPendentes), findsOneWidget);
+    expect(
+      find.widgetWithText(TextButton, AppStrings.revogarConvitePendente),
+      findsOneWidget,
+    );
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_revogar_convite_pendente_anterior_quando_toca_revogar', (
+    tester,
+  ) async {
+    final servidor = ServidorFake((req) {
+      if (req.method == 'GET' && req.url.path.contains('/convites')) {
+        return (200, [_linhaConvite(papel: 'leitor')]);
+      }
+      if (req.method == 'PATCH' && req.url.path.contains('/convites')) {
+        return (204, const <Object?>[]);
+      }
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    await abrir(tester, servidor);
+    expect(find.text(AppStrings.convitesPendentes), findsOneWidget);
+
+    await tester.tap(
+      find.widgetWithText(TextButton, AppStrings.revogarConvitePendente),
+    );
+    await tester.pumpAndSettle();
+
+    // A lista de pendentes esvazia e o dono é avisado; nenhum link é gerado.
+    expect(find.text(AppStrings.conviteRevogado), findsOneWidget);
+    expect(find.text(AppStrings.convitesPendentes), findsNothing);
     expect(find.text(_link), findsNothing);
 
     final patch = servidor.pedidos.singleWhere((p) => p.method == 'PATCH');

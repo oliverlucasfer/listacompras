@@ -34,12 +34,59 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
   String? _erro;
   Convite? _convite;
   TextEditingController? _linkController;
+  List<Convite> _pendentes = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    // Convites criados antes nesta lista continuam válidos (R-07/F21-T03): o
+    // dono precisa vê-los para revogar. Falha de rede não bloqueia o sheet —
+    // só a ação de revogar sinaliza erro.
+    _carregarPendentes();
+  }
 
   @override
   void dispose() {
     _linkController?.dispose();
     super.dispose();
   }
+
+  Future<void> _carregarPendentes() async {
+    try {
+      final pendentes = await ref
+          .read(convitesRepositoryProvider)
+          .pendentesDaLista(widget.listaId);
+      if (mounted) setState(() => _pendentes = pendentes);
+    } on Object {
+      // Silencioso: a listagem é auxiliar; gerar/revogar o link segue abaixo.
+    }
+  }
+
+  Future<void> _revogarPendente(Convite convite) async {
+    setState(() {
+      _erro = null;
+      _revogando = true;
+    });
+    try {
+      await ref.read(convitesRepositoryProvider).revogar(convite.id);
+      if (mounted) {
+        setState(
+          () =>
+              _pendentes = _pendentes.where((c) => c.id != convite.id).toList(),
+        );
+        mostrarSnackBar(context, AppStrings.conviteRevogado);
+      }
+    } on Object {
+      if (mounted) setState(() => _erro = AppStrings.erroGenerico);
+    }
+    if (mounted) setState(() => _revogando = false);
+  }
+
+  String _rotuloPapel(Papel papel) => switch (papel) {
+    Papel.dono => AppStrings.papelDono,
+    Papel.editor => AppStrings.convidarPapelEditor,
+    Papel.leitor => AppStrings.convidarPapelLeitor,
+  };
 
   Future<void> _gerar() async {
     setState(() {
@@ -133,6 +180,11 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
   @override
   Widget build(BuildContext context) {
     final convite = _convite;
+    // O convite recém-gerado tem a própria área com link/compartilhar; não
+    // duplica na lista de pendentes.
+    final pendentesAnteriores = _pendentes
+        .where((c) => c.id != convite?.id)
+        .toList();
     return SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -153,6 +205,26 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
               ),
             ],
           ),
+          if (pendentesAnteriores.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              AppStrings.convitesPendentes,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            for (final pendente in pendentesAnteriores)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.link),
+                title: Text(_rotuloPapel(pendente.papelOferecido)),
+                subtitle: const Text(AppStrings.convitePendenteAjuda),
+                trailing: TextButton(
+                  onPressed: _revogando
+                      ? null
+                      : () => _revogarPendente(pendente),
+                  child: const Text(AppStrings.revogarConvitePendente),
+                ),
+              ),
+          ],
           if (convite == null) ...[
             RadioGroup<Papel>(
               groupValue: _papel,
