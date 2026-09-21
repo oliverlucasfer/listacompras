@@ -116,6 +116,7 @@ jobs:
       - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/aceitar_convite_tests.sql
       - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/transferir_dono_tests.sql
       - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/preco_item_tests.sql
+      - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/arquivar_listas_tests.sql
       - name: Teste de Realtime (01 §7, 02 §5 P-05)
         working-directory: supabase/tests
         run: |
