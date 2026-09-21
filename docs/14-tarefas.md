@@ -563,6 +563,20 @@ Spec: [superpowers/specs/2026-09-18-modo-mercado-frequentes-design.md](superpowe
   Dep: F22-T04 · Docs: [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [14](14-tarefas.md), [15](15-design-system.md), [00 §6](00-visao-geral.md)
   CP: botão `shopping_cart_checkout` na AppBar da lista visível só para dono/editor (testes de gate); RF-18/RF-19 nos docs donos; Fase 22 marcada e tabela de progresso atualizada.
 
+## Fase 23 — Duplicar lista ("comprar de novo")
+
+Spec: [superpowers/specs/2026-09-21-duplicar-lista-design.md](superpowers/specs/2026-09-21-duplicar-lista-design.md) · Requisito: RF-20 (duplicar lista). · Docs donos: 05, 10, 12.
+
+- [x] **F23-T01** — Duplicar lista no repositório (RF-20)
+  Dep: — · Docs: [05 §6.2](05-app-flutter.md)
+  CP: `ListasRepository.duplicarLista` copia só pendentes, preserva nome/quantidade/unidade/categoria e ordem, enfileira mutações e não altera a origem; unit tests verdes.
+- [x] **F23-T02** — Menu "Comprar de novo" e sheet no painel (RF-20)
+  Dep: F23-T01 · Docs: [05 §6.2](05-app-flutter.md), [10 §2.5](10-wireframes-telas.md)
+  CP: item no menu `⋮` (dono e membro) só com pendentes; sheet com contagem e título editável; cria e abre a lista nova; widget tests verdes.
+- [x] **F23-T03** — Docs donos e fechamento
+  Dep: F23-T02 · Docs: [12](12-prd.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [14](14-tarefas.md), [16](16-roadmap-pos-mvp.md)
+  CP: RF-20 no 12; §6.2 no 05; §2.5 no 10; Fase 23 marcada e progresso atualizado.
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -587,7 +601,8 @@ Spec: [superpowers/specs/2026-09-18-modo-mercado-frequentes-design.md](superpowe
 | F20 Correções da revisão | 13 | 13 |
 | F21 Pendências do fechamento | 4 | 4 |
 | F22 Modo mercado e itens frequentes | 5 | 5 |
-| **Total** | **135** | **133** |
+| F23 Duplicar lista | 3 | 3 |
+| **Total** | **138** | **136** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

@@ -166,6 +166,7 @@ O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado
 * Estado vazio: ilustração simples + CTA de criação.
 * Lista com `deletado_em` nunca aparece (tombstone invisível).
 * **Busca (F16, RF-17):** a lupa na AppBar revela um campo no topo do corpo que filtra os cards pelo **título** (offline, sem acento/caixa); sem resultado → `AppEstadoVazio` "Nenhuma lista encontrada" (sem CTA); ✕ limpa e fecha; campo com rótulo acessível (label) e hint de exemplo.
+* **Comprar de novo (RF-20, F23):** o menu `⋮` — dono **e** membro — ganha o item "Comprar de novo" quando a lista tem itens **pendentes**; abre o sheet de título (com a contagem de pendentes, título pré-preenchido com o da origem, editável) e cria uma lista nova copiando os pendentes — nome/quantidade/unidade/categoria, na ordem original, todos pendentes — com o usuário atual como dono; a lista nova abre em seguida. Escrita local + fila, sem rede (doc 03).
 
 ### 6.3. Tela da Lista de Compras
 | Elemento | Comportamento |

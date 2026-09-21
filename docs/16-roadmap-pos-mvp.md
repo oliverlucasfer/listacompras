@@ -15,7 +15,7 @@
 
 | ID | Frente | Requisito | Fase | Spec | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| A1 | **Duplicar lista ("Comprar de novo")** | **RF-20** (novo) | F23 | [spec](superpowers/specs/2026-09-21-duplicar-lista-design.md) | spec aprovado — aguardando plano |
+| A1 | **Duplicar lista ("Comprar de novo")** | **RF-20** | F23 | [spec](superpowers/specs/2026-09-21-duplicar-lista-design.md) | concluído (F23-T01…T03) |
 
 ## Onda A — Uso diário e retenção
 

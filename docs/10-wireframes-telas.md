@@ -147,6 +147,24 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 └─────────────────────────────────┘
 ```
 
+### 2.5. Sheet "Comprar de novo" (F23/RF-20)
+
+**Entrada:** item "Comprar de novo" no menu `⋮` do card (dono e membro), **só quando há pendentes** (doc 10 §2.1).
+
+```
+┌─────────────────────────────────┐
+│  Comprar de novo             ✕  │
+├─────────────────────────────────┤
+│  3 itens pendentes serão        │
+│  copiados.                      │
+│                                 │
+│  Nome da lista                  │
+│  [ Compras da Semana         ]  │ ← pré-preenchido, editável
+│                                 │
+│  (       Criar lista      )     │ ← cria + abre a lista nova (RF-20)
+└─────────────────────────────────┘
+```
+
 ---
 
 ## 3. Tela da Lista de Compras
