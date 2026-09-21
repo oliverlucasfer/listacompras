@@ -67,7 +67,7 @@ Tabela local Drift (`mutacoes_pendentes`):
 2. **Flush (online):** o Sync Engine drena a fila enviando ao Supabase:
    * **Sem linha remota → `INSERT`** (F12-T04): o `upsert` do PostgREST avalia a policy de UPDATE e era negado para listas novas; ID client-side é UUID v4, colisão é improvável.
    * **Com linha remota → `UPDATE`** (LWW já decidiu — Seção 5).
-3. **Realtime (WebSocket):** mudanças remotas chegam → aplicadas ao Drift **se vencerem no LWW** → UI reage reativamente (Streams do Drift).
+3. **Realtime (WebSocket):** mudanças remotas chegam → aplicadas ao Drift **se vencerem no LWW** → UI reage reativamente (Streams do Drift). O canal assina um **callback de status** (F20, R-12): a cada `SUBSCRIBED` — inclusive o primeiro e após uma reconexão — o bootstrap re-sincroniza o cache, cobrindo eventos perdidos em `CHANNEL_ERROR`/`TIMED_OUT` (Seção 7).
 4. **Reconexão:** listener de conectividade dispara flush automático da fila.
 
 > **Robustez (F12-T03):** o engine assina a fila **antes** de checar a conexão —

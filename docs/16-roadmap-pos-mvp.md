@@ -48,7 +48,7 @@ Foco: confiabilidade e preparação para publicação séria.
 
 | ID | Frente | Referência | Doc dono | Valor | Esforço | Notas |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| C1 | Status do Realtime + re-sync automático | R-12 | 03 §4 | Alto | P/M | Callback em `CHANNEL_ERROR`/`TIMED_OUT`; última dívida de sync confiável |
+| C1 | Status do Realtime + re-sync automático | R-12 | 03 §4 | Alto | P/M | concluído (F20, `4ff9d11`) |
 | C2 | E2E/integration dos fluxos críticos + goldens | 07 | 07 | Alto | M | Cobertura além de unit/widget |
 | C3 | Alertas do Sentry + backup automatizado | 07 §4, 09 §2.2 | 07, 09 | Médio | P | Eventos 1–2; agendar `db dump` |
 | C4 | CSP no Web (endurecimento) | R-21 | 06 §3.4 | Baixo | P | Recomendação, não requisito |
