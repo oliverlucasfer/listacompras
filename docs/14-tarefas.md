@@ -598,6 +598,26 @@ Spec: [superpowers/specs/2026-09-21-transferencia-dono-design.md](superpowers/sp
   Dep: F24-T04 · Docs: [01](01-banco-de-dados.md), [02](02-seguranca-rls.md), [06 §3.3.1](06-mvp-entregas.md), [08](08-compartilhamento-colaborativo.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
   CP: docs donos refletem a transferência; R-17 marcado resolvido; Fase 24 na tabela de progresso (143/141).
 
+## Fase 25 — Preço por Item e Total no Carrinho (RF-21)
+
+Spec: [superpowers/specs/2026-09-21-precos-total-design.md](superpowers/specs/2026-09-21-precos-total-design.md) · Requisito: RF-21 (preço unitário + total dos marcados). · Docs donos: 01, 03, 05, 10, 12.
+
+- [x] **F25-T01** — Banco: migration `0017` (coluna `preco_centavos` + CHECK) + testes SQL + CI
+  Dep: — · Docs: [01 §4.3](01-banco-de-dados.md)
+  CP: `preco_centavos integer` nullable com CHECK `null ou 0..99999999`; sem policy nova (herda `itens_lista`); PC-01…PC-03 verdes; step novo no CI.
+- [x] **F25-T02** — App: `precoCentavos` no Drift, domínio, repositório e aplicador
+  Dep: F25-T01 · Docs: [01 §4.3](01-banco-de-dados.md), [03 §3](03-sincronizacao-offline.md)
+  CP: `Item.precoCentavos` (`int?`); `adicionarItem(..., precoCentavos)`; `editarItem(..., precoCentavos, limparPreco)`; payload de item com `preco_centavos`; aplicador tolera ausente/não numérico → `null`; `duplicarLista` copia o preço; unit tests verdes.
+- [x] **F25-T03** — App: funções puras `formatarReais`/`parsePrecoParaCentavos`/`totalCarrinho`
+  Dep: F25-T02 · Docs: [05 §6.3](05-app-flutter.md)
+  CP: `lib/features/listas/domain/preco.dart` sem `double` para dinheiro; total soma só **marcados com preço**, arredondando cada subtotal ao centavo; unit tests de formatação/parse/total verdes.
+- [x] **F25-T04** — App: campo de preço no editor e faixa `TotalCarrinho`
+  Dep: F25-T03 · Docs: [05 §6.3/§6.5](05-app-flutter.md), [10 §3.1/§3.5](10-wireframes-telas.md)
+  CP: campo "Preço (R$)" opcional com erro inline; faixa "No carrinho: R$ … · N sem preço" no rodapé da lista e no modo mercado, oculta sem marcados; widget tests verdes (lista/mercado/editor).
+- [x] **F25-T05** — Docs donos e fechamento
+  Dep: F25-T04 · Docs: [01](01-banco-de-dados.md), [03](03-sincronizacao-offline.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
+  CP: RF-21 no 12 (tabela, rastreabilidade e fora de escopo ajustado); docs donos refletem preço/total; Fase 25 na tabela de progresso (148/146).
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -624,7 +644,8 @@ Spec: [superpowers/specs/2026-09-21-transferencia-dono-design.md](superpowers/sp
 | F22 Modo mercado e itens frequentes | 5 | 5 |
 | F23 Duplicar lista | 3 | 3 |
 | F24 Transferência de dono | 5 | 5 |
-| **Total** | **143** | **141** |
+| F25 Preço e total | 5 | 5 |
+| **Total** | **148** | **146** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

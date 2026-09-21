@@ -191,12 +191,15 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 │  ☐ Café             1 pacote ≡  │    editar/remover (undo);
 │  LATICÍNIOS (2)                 │    drag restrito ao grupo
 │  ☐ Leite            2 un    ≡   │ ← editar: dropdown de categoria
-│  ☐ Queijo prato     500 g   ≡   │
+│  ☐ Queijo prato     500 g   ≡   │    + campo Preço (R$) (RF-21/F25)
 │                                 │
 │  ▼ Itens Concluídos (3)         │ ← seção única, sem categorias
 │    ☑ Detergente     2 un        │
 │    ☑ Macarrão       500 g       │ ← desmarcar devolve ao seu grupo
 │                                 │
+│  No carrinho: R$ 17,47 · 1 sem  │ ← faixa do total (RF-21/F25):
+│  preço                          │    soma itens marcados com preço;
+│                                 │    oculta sem marcados
 │  (Importar lista)               │
 └─────────────────────────────────┘
 ```
@@ -204,6 +207,23 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 **Busca (F16):** lupa na AppBar revela um campo (rótulo "Buscar item", hint de exemplo "Nome do item"); campo com rótulo acessível (label) e hint de exemplo; os grupos de categoria permanecem (vazios somem) e o drag fica desabilitado; sem resultado → vazio "Nenhum item encontrado" + "Limpar busca".
 
 **Chips de itens frequentes (F22/RF-19):** faixa horizontal acima do campo "Adicionar item", exibida só quando o campo está vazio e há sugestões; toque adiciona o item (1 `un`, categoria pela cadeia local); o botão do modo mercado (`shopping_cart_checkout`) fica na AppBar, visível a dono/editor.
+
+**Diálogo do item (F12-T06 + preço RF-21/F25):**
+```
+┌─────────────────────────────────┐
+│  Editar item                 ✕  │
+├─────────────────────────────────┤
+│  Nome do item                   │
+│  [Arroz_____________________ ]  │ ← erro inline se vazio
+│  Quantidade                     │
+│  [−] [ 1 ] [+]      Unidade ▾   │
+│  Categoria                    ▾ │
+│  Preço (R$)                     │
+│  [5,49______________________ ]  │ ← opcional; vazio = sem preço;
+│                                 │    inválido → erro inline
+│  (Remover)         (Salvar)     │
+└─────────────────────────────────┘
+```
 
 ### 3.2. Estados do indicador de sync (AppBar, [03 §6](03-sincronizacao-offline.md))
 ```
@@ -250,7 +270,8 @@ O trecho "para todos os participantes" aparece quando há membros conhecidos (be
 │  ● Sincronizado                 │
 ├─────────────────────────────────┤
 │  3 de 12                        │ ← marcados nesta sessão / total ativo
-│                                 │    (live region)
+│  No carrinho: R$ 15,98          │    (live region); faixa do total
+│                                 │    (RF-21/F25) logo abaixo
 │  ☐ Arroz            1 kg        │ ← lista generosa de pendentes;
 │  ☐ Leite            2 un        │    toque na linha marca (alvo ≥48dp)
 │  ☐ Café             1 pacote    │

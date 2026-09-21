@@ -164,10 +164,12 @@ create index idx_membros_user on public.lista_membros (user_id);
 | `categoria` | `categoria_item NOT NULL DEFAULT 'outros'` | Enum (Seção 3.2, ADR-011) — agrupa pendentes na UI; migrada aditivamente em `0006` (itens antigos → `outros`) |
 | `concluido` | `boolean NOT NULL DEFAULT false` | Estado da checkbox |
 | `ordem` | `integer NOT NULL DEFAULT 0` | Posição na lista (drag-and-drop) |
+| `preco_centavos` | `integer` nullable | Preço unitário em centavos (RF-21, F25) — `null` = sem preço (item fora do total); `0` é válido; CHECK `null ou 0..99999999`. Coluna aditiva da `0017` |
 | `deletado_em` | `timestamptz` nullable | Soft delete / tombstone |
 
 **Constraints e índices:**
 * `UNIQUE (lista_id, lower(nome)) WHERE deletado_em IS NULL` — deduplicação de itens ativos (o usuário não cria item repetido na mesma lista).
+* `CHECK (preco_centavos IS NULL OR (preco_centavos >= 0 AND preco_centavos <= 99999999))` (migration `0017`) — dinheiro em **centavos inteiros** (sem `float`); teto de R$ 999.999,99; negativo rejeitado.
 * Índice `(lista_id, ordem)` para leitura ordenada.
 
 ```sql
@@ -182,6 +184,8 @@ create table public.itens_lista (
   categoria  public.categoria_item not null default 'outros',
   concluido  boolean not null default false,
   ordem      integer not null default 0,
+  preco_centavos integer
+    check (preco_centavos is null or (preco_centavos >= 0 and preco_centavos <= 99999999)),
   deletado_em timestamptz
 );
 
@@ -195,6 +199,8 @@ create index idx_itens_lista_ordem
 ```
 
 > **Compatibilidade (spec F6 §7):** clientes antigos que escrevem sem `categoria` recebem o default `outros` no INSERT; o upsert LWW do sync **não toca** a coluna quando ela não está no payload — a categoria existente é preservada.
+
+> **Preço do item (RF-21, F25):** `preco_centavos` **herda as policies de `itens_lista`** (quem edita item edita preço — `dono`/`editor`) — **sem policy nova**. Item com `null` fica fora do total do carrinho; `0` (R$ 0,00) é preço válido.
 
 ---
 

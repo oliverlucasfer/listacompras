@@ -58,7 +58,7 @@ Foco: confiabilidade e preparação para publicação séria.
 
 | ID | Frente | Requisito | Doc dono | Valor | Esforço | Notas |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| D1 | Preço por item, total ao vivo e comparação entre idas | novo | 01, 03, 05, 10 | Alto | G | Único que exige schema + sync + RLS novos; fazer após a robustez |
+| D1 | Preço por item, total ao vivo e comparação entre idas | RF-21 (preço/total) | 01, 03, 05, 10 | Alto | G | **Preço + total concluído (F25-T01…T05)** — coluna `preco_centavos` + faixa do total, sem policy nova; **orçamento e comparação entre idas pendentes** |
 
 ## Onda E — Alcance
 

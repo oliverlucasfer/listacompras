@@ -176,7 +176,7 @@ O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado
 | Exibição | Ordenação determinística entre dispositivos: `(categoria, ordem, id)` |
 | Item | Nome, quantidade + unidade, checkbox |
 | Checkbox marcada | Item move para seção dobrável "Itens Concluídos (n)" — **sem divisão por categoria** (Fase 6) |
-| Tocar no item | Abre o editor (mesmo diálogo do swipe): nome, quantidade, unidade, categoria e ação **Remover** com undo (F12-T06); nome vazio/quantidade inválida geram erro inline no campo (F14-T07) |
+| Tocar no item | Abre o editor (mesmo diálogo do swipe): nome, quantidade, unidade, categoria, **Preço (R$)** e ação **Remover** com undo (F12-T06/F25); nome vazio/quantidade inválida/preço inválido geram erro inline no campo (F14-T07) |
 | Swipe direita/esquerda | Editar / Remover (com undo via SnackBar); edição inclui **dropdown de categoria** ao lado das unidades (Fase 6) |
 | Botão de importação | Abre modal (6.4) |
 | Menu (⋮) | "Desmarcar todos", "Limpar concluídos", "Renomear lista", "Excluir lista" |
@@ -184,9 +184,12 @@ O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado
 | Indicador de sync | Estado de [03 §6](03-sincronizacao-offline.md) no **topo da tela da lista** e no **topo do painel de listas** (Minhas Listas e Compartilhadas — F21-T01, alinhado ao wireframe [10 §3.2](10-wireframes-telas.md)) |
 | Chips de itens frequentes | Acima do campo "Adicionar item", em rolagem horizontal, quando o campo está **vazio** e há sugestões (`itensFrequentesProvider`, RF-19): toque adiciona o item com quantidade 1, unidade `un` e categoria pela cadeia local (§3); somem ao digitar o primeiro caractere e voltam ao limpar o campo |
 | Botão do modo mercado | Ícone `shopping_cart_checkout` na AppBar (`tooltip` "Modo mercado"), **antes da lupa**; abre `/mercado/:listaId` via `push`. Visível apenas para dono/editor (papel efetivo com escrita); para `leitor` o botão não existe (RF-18) |
+| Faixa do total | Componente `TotalCarrinho` no **rodapé** da tela da lista e no **modo mercado** (§6.5): "No carrinho: R$ …" somando **itens marcados com preço**; se houver marcados sem preço, acrescenta "· N sem preço". Oculta quando não há nenhum item marcado (RF-21, F25) |
 
 * **Reordenar (Fase 6):** drag-and-drop restrito **ao grupo da categoria** — reordena só os itens do grupo (grava `ordem` local + fila); mudar de categoria é pelo dropdown do editar. Exibição continua `(categoria, ordem, id)` — sem coluna nova.
 * Quantidades: stepper + input direto; unidades restritas ao enum ([01 §3.1](01-banco-de-dados.md)).
+* **Preço do item (RF-21, F25):** campo **"Preço (R$)"** opcional no editor; aceita `5,49`, `5.49`, `5`; vazio → sem preço (`null`); inválido/negativo → erro inline. Gravado em centavos (`preco_centavos`, [01 §4.3](01-banco-de-dados.md)) via `editarItem(..., precoCentavos, limparPreco)`; o payload de sync inclui a coluna ([03 §3](03-sincronizacao-offline.md)) e `duplicarLista` copia o preço (RF-20).
+* **Faixa do total (RF-21, F25):** `TotalCarrinho` (`lib/features/listas/ui/total_carrinho.dart`, `Semantics` live region) deriva de `itensDaListaProvider` e mostra "No carrinho: R$ …" no rodapé da lista e no modo mercado; soma `round(quantidade × precoCentavos)` apenas de itens **marcados com preço**, com sufixo "· N sem preço" quando aplicável. Oculta sem marcados.
 * Item duplicado (mesmo nome ativo, comparação normalizada): **mesma unidade → soma** a quantidade; **unidade diferente → atualiza** o item para a nova quantidade/unidade — nunca duplica o nome ativo (unique parcial no servidor) (F12-T06).
 * **Rótulo do campo de nome (F14-T06):** no editor, o campo usa "Nome do item" — "Adicionar item" vale só para a entrada rápida.
 * **Erro e vazio (F14-T04):** falha de carga usa `AppEstadoErro` **com retry** (não texto puro, como fazia); "Lista não encontrada" ganha CTA para `/listas`; o vazio do leitor **instrui** ("Peça a um editor para adicionar") em vez de apontar para um campo que ele não tem.
@@ -209,6 +212,7 @@ Tela dedicada `/mercado/:listaId` para usar o celular no mercado, sem a densidad
 
 * **AppBar** com título da lista e seta de voltar (sem menu); `IndicadorSync` no topo apenas no estado carregado — em carregando/erro/não encontrada o título é "Modo mercado" e o indicador não renderiza.
 * **Contador** `mercadoProgresso(marcados, total)` (ex.: "3 de 12"): marcados **nesta sessão** / total de itens ativos; é uma live region.
+* **Faixa do total (RF-21):** `TotalCarrinho` logo abaixo do contador — "No carrinho: R$ …" dos itens marcados com preço (§6.3); oculta sem marcados.
 * **Pendentes** em lista de altura generosa, com checkbox de alvo ≥48dp e toque na linha para marcar (`editarItem(concluido: true)`). **Sem** grupos de categoria, busca, drag, swipe, menu ou importação.
 * **Faixa "Marcados (n)"** recolhível no rodapé — é o undo do toque acidental: ao marcar, o item sai da área principal e entra na faixa, que abre automaticamente na primeira marcação da sessão; tocar num item da faixa desmarca e o devolve aos pendentes.
 * **Estados:** carregando (`AppEsqueleto`), erro (`AppEstadoErro` com retry em `itensDaListaProvider`), lista não encontrada e "tudo comprado" (0 pendentes) com CTA para voltar; enquanto o papel não carrega, o default é leitor (somente leitura).
