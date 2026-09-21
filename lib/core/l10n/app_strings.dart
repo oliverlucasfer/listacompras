@@ -203,6 +203,17 @@ abstract final class AppStrings {
   static const importLocalTextoLongo =
       'Texto muito longo. Envie até 10.000 caracteres.';
 
+  // Adicionar de outra lista (RF-23)
+  static const adicionarDeOutraLista = 'Adicionar de outra lista';
+  static const escolherListaOrigem = 'Lista de origem';
+  static const selecionarTodos = 'Selecionar todos';
+  static const adicionarSelecionados = 'Adicionar';
+  static const nenhumItemPendenteNaOrigem = 'Nenhum item pendente nesta lista.';
+
+  static String itensAdicionadosDeOutra(int n) => n == 1
+      ? '1 item adicionado de outra lista.'
+      : '$n itens adicionados de outra lista.';
+
   // Compartilhamento por convite (doc 08, RF-13)
   static const conviteInvalido = 'Este convite não é mais válido.';
   static const conviteSemConexao =

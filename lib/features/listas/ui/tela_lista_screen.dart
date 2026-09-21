@@ -35,6 +35,7 @@ import '../domain/resultado_dedup.dart';
 import '../domain/sugestao_item.dart';
 import '../domain/unidade.dart';
 import '../providers/listas_providers.dart';
+import 'modal_adicionar_de_outra_lista.dart';
 import 'sheet_titulo_lista.dart';
 import 'total_carrinho.dart';
 
@@ -139,6 +140,33 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
         abrirSheetConvidar(context, ref, idLista);
       case 'membros':
         context.push('/membros/$idLista');
+      case 'outraLista':
+        _adicionarDeOutraLista(context, ref, idLista);
+    }
+  }
+
+  /// Adicionar itens pendentes de outra lista (F27-T02, RF-23): abre o modal,
+  /// aplica a dedup no lote e dá feedback da quantidade adicionada.
+  Future<void> _adicionarDeOutraLista(
+    BuildContext context,
+    WidgetRef ref,
+    String idLista,
+  ) async {
+    final selecionados = await abrirModalAdicionarDeOutraLista(
+      context,
+      listaAtualId: idLista,
+    );
+    if (selecionados == null || selecionados.isEmpty || !context.mounted) {
+      return;
+    }
+    await ref
+        .read(listasRepositoryProvider)
+        .adicionarItensDedup(idLista, selecionados);
+    if (context.mounted) {
+      mostrarSnackBar(
+        context,
+        AppStrings.itensAdicionadosDeOutra(selecionados.length),
+      );
     }
   }
 
@@ -315,6 +343,11 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                         const PopupMenuItem(
                           value: 'renomear',
                           child: Text(AppStrings.renomearLista),
+                        ),
+                      if (podeEscrever)
+                        const PopupMenuItem(
+                          value: 'outraLista',
+                          child: Text(AppStrings.adicionarDeOutraLista),
                         ),
                       // Membros (doc 08 §8) todos veem; navegação inclui
                       // "Sair da lista" para não-donos.
