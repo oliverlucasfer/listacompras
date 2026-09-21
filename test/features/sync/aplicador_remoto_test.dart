@@ -263,4 +263,39 @@ void main() {
     )..where((i) => i.id.equals('i-preco-2'))).getSingle();
     expect(linha.precoCentavos, 549);
   });
+
+  test('deve_mapear_preco_nao_numerico_para_null_quando_tolerancia', () async {
+    final aplicador = AplicadorRemoto(db);
+    await db
+        .into(db.listaLocal)
+        .insert(
+          ListaLocalCompanion.insert(
+            id: 'l-preco-3',
+            createdAt: DateTime.utc(2026, 9, 21),
+            updatedAt: DateTime.utc(2026, 9, 21),
+            titulo: 'X',
+            donoId: 'u',
+          ),
+        );
+
+    await aplicador.aplicar('itens_lista', {
+      'id': 'i-preco-3',
+      'lista_id': 'l-preco-3',
+      'nome': 'Arroz',
+      'quantidade': 1,
+      'unidade': 'un',
+      'categoria': 'outros',
+      'concluido': false,
+      'ordem': 0,
+      'preco_centavos': 'abc',
+      'created_at': '2026-09-21T12:00:00.000Z',
+      'updated_at': '2026-09-21T12:00:00.000Z',
+      'deletado_em': null,
+    });
+
+    final linha = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals('i-preco-3'))).getSingle();
+    expect(linha.precoCentavos, isNull);
+  });
 }

@@ -75,6 +75,24 @@ void main() {
     },
   );
 
+  test('deve_copiar_preco_quando_duplicar_lista', () async {
+    final origem = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    await repo.adicionarItem(
+      listaId: origem.id,
+      nome: 'Arroz',
+      precoCentavos: 549,
+    );
+
+    final nova = await repo.duplicarLista(
+      origemId: origem.id,
+      titulo: 'Y',
+      donoId: 'user-a',
+    );
+
+    final copiado = (await itensDe(nova.id)).single;
+    expect(copiado.precoCentavos, 549);
+  });
+
   test('deve_preservar_a_ordem_dos_itens_quando_duplica', () async {
     final origem = await repo.criarLista(titulo: 'X', donoId: 'user-a');
     final arroz = await repo.adicionarItem(listaId: origem.id, nome: 'Arroz');
