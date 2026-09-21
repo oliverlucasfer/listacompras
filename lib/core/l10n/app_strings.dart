@@ -317,6 +317,13 @@ abstract final class AppStrings {
   static const temaClaro = 'Claro';
   static const temaEscuro = 'Escuro';
   static const temaSistema = 'Sistema';
+  static const ordenarCategorias = 'Ordenar categorias';
+  static const ordenarCategoriasDica =
+      'Arraste para a ordem dos corredores do seu mercado.';
+  static const restaurarPadrao = 'Restaurar padrão';
+  static const restaurarPadraoTitulo = 'Restaurar a ordem padrão?';
+  static const restaurarPadraoMensagem =
+      'As categorias voltam à ordem original.';
   static const conta = 'Conta';
   static const sobre = 'Sobre';
   static const politicaPrivacidade = 'Política de Privacidade';

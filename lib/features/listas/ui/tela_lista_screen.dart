@@ -36,6 +36,7 @@ import '../domain/resultado_dedup.dart';
 import '../domain/sugestao_item.dart';
 import '../domain/unidade.dart';
 import '../providers/listas_providers.dart';
+import '../providers/ordem_categorias_provider.dart';
 import 'modal_adicionar_de_outra_lista.dart';
 import 'sheet_titulo_lista.dart';
 import 'total_carrinho.dart';
@@ -705,9 +706,12 @@ class _ListaItens extends ConsumerWidget {
           );
         }
         final slivers = <Widget>[];
-        // Grupos na ordem do enum (doc 01 §3.2); exibição = (categoria, ordem,
-        // id) — o stream já chega ordenado por (ordem, id).
-        for (final categoria in CategoriaItem.values) {
+        // Grupos na ordem pessoal das categorias (RF-24), com fallback para o
+        // enum (doc 01 §3.2) enquanto a preferência carrega; exibição =
+        // (categoria, ordem, id) — o stream já chega ordenado por (ordem, id).
+        final ordemCategorias =
+            ref.watch(ordemCategoriasProvider).value ?? CategoriaItem.values;
+        for (final categoria in ordemCategorias) {
           final grupo = pendentes
               .where((i) => i.categoria == categoria)
               .toList();

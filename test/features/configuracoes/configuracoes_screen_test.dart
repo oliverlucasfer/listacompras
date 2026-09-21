@@ -5,11 +5,17 @@ import 'package:go_router/go_router.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/features/auth/providers/auth_providers.dart';
 import 'package:lista_compras/features/configuracoes/ui/configuracoes_screen.dart';
+import 'package:lista_compras/features/listas/ui/tela_ordenar_categorias.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../auth/fakes.dart';
 
 void main() {
   setUpAll(inicializarSupabaseTeste);
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
 
   Future<void> abrir(WidgetTester tester) async {
     await tester.pumpWidget(
@@ -51,6 +57,39 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
+
+  Future<void> abrirComRouterComCategorias(WidgetTester tester) async {
+    final router = GoRouter(
+      initialLocation: '/configuracoes',
+      routes: [
+        GoRoute(
+          path: '/configuracoes',
+          builder: (_, _) => const ConfiguracoesScreen(),
+        ),
+        GoRoute(
+          path: '/categorias',
+          builder: (_, _) => const TelaOrdenarCategorias(),
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          emailUsuarioProvider.overrideWithValue('oliveira@exemplo.com'),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('deve_abrir_ordenar_categorias_quando_toca', (tester) async {
+    await abrirComRouterComCategorias(tester);
+    await tester.tap(find.text(AppStrings.ordenarCategorias));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.restaurarPadrao), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 
   testWidgets('deve_exibir_email_secoes_versao_e_exclusao_quando_abrir', (
     tester,

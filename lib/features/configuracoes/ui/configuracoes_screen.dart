@@ -94,6 +94,12 @@ class ConfiguracoesScreen extends ConsumerWidget {
             padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             child: SeletorTema(),
           ),
+          ListTile(
+            leading: const Icon(Icons.reorder),
+            title: const Text(AppStrings.ordenarCategorias),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/categorias'),
+          ),
           const AppCabecalhoSecao(AppStrings.conta),
           ListTile(
             leading: const Icon(Icons.email_outlined),

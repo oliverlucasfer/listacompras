@@ -31,6 +31,7 @@ import 'package:lista_compras/features/listas/domain/unidade.dart';
 import 'package:lista_compras/features/listas/ui/tela_lista_screen.dart';
 import 'package:lista_compras/features/sync/domain/sync_status.dart';
 import 'package:lista_compras/features/sync/providers/sync_providers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../convites/servidor_fake.dart';
@@ -43,6 +44,7 @@ void main() {
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
+    SharedPreferences.setMockInitialValues({});
   });
 
   tearDown(() async {
@@ -226,6 +228,61 @@ void main() {
     expect(dyHorti, lessThan(dyMerce));
     expect(dyMerce, lessThan(dyLatic));
 
+    await fechar(tester);
+  });
+
+  testWidgets('deve_agrupar_na_ordem_custom_quando_lista', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'ordem_categorias':
+          '${CategoriaItem.bebidas.valor},'
+          '${CategoriaItem.mercearia.valor},'
+          '${CategoriaItem.hortifruti.valor}',
+    });
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      categoria: CategoriaItem.mercearia,
+    );
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Banana',
+      categoria: CategoriaItem.hortifruti,
+    );
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Suco',
+      categoria: CategoriaItem.bebidas,
+    );
+    final sync = StreamController<SyncStatus>();
+    sync.add(const Sincronizado());
+    addTearDown(sync.close);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          papelRepositoryProvider.overrideWithValue(
+            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
+          ),
+          syncStatusProvider.overrideWith((ref) => sync.stream),
+        ],
+        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final dyBebidas = tester
+        .getTopLeft(find.text('${CategoriaItem.bebidas.rotulo} (1)'))
+        .dy;
+    final dyMercearia = tester
+        .getTopLeft(find.text('${CategoriaItem.mercearia.rotulo} (1)'))
+        .dy;
+    final dyHortifruti = tester
+        .getTopLeft(find.text('${CategoriaItem.hortifruti.rotulo} (1)'))
+        .dy;
+    expect(dyBebidas, lessThan(dyMercearia));
+    expect(dyMercearia, lessThan(dyHortifruti));
     await fechar(tester);
   });
 

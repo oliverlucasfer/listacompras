@@ -20,6 +20,7 @@ import 'features/listas/ui/compartilhadas_screen.dart';
 import 'features/listas/ui/mercado_screen.dart';
 import 'features/listas/ui/minhas_listas_screen.dart';
 import 'features/listas/ui/tela_lista_screen.dart';
+import 'features/listas/ui/tela_ordenar_categorias.dart';
 
 /// Rotas (doc 05 §4): /login, /registro, /recuperar-senha e /entrar são
 /// públicas; as demais exigem autenticação. Redirect global nas duas
@@ -141,6 +142,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/mercado/:listaId',
         builder: (context, state) =>
             MercadoScreen(listaId: state.pathParameters['listaId']!),
+      ),
+      GoRoute(
+        path: '/categorias',
+        builder: (context, state) => const TelaOrdenarCategorias(),
       ),
       if (kDebugMode)
         GoRoute(
