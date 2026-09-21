@@ -65,12 +65,17 @@ end $$;
 
 -- ===== ARQ-03: editor renomeia sem tocar arquivada_em =====
 do $$
+declare v_titulo text;
 begin
   perform set_config('role', 'authenticated', true);
   perform set_config('request.jwt.claims', '{"sub":"f1000000-0000-0000-0000-000000000000","role":"authenticated"}', true);
   update public.listas set titulo = 'Renomeada pelo editor'
   where id = 'f9000000-0000-0000-0000-000000000000';
   perform set_config('role', 'postgres', true);
+  select titulo into v_titulo from public.listas where id = 'f9000000-0000-0000-0000-000000000000';
+  if v_titulo <> 'Renomeada pelo editor' then
+    raise exception 'FALHOU ARQ-03: rename nao persistiu (%)', v_titulo;
+  end if;
   raise notice 'OK ARQ-03: editor renomeia sem interferencia';
 end $$;
 

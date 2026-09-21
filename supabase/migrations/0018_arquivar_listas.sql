@@ -15,6 +15,8 @@ security definer
 set search_path = public
 as $$
 begin
+  -- `old.dono_id <> auth.uid()` trata NULL de auth.uid() (service_role ou
+  -- contexto definer) como "allow" de propósito; não transforme em bloqueio.
   if new.arquivada_em is distinct from old.arquivada_em
      and old.dono_id <> auth.uid() then
     raise exception 'APENAS_O_DONO_PODE_ARQUIVAR';
