@@ -540,6 +540,7 @@ void main() {
 
   test('deve_gravar_e_enfileirar_arquivo_quando_arquivar', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    final antes = DateTime.now().toUtc();
 
     await repo.definirArquivada(lista.id, arquivada: true);
 
@@ -547,13 +548,28 @@ void main() {
       db.listaLocal,
     )..where((l) => l.id.equals(lista.id))).getSingle();
     expect(local.arquivadaEm, isNotNull);
+    // Valor exato gravado: arquivada_em == updated_at do mesmo write.
+    expect(local.arquivadaEm!.toUtc(), local.updatedAt.toUtc());
+    // E dentro de uma janela estreita em torno de "agora".
+    expect(local.arquivadaEm!.toUtc().isBefore(antes), isFalse);
+    expect(
+      local.arquivadaEm!.toUtc().difference(DateTime.now().toUtc()).abs(),
+      lessThan(const Duration(minutes: 1)),
+    );
     final payload = (await fila()).last['payload'] as Map<String, Object?>;
-    expect(payload['arquivada_em'], isNotNull);
+    expect(
+      payload['arquivada_em'],
+      local.arquivadaEm!.toUtc().toIso8601String(),
+    );
   });
 
   test('deve_limpar_arquivo_quando_desarquivar', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
     await repo.definirArquivada(lista.id, arquivada: true);
+    final arquivada = await (db.select(
+      db.listaLocal,
+    )..where((l) => l.id.equals(lista.id))).getSingle();
+    expect(arquivada.arquivadaEm!.toUtc(), arquivada.updatedAt.toUtc());
 
     await repo.definirArquivada(lista.id, arquivada: false);
 
@@ -577,5 +593,22 @@ void main() {
     );
 
     expect(nova.arquivadaEm, isNull);
+  });
+
+  test('deve_refletir_arquivo_no_painel_quando_watch_contagem', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+
+    await repo.definirArquivada(lista.id, arquivada: true);
+    final arquivada = await repo.watchListasComContagem().first.timeout(
+      const Duration(seconds: 2),
+    );
+    expect(arquivada.single.lista.arquivadaEm, isNotNull);
+    expect(arquivada.single.lista.id, lista.id);
+
+    await repo.definirArquivada(lista.id, arquivada: false);
+    final desarquivada = await repo.watchListasComContagem().first.timeout(
+      const Duration(seconds: 2),
+    );
+    expect(desarquivada.single.lista.arquivadaEm, isNull);
   });
 }
