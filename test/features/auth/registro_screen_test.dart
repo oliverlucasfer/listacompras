@@ -81,6 +81,21 @@ void main() {
     expect(repo.registrarChamado, isFalse);
   });
 
+  testWidgets('deve_abrir_politica_privacidade_quando_toca_ver_politica', (
+    tester,
+  ) async {
+    // F21-T04: o texto in-app precisa ser alcançável já no cadastro (não só
+    // aceito às cegas), sem versão online.
+    final repo = FakeAuthRepository();
+    await abrirTela(tester, repo);
+
+    await tester.tap(find.widgetWithText(TextButton, AppStrings.verPolitica));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Dados que coletamos'), findsOneWidget);
+    expect(find.textContaining('Por quanto tempo guardamos'), findsOneWidget);
+  });
+
   testWidgets('deve_exibir_tela_verificacao_quando_registro_bem_sucedido', (
     tester,
   ) async {
@@ -107,7 +122,9 @@ void main() {
     repo.onRegistrar = (email, senha) => Future.value(AuthResponse());
     await abrirTela(tester, repo);
     await preencherFormulario(tester, 'a@b.com', '123456', '123456');
+    await tester.ensureVisible(find.byType(Checkbox));
     await aceitarPolitica(tester);
+    await tester.ensureVisible(find.byType(FilledButton));
     await tester.tap(find.byType(FilledButton));
     await tester.pumpAndSettle();
 

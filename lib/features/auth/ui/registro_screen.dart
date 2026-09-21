@@ -8,6 +8,7 @@ import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
+import '../../../core/widgets/app_politica_privacidade.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../providers/auth_providers.dart';
 
@@ -181,6 +182,13 @@ class _RegistroScreenState extends ConsumerState<RegistroScreen> {
                     controlAffinity: ListTileControlAffinity.leading,
                     contentPadding: EdgeInsets.zero,
                     title: const Text(AppStrings.liPoliticaPrivacidade),
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(
+                      onPressed: () => abrirPoliticaPrivacidade(context),
+                      child: const Text(AppStrings.verPolitica),
+                    ),
                   ),
                   if (_erroGeral != null) ...[
                     const SizedBox(height: AppSpacing.sm),

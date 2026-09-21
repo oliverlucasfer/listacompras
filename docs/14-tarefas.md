@@ -537,9 +537,10 @@ Achados da revisão de fechamento que **não** deveriam ser marcados como conclu
   Dep: — · Docs: [08 §2](08-compartilhamento-colaborativo.md)
   CP: sheet lista os convites pendentes da lista (usando `pendentesDaLista`) com ação de revogar; ou limite documentado no 08.
   Nota: *(sheet "Convidar" carrega `pendentesDaLista(listaId)` no `initState` e mostra a seção "Convites pendentes" com "Revogar" por item — o recém-gerado não duplica; falha de rede na listagem é silenciosa e não bloqueia gerar/revogar; strings `convitesPendentes`/`revogarConvitePendente`/`convitePendenteAjuda`; 2 widget tests)*
-- [ ] **F21-T04** — Política de Privacidade acessível pelo app (herdada da F19-T04)
+- [x] **F21-T04** — Política de Privacidade acessível pelo app (herdada da F19-T04)
   Dep: — · Docs: [06 §3.3.2](06-mvp-entregas.md)
   CP: link "ver política" no cadastro e em Configurações abrindo o texto in-app (`politicaPrivacidadeTexto`); **sem** versão online (decisão de 18/09/2026).
+  Nota: *(`abrirPoliticaPrivacidade` em `core/widgets/app_politica_privacidade.dart` — texto em sheet; "Ver política" no cadastro abaixo do checkbox e reuso em Configurações (antes `_abrirPolitica` duplicado); wireframe 10 §1.2 e comentário do `politica_privacidade.dart` (R-15) atualizados; 1 widget test novo + ajuste de `ensureVisible` no teste de escala 2x com o form mais alto)*
 
 ## Fase 22 — Modo mercado e itens frequentes
 
@@ -583,9 +584,9 @@ Spec: [superpowers/specs/2026-09-18-modo-mercado-frequentes-design.md](superpowe
 | F18 Web e Desktop | 6 | 6 |
 | F19 Publicação Web — **cancelada** | 5 | 5 |
 | F20 Correções da revisão | 13 | 13 |
-| F21 Pendências do fechamento | 4 | 2 |
+| F21 Pendências do fechamento | 4 | 3 |
 | F22 Modo mercado e itens frequentes | 5 | 5 |
-| **Total** | **135** | **131** |
+| **Total** | **135** | **132** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

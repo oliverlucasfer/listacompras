@@ -47,6 +47,7 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 │  [________________________ ]    │   │  (link único, expira — Supabase)│
 │                                 │   └─────────────────────────────────┘
 │  ☐ Li a Política de Privacidade │
+│  (ver política)                 │
 │  (     Criar conta        )     │   Após registro: tela "Verifique
 │                                 │   seu e-mail" (reenviar link).
 └─────────────────────────────────┘

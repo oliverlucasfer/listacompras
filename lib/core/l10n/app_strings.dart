@@ -37,6 +37,7 @@ abstract final class AppStrings {
   static const erroRedefinirSenha =
       'Não foi possível salvar a senha. O link pode ter expirado.';
   static const liPoliticaPrivacidade = 'Li a Política de Privacidade';
+  static const verPolitica = 'Ver política';
   static const sair = 'Sair';
   static const sairContaTitulo = 'Sair da conta?';
   static const sairContaMensagem =

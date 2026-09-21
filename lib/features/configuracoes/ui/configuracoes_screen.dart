@@ -5,14 +5,13 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/l10n/app_strings.dart';
-import '../../../core/l10n/politica_privacidade.dart';
 import '../../../core/theme/seletor_tema.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_cabecalho_secao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
 import '../../../core/widgets/app_dialog.dart';
-import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/app_politica_privacidade.dart';
 import '../../auth/providers/auth_providers.dart';
 
 /// Tela Configurações (doc 06 §3, wireframe 10 §5, RF-11): e-mail da conta,
@@ -20,13 +19,6 @@ import '../../auth/providers/auth_providers.dart';
 /// fluxo completo na F5-T02).
 class ConfiguracoesScreen extends ConsumerWidget {
   const ConfiguracoesScreen({super.key});
-
-  void _abrirPolitica(BuildContext context) {
-    AppSheet.mostrar<void>(
-      context,
-      child: SingleChildScrollView(child: Text(politicaPrivacidadeTexto)),
-    );
-  }
 
   Future<void> _confirmarSair(BuildContext context, WidgetRef ref) async {
     final confirmou = await AppDialog.confirmarDestrutivo(
@@ -117,7 +109,7 @@ class ConfiguracoesScreen extends ConsumerWidget {
             leading: const Icon(Icons.privacy_tip_outlined),
             title: const Text(AppStrings.politicaPrivacidade),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _abrirPolitica(context),
+            onTap: () => abrirPoliticaPrivacidade(context),
           ),
           ListTile(
             leading: const Icon(Icons.info_outline),
