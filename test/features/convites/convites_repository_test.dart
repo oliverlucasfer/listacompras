@@ -543,4 +543,111 @@ void main() {
       ),
     );
   });
+
+  group('transferir_dono', () {
+    ConvitesRepository repoCom(ServidorFake servidor) => ConvitesRepository(
+      SupabaseClient(
+        'http://127.0.0.1:54321',
+        'test-key',
+        httpClient: servidor,
+      ),
+    );
+
+    test('deve_chamar_rpc_de_transferencia_quando_transfere', () async {
+      final servidor = ServidorFake((req) {
+        if (req.method == 'POST' && req.url.path.contains('transferir_dono')) {
+          return (200, const <Object?>[]);
+        }
+        return (500, {'message': 'inesperada: ${req.url.path}'});
+      });
+      addTearDown(servidor.close);
+
+      await repoCom(
+        servidor,
+      ).transferirDono(listaId: _listaId, novoDonoId: 'U2');
+
+      final corpo = jsonDecode(servidor.corpoDe(0)) as Map<String, Object?>;
+      expect(corpo, {'p_lista': _listaId, 'p_novo_dono': 'U2'});
+    });
+
+    test('deve_mapear_apenas_dono_quando_servidor_nega', () async {
+      final servidor = ServidorFake((req) {
+        if (req.method == 'POST' && req.url.path.contains('transferir_dono')) {
+          return (
+            400,
+            {
+              'code': 'P0001',
+              'message': 'APENAS_O_DONO_PODE_TRANSFERIR',
+              'details': null,
+              'hint': null,
+            },
+          );
+        }
+        return (500, {'message': 'inesperada: ${req.url.path}'});
+      });
+      addTearDown(servidor.close);
+
+      await expectLater(
+        repoCom(servidor).transferirDono(listaId: _listaId, novoDonoId: 'U2'),
+        throwsA(
+          isA<ErroConvite>()
+              .having((e) => e.code, 'code', 'apenas_dono')
+              .having(
+                (e) => e.message,
+                'message',
+                AppStrings.transferirApenasDono,
+              ),
+        ),
+      );
+    });
+
+    test('deve_mapear_destino_invalido_quando_servidor_nega', () async {
+      final servidor = ServidorFake((req) {
+        if (req.method == 'POST' && req.url.path.contains('transferir_dono')) {
+          return (
+            400,
+            {
+              'code': 'P0001',
+              'message': 'NOVO_DONO_PRECISA_SER_MEMBRO',
+              'details': null,
+              'hint': null,
+            },
+          );
+        }
+        return (500, {'message': 'inesperada: ${req.url.path}'});
+      });
+      addTearDown(servidor.close);
+
+      await expectLater(
+        repoCom(servidor).transferirDono(listaId: _listaId, novoDonoId: 'U2'),
+        throwsA(
+          isA<ErroConvite>().having(
+            (e) => e.message,
+            'message',
+            AppStrings.transferirDestinoInvalido,
+          ),
+        ),
+      );
+    });
+
+    test('deve_mapear_sem_conexao_quando_socket_ao_transferir', () async {
+      final servidor = ServidorFake((req) {
+        throw const SocketException('sem rota');
+      });
+      addTearDown(servidor.close);
+
+      await expectLater(
+        repoCom(servidor).transferirDono(listaId: _listaId, novoDonoId: 'U2'),
+        throwsA(
+          isA<ErroConvite>()
+              .having((e) => e.code, 'code', 'sem_conexao')
+              .having(
+                (e) => e.message,
+                'message',
+                AppStrings.transferirSemConexao,
+              ),
+        ),
+      );
+    });
+  });
 }

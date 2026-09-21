@@ -244,6 +244,18 @@ abstract final class AppStrings {
   static const sairListaTitulo = 'Sair da lista';
   static const sairListaMensagem = 'Você deixará de ter acesso a esta lista.';
   static const membroEntrou = 'Um novo membro entrou na lista';
+  static const transferirDono = 'Transferir dono';
+  static const transferirDonoTitulo = 'Transferir dono?';
+  static const transferirDonoMensagem =
+      'Você deixará de ser dono e passará a editor desta lista.';
+  static const transferirDonoMensagemFinal =
+      'Confirmar a transferência? Depois disso você poderá sair da lista.';
+  static const donoTransferido = 'Dono transferido.';
+  static const transferirApenasDono = 'Só o dono pode transferir a lista.';
+  static const transferirDestinoInvalido =
+      'Escolha um participante da lista para receber.';
+  static const transferirSemConexao = 'Conecte-se para transferir a lista.';
+  static const voceAgoraDono = 'Você agora é dono de uma lista';
 
   static String itensExtraidos(int n) =>
       n == 1 ? '1 item extraído.' : '$n itens extraídos.';

@@ -28,6 +28,22 @@ class ErroConvite implements Exception {
     }
     return const ErroConvite('inesperado', AppStrings.conviteInesperado);
   }
+
+  /// Mapeia os códigos do RPC `transferir_dono` (doc 08 §6, RF-14, F24).
+  static ErroConvite fromCodigoTransferencia(String mensagemServidor) {
+    final maiuscula = mensagemServidor.toUpperCase();
+    if (maiuscula.contains('APENAS_O_DONO_PODE_TRANSFERIR')) {
+      return const ErroConvite('apenas_dono', AppStrings.transferirApenasDono);
+    }
+    if (maiuscula.contains('NOVO_DONO_PRECISA_SER_MEMBRO') ||
+        maiuscula.contains('NAO_PODE_TRANSFERIR_PARA_SI')) {
+      return const ErroConvite(
+        'destino_invalido',
+        AppStrings.transferirDestinoInvalido,
+      );
+    }
+    return const ErroConvite('inesperado', AppStrings.conviteInesperado);
+  }
 }
 
 /// Convite pendente/ativo de uma lista (doc 08 §2, tabela `convites`).

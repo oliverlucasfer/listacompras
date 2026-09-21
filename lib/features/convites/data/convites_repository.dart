@@ -147,6 +147,28 @@ class ConvitesRepository {
     }
   }
 
+  /// Transfere a lista para outro membro (doc 08 §6, RF-14, F24):
+  /// online-only (papel não vive no Drift). Erros do contrato viram
+  /// mensagens amigáveis, como nos demais RPCs.
+  Future<void> transferirDono({
+    required String listaId,
+    required String novoDonoId,
+  }) async {
+    try {
+      await _client.rpc(
+        'transferir_dono',
+        params: {'p_lista': listaId, 'p_novo_dono': novoDonoId},
+      );
+    } on PostgrestException catch (e) {
+      throw ErroConvite.fromCodigoTransferencia(e.message);
+    } catch (e) {
+      if (ehSemConexao(e)) {
+        throw const ErroConvite('sem_conexao', AppStrings.transferirSemConexao);
+      }
+      rethrow;
+    }
+  }
+
   /// Link compartilhável do convite (web: https; nativo: scheme) — doc 08 §1.1.
   String linkConvite(String token) => linkConviteDe(token);
 }
