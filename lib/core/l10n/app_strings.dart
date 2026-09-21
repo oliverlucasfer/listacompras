@@ -130,9 +130,10 @@ abstract final class AppStrings {
   static const categoria = 'Categoria';
   static const preco = 'Preço (R\$)';
   static const erroPrecoInvalido = 'Preço inválido.';
-  static const noCarrinho = 'No carrinho';
 
-  static String semPreco(int n) => n == 1 ? '1 sem preço' : '$n sem preço';
+  static String totalNoCarrinho(String valor, int semPreco) => semPreco == 0
+      ? 'No carrinho: $valor'
+      : 'No carrinho: $valor · $semPreco sem preço';
 
   static const diminuir = 'Diminuir';
   static const aumentar = 'Aumentar';

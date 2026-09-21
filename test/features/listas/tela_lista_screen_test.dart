@@ -22,6 +22,7 @@ import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/domain/categoria.dart';
 import 'package:lista_compras/features/listas/domain/item.dart';
 import 'package:lista_compras/features/listas/domain/lista.dart';
+import 'package:lista_compras/features/listas/domain/preco.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
 import 'package:lista_compras/features/convites/ui/tela_membros_screen.dart';
@@ -1758,7 +1759,90 @@ void main() {
 
   testWidgets('nao_deve_mostrar_total_quando_nada_marcado', (tester) async {
     await abrirListaComPreco(tester, marcado: false);
-    expect(find.textContaining(AppStrings.noCarrinho), findsNothing);
+    expect(
+      find.textContaining(AppStrings.totalNoCarrinho(formatarReais(549), 0)),
+      findsNothing,
+    );
+    await fechar(tester);
+  });
+
+  testWidgets('nao_deve_somar_sem_preco_quando_total', (tester) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    // Marcado COM preço (R$ 5,49) + marcado SEM preço (R$ 999,00 no nome):
+    // o total soma só o primeiro e conta o segundo como "1 sem preço".
+    final comPreco = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      precoCentavos: 549,
+    );
+    final semPreco = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Item caro',
+      precoCentavos: 99900,
+    );
+    await repo.editarItem(comPreco.id, concluido: true);
+    await repo.editarItem(semPreco.id, concluido: true, limparPreco: true);
+    final sync = StreamController<SyncStatus>();
+    sync.add(const Sincronizado());
+    addTearDown(sync.close);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          papelRepositoryProvider.overrideWithValue(
+            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
+          ),
+          syncStatusProvider.overrideWith((ref) => sync.stream),
+        ],
+        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(AppStrings.totalNoCarrinho(formatarReais(549), 1)),
+      findsOneWidget,
+    );
+    expect(find.textContaining(r'R$ 999,00'), findsNothing);
+    await fechar(tester);
+  });
+
+  // ---- Preço no editor de item (F25-T04, RF-21) ----
+
+  testWidgets('deve_salvar_preco_quando_editor_preenchido', (tester) async {
+    await abrirListaComPreco(tester, marcado: false);
+
+    await tester.tap(find.text('Arroz'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.preco),
+      '12,34',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.pumpAndSettle();
+
+    final item = (await db.select(db.itemLocal).get()).single;
+    expect(item.precoCentavos, 1234);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_erro_inline_quando_preco_invalido', (tester) async {
+    await abrirListaComPreco(tester, marcado: false);
+
+    await tester.tap(find.text('Arroz'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.preco),
+      'abc',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.erroPrecoInvalido), findsOneWidget);
+    expect(find.text(AppStrings.editarItem), findsOneWidget); // segue aberto
+    final item = (await db.select(db.itemLocal).get()).single;
+    expect(item.precoCentavos, 549); // inalterado
     await fechar(tester);
   });
 }

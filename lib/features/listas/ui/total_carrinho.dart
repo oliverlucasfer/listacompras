@@ -21,15 +21,6 @@ class TotalCarrinho extends ConsumerWidget {
     final marcados = itens.where((i) => i.concluido).toList();
     if (marcados.isEmpty) return const SizedBox.shrink();
     final semPreco = marcados.where((i) => i.precoCentavos == null).length;
-    final texto = StringBuffer()
-      ..write(AppStrings.noCarrinho)
-      ..write(': ')
-      ..write(formatarReais(totalCarrinho(itens)));
-    if (semPreco > 0) {
-      texto
-        ..write(' · ')
-        ..write(AppStrings.semPreco(semPreco));
-    }
     return Semantics(
       liveRegion: true,
       child: Padding(
@@ -40,7 +31,10 @@ class TotalCarrinho extends ConsumerWidget {
           AppSpacing.xs,
         ),
         child: Text(
-          texto.toString(),
+          AppStrings.totalNoCarrinho(
+            formatarReais(totalCarrinho(itens)),
+            semPreco,
+          ),
           style: Theme.of(context).textTheme.titleMedium,
         ),
       ),
