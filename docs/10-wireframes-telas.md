@@ -331,7 +331,7 @@ AppBar `Membros · {título}`; cada membro mostra o UUID prefixado, o chip de pa
 ┌─────────────────────────────────┐
 │  Adicionar de outra lista    ✕  │
 ├─────────────────────────────────┤
-│  Origem                         │
+│  Lista de origem                │
 │  [ Compras da Semana        ▾ ] │ ← todas menos a atual;
 │                                 │   arquivadas rotuladas "Arquivada"
 │  ( Selecionar todos )           │ ← TextButton (alterna marcar/desmarcar)
@@ -341,7 +341,8 @@ AppBar `Membros · {título}`; cada membro mostra o UUID prefixado, o chip de pa
 │  (Cancelar)   ( Adicionar )     │ ← estático; desabilitado com 0
 └─────────────────────────────────┘
    (confirma → adiciona com a dedup do app [05 §6.3], SnackBar com a
-    contagem; preço não é copiado; sem pendentes → vazio no modal)
+    contagem; preço não é copiado)
+   (origem sem pendentes → "Nenhum item pendente nesta lista.")
 ```
 
 ---

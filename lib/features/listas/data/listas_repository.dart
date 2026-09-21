@@ -293,9 +293,14 @@ class ListasRepository {
     required Unidade unidade,
     required CategoriaItem categoria,
   }) async {
-    final itens = await (_db.select(
-      _db.itemLocal,
-    )..where((i) => i.listaId.equals(listaId) & i.deletadoEm.isNull())).get();
+    final itens =
+        await (_db.select(_db.itemLocal)
+              ..where((i) => i.listaId.equals(listaId) & i.deletadoEm.isNull())
+              ..orderBy([
+                (i) => OrderingTerm.asc(i.ordem),
+                (i) => OrderingTerm.asc(i.id),
+              ]))
+            .get();
     final alvo = normalizarTexto(nome);
     ItemLocalData? existente;
     for (final i in itens) {

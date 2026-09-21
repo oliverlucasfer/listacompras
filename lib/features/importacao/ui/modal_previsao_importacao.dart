@@ -11,6 +11,7 @@ import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../../listas/domain/categoria.dart';
+import '../../listas/domain/quantidade.dart';
 import '../../listas/domain/unidade.dart';
 import '../../listas/providers/listas_providers.dart';
 
@@ -204,7 +205,7 @@ class _LinhaItem extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '${_formatarQuantidade(linha.quantidade)} ${linha.unidade.valor}',
+            '${formatarQuantidade(linha.quantidade)} ${linha.unidade.valor}',
           ),
           IconButton(
             tooltip: AppStrings.editarItem,
@@ -237,7 +238,7 @@ class _PainelEdicao extends StatefulWidget {
 class _PainelEdicaoState extends State<_PainelEdicao> {
   late final _nome = TextEditingController(text: widget.linha.nome);
   late final _quantidade = TextEditingController(
-    text: _formatarQuantidade(widget.linha.quantidade),
+    text: formatarQuantidade(widget.linha.quantidade),
   );
   late Unidade _unidade = widget.linha.unidade;
   late CategoriaItem _categoria = widget.linha.categoria;
@@ -282,7 +283,7 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
   void _passo(int delta) {
     final novo = (_quantidadeLida() ?? 1) + delta;
     if (novo <= 0) return;
-    setState(() => _quantidade.text = _formatarQuantidade(novo));
+    setState(() => _quantidade.text = formatarQuantidade(novo));
     _notificar(quantidade: novo);
   }
 
@@ -364,6 +365,3 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
     );
   }
 }
-
-String _formatarQuantidade(double q) =>
-    q == q.roundToDouble() ? q.toInt().toString() : q.toString();

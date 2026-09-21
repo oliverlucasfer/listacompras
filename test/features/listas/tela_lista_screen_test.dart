@@ -2031,6 +2031,106 @@ void main() {
 
     await fechar(tester);
   });
+
+  testWidgets('deve_rotular_origem_arquivada_quando_escolhe', (tester) async {
+    final repo = ListasRepository(db);
+    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'user-a');
+    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
+    await repo.definirArquivada(origem.id, arquivada: true);
+    await abrirListaF7t07(tester, listaId: atual.id);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.adicionarDeOutraLista));
+    await tester.pumpAndSettle();
+
+    // O rótulo combina título + "Arquivada" (AppStrings.arquivada).
+    final rotulo = AppStrings.tituloListaArquivada('Outra');
+    final dropdown = tester.widget<AppDropdown<String>>(
+      find.byType(AppDropdown<String>),
+    );
+    final rotulos = dropdown.itens
+        .map((item) => (item.child as Text).data)
+        .toList();
+    expect(rotulos, contains(rotulo));
+    // Origem única (arquivada) → já vem selecionada e rotulada no seletor.
+    expect(find.text(rotulo), findsWidgets);
+
+    await fechar(tester);
+  });
+
+  testWidgets('nao_deve_listar_itens_concluidos_da_origem_quando_abre', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'user-a');
+    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
+    await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
+    final detergente = await repo.adicionarItem(
+      listaId: origem.id,
+      nome: 'Detergente',
+    );
+    await repo.editarItem(detergente.id, concluido: true);
+    await abrirListaF7t07(tester, listaId: atual.id);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.adicionarDeOutraLista));
+    await tester.pumpAndSettle();
+
+    final dialogo = find.byType(AlertDialog);
+    // Só o pendente vira opção (checkbox); o concluído da origem não aparece.
+    expect(
+      find.descendant(of: dialogo, matching: find.text('Feijão')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: dialogo, matching: find.text('Detergente')),
+      findsNothing,
+    );
+    expect(
+      find.descendant(of: dialogo, matching: find.byType(Checkbox)),
+      findsOneWidget,
+    );
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_limpar_selecao_quando_troca_a_origem', (tester) async {
+    final repo = ListasRepository(db);
+    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'user-a');
+    final primeira = await repo.criarLista(
+      titulo: 'Primeira',
+      donoId: 'user-a',
+    );
+    await repo.adicionarItem(listaId: primeira.id, nome: 'Feijão');
+    final segunda = await repo.criarLista(titulo: 'Segunda', donoId: 'user-a');
+    await repo.adicionarItem(listaId: segunda.id, nome: 'Leite');
+    await abrirListaF7t07(tester, listaId: atual.id);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.adicionarDeOutraLista));
+    await tester.pumpAndSettle();
+
+    final confirmar = find.widgetWithText(
+      FilledButton,
+      AppStrings.adicionarSelecionados,
+    );
+    await tester.tap(find.text(AppStrings.selecionarTodos));
+    await tester.pumpAndSettle();
+    expect(tester.widget<FilledButton>(confirmar).onPressed, isNotNull);
+
+    // Troca a origem (Segunda → Primeira): a seleção anterior é limpa.
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Primeira').last);
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<FilledButton>(confirmar).onPressed, isNull);
+
+    await fechar(tester);
+  });
 }
 
 class _RepoLimparFalha extends ListasRepository {

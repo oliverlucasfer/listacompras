@@ -160,9 +160,14 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
     if (selecionados == null || selecionados.isEmpty || !context.mounted) {
       return;
     }
-    await ref
-        .read(listasRepositoryProvider)
-        .adicionarItensDedup(idLista, selecionados);
+    try {
+      await ref
+          .read(listasRepositoryProvider)
+          .adicionarItensDedup(idLista, selecionados);
+    } catch (_) {
+      if (context.mounted) mostrarSnackBar(context, AppStrings.erroGenerico);
+      return;
+    }
     if (context.mounted) {
       mostrarSnackBar(
         context,

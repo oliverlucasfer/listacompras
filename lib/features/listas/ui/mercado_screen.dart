@@ -16,6 +16,7 @@ import '../../convites/domain/papel.dart';
 import '../../convites/providers/papel_providers.dart';
 import '../../sync/ui/indicador_sync.dart';
 import '../domain/item.dart';
+import '../domain/quantidade.dart';
 import '../providers/listas_providers.dart';
 import 'total_carrinho.dart';
 
@@ -264,9 +265,6 @@ class _LinhaMercado extends StatelessWidget {
   final bool podeEscrever;
   final VoidCallback onAlternar;
 
-  String _formatarQuantidade(double q) =>
-      q == q.roundToDouble() ? q.toInt().toString() : q.toString();
-
   @override
   Widget build(BuildContext context) {
     final cores = Theme.of(context).colorScheme;
@@ -306,7 +304,7 @@ class _LinhaMercado extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${_formatarQuantidade(item.quantidade)} '
+                      '${formatarQuantidade(item.quantidade)} '
                       '${item.unidade.valor}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: cores.onSurfaceVariant,
