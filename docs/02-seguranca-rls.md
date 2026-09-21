@@ -328,6 +328,59 @@ grant execute on function public.agora_servidor() to authenticated;
 
 > **Por que existe:** a detecção de relógio de dispositivo adiantado compara `ts_local` com o `now()` do **banco** ([03 §5](03-sincronizacao-offline.md), evento 2 de [07 §4](07-qualidade-ci.md)). Não expõe dado algum — só o horário do servidor — e não precisa de `security definer` (não toca tabelas). Migration `0014`.
 
+### 4.6. RPC `transferir_dono` (RF-14, F24)
+
+```sql
+create or replace function public.transferir_dono(p_lista uuid, p_novo_dono uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  papel_novo text;
+begin
+  if auth.uid() is null then
+    raise exception 'AUTENTICACAO_NECESSARIA';
+  end if;
+
+  -- Só o dono atual transfere.
+  if not exists (
+    select 1 from public.listas
+    where id = p_lista and dono_id = auth.uid()
+  ) then
+    raise exception 'APENAS_O_DONO_PODE_TRANSFERIR';
+  end if;
+
+  -- O destino precisa ser membro (editor/leitor) e ≠ eu.
+  if p_novo_dono = auth.uid() then
+    raise exception 'NAO_PODE_TRANSFERIR_PARA_SI';
+  end if;
+  select papel into papel_novo
+  from public.lista_membros
+  where lista_id = p_lista and user_id = p_novo_dono;
+  if papel_novo is null then
+    raise exception 'NOVO_DONO_PRECISA_SER_MEMBRO';
+  end if;
+
+  -- Libera o trigger sync_dono apenas nesta transação (padrão do excluir_conta).
+  perform set_config('app.transferindo_dono', 'true', true);
+
+  -- Ordem importa: demove o antigo ANTES de promover o novo.
+  update public.lista_membros set papel = 'editor'
+  where lista_id = p_lista and user_id = auth.uid();
+
+  update public.lista_membros set papel = 'dono'
+  where lista_id = p_lista and user_id = p_novo_dono;
+end;
+$$;
+
+revoke execute on function public.transferir_dono(uuid, uuid) from public, anon;
+grant execute on function public.transferir_dono(uuid, uuid) to authenticated;
+```
+
+> **Nenhuma policy nova:** o RPC é `security definer` (dono `postgres`, migration `0016`) e atravessa o `force row level security` de `lista_membros`, como `aceitar_convite`/`excluir_conta`. A autorização é interna (só o dono da lista) e `listas.dono_id` continua sendo ajustado **só pelo trigger** `sync_dono` ([01 §6](01-banco-de-dados.md)). O `set_config` de namespace customizado não é acessível via PostgREST — clientes não forjam `app.transferindo_dono`. Fluxo e UX em [08 §6](08-compartilhamento-colaborativo.md).
+
 ---
 
 ## 5. Testes de Negação (obrigatórios na Fase 1)
@@ -375,6 +428,8 @@ Casos que **DEVEM passar**:
 | P-11 | Dono se insere como `dono` em lista nova | sucesso (`0015`, R-18) |
 
 Ferramentas: testes de integração com dois usuários reais (ver [07 Qualidade](07-qualidade-ci.md)) ou script SQL com `set local role authenticated; set local request.jwt.claims = ...` em ambiente dev.
+
+> **Transferência de dono (RF-14, F24):** coberta por `supabase/tests/transferir_dono_tests.sql` (T-01…T-07) rodado no CI — papéis e `listas.dono_id` após a transferência (editor e leitor viram dono), erros `APENAS_O_DONO_PODE_TRANSFERIR`/`NOVO_DONO_PRECISA_SER_MEMBRO`/`NAO_PODE_TRANSFERIR_PARA_SI`, defesa em profundidade sem a flag (o downgrade direto segue bloqueado) e a cascata de `convites.criado_por` (R-17).
 
 ---
 

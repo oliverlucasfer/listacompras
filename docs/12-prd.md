@@ -34,7 +34,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-11 | Exclusão de conta com delete físico em cascata (LGPD) | 06 §3.3.1 | F5 | [06 §3.3.1](06-mvp-entregas.md) |
 | RF-12 | Observabilidade: Sentry com privacidade (sem conteúdo de listas em logs) | 07 §4 | F5 | [07](07-qualidade-ci.md) |
 | RF-13 | Compartilhamento por convite (link/e-mail) com papéis — **Fase 6** (1ª rodada: link-only, [08 §1.1](08-compartilhamento-colaborativo.md)) | 08 | F7 | [08 §9](08-compartilhamento-colaborativo.md) |
-| RF-14 | Transferência de dono — **Fase 6** (adiada — [08 §1.1](08-compartilhamento-colaborativo.md)) | 08 §6 | F7 | [08 §9](08-compartilhamento-colaborativo.md) |
+| RF-14 | Transferência de dono: o dono passa a lista para um membro e vira `editor`; novo dono avisado pelo Realtime | 08 §6 | F24 | [08 §9](08-compartilhamento-colaborativo.md) |
 | RF-15 | Agrupamento da lista por categoria (enum fechado [01 §3](01-banco-de-dados.md)) com sugestão local em camadas (memória por nome → dicionário estático → `outros`) | 05 §6.3 + 01 §4.3 | F6 | [05 §8](05-app-flutter.md) + [03 §8](03-sincronizacao-offline.md) |
 | RF-16 | Importação de lista por texto livre (parser local determinístico, offline) com pré-visualização editável | 05 §6.4 + 10 §4 | F11 | [05 §8](05-app-flutter.md) |
 | RF-17 | Busca/filtro **local (offline)** de listas pelo título (painel) e de itens pelo nome (tela da lista) | 05 §6.2 + §6.3 | F16 | [05 §8](05-app-flutter.md) |
@@ -126,7 +126,8 @@ Cada requisito liga story → design → tarefas ([14](14-tarefas.md)) → verif
 | RF-10 | US-02 | F4 | F4-T06 | Sync + SQL |
 | RF-11 | — | F5 | F5-T02, F5-T03 | Integração RPC |
 | RF-12 | — | F5 | F5-T04 | Sentry smoke |
-| RF-13/14 | US-05, US-06 | F6 | (planejar na F6) | N-11…N-14 |
+| RF-13 | US-05, US-06 | F6 | (planejar na F6) | N-11…N-14 |
+| RF-14 | US-05 | F24 | F24-T01…T04 | SQL T-01…T-07 + unit/widget |
 | RF-15 | US-07, US-08 | F6 | F6-T01…T06 | Repo + sugestão + widgets + sync |
 | RF-16 | US-02 | F11 | F11-T01…T03; F17-T01…T03 | Unit parser + widgets |
 | RF-17 | US-01 | F16 | F16-T01…T03 | Unit busca + widgets |

@@ -37,7 +37,7 @@ Foco: fechar o compartilhamento prometido no [08](08-compartilhamento-colaborati
 
 | ID | Frente | Requisito | Doc dono | Valor | Esforço | Notas |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| B1 | Transferência de dono | RF-14 | 08 §6 | Alto | M | RPC já desenhado; tratar R-17 (`convites.criado_por` sem cascade) |
+| B1 | Transferência de dono | RF-14 | 08 §6 | Alto | M | concluído (F24-T01…T05) |
 | B2 | Convite por e-mail (fluxo B) | RF-13 | 08 §4 | Alto | M | Edge Function `enviar-convite` + painel de convites pendentes |
 | B3 | Notificações push (convite/entrada) | novo | 08, 09 | Médio | G | Fora do MVP; exige infra de push |
 

@@ -577,6 +577,26 @@ Spec: [superpowers/specs/2026-09-21-duplicar-lista-design.md](superpowers/specs/
   Dep: F23-T02 · Docs: [12](12-prd.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [14](14-tarefas.md), [16](16-roadmap-pos-mvp.md)
   CP: RF-20 no 12; §6.2 no 05; §2.5 no 10; Fase 23 marcada e progresso atualizado.
 
+## Fase 24 — Transferência de dono (RF-14)
+
+Spec: [superpowers/specs/2026-09-21-transferencia-dono-design.md](superpowers/specs/2026-09-21-transferencia-dono-design.md) · Requisito: RF-14 (transferência de dono). · Docs donos: 01, 02, 08, 05, 10, 06 §3.3.1, 12.
+
+- [x] **F24-T01** — Banco: migration `0016` (RPC `transferir_dono`, `sync_dono` v3, R-17) + testes SQL + CI
+  Dep: — · Docs: [01 §6](01-banco-de-dados.md), [02 §4.6](02-seguranca-rls.md), [08 §6](08-compartilhamento-colaborativo.md)
+  CP: RPC só dono/destino membro/≠eu; demove→promove com `listas.dono_id` só pelo trigger; T-01…T-07 verdes; FK `convites.criado_por` com `on delete cascade`; step novo no CI.
+- [x] **F24-T02** — App: `ConvitesRepository.transferirDono` + erros + strings
+  Dep: F24-T01 · Docs: [08 §6](08-compartilhamento-colaborativo.md)
+  CP: RPC online-only com `p_lista`/`p_novo_dono`; erros mapeados em pt-BR (`apenas_dono`/`destino_invalido`/`sem_conexao`); 4 unit tests verdes.
+- [x] **F24-T03** — App: "Transferir dono" na tela de membros com confirmação dupla
+  Dep: F24-T02 · Docs: [05 §6.6](05-app-flutter.md), [10 §3.7](10-wireframes-telas.md)
+  CP: item no menu só para dono e alvo ≠ eu; confirmação dupla; sucesso atualiza o papel local (editor), invalida membros e mostra SnackBar; 3 widget tests verdes.
+- [x] **F24-T04** — App: aviso ao novo dono via Realtime
+  Dep: F24-T03 · Docs: [08 §6](08-compartilhamento-colaborativo.md)
+  CP: UPDATE de `lista_membros` para `dono` sinaliza `donoTransferido`; SnackBar genérico "Você agora é dono de uma lista" com guarda por `listaId`; testes de repositório e de tela verdes.
+- [x] **F24-T05** — Docs donos e fechamento
+  Dep: F24-T04 · Docs: [01](01-banco-de-dados.md), [02](02-seguranca-rls.md), [06 §3.3.1](06-mvp-entregas.md), [08](08-compartilhamento-colaborativo.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
+  CP: docs donos refletem a transferência; R-17 marcado resolvido; Fase 24 na tabela de progresso (143/141).
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -602,7 +622,8 @@ Spec: [superpowers/specs/2026-09-21-duplicar-lista-design.md](superpowers/specs/
 | F21 Pendências do fechamento | 4 | 4 |
 | F22 Modo mercado e itens frequentes | 5 | 5 |
 | F23 Duplicar lista | 3 | 3 |
-| **Total** | **138** | **136** |
+| F24 Transferência de dono | 5 | 5 |
+| **Total** | **143** | **141** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

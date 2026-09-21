@@ -29,7 +29,7 @@ Papéis já definidos no enum de `lista_membros.papel` ([01 §4.2](01-banco-de-d
 
 ### 1.1. Decisões da rodada (2026-09-10 — spec [`superpowers/specs/2026-09-10-compartilhamento-link-design.md`](superpowers/specs/2026-09-10-compartilhamento-link-design.md))
 
-Primeira rodada da fase é **link-only**: fluxos `email` (§4) e Edge Function `enviar-convite` ficam para uma rodada futura — o schema as prevê, o app ainda não as usa. O **link compartilhável depende da plataforma** (ADR-012, [05 §2.1](05-app-flutter.md)): no **web** é `https://<origem>/entrar?token=...` (URL normal do navegador, graças ao path URL strategy) e no **nativo** é o **custom scheme** `br.com.oliverlucas.listacompras://entrar?token=...` (host `entrar`, mais um intent-filter igual ao do login-callback da F3-T03); em ambos a UI aceita colar o token cru. No web a URL do convite chega direto ao `go_router`; a ponte `deeplinkConviteProvider` só escuta o `app_links` no nativo. Enquanto a hospedagem pública não sai (F5-T06 adiada), a origem do link https é `Uri.base.origin` em dev ou `APP_WEB_URL` no nativo; universal link fica para uma rodada futura. **Transferência de dono (§6) adiada**: nesta rodada o dono não consegue sair da lista; membros comuns saem normalmente (`sync_dono` não é alterado). Realtime: `lista_membros` e `convites` vão ao publication (§7); o painel de pendências faz fetch ao abrir — o canal de `convites` empurra evento, mas a UI não depende dele nesta rodada (sem e-mail, o painel não tem entradas).
+Primeira rodada da fase é **link-only**: fluxos `email` (§4) e Edge Function `enviar-convite` ficam para uma rodada futura — o schema as prevê, o app ainda não as usa. O **link compartilhável depende da plataforma** (ADR-012, [05 §2.1](05-app-flutter.md)): no **web** é `https://<origem>/entrar?token=...` (URL normal do navegador, graças ao path URL strategy) e no **nativo** é o **custom scheme** `br.com.oliverlucas.listacompras://entrar?token=...` (host `entrar`, mais um intent-filter igual ao do login-callback da F3-T03); em ambos a UI aceita colar o token cru. No web a URL do convite chega direto ao `go_router`; a ponte `deeplinkConviteProvider` só escuta o `app_links` no nativo. Enquanto a hospedagem pública não sai (F5-T06 adiada), a origem do link https é `Uri.base.origin` em dev ou `APP_WEB_URL` no nativo; universal link fica para uma rodada futura. **Transferência de dono (§6) entregue na F24 (RF-14)**: o dono transfere a lista para um membro, vira `editor` e pode sair; o `sync_dono` v3 (migration `0016`) reconhece a marca da transferência. Realtime: `lista_membros` e `convites` vão ao publication (§7); o painel de pendências faz fetch ao abrir — o canal de `convites` empurra evento, mas a UI não depende dele nesta rodada (sem e-mail, o painel não tem entradas).
 
 ---
 
@@ -173,51 +173,23 @@ $$;
 * Revogar convite pendente: dono marca `estado = 'revogado'`; token deixa de ser aceito. O sheet "Convidar" lista os convites pendentes já criados nesta lista (não só o recém-gerado) para o dono revogar (F21-T03).
 * **Feedback (F14-T05):** remover membro e trocar papel dão SnackBar ("Membro removido" / "Papel atualizado") e compartilhar o convite dá "Link compartilhado" — antes, essas ações eram silenciosas (só o erro aparecia).
 
-## 6. Transferência de dono (processo explícito)
+## 6. Transferência de dono (processo explícito — entregue na F24/RF-14)
 
-Hoje o trigger `sync_dono` ([01 §6](01-banco-de-dados.md)) **impede** qualquer mudança de dono. A transferência será a única exceção, via RPC atômico:
+O trigger `sync_dono` ([01 §6](01-banco-de-dados.md)) **impede** remover/rebaixar o único `dono`. A transferência é a única exceção, e agora é entregue: RPC `transferir_dono` (`security definer`, migration `0016`; SQL completo em [02 §4.6](02-seguranca-rls.md)), online-only.
 
-```sql
-create or replace function public.transferir_dono(p_lista uuid, p_novo_dono uuid)
-returns void
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  papel_novo text;
-begin
-  -- só o dono atual pode transferir
-  if not exists (
-    select 1 from public.listas
-    where id = p_lista and dono_id = auth.uid()
-  ) then
-    raise exception 'APENAS_O_DONO_PODE_TRANSFERIR';
-  end if;
+**Regras do RPC:**
+* Só o **dono atual** transfere → `APENAS_O_DONO_PODE_TRANSFERIR`.
+* O destino precisa ser **membro** da lista → `NOVO_DONO_PRECISA_SER_MEMBRO`; e diferente de mim → `NAO_PODE_TRANSFERIR_PARA_SI`.
+* Marca a transação com `set_config('app.transferindo_dono', 'true', true)`; o `sync_dono` v3 reconhece a marca (o restante do trigger fica igual: bloqueia 2º dono e ajusta `listas.dono_id`).
+* **Ordem importa:** demove o antigo para `editor` **antes** de promover o novo — o contador de "1 dono" nunca vê dois donos.
+* `listas.dono_id` **não** é tocado pelo RPC: quem o ajusta é o trigger (fonte única).
+* O ex-dono vira `editor` e **pode sair da lista** em seguida (§5; a policy já permite sair onde não é dono).
 
-  select papel into papel_novo from public.lista_membros
-  where lista_id = p_lista and user_id = p_novo_dono;
+**UX (F24):** o dono abre a lista de membros → menu `⋮` do membro → **"Transferir dono"** (o item só aparece para o dono e nunca no próprio usuário; [05 §6.6](05-app-flutter.md)) → **confirmação dupla** (a primeira explica que ele deixará de ser dono e passará a editor; a segunda confirma). No sucesso, o papel local vira `editor`, a lista de membros é recarregada e um SnackBar **"Dono transferido."** confirma. A operação é **online-only** (papel não vive no Drift): offline → erro amigável.
 
-  if papel_novo is null then
-    raise exception 'NOVO_DONO_PRECISA_SER_MEMBRO';
-  end if;
+**Aviso ao novo dono (Realtime):** o UPDATE de `lista_membros` que o promove a `dono` chega pela tabela publicada (§7) e dispara o SnackBar genérico **"Você agora é dono de uma lista"** na tela da lista — mesmo padrão do "membro entrou" (F7-T07), sem nome (o RLS não expõe perfis).
 
-  -- rebaixa o dono atual para editor e promove o novo — mesma transação
-  update public.lista_membros set papel = 'editor'
-  where lista_id = p_lista and user_id = auth.uid();
-
-  update public.lista_membros set papel = 'dono'
-  where lista_id = p_lista and user_id = p_novo_dono;
-
-  update public.listas set dono_id = p_novo_dono
-  where id = p_lista;
-end;
-$$;
-```
-
-**Alteração necessária no trigger `sync_dono`:** permitir execução quando invocada dentro de `transferir_dono` (ex.: variável `current_setting('app.transferindo_dono', true)` setada pelo RPC, que faz o trigger pular os checks). Migration da Fase 6.
-
-**UX da transferência:** dono abre lista de membros → "Transferir dono" → escolhe membro → confirmação dupla explicando que perderá poderes de dono. Novo dono notificado via Realtime.
+**R-17 resolvido:** a FK `convites.criado_por` ganhou `on delete cascade` (migration `0016`) — depois de transferir, o ex-dono com convites criados consegue excluir a conta ([06 §3.3.1](06-mvp-entregas.md)).
 
 ## 7. Notificações e Realtime (Fase 6)
 

@@ -265,6 +265,41 @@ Com 0 pendentes, a área principal dá lugar ao vazio "Tudo comprado" com CTA pa
 ### 3.6. Chips de itens frequentes na lista (F22/RF-19)
 Acima do campo de adicionar, uma faixa horizontal rolável de `ActionChip` (alvo ≥48dp, com `Semantics` de ação "Adicionar <nome>") mostra até 8 sugestões quando o campo está vazio; tocar adiciona o item. O ranking vem do histórico local do Drift (peso 2 para a lista aberta, exclui pendentes, limiar ≥2) — nenhum dado de rede.
 
+### 3.7. Tela de Membros (RF-13/RF-14 — [05 §6.6](05-app-flutter.md))
+AppBar `Membros · {título}`; cada membro mostra o UUID prefixado, o chip de papel e — para o dono, em membros que **não** são ele — o menu `⋮` (papel editor↔leitor, remover e **transferir dono**).
+
+```
+┌─────────────────────────────────┐
+│  ← Membros · Compras da Semana  │
+├─────────────────────────────────┤
+│  d0a1b2c3 (Você)          dono  │
+│  e4f5a6b7               editor ⋮│
+│  a1b2c3d4               leitor ⋮│
+└─────────────────────────────────┘
+   (sem menu no próprio usuário; [⋮] só para o dono, alvo ≠ eu:
+    Editor / Leitor / Transferir dono / Remover)
+```
+
+**Confirmação dupla do "Transferir dono" (F24/RF-14):**
+```
+┌─────────────────────────────────┐
+│  Transferir dono?               │
+│  Você deixará de ser dono e     │ ← 1º passo
+│  passará a editor desta lista.  │
+│  (Cancelar)        (Continuar)  │
+└─────────────────────────────────┘
+                ▼
+┌─────────────────────────────────┐
+│  Transferir dono?               │
+│  Confirmar a transferência?     │ ← 2º passo
+│  Depois disso você poderá sair  │
+│  da lista.                      │
+│  (Cancelar)   (Transferir dono) │
+└─────────────────────────────────┘
+   (sucesso → SnackBar "Dono transferido." e "Sair da lista" aparece;
+    o novo dono recebe "Você agora é dono de uma lista" pelo Realtime)
+```
+
 ---
 
 ## 4. Importação de lista (RF-16 — [04](04-importacao-lista.md))

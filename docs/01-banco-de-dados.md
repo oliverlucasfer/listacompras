@@ -204,7 +204,7 @@ Tabela de convites por link/e-mail: `id`, `lista_id` (CASCADE), `criado_por` (FK
 
 * **Dono do detalhe:** [08 §2](08-compartilhamento-colaborativo.md) (tabela e índices) e [02 §4.4](02-seguranca-rls.md) (policies). Migration `0007`; entram no publication (§7).
 * **`atualizado_em`:** carimbado pelo trigger `trg_convites_updated` (`touch_convites_updated_at`, migration `0015`) — mesmo contrato de `listas`/`itens_lista` (§5).
-* **Pendência conhecida (R-17):** `criado_por` não tem `ON DELETE CASCADE` — hoje não bloqueia a exclusão de conta (só o dono cria convite e a lista cai em cascata), mas deve entrar na revisão de cascatas se a transferência de dono (Fase 6) for implementada.
+* **R-17 resolvido (migration `0016`):** `criado_por` ganhou `ON DELETE CASCADE` — com a transferência de dono (RF-14), o ex-dono pode deixar de ser dono e ainda ter convites criados; sem a cascata, excluir a conta dele falharia por FK.
 
 ---
 
@@ -252,7 +252,7 @@ create trigger trg_itens_updated
 
 ## 6. Trigger de Consistência do Dono
 
-Garante que `listas.dono_id` reflita sempre o único membro com `papel = 'dono'`:
+Garante que `listas.dono_id` reflita sempre o único membro com `papel = 'dono'`. A versão atual (`v3`, migration `0016`) reconhece as duas marcas de processo explícito: exclusão de conta (`app.excluindo_conta`, `0005`) e transferência de dono (`app.transferindo_dono`, RPC `transferir_dono` — [08 §6](08-compartilhamento-colaborativo.md)):
 
 ```sql
 create or replace function public.sync_dono()
@@ -284,12 +284,16 @@ begin
     end if;
   end if;
 
-  -- Impede remoção/downgrade do dono (transferência é processo explícito, Fase 6).
-  -- Usa old.papel (snapshot do trigger) — consultar a tabela num trigger AFTER
-  -- veria a linha já alterada/apagada e nunca bloquearia.
+  -- Impede remoção/downgrade do dono (transferência é processo explícito).
+  -- Exceções: exclusão de conta (migration 0005) e RPC transferir_dono
+  -- (migration 0016). Usa old.papel (snapshot do trigger) — consultar a tabela
+  -- num trigger AFTER veria a linha já alterada/apagada e nunca bloquearia.
   if (tg_op = 'DELETE' and old.papel = 'dono')
      or (tg_op = 'UPDATE' and old.papel = 'dono' and new.papel <> 'dono') then
-    raise exception 'Transferência de dono deve ser processo explícito';
+    if coalesce(current_setting('app.excluindo_conta', true), '') <> 'true'
+       and coalesce(current_setting('app.transferindo_dono', true), '') <> 'true' then
+      raise exception 'Transferência de dono deve ser processo explícito';
+    end if;
   end if;
 
   return coalesce(new, old);
@@ -335,8 +339,8 @@ where not exists (
 **Regras de negócio implementadas:**
 1. Ao inserir uma lista, o **servidor** cria a linha do dono em `lista_membros` com `papel = 'dono'` (trigger `trg_listas_cria_dono`, migration `0010`). A policy de INSERT de `listas` exige `dono_id = auth.uid()` (ver [02](02-seguranca-rls.md)); a associação do dono é derivada dele.
 2. Não é possível ter 2 donos.
-3. Não é possível remover ou rebaixar o dono sem processo explícito de transferência — **planejado na Fase 6, ver [08 §6](08-compartilhamento-colaborativo.md)** (RPC `transferir_dono` + alteração neste trigger).
-4. **Exceção — exclusão de conta ([06 §3.3.1](06-mvp-entregas.md), migration `0005`):** o RPC `excluir_conta()` marca a transação com `set_config('app.excluindo_conta', 'true')` e o trigger reconhece a marca, permitindo a remoção do dono em cascata — a conta inteira está sendo apagada, junto com suas listas. O `set_config` de namespace customizado só é executável por SQL direto (não via PostgREST), e o RPC é `security definer` — clientes não conseguem forjar a marca.
+3. Não é possível remover ou rebaixar o dono sem processo explícito de transferência — o RPC `transferir_dono` (migration `0016`, [08 §6](08-compartilhamento-colaborativo.md)) é esse processo: `security definer`, só o dono atual transfere para um membro existente; ele demove o antigo para `editor` e promove o novo na mesma transação, marcando `app.transferindo_dono` para o trigger liberar o downgrade. `listas.dono_id` continua sendo ajustado **só pelo trigger**.
+4. **Exceção — exclusão de conta ([06 §3.3.1](06-mvp-entregas.md), migration `0005`):** o RPC `excluir_conta()` marca a transação com `set_config('app.excluindo_conta', 'true')` e o trigger reconhece a marca, permitindo a remoção do dono em cascata — a conta inteira está sendo apagada, junto com suas listas. O `set_config` de namespace customizado só é executável por SQL direto (não via PostgREST), e o RPC é `security definer` — clientes não conseguem forjar a marca. O `sync_dono` v3 reconhece as duas marcas (`app.excluindo_conta` e `app.transferindo_dono`).
 
 ---
 

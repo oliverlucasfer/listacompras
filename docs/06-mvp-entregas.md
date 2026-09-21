@@ -71,7 +71,7 @@ Uma fase só está "pronta" quando:
 * Fluxo: Configurações → "Excluir conta" → confirmação dupla (senha + diálogo) → execução.
 * **Estratégia: delete físico em cascata** (ADR-008):
   1. RPC `excluir_conta()` (SECURITY DEFINER) executa: `delete from auth.users where id = auth.uid()`.
-  2. Cascades já existentes propagam: `lista_membros` (participações), `listas` onde `dono_id`, `itens_lista` por CASCADE de lista e `convites` por CASCADE de lista. `convites.criado_por` não tem CASCADE: hoje não bloqueia a exclusão (só o dono cria convite e a lista dele cai junto) — entra na revisão de cascatas se a transferência de dono (Fase 6) for implementada.
+  2. Cascades propagam: `lista_membros` (participações), `listas` onde `dono_id`, `itens_lista` por CASCADE de lista, `convites` por CASCADE de lista e `convites` por `criado_por` (migration `0016`, R-17) — o ex-dono de uma lista transferida não fica preso por convites que criou.
   3. Sessão invalidada; app limpa cache local e fila de pendências.
 * Listas compartilhadas onde o usuário era apenas membro: sua participação some; a lista do outro dono permanece (dados do titular removidos das membresias).
 * Confirmação final para o usuário: "Esta ação é permanente e apaga todas as suas listas."

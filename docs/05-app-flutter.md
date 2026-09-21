@@ -214,6 +214,13 @@ Tela dedicada `/mercado/:listaId` para usar o celular no mercado, sem a densidad
 * **Estados:** carregando (`AppEsqueleto`), erro (`AppEstadoErro` com retry em `itensDaListaProvider`), lista não encontrada e "tudo comprado" (0 pendentes) com CTA para voltar; enquanto o papel não carrega, o default é leitor (somente leitura).
 * O botão de entrada fica na AppBar da tela da lista e é **escondido para leitor** (§6.3).
 
+### 6.6. Tela de Membros (RF-13/RF-14)
+
+Rota `/membros/:listaId` (AppBar `Membros · {título}`). Lista os membros (UUID prefixado), o chip de papel e o menu `⋮` das ações do dono (mudar papel editor↔leitor, remover, **transferir dono**). Fluxo em [08 §8](08-compartilhamento-colaborativo.md); layout em [10 §3.7](10-wireframes-telas.md).
+
+* **Transferir dono (RF-14, F24):** item "Transferir dono" no menu `⋮` de cada membro — visível **só para o dono** e **nunca no próprio usuário**. Abre **confirmação dupla** (a primeira explica que o dono deixará de ser dono e passará a `editor`; a segunda confirma). No sucesso, o papel local vira `editor` (o botão "Sair da lista" passa a aparecer), a lista de membros é recarregada e um SnackBar "Dono transferido." confirma. Operação **online-only** (papel não vive no Drift); offline → erro amigável.
+* **Aviso ao novo dono (Realtime):** quem recebe a lista vê o SnackBar genérico "Você agora é dono de uma lista" na tela da lista (sem nome — o RLS não expõe perfis).
+
 ---
 
 ## 7. Design System
