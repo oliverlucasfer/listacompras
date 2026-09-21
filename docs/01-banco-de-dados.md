@@ -109,6 +109,7 @@ A **ordem do enum define a ordem dos grupos na UI** (doc 05 §6.3). Labels pt-BR
 | `titulo` | `text NOT NULL` | Nome da lista (ex: "Compras da Semana") |
 | `dono_id` | `uuid NOT NULL FK → auth.users(id)` | Criador. **Denormalização** de `lista_membros` para queries RLS rápidas; consistência por trigger (Seção 6) |
 | `deletado_em` | `timestamptz` nullable | Soft delete / tombstone |
+| `arquivada_em` | `timestamptz` nullable | Arquivada nesse instante (RF-22, F26) — `null` = **ativa**; `timestamptz` = arquivada (reversível: volta a `null`). Só o **dono** muda a coluna (trigger). Coluna aditiva da `0018` |
 
 ```sql
 create table public.listas (
@@ -117,11 +118,18 @@ create table public.listas (
   updated_at  timestamptz not null default now(),
   titulo      text not null check (length(btrim(titulo)) between 1 and 120),
   dono_id     uuid not null references auth.users(id) on delete cascade,
-  deletado_em timestamptz
+  deletado_em timestamptz,
+  arquivada_em timestamptz
 );
 
 create index idx_listas_dono on public.listas (dono_id) where deletado_em is null;
+
+create index idx_listas_dono_ativas
+  on public.listas (dono_id)
+  where deletado_em is null and arquivada_em is null;
 ```
+
+> **Arquivo da lista (RF-22, F26):** `arquivada_em` **não tem policy nova** — herda o RLS de `listas`. O trigger `trg_listas_arquivo_dono` (função `protege_arquivo_dono()`, migration `0018`) rejeita a mudança da coluna por quem não é o dono (`APENAS_O_DONO_PODE_ARQUIVAR`); renomear (dono **ou** editor) não toca `arquivada_em` e segue normal. O índice parcial `idx_listas_dono_ativas` cobre a leitura das listas ativas do painel (não deletada e não arquivada).
 
 ### 4.2. `lista_membros`
 

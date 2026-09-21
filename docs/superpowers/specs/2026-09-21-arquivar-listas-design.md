@@ -68,7 +68,7 @@ create trigger trg_listas_arquivo_dono
   - novo `Future<void> definirArquivada(String id, {required bool arquivada})` — grava `arquivada_em` (`agora`/`null`) + `updated_at` e enfileira `UPDATE` (mesmo caminho de `renomearLista`);
   - `duplicarLista` cria a nova lista **sem** arquivo (default `null`).
 - `lib/features/sync/data/aplicador_remoto.dart` (`_aplicarLista`): mapear `arquivada_em` com tolerância (ausente → `null`).
-- Os streams do painel (`watchListas`, `watchListasComContagem`) **não** mudam: continuam devolvendo tudo menos `deletado_em`; o filtro de arquivadas é do painel.
+- Os streams do painel continuam devolvendo tudo menos `deletado_em` — o filtro (mostrar/ocultar arquivadas) é do painel. A **projeção** do `watchListasComContagem` foi ajustada para carregar `arquivada_em` (o `watchListas` já lê a linha completa), para que o filtro e o rótulo tenham o dado na tela. O aplicador tolera `arquivada_em` ausente → `null`.
 
 ## 5. UI (painel de listas)
 

@@ -59,6 +59,7 @@ Tabela local Drift (`mutacoes_pendentes`):
 * Retry com **backoff exponencial** (1s → 2s → 4s → ... → máx. 5 min); após 10 tentativas, a mutação entra em estado `erro` visível na UI com ação "tentar de novo".
 * **Payload de itens inclui `categoria`** (enum fechado [01 §3.2](01-banco-de-dados.md), Fase 6/ADR-011). Clientes antigos (1.0.0+2) sem a coluna recebem o default no INSERT e o upsert LWW não toca a coluna fora do payload — categoria existente preservada ([01 §4.3](01-banco-de-dados.md)).
 * **Payload de itens inclui `preco_centavos`** (preço unitário em centavos [01 §4.3](01-banco-de-dados.md), RF-21/F25). O aplicador trata a coluna com **tolerância**: ausente ou não numérica → `null` (linha gravada por app antigo), como em `categoria`; no merge LWW a coluna só é tocada quando presente no payload.
+* **Payload de listas inclui `arquivada_em`** (estado de arquivo da lista [01 §4.1](01-banco-de-dados.md), RF-22/F26). O aplicador trata a coluna com **tolerância**: ausente → `null` (linha gravada por app antigo); no merge LWW a coluna só é tocada quando presente no payload. A coluna herda o RLS de `listas` (sem policy nova); a autoria da mudança é restrita ao dono pelo trigger ([01 §4.1](01-banco-de-dados.md)).
 
 ---
 

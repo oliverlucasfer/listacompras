@@ -81,8 +81,9 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 ### 2.1. Estado preenchido
 ```
 ┌─────────────────────────────────┐
-│  [▣] Minhas Listas       [≡]    │ ← [▣] marca do app (F13-T02)
-│  ● Sincronizado            (1)  │ ← [03 §6] sincronizado/pendente/offline
+│  [▣] Minhas Listas   [▤] [≡]    │ ← [▣] marca do app (F13-T02)
+│  ● Sincronizado            (1)  │ ← [03 §6] sync/pendente/offline;
+│                                 │   [▤] "Mostrar arquivadas" (RF-22)
 ├─────────────────────────────────┤
 │  ┌───────────────────────────┐  │
 │  │ Compras da Semana      [⋮] │  │ ← [⋮] (F14-T06): renomear/excluir
@@ -101,6 +102,8 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardTheme` zera a margem do `Card`, então o espaçamento entre cards empilhados é responsabilidade do layout da lista (`ListView.separated`, F12-T05).
 
 **Marca no cabeçalho (F13-T02):** as telas de **topo** (Minhas Listas / Compartilhadas, sem botão voltar) mostram a marca do app (`AppLogo`, 28dp) à esquerda do título; telas internas (`push`: lista, membros, configurações, auth) mantêm apenas o texto. Título de tela em **24sp bold** (F13-T03, doc [15 §1](15-design-system.md)).
+
+**Arquivar listas (RF-22, F26):** o card de uma lista arquivada exibe o chip **"Arquivada"** ao lado do título (só aparece com o toggle ligado, pois arquivadas ficam ocultas por padrão). O toggle `[▤]` "Mostrar arquivadas" fica na AppBar e vale para **Minhas** e **Compartilhadas**; o menu `⋮` do **dono** mostra "Arquivar" (ativa) ou "Desarquivar" (arquivada visível) — comportamento em [05 §6.2](../05-app-flutter.md).
 
 ### 2.2. Estado vazio
 ```

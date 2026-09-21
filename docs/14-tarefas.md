@@ -618,6 +618,23 @@ Spec: [superpowers/specs/2026-09-21-precos-total-design.md](superpowers/specs/20
   Dep: F25-T04 · Docs: [01](01-banco-de-dados.md), [03](03-sincronizacao-offline.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
   CP: RF-21 no 12 (tabela, rastreabilidade e fora de escopo ajustado); docs donos refletem preço/total; Fase 25 na tabela de progresso (148/146).
 
+## Fase 26 — Arquivar listas (RF-22)
+
+Spec: [superpowers/specs/2026-09-21-arquivar-listas-design.md](superpowers/specs/2026-09-21-arquivar-listas-design.md) · Requisito: RF-22 (arquivar/desarquivar listas). · Docs donos: 01, 03, 05, 10, 12.
+
+- [x] **F26-T01** — Banco: migration `0018` (`arquivada_em` + índice parcial + trigger) + testes SQL + CI
+  Dep: — · Docs: [01 §4.1](01-banco-de-dados.md)
+  CP: `arquivada_em timestamptz` nullable (`null` = ativa); índice `idx_listas_dono_ativas`; trigger `protege_arquivo_dono`/`trg_listas_arquivo_dono` restringe a autoria da mudança ao dono; sem policy nova; ARQ-01…ARQ-03 verdes; step novo no CI.
+- [x] **F26-T02** — App: `arquivadaEm` no Drift, domínio, repositório e aplicador
+  Dep: F26-T01 · Docs: [01 §4.1](01-banco-de-dados.md), [03 §3](03-sincronizacao-offline.md)
+  CP: `Lista.arquivadaEm` (`DateTime?`); `definirArquivada(String, {required bool arquivada})` (Drift + fila); payload de lista com `arquivada_em`; aplicador tolera ausente → `null`; `duplicarLista` nasce ativa; migração Drift v4→v5; unit tests verdes.
+- [x] **F26-T03** — UI: toggle "Mostrar arquivadas", ação no card e rótulo
+  Dep: F26-T02 · Docs: [05 §6.2](05-app-flutter.md), [10 §2](10-wireframes-telas.md)
+  CP: toggle "Mostrar arquivadas" na AppBar (ocultas por padrão, aplica a Minhas e Compartilhadas); menu `⋮` do dono com Arquivar/Desarquivar; chip "Arquivada" no card; busca respeita o toggle; widget tests verdes.
+- [x] **F26-T04** — Docs donos e fechamento
+  Dep: F26-T03 · Docs: [01](01-banco-de-dados.md), [03](03-sincronizacao-offline.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
+  CP: RF-22 no 12 (tabela e rastreabilidade); docs donos refletem arquivo (coluna/índice/trigger, payload, toggle/rótulo); A2 do 16 concluído; Fase 26 na tabela de progresso (152/150).
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -645,7 +662,8 @@ Spec: [superpowers/specs/2026-09-21-precos-total-design.md](superpowers/specs/20
 | F23 Duplicar lista | 3 | 3 |
 | F24 Transferência de dono | 5 | 5 |
 | F25 Preço e total | 5 | 5 |
-| **Total** | **148** | **146** |
+| F26 Arquivar listas | 4 | 4 |
+| **Total** | **152** | **150** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
