@@ -582,22 +582,18 @@ git commit -m "F24-T02: repositorio transferirDono com erros amigaveis (RF-14)"
 
 - [ ] **Step 1: Escrever os testes que falham**
 
-Acrescentar ao final de `void main()` em `test/features/convites/tela_membros_screen_test.dart` (seguindo o harness já existente no arquivo: `ServidorFake`, `ProviderScope` com `donoAtualIdProvider`, `papelRepositoryProvider`):
+Acrescentar ao final de `void main()` em `test/features/convites/tela_membros_screen_test.dart` (o arquivo já tem o harness `abrir(tester, servidor, usuarioId:)`, `fechar`, `_linhasMembros()` e o import de `TelaMembrosScreen`; adicione o import de `package:lista_compras/features/convites/domain/papel.dart`):
 
 ```dart
-  testWidgets('deve_mostrar_transferir_dono_so_para_dono', (tester) async {
-    // dono D vê a opção no menu de outro membro, mas não em si mesmo.
+  testWidgets('deve_mostrar_transferir_dono_no_menu_do_membro', (tester) async {
     final servidor = ServidorFake((req) {
       if (req.method == 'GET' && req.url.path.contains('/lista_membros')) {
         return (200, _linhasMembros());
       }
-      if (req.method == 'GET' && req.url.path.contains('/listas')) {
-        return (200, _listaLinha());
-      }
-      return (500, {'message': 'inesperada: ${req.url.path}'});
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
     });
     addTearDown(servidor.close);
-    await abrirTela(tester, servidor);
+    await abrir(tester, servidor, usuarioId: 'U1');
 
     await tester.tap(find.byIcon(Icons.more_vert).first);
     await tester.pumpAndSettle();
@@ -610,13 +606,10 @@ Acrescentar ao final de `void main()` em `test/features/convites/tela_membros_sc
       if (req.method == 'GET' && req.url.path.contains('/lista_membros')) {
         return (200, _linhasMembros());
       }
-      if (req.method == 'GET' && req.url.path.contains('/listas')) {
-        return (200, _listaLinha());
-      }
-      return (500, {'message': 'inesperada: ${req.url.path}'});
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
     });
     addTearDown(servidor.close);
-    await abrirTela(tester, servidor);
+    await abrir(tester, servidor, usuarioId: 'U1');
 
     await tester.tap(find.byIcon(Icons.more_vert).first);
     await tester.pumpAndSettle();
@@ -633,8 +626,9 @@ Acrescentar ao final de `void main()` em `test/features/convites/tela_membros_sc
     await fechar(tester);
   });
 
-  testWidgets('deve_transferir_quando_confirma_duas_vezes', (tester) async {
-    var papelAtualizado = false;
+  testWidgets('deve_transferir_e_atualizar_papel_quando_confirma_duas_vezes', (
+    tester,
+  ) async {
     final servidor = ServidorFake((req) {
       if (req.method == 'POST' &&
           req.url.path.contains('transferir_dono')) {
@@ -643,13 +637,10 @@ Acrescentar ao final de `void main()` em `test/features/convites/tela_membros_sc
       if (req.method == 'GET' && req.url.path.contains('/lista_membros')) {
         return (200, _linhasMembros());
       }
-      if (req.method == 'GET' && req.url.path.contains('/listas')) {
-        return (200, _listaLinha());
-      }
-      return (500, {'message': 'inesperada: ${req.url.path}'});
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
     });
     addTearDown(servidor.close);
-    await abrirTela(tester, servidor, aoAtualizarPapel: () => papelAtualizado = true);
+    await abrir(tester, servidor, usuarioId: 'U1');
 
     await tester.tap(find.byIcon(Icons.more_vert).first);
     await tester.pumpAndSettle();
@@ -662,13 +653,17 @@ Acrescentar ao final de `void main()` em `test/features/convites/tela_membros_sc
     );
     await tester.pumpAndSettle();
 
-    expect(papelAtualizado, isTrue);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(TelaMembrosScreen)),
+    );
+    expect(
+      container.read(papelRepositoryProvider).papelDe(_listaId),
+      Papel.editor,
+    );
     expect(find.text(AppStrings.donoTransferido), findsOneWidget);
     await fechar(tester);
   });
 ```
-
-> O harness `abrirTela`/`fechar`, os helpers `_linhasMembros`/`_listaLinha` e o parâmetro `aoAtualizarPapel` podem precisar ser adicionados/ajustados no arquivo seguindo o que já existe — use o harness real do arquivo (ele já cria `ServidorFake`, `donoAtualIdProvider = 'D'` e o `PapelRepository`); reaproveite os helpers existentes em vez de duplicar. Se `aoAtualizarPapel` for difícil de costurar, valide o efeito pelo `papelRepository` lido do container, como em `minhas_listas_screen_test.dart:221-226`.
 
 - [ ] **Step 2: Rodar e ver falhar**
 
@@ -765,14 +760,18 @@ git commit -m "F24-T03: transferir dono na tela de membros com confirmacao dupla
 
 - [ ] **Step 1: Escrever os testes que falham**
 
-Em `test/features/convites/papel_repository_test.dart`, acrescentar ao final de `void main()`:
+Em `test/features/convites/papel_repository_test.dart`, acrescentar ao final de `void main()` (o arquivo já tem o helper `_cliente(ServidorFake)` e `_payloadMembro({evento, newRecord, oldRecord})`):
 
 ```dart
   test('deve_sinalizar_dono_transferido_quando_update_para_dono', () {
-    final repo = PapelRepository(Supabase.instance.client);
+    final repo = PapelRepository(_cliente(ServidorFake((req) => (500, {}))));
     aplicarEventoMembro(
       usuarioAtual: 'U1',
-      payload: _payloadUpdate(paraPapel: 'dono', dePapel: 'editor'),
+      payload: _payloadMembro(
+        evento: PostgresChangeEvent.update,
+        newRecord: {'lista_id': 'l1', 'user_id': 'U1', 'papel': 'dono'},
+        oldRecord: {'lista_id': 'l1', 'user_id': 'U1', 'papel': 'editor'},
+      ),
       onPerdaAcesso: () {},
       papelRepository: repo,
     );
@@ -782,10 +781,14 @@ Em `test/features/convites/papel_repository_test.dart`, acrescentar ao final de 
   });
 
   test('nao_deve_sinalizar_dono_quando_ja_era_dono', () {
-    final repo = PapelRepository(Supabase.instance.client);
+    final repo = PapelRepository(_cliente(ServidorFake((req) => (500, {}))));
     aplicarEventoMembro(
       usuarioAtual: 'U1',
-      payload: _payloadUpdate(paraPapel: 'dono', dePapel: 'dono'),
+      payload: _payloadMembro(
+        evento: PostgresChangeEvent.update,
+        newRecord: {'lista_id': 'l1', 'user_id': 'U1', 'papel': 'dono'},
+        oldRecord: {'lista_id': 'l1', 'user_id': 'U1', 'papel': 'dono'},
+      ),
       onPerdaAcesso: () {},
       papelRepository: repo,
     );
@@ -793,22 +796,24 @@ Em `test/features/convites/papel_repository_test.dart`, acrescentar ao final de 
   });
 ```
 
-> `_payloadUpdate` segue o payload de `lista_membros` já montado no arquivo (`papel_repository_test.dart:34-46`); ajuste o helper existente para parametrizar `papel`/`old papel` em vez de criar outro.
-
-Em `test/features/listas/tela_lista_screen_test.dart`, acrescentar (espelhando os testes de `membroEntrou`, linhas ~1195-1220):
+Em `test/features/listas/tela_lista_screen_test.dart`, acrescentar ao final de `void main()`, reusando o helper `abrirListaF7t07(tester)` já existente (linhas ~1164-1194):
 
 ```dart
   testWidgets('deve_mostrar_voce_agora_dono_quando_papel_vira_dono', (
     tester,
   ) async {
-    // ... montar a tela como no teste de `membroEntrou` ...
-    // papelRepo.notificarDono(listaId);
-    // await tester.pumpAndSettle();
+    final (papelRepo, listaId) = await abrirListaF7t07(tester);
+    expect(find.text(AppStrings.voceAgoraDono), findsNothing);
+
+    papelRepo.notificarDono(listaId);
+    await tester.pump();
+
     expect(find.text(AppStrings.voceAgoraDono), findsOneWidget);
+    expect(papelRepo.donoTransferido.value, isNull); // consumido pela tela
+
+    await fechar(tester);
   });
 ```
-
-> Reuse o setup do teste `deve_mostrar_membro_entrou...` do mesmo arquivo (servidor fake, `papelRepo`); troque `notificarEntrada` por `notificarDono` e a string esperada.
 
 - [ ] **Step 2: Rodar e ver falhar**
 
@@ -945,5 +950,5 @@ git commit -m "F24-T05: docs donos e fechamento da Fase 24 (RF-14)"
 ## Self-review (preenchido pelo autor do plano)
 
 - **Cobertura do spec:** §3 banco (RPC, trigger v3, R-17) → Task 1; §4.1 repositório → Task 2; §4.2 tela de membros → Task 3; §4.3 Realtime → Task 4; §4.4 strings → Task 2; §5 testes → Tasks 1–4; §6 decisões → refletidas; docs → Task 5.
-- **Placeholders:** os Steps de UI (Task 3 e Task 4) apontam para o harness existente do arquivo de teste em vez de repetir código que só o arquivo conhece — o implementador lê o arquivo; todo o código novo de produção está completo. Nenhum "TBD".
+- **Placeholders:** nenhum "TBD"; todo o código novo — de produção e de teste — está completo e usa os harnesses reais dos arquivos de teste do repo (`abrir`, `_linhasMembros`, `_cliente`, `_payloadMembro`, `abrirListaF7t07`).
 - **Consistência de tipos:** `transferir_dono(p_lista, p_novo_dono)`; `transferirDono({listaId, novoDonoId})`; `ErroConvite.fromCodigoTransferencia`; `donoTransferido`/`notificarDono`/`consumirDono`; `voceAgoraDono`; progresso 143/141 — idênticos entre tarefas.
