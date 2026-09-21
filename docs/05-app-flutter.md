@@ -227,7 +227,7 @@ Rota `/membros/:listaId` (AppBar `Membros · {título}`). Lista os membros (UUID
 * **Transferir dono (RF-14, F24):** item "Transferir dono" no menu `⋮` de cada membro — visível **só para o dono** e **nunca no próprio usuário**. Abre **confirmação dupla** (a primeira explica que o dono deixará de ser dono e passará a `editor`; a segunda confirma). No sucesso, o papel local vira `editor` (o botão "Sair da lista" passa a aparecer), a lista de membros é recarregada e um SnackBar "Dono transferido." confirma. Operação **online-only** (papel não vive no Drift); offline → erro amigável.
 * **Aviso ao novo dono (Realtime):** quem recebe a lista vê o SnackBar genérico "Você agora é dono de uma lista" na tela da lista (sem nome — o RLS não expõe perfis).
 
-### 6.7. Tela de Configurações (RF-24)
+### 6.7. Configurações — Aparência e Ordenar categorias (RF-24)
 
 * **Aparência:** seletor de tema Claro/Escuro/Sistema (`SeletorTema`, doc [15 §2](15-design-system.md)).
 * **Ordenar categorias (RF-24, F28):** item abaixo do seletor abre `/categorias` (fora do shell), a `TelaOrdenarCategorias` — lista arrastável das 11 categorias com ação **"Restaurar padrão"** (volta à ordem do enum, com confirmação). A preferência é **global** e **local** (SharedPreferences, chave `ordem_categorias`, como o tema); sem schema/RLS/sync. Detalhe em [10 §5.1](10-wireframes-telas.md).

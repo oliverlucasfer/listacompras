@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/features/listas/domain/categoria.dart';
+import 'package:lista_compras/features/listas/domain/ordem_categorias.dart';
 import 'package:lista_compras/features/listas/ui/tela_ordenar_categorias.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -107,7 +108,7 @@ void main() {
       lessThan(dyDe(tester, CategoriaItem.mercearia)),
     );
 
-    // Long-press (handle padrão do Android) no 1º item e arrasta para baixo.
+    // Segura a alça explícita do 1º item e arrasta para baixo (1 posição).
     final gesture = await tester.startGesture(
       tester.getCenter(find.byIcon(Icons.drag_handle).first),
     );
@@ -118,7 +119,9 @@ void main() {
     await tester.pumpAndSettle();
 
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString('ordem_categorias'), isNotNull);
+    // Arrastar o 1º item para baixo 1 posição: ordem crua (0 → 2).
+    final esperada = serializarOrdem(moverItem(CategoriaItem.values, 0, 2));
+    expect(prefs.getString('ordem_categorias'), esperada);
     expect(
       dyDe(tester, CategoriaItem.mercearia),
       lessThan(dyDe(tester, CategoriaItem.hortifruti)),

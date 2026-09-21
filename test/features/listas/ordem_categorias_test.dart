@@ -43,6 +43,14 @@ void main() {
     expect(moverItem([1, 2, 3], 2, 0), [3, 1, 2]); // sobe
   });
 
+  test('deve_manter_ordem_quando_moverItem_mesmo_indice', () {
+    expect(moverItem([1, 2, 3], 1, 1), [1, 2, 3]);
+  });
+
+  test('deve_mover_para_o_fim_quando_moverItem_newIndex_final', () {
+    expect(moverItem([1, 2, 3], 0, 3), [2, 3, 1]);
+  });
+
   test('deve_converter_indice_do_onReorderItem_quando_desce', () {
     // onReorderItem entrega o índice final já ajustado (0→1 = desceu 1).
     expect(indiceCruDeReordenacao(0, 1), 2);

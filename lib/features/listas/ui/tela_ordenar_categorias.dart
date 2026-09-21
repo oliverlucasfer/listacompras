@@ -45,12 +45,16 @@ class TelaOrdenarCategorias extends ConsumerWidget {
           ),
           Expanded(
             child: ReorderableListView(
+              buildDefaultDragHandles: false,
               children: [
-                for (final c in ordem)
+                for (var i = 0; i < ordem.length; i++)
                   ListTile(
-                    key: ValueKey(c.valor),
-                    leading: const Icon(Icons.drag_handle),
-                    title: Text(c.rotulo),
+                    key: ValueKey(ordem[i].valor),
+                    leading: ReorderableDragStartListener(
+                      index: i,
+                      child: const Icon(Icons.drag_handle),
+                    ),
+                    title: Text(ordem[i].rotulo),
                   ),
               ],
               onReorderItem: (oldIndex, newIndex) {

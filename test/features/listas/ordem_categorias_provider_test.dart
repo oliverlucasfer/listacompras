@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/features/listas/domain/categoria.dart';
+import 'package:lista_compras/features/listas/domain/ordem_categorias.dart';
 import 'package:lista_compras/features/listas/providers/ordem_categorias_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -28,16 +29,14 @@ void main() {
     addTearDown(container.dispose);
     await container.read(ordemCategoriasProvider.future);
 
-    await container.read(ordemCategoriasProvider.notifier).definir([
+    final nova = [
       CategoriaItem.limpeza,
       ...CategoriaItem.values.where((c) => c != CategoriaItem.limpeza),
-    ]);
+    ];
+    await container.read(ordemCategoriasProvider.notifier).definir(nova);
 
     final prefs = await SharedPreferences.getInstance();
-    expect(
-      prefs.getString('ordem_categorias'),
-      startsWith(CategoriaItem.limpeza.valor),
-    );
+    expect(prefs.getString('ordem_categorias'), serializarOrdem(nova));
   });
 
   test('deve_voltar_ao_enum_quando_restaurar_padrao', () async {

@@ -421,11 +421,11 @@ Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstad
 ├─────────────────────────────────┤
 │  Arraste para a ordem dos       │
 │  corredores do seu mercado.     │
+│  ( Restaurar padrão )           │ ← volta à ordem do enum (confirma)
 │  ⠿ Hortifrúti                   │
 │  ⠿ Mercearia                    │
 │  ⠿ Frios                        │
 │  …                              │ ← as 11 categorias, alça ≥48dp
-│  ( Restaurar padrão )           │ ← volta à ordem do enum (confirma)
 └─────────────────────────────────┘
 ```
 
