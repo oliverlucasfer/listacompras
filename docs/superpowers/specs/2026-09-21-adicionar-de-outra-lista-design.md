@@ -57,7 +57,7 @@ Future<void> adicionarItensDedup(String listaId, Iterable<Item> itens);
 - **Modal** (`AppSheet`/diálogo) com:
   1. **Seletor da lista de origem** — dropdown com as listas do usuário (Minhas + Compartilhadas) menos a atual; listas arquivadas aparecem com o rótulo "Arquivada". Fonte: `listasComContagemProvider`/Drift (offline).
   2. **Lista de pendentes** da origem — `CheckboxListTile` por item (nome, quantidade/unidade), com **"Selecionar todos"**; itens concluídos da origem não aparecem.
-  3. Ação **Adicionar (N)** — desabilitada com 0 selecionados.
+  3. Ação **Adicionar** (estática) — desabilitada com 0 selecionados.
 - **Resultado:** ao confirmar, `adicionarItensDedup` roda em sequência e a tela mostra SnackBar com quantos entraram (`AppStrings.itensAdicionadosDeOutra(n)`); o modal fecha.
 - **Origem vazia/sem pendentes:** estado vazio no modal ("Nenhum item pendente nesta lista").
 - **Acessibilidade:** checkboxes com alvo ≥48dp, `Semantics` no seletor; escala 2.0 sem overflow.

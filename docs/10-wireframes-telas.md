@@ -334,12 +334,11 @@ AppBar `Membros · {título}`; cada membro mostra o UUID prefixado, o chip de pa
 │  Origem                         │
 │  [ Compras da Semana        ▾ ] │ ← todas menos a atual;
 │                                 │   arquivadas rotuladas "Arquivada"
-│  ☑ Selecionar todos             │
+│  ( Selecionar todos )           │ ← TextButton (alterna marcar/desmarcar)
 │  ☑ Arroz            1 kg        │ ← só pendentes (alvo ≥48dp)
 │  ☐ Leite            2 un        │
 │                                 │
-│  1 de 2 selecionados            │
-│  (Cancelar)   (Adicionar 1)     │ ← desabilitado com 0
+│  (Cancelar)   ( Adicionar )     │ ← estático; desabilitado com 0
 └─────────────────────────────────┘
    (confirma → adiciona com a dedup do app [05 §6.3], SnackBar com a
     contagem; preço não é copiado; sem pendentes → vazio no modal)
