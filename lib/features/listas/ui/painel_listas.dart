@@ -269,7 +269,14 @@ class _CardListaState extends ConsumerState<_CardLista> {
     );
   }
 
+  int get _pendentes => widget.contagem.totalItens - widget.contagem.concluidos;
+
   List<PopupMenuEntry<String>> _itensDono(BuildContext context) => [
+    if (_pendentes > 0)
+      const PopupMenuItem(
+        value: 'duplicar',
+        child: Text(AppStrings.comprarDeNovo),
+      ),
     const PopupMenuItem(value: 'renomear', child: Text(AppStrings.renomear)),
     PopupMenuItem(
       value: 'excluir',
@@ -280,14 +287,21 @@ class _CardListaState extends ConsumerState<_CardLista> {
     ),
   ];
 
-  List<PopupMenuEntry<String>> _itensMembro() => const [
-    PopupMenuItem(value: 'membros', child: Text(AppStrings.membros)),
-    PopupMenuItem(value: 'sair', child: Text(AppStrings.sairDaLista)),
+  List<PopupMenuEntry<String>> _itensMembro() => [
+    if (_pendentes > 0)
+      const PopupMenuItem(
+        value: 'duplicar',
+        child: Text(AppStrings.comprarDeNovo),
+      ),
+    const PopupMenuItem(value: 'membros', child: Text(AppStrings.membros)),
+    const PopupMenuItem(value: 'sair', child: Text(AppStrings.sairDaLista)),
   ];
 
   void _acaoMenu(String acao) {
     final listaId = widget.contagem.lista.id;
     switch (acao) {
+      case 'duplicar':
+        _duplicar();
       case 'renomear':
         _abrirSheetRenomear();
       case 'excluir':
@@ -296,6 +310,33 @@ class _CardListaState extends ConsumerState<_CardLista> {
         context.push('/membros/$listaId');
       case 'sair':
         confirmarSairDaLista(context, ref, listaId);
+    }
+  }
+
+  Future<void> _duplicar() async {
+    final lista = widget.contagem.lista;
+    String? criadoId;
+    await abrirSheetTitulo(
+      context,
+      titulo: AppStrings.comprarDeNovo,
+      descricao: AppStrings.duplicarDescricao(_pendentes),
+      rotuloBotao: AppStrings.criarLista,
+      valorInicial: lista.titulo,
+      mensagemSucesso: AppStrings.listaCriada,
+      onSalvar: (nome) async {
+        final nova = await ref
+            .read(listasRepositoryProvider)
+            .duplicarLista(
+              origemId: lista.id,
+              titulo: nome,
+              donoId: ref.read(donoAtualIdProvider),
+            );
+        ref.read(papelRepositoryProvider).atualizar(nova.id, Papel.dono);
+        criadoId = nova.id;
+      },
+    );
+    if (criadoId != null && mounted) {
+      context.push('/lista/$criadoId');
     }
   }
 

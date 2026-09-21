@@ -93,6 +93,12 @@ abstract final class AppStrings {
   static const renomearLista = 'Renomear lista';
   static const listaCriada = 'Lista criada.';
   static const listaRenomeada = 'Lista renomeada.';
+  static const comprarDeNovo = 'Comprar de novo';
+
+  static String duplicarDescricao(int n) => n == 1
+      ? '1 item pendente será copiado.'
+      : '$n itens pendentes serão copiados.';
+
   static const excluirLista = 'Excluir lista';
 
   static String excluirListaTitulo(String titulo) => 'Excluir "$titulo"?';

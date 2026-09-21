@@ -16,6 +16,7 @@ class SheetTituloLista extends StatefulWidget {
     required this.onSalvar,
     this.valorInicial,
     this.mensagemSucesso,
+    this.descricao,
   });
 
   final String titulo;
@@ -23,6 +24,7 @@ class SheetTituloLista extends StatefulWidget {
   final Future<void> Function(String nome) onSalvar;
   final String? valorInicial;
   final String? mensagemSucesso;
+  final String? descricao;
 
   @override
   State<SheetTituloLista> createState() => _SheetTituloListaState();
@@ -90,6 +92,13 @@ class _SheetTituloListaState extends State<SheetTituloLista> {
               ),
             ],
           ),
+          if (widget.descricao != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              widget.descricao!,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
           const SizedBox(height: AppSpacing.lg),
           AppCampoTexto(
             controller: _controller,
@@ -117,6 +126,7 @@ Future<void> abrirSheetTitulo(
   required Future<void> Function(String nome) onSalvar,
   String? valorInicial,
   String? mensagemSucesso,
+  String? descricao,
 }) {
   return AppSheet.mostrar<void>(
     context,
@@ -125,6 +135,7 @@ Future<void> abrirSheetTitulo(
       rotuloBotao: rotuloBotao,
       valorInicial: valorInicial,
       mensagemSucesso: mensagemSucesso,
+      descricao: descricao,
       onSalvar: onSalvar,
     ),
   );

@@ -374,4 +374,81 @@ void main() {
 
     await fechar(tester);
   });
+
+  testWidgets('deve_mostrar_comprar_de_novo_quando_ha_pendentes', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await abrirTela(tester);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.comprarDeNovo), findsOneWidget);
+    await fechar(tester);
+  });
+
+  testWidgets('nao_deve_mostrar_comprar_de_novo_quando_sem_pendentes', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await repo.editarItem(item.id, concluido: true);
+    await abrirTela(tester);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.comprarDeNovo), findsNothing);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_criar_e_navegar_quando_confirma_duplicar', (tester) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await abrirTela(tester);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.comprarDeNovo));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.duplicarDescricao(1)), findsOneWidget);
+    expect(
+      find.widgetWithText(TextField, AppStrings.nomeDaLista),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.criarLista));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('lista-'), findsOneWidget);
+    expect(find.text(AppStrings.listaCriada), findsOneWidget);
+
+    final listas = await db.select(db.listaLocal).get();
+    expect(listas, hasLength(2));
+    await fechar(tester);
+  });
+
+  testWidgets('nao_deve_criar_quando_cancela_duplicar', (tester) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await abrirTela(tester);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.comprarDeNovo));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip(AppStrings.cancelar));
+    await tester.pumpAndSettle();
+
+    final listas = await db.select(db.listaLocal).get();
+    expect(listas, hasLength(1));
+    await fechar(tester);
+  });
 }
