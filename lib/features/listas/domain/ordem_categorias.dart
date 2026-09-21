@@ -31,6 +31,11 @@ List<CategoriaItem> desserializarOrdem(String? csv) {
   return normalizarOrdem(lida);
 }
 
+/// Converte o índice final do `onReorderItem` (já ajustado pelo Flutter) no
+/// índice cru que o `onReorder`/`moverItem` esperam.
+int indiceCruDeReordenacao(int oldIndex, int newIndex) =>
+    newIndex > oldIndex ? newIndex + 1 : newIndex;
+
 /// Move `oldIndex` para `newIndex` (mesma semântica do `onReorder` do
 /// `ReorderableListView`: ao descer, o índice final é decrementado).
 List<T> moverItem<T>(List<T> lista, int oldIndex, int newIndex) {

@@ -18,13 +18,11 @@ class TelaOrdenarCategorias extends ConsumerWidget {
         ref.watch(ordemCategoriasProvider).value ?? CategoriaItem.values;
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.ordenarCategorias),
-        actions: [
-          TextButton(
-            onPressed: () => _confirmarRestaurar(context, ref),
-            child: const Text(AppStrings.restaurarPadrao),
-          ),
-        ],
+        title: const Text(
+          AppStrings.ordenarCategorias,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -32,6 +30,18 @@ class TelaOrdenarCategorias extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Text(AppStrings.ordenarCategoriasDica),
+          ),
+          // Fora da AppBar: título + ação não cabem na mesma linha em escala
+          // de texto 2.0 (a Row de actions transbordava).
+          Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: TextButton(
+                onPressed: () => _confirmarRestaurar(context, ref),
+                child: const Text(AppStrings.restaurarPadrao),
+              ),
+            ),
           ),
           Expanded(
             child: ReorderableListView(
@@ -43,8 +53,6 @@ class TelaOrdenarCategorias extends ConsumerWidget {
                     title: Text(c.rotulo),
                   ),
               ],
-              // `onReorderItem` já entrega o índice final (ajustado); o
-              // `moverItem` espera o índice do `onReorder` (pré-remoção).
               onReorderItem: (oldIndex, newIndex) {
                 ref
                     .read(ordemCategoriasProvider.notifier)
@@ -52,7 +60,7 @@ class TelaOrdenarCategorias extends ConsumerWidget {
                       moverItem(
                         ordem,
                         oldIndex,
-                        newIndex >= oldIndex ? newIndex + 1 : newIndex,
+                        indiceCruDeReordenacao(oldIndex, newIndex),
                       ),
                     );
               },
@@ -70,7 +78,7 @@ class TelaOrdenarCategorias extends ConsumerWidget {
       mensagem: AppStrings.restaurarPadraoMensagem,
       confirmar: AppStrings.restaurarPadrao,
     );
-    if (confirmou) {
+    if (confirmou && context.mounted) {
       await ref.read(ordemCategoriasProvider.notifier).restaurarPadrao();
     }
   }

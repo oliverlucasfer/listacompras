@@ -42,4 +42,17 @@ void main() {
     expect(moverItem([1, 2, 3], 0, 2), [2, 1, 3]); // desce
     expect(moverItem([1, 2, 3], 2, 0), [3, 1, 2]); // sobe
   });
+
+  test('deve_converter_indice_do_onReorderItem_quando_desce', () {
+    // onReorderItem entrega o índice final já ajustado (0→1 = desceu 1).
+    expect(indiceCruDeReordenacao(0, 1), 2);
+  });
+
+  test('deve_converter_indice_do_onReorderItem_quando_sobe', () {
+    expect(indiceCruDeReordenacao(2, 0), 0);
+  });
+
+  test('deve_converter_indice_do_onReorderItem_quando_mesma_posicao', () {
+    expect(indiceCruDeReordenacao(1, 1), 1);
+  });
 }
