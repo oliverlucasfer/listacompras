@@ -50,6 +50,7 @@ class TelaListaScreen extends ConsumerStatefulWidget {
 class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
   PapelRepository? _papelRepo;
   ValueNotifier<String?>? _membroEntrou;
+  ValueNotifier<String?>? _donoTransferido;
   final _busca = TextEditingController();
   bool _buscando = false;
 
@@ -68,18 +69,30 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
     mostrarSnackBar(context, AppStrings.membroEntrou);
   }
 
+  /// Feedback "você agora é dono" (RF-14): UPDATE de `lista_membros` que
+  /// promove o usuário a dono sinaliza o notifier — sem nome, o RLS não
+  /// expõe perfis.
+  void _aoVirarDono() {
+    if (!mounted || _donoTransferido?.value == null) return;
+    _papelRepo?.consumirDono();
+    mostrarSnackBar(context, AppStrings.voceAgoraDono);
+  }
+
   @override
   void initState() {
     super.initState();
     _papelRepo = ref.read(papelRepositoryProvider);
     _membroEntrou = _papelRepo?.membroEntrou;
     _membroEntrou?.addListener(_aoMembroEntrar);
+    _donoTransferido = _papelRepo?.donoTransferido;
+    _donoTransferido?.addListener(_aoVirarDono);
   }
 
   @override
   void dispose() {
     _busca.dispose();
     _membroEntrou?.removeListener(_aoMembroEntrar);
+    _donoTransferido?.removeListener(_aoVirarDono);
     super.dispose();
   }
 

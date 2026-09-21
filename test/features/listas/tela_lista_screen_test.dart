@@ -1685,6 +1685,21 @@ void main() {
     expect(find.byTooltip(AppStrings.modoMercado), findsOneWidget);
     await fechar(tester);
   });
+
+  testWidgets('deve_mostrar_voce_agora_dono_quando_papel_vira_dono', (
+    tester,
+  ) async {
+    final (papelRepo, listaId) = await abrirListaF7t07(tester);
+    expect(find.text(AppStrings.voceAgoraDono), findsNothing);
+
+    papelRepo.notificarDono(listaId);
+    await tester.pump();
+
+    expect(find.text(AppStrings.voceAgoraDono), findsOneWidget);
+    expect(papelRepo.donoTransferido.value, isNull); // consumido pela tela
+
+    await fechar(tester);
+  });
 }
 
 class _RepoLimparFalha extends ListasRepository {

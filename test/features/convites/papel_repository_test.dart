@@ -305,4 +305,36 @@ void main() {
 
     expect(perdeu, isFalse);
   });
+
+  test('deve_sinalizar_dono_transferido_quando_update_para_dono', () {
+    final repo = PapelRepository(_cliente(ServidorFake((req) => (500, {}))));
+    aplicarEventoMembro(
+      usuarioAtual: 'U1',
+      payload: _payloadMembro(
+        evento: PostgresChangeEvent.update,
+        newRecord: {'lista_id': 'l1', 'user_id': 'U1', 'papel': 'dono'},
+        oldRecord: {'lista_id': 'l1', 'user_id': 'U1', 'papel': 'editor'},
+      ),
+      onPerdaAcesso: () {},
+      papelRepository: repo,
+    );
+    expect(repo.donoTransferido.value, 'l1');
+    repo.consumirDono();
+    expect(repo.donoTransferido.value, isNull);
+  });
+
+  test('nao_deve_sinalizar_dono_quando_ja_era_dono', () {
+    final repo = PapelRepository(_cliente(ServidorFake((req) => (500, {}))));
+    aplicarEventoMembro(
+      usuarioAtual: 'U1',
+      payload: _payloadMembro(
+        evento: PostgresChangeEvent.update,
+        newRecord: {'lista_id': 'l1', 'user_id': 'U1', 'papel': 'dono'},
+        oldRecord: {'lista_id': 'l1', 'user_id': 'U1', 'papel': 'dono'},
+      ),
+      onPerdaAcesso: () {},
+      papelRepository: repo,
+    );
+    expect(repo.donoTransferido.value, isNull);
+  });
 }

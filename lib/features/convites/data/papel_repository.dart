@@ -20,6 +20,10 @@ class PapelRepository {
   /// one-shot setado pelo realtime e consumido/resettado pela tela aberta.
   final ValueNotifier<String?> membroEntrou = ValueNotifier(null);
 
+  /// Última lista onde o usuário virou dono por transferência (RF-14): sinal
+  /// one-shot, espelho de [membroEntrou].
+  final ValueNotifier<String?> donoTransferido = ValueNotifier(null);
+
   Map<String, Papel> get valores => _papeis.value;
 
   /// Papel do usuário corrente na lista; null = desconhecido
@@ -74,6 +78,11 @@ class PapelRepository {
   /// A tela da lista aberta consome o sinal após mostrar o feedback.
   void consumirEntrada() => membroEntrou.value = null;
 
+  /// UPDATE de `lista_membros` que promove o usuário a dono (RF-14).
+  void notificarDono(String listaId) => donoTransferido.value = listaId;
+
+  void consumirDono() => donoTransferido.value = null;
+
   void remover(String listaId) {
     final copia = {..._papeis.value}..remove(listaId);
     _notificar(copia);
@@ -82,6 +91,7 @@ class PapelRepository {
   void limpar() {
     _notificar(const {});
     membroEntrou.value = null;
+    donoTransferido.value = null;
   }
 
   void _notificar(Map<String, Papel> novos) {

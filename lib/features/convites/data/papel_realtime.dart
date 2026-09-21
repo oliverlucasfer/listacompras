@@ -42,6 +42,12 @@ void aplicarEventoMembro({
       } on ArgumentError {
         // Papel fora do enum fechado (servidor divergiu): linha ignorada.
       }
+      // Transferência de dono para mim (RF-14): avisa a UI aberta.
+      if (evento == PostgresChangeEvent.update &&
+          payload.newRecord['papel'] == 'dono' &&
+          payload.oldRecord['papel'] != 'dono') {
+        papelRepository?.notificarDono(listaId);
+      }
     case _:
       break;
   }
