@@ -413,6 +413,45 @@ class ListasRepository {
     return concluidos.map(Item.fromLocal).toList();
   }
 
+  /// Duplica uma lista a partir dos itens **pendentes** (RF-20, "comprar de
+  /// novo"): cria uma lista nova do `donoId` e copia nome/quantidade/unidade/
+  /// categoria de cada pendente, na ordem original; a origem não é tocada.
+  /// Offline-first: reusa `criarLista`/`adicionarItem` e a fila de mutações.
+  Future<Lista> duplicarLista({
+    required String origemId,
+    required String titulo,
+    required String donoId,
+  }) async {
+    final pendentes =
+        await (_db.select(_db.itemLocal)
+              ..where(
+                (i) =>
+                    i.listaId.equals(origemId) &
+                    i.deletadoEm.isNull() &
+                    i.concluido.equals(false),
+              )
+              ..orderBy([
+                (i) => OrderingTerm.asc(i.ordem),
+                (i) => OrderingTerm.asc(i.id),
+              ]))
+            .get();
+    if (pendentes.isEmpty) {
+      throw StateError('não há itens pendentes para duplicar');
+    }
+
+    final nova = await criarLista(titulo: titulo, donoId: donoId);
+    for (final item in pendentes) {
+      await adicionarItem(
+        listaId: nova.id,
+        nome: item.nome,
+        quantidade: item.quantidade,
+        unidade: Unidade.fromValor(item.unidade),
+        categoria: CategoriaItem.fromValor(item.categoria),
+      );
+    }
+    return nova;
+  }
+
   // ---- Internos ----
 
   Future<Map<String, Object?>> _payloadLista(String id) async {
