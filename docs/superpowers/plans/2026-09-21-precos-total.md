@@ -231,86 +231,74 @@ Em `test/features/listas/listas_repository_test.dart`, acrescentar ao final de `
   });
 ```
 
-Em `test/features/sync/aplicador_remoto_test.dart`, acrescentar ao final de `void main()` (seguindo o harness do arquivo — ele monta um `registro` de item e chama o aplicador):
+Em `test/features/sync/aplicador_remoto_test.dart`, acrescentar ao final de `void main()` (o arquivo já tem `db` no `setUp`/`tearDown` e usa a classe `AplicadorRemoto(db).aplicar(tabela, registro)`):
 
 ```dart
   test('deve_mapear_preco_ausente_para_null_quando_linha_antiga', () async {
-    final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
+    final aplicador = AplicadorRemoto(db);
     await db.into(db.listaLocal).insert(
           ListaLocalCompanion.insert(
-            id: 'l1',
-            createdAt: DateTime.now().toUtc(),
-            updatedAt: DateTime.now().toUtc(),
+            id: 'l-preco-1',
+            createdAt: DateTime.utc(2026, 9, 21),
+            updatedAt: DateTime.utc(2026, 9, 21),
             titulo: 'X',
             donoId: 'u',
           ),
         );
 
-    await aplicarRemoto(
-      db,
-      'itens_lista',
-      {
-        'id': 'i1',
-        'lista_id': 'l1',
-        'nome': 'Arroz',
-        'quantidade': 1,
-        'unidade': 'un',
-        'categoria': 'outros',
-        'concluido': false,
-        'ordem': 0,
-        'created_at': DateTime.now().toUtc().toIso8601String(),
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-        'deletado_em': null,
-      },
-    );
+    await aplicador.aplicar('itens_lista', {
+      'id': 'i-preco-1',
+      'lista_id': 'l-preco-1',
+      'nome': 'Arroz',
+      'quantidade': 1,
+      'unidade': 'un',
+      'categoria': 'outros',
+      'concluido': false,
+      'ordem': 0,
+      'created_at': '2026-09-21T12:00:00.000Z',
+      'updated_at': '2026-09-21T12:00:00.000Z',
+      'deletado_em': null,
+    });
 
     final linha = await (db.select(
       db.itemLocal,
-    )..where((i) => i.id.equals('i1'))).getSingle();
+    )..where((i) => i.id.equals('i-preco-1'))).getSingle();
     expect(linha.precoCentavos, isNull);
   });
 
   test('deve_mapear_preco_quando_presente', () async {
-    final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
+    final aplicador = AplicadorRemoto(db);
     await db.into(db.listaLocal).insert(
           ListaLocalCompanion.insert(
-            id: 'l1',
-            createdAt: DateTime.now().toUtc(),
-            updatedAt: DateTime.now().toUtc(),
+            id: 'l-preco-2',
+            createdAt: DateTime.utc(2026, 9, 21),
+            updatedAt: DateTime.utc(2026, 9, 21),
             titulo: 'X',
             donoId: 'u',
           ),
         );
 
-    await aplicarRemoto(
-      db,
-      'itens_lista',
-      {
-        'id': 'i1',
-        'lista_id': 'l1',
-        'nome': 'Arroz',
-        'quantidade': 1,
-        'unidade': 'un',
-        'categoria': 'outros',
-        'concluido': false,
-        'ordem': 0,
-        'preco_centavos': 549,
-        'created_at': DateTime.now().toUtc().toIso8601String(),
-        'updated_at': DateTime.now().toUtc().toIso8601String(),
-        'deletado_em': null,
-      },
-    );
+    await aplicador.aplicar('itens_lista', {
+      'id': 'i-preco-2',
+      'lista_id': 'l-preco-2',
+      'nome': 'Arroz',
+      'quantidade': 1,
+      'unidade': 'un',
+      'categoria': 'outros',
+      'concluido': false,
+      'ordem': 0,
+      'preco_centavos': 549,
+      'created_at': '2026-09-21T12:00:00.000Z',
+      'updated_at': '2026-09-21T12:00:00.000Z',
+      'deletado_em': null,
+    });
 
     final linha = await (db.select(
       db.itemLocal,
-    )..where((i) => i.id.equals('i1'))).getSingle();
+    )..where((i) => i.id.equals('i-preco-2'))).getSingle();
     expect(linha.precoCentavos, 549);
   });
 ```
-
-> Se o harness do `aplicador_remoto_test.dart` já tiver um helper de setup de lista/item, reutilize-o em vez de repetir o insert acima (mantenha o teste real, sem mocks).
 
 - [ ] **Step 2: Rodar e ver falhar**
 
