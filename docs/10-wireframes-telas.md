@@ -74,7 +74,7 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 
 ## 2. Minhas Listas
 
-**Navegação (F10):** barra inferior (NavigationBar) com **Minhas**, **Compartilhadas** e **Configurações**; em telas largas vira NavigationRail. O painel abaixo é **Minhas Listas** (listas em que você é dono). A aba **Compartilhadas** usa o mesmo layout, **sem FAB** e com a ação "Entrar com código" no AppBar (o menu `⋮` do card abre Membros e Sair da lista; o long-press abre o mesmo menu). Abrir uma lista/membros é `push` sobre o shell: a tela é cheia (barra some) e o voltar retorna à aba de origem (doc [05 §4](../05-app-flutter.md)).
+**Navegação (F10):** barra inferior (NavigationBar) com **Minhas**, **Compartilhadas** e **Configurações**; em telas largas vira NavigationRail. O painel abaixo é **Minhas Listas** (listas em que você é dono). A aba **Compartilhadas** usa o mesmo layout, **sem FAB** e com a ação "Entrar com código" no AppBar (o menu `⋮` do card abre Membros e Sair da lista; o long-press abre o mesmo menu). Abrir uma lista/membros é `push` sobre o shell: a tela é cheia (barra some) e o voltar retorna à aba de origem (doc [05 §4](05-app-flutter.md)).
 
 **Busca (F16):** lupa na AppBar revela um campo no topo do corpo (rótulo "Buscar lista", hint de exemplo "Nome da lista"); campo com rótulo acessível (label) e hint de exemplo; a lista filtrada esconde os cards que não casam; sem resultado → vazio "Nenhuma lista encontrada".
 
@@ -103,7 +103,7 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 
 **Marca no cabeçalho (F13-T02):** as telas de **topo** (Minhas Listas / Compartilhadas, sem botão voltar) mostram a marca do app (`AppLogo`, 28dp) à esquerda do título; telas internas (`push`: lista, membros, configurações, auth) mantêm apenas o texto. Título de tela em **24sp bold** (F13-T03, doc [15 §1](15-design-system.md)).
 
-**Arquivar listas (RF-22, F26):** o card de uma lista arquivada exibe o chip **"Arquivada"** ao lado do título (só aparece com o toggle ligado, pois arquivadas ficam ocultas por padrão). O toggle `[▤]` "Mostrar arquivadas" fica na AppBar e vale para **Minhas** e **Compartilhadas**; o menu `⋮` do **dono** mostra "Arquivar" (ativa) ou "Desarquivar" (arquivada visível) — comportamento em [05 §6.2](../05-app-flutter.md).
+**Arquivar listas (RF-22, F26):** o card de uma lista arquivada exibe o chip **"Arquivada"** no card (no subtítulo, junto da contagem e da atualização; só aparece com o toggle ligado, pois arquivadas ficam ocultas por padrão). O toggle `[▤]` "Mostrar arquivadas" fica na AppBar e vale para **Minhas** e **Compartilhadas**; o menu `⋮` do **dono** mostra "Arquivar" (ativa) ou "Desarquivar" (arquivada visível) — comportamento em [05 §6.2](05-app-flutter.md).
 
 ### 2.2. Estado vazio
 ```

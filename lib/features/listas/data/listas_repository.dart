@@ -224,7 +224,7 @@ class ListasRepository {
       registroId: id,
       listaId: id,
       tsLocal: agora,
-      payload: await _payloadLista(id),
+      payload: await _payloadLista(id, incluirArquivo: true),
     );
   }
 
@@ -485,7 +485,10 @@ class ListasRepository {
 
   // ---- Internos ----
 
-  Future<Map<String, Object?>> _payloadLista(String id) async {
+  Future<Map<String, Object?>> _payloadLista(
+    String id, {
+    bool incluirArquivo = false,
+  }) async {
     final l = await (_db.select(
       _db.listaLocal,
     )..where((l) => l.id.equals(id))).getSingle();
@@ -496,7 +499,8 @@ class ListasRepository {
       'created_at': _iso(l.createdAt),
       'updated_at': _iso(l.updatedAt),
       'deletado_em': l.deletadoEm == null ? null : _iso(l.deletadoEm!),
-      'arquivada_em': l.arquivadaEm == null ? null : _iso(l.arquivadaEm!),
+      if (incluirArquivo)
+        'arquivada_em': l.arquivadaEm == null ? null : _iso(l.arquivadaEm!),
     };
   }
 

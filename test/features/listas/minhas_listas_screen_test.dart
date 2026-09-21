@@ -503,4 +503,31 @@ void main() {
     expect(find.text(AppStrings.listaArquivada), findsOneWidget);
     await fechar(tester);
   });
+
+  testWidgets('deve_desarquivar_quando_toca_em_lista_arquivada_visivel', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Velha', donoId: 'user-a');
+    await repo.definirArquivada(lista.id, arquivada: true);
+    await abrirTela(tester);
+
+    await tester.tap(find.byTooltip(AppStrings.mostrarArquivadas));
+    await tester.pumpAndSettle();
+    expect(find.text('Velha'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.desarquivar));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.listaDesarquivada), findsOneWidget);
+
+    await tester.tap(find.byTooltip(AppStrings.mostrarArquivadas));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Velha'), findsOneWidget);
+    expect(find.text(AppStrings.arquivada), findsNothing);
+    await fechar(tester);
+  });
 }

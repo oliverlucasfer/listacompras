@@ -137,7 +137,7 @@ Cada requisito liga story → design → tarefas ([14](14-tarefas.md)) → verif
 | RF-19 | US-01 | F22 | F22-T02, F22-T03 | Unit frequentes (peso, limiar, limite) + widgets de chips |
 | RF-20 | US-01 | F23 | F23-T01, F23-T02 | Unit duplicar (só pendentes, preserva campos/ordem) + widget do painel |
 | RF-21 | US-01 | F25 | F25-T02…T04 | Unit preço/total + widgets |
-| RF-22 | US-01 | F26 | F26-T02, F26-T03 | Unit arquivo + widgets |
+| RF-22 | US-01 | F26 | F26-T02, F26-T03 | Unit arquivo + widgets + SQL ARQ-01…ARQ-03 |
 | RNF-06 | — | F8 · F14 | F14-T01…T02 | Guidelines de a11y + escala de fonte |
 
 ## 7. Fora de escopo (MVP)

@@ -56,7 +56,7 @@ create trigger trg_listas_arquivo_dono
 
 - **Sem policy nova** — a coluna herda o RLS de `listas`; o trigger restringe a **autoria** da mudança ao dono.
 - `null` = lista ativa; `timestamptz` = arquivada nesse instante (reversível: volta a `null`).
-- Renomear (dono **ou** editor) não muda `arquivada_em` → o trigger não interfere (a comparação é por valor).
+- Renomear (dono **ou** editor) não muda `arquivada_em` → o trigger não interfere (a comparação é por valor). O payload de updates que não são de arquivo **omite** a coluna (ver §4), então um rename de editor nunca carrega um `arquivada_em` obsoleto.
 - `excluir_conta` (delete em cascata) e `transferir_dono` (muda `dono_id`) não tocam `arquivada_em`.
 
 ## 4. Drift, domínio e repositório
@@ -64,7 +64,7 @@ create trigger trg_listas_arquivo_dono
 - `lib/drift/tables/lista_local.dart`: `DateTimeColumn get arquivadaEm => dateTime().nullable()();` (+ regenerar `database.g.dart`).
 - `lib/features/listas/domain/lista.dart`: `final DateTime? arquivadaEm;` + mapeamento em `Lista.fromLocal`.
 - `lib/features/listas/data/listas_repository.dart`:
-  - `_payloadLista` inclui `'arquivada_em': l.arquivadaEm == null ? null : _iso(l.arquivadaEm!)`;
+  - `_payloadLista(String id, {bool incluirArquivo = false})` **omite** `arquivada_em` por padrão; só inclui a coluna quando `incluirArquivo: true`, usado **exclusivamente** por `definirArquivada`. O INSERT (criar) e os demais updates (renomear/excluir/duplicar) usam o default (omitir): no INSERT vale o default do banco (`null`); no UPDATE o valor do servidor fica intacto. Assim um payload antigo com `arquivada_em = null` não é rejeitado pelo trigger `protege_arquivo_dono` e o LWW segue em `updated_at`;
   - novo `Future<void> definirArquivada(String id, {required bool arquivada})` — grava `arquivada_em` (`agora`/`null`) + `updated_at` e enfileira `UPDATE` (mesmo caminho de `renomearLista`);
   - `duplicarLista` cria a nova lista **sem** arquivo (default `null`).
 - `lib/features/sync/data/aplicador_remoto.dart` (`_aplicarLista`): mapear `arquivada_em` com tolerância (ausente → `null`).
@@ -75,7 +75,7 @@ create trigger trg_listas_arquivo_dono
 - **Toggle "Mostrar arquivadas"** na AppBar do `PainelListas` (ícone `Icons.inventory_2_outlined`, `tooltip` acessível). Estado **efêmero** (`setState`) — não persistido. Aplica-se a **Minhas** e **Compartilhadas**.
 - **Filtro:** por padrão, `listasComContagemProvider` é filtrado para `arquivadaEm == null`; com o toggle ligado, todas aparecem (arquivadas no fim ou misturadas — o plano decide; recomenda-se manter a ordenação por `updated_at`).
 - **Ação no card (`⋮`), só dono:** "Arquivar" (lista ativa) ou "Desarquivar" (lista arquivada e visível). Chama `definirArquivada(...)`, SnackBar `listaArquivada` / `listaDesarquivada`.
-- **Rótulo:** card arquivado mostra um `AppChip` "Arquivada" (doc 15) ao lado do título.
+- **Rótulo:** card arquivado mostra um `AppChip` "Arquivada" (doc 15) no card (no subtítulo, junto da contagem e da atualização).
 - **Busca (F16):** o filtro de texto continua; a lista buscada respeita o toggle.
 - Ação **não** aparece para membro (a lista não é dele) nem para `leitor`.
 

@@ -581,6 +581,25 @@ void main() {
     expect(payload['arquivada_em'], isNull);
   });
 
+  test('nao_deve_enviar_arquivo_quando_renomear', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+
+    await repo.renomearLista(id: lista.id, titulo: 'Y');
+
+    final rename = (await fila()).last['payload'] as Map<String, Object?>;
+    expect(rename.containsKey('arquivada_em'), isFalse);
+
+    await repo.definirArquivada(lista.id, arquivada: true);
+    final arquivar = (await fila()).last['payload'] as Map<String, Object?>;
+    expect(arquivar.containsKey('arquivada_em'), isTrue);
+    expect(arquivar['arquivada_em'], isA<String>());
+
+    await repo.definirArquivada(lista.id, arquivada: false);
+    final desarquivar = (await fila()).last['payload'] as Map<String, Object?>;
+    expect(desarquivar.containsKey('arquivada_em'), isTrue);
+    expect(desarquivar['arquivada_em'], isNull);
+  });
+
   test('nao_deve_arquivar_lista_nova_quando_duplicar', () async {
     final origem = await repo.criarLista(titulo: 'X', donoId: 'user-a');
     await repo.adicionarItem(listaId: origem.id, nome: 'Arroz');
