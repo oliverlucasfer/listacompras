@@ -128,6 +128,12 @@ abstract final class AppStrings {
   static const quantidade = 'Quantidade';
   static const unidade = 'Unidade';
   static const categoria = 'Categoria';
+  static const preco = 'Preço (R\$)';
+  static const erroPrecoInvalido = 'Preço inválido.';
+  static const noCarrinho = 'No carrinho';
+
+  static String semPreco(int n) => n == 1 ? '1 sem preço' : '$n sem preço';
+
   static const diminuir = 'Diminuir';
   static const aumentar = 'Aumentar';
   static const menu = 'Menu';

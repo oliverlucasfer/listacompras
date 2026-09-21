@@ -17,6 +17,7 @@ import '../../convites/providers/papel_providers.dart';
 import '../../sync/ui/indicador_sync.dart';
 import '../domain/item.dart';
 import '../providers/listas_providers.dart';
+import 'total_carrinho.dart';
 
 /// Modo mercado (RF-18, doc 05 §6.5, wireframe 10 §3.5): tela focada para
 /// usar no corredor — só pendentes grandes, toque para marcar, faixa
@@ -138,6 +139,7 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
                           ref.invalidate(itensDaListaProvider(listaId)),
                     ),
                     data: (itens) => _CorpoMercado(
+                      listaId: listaId,
                       itens: itens,
                       marcadosNaSessao: _marcadosValidos(itens),
                       podeEscrever: podeEscrever,
@@ -158,6 +160,7 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
 
 class _CorpoMercado extends StatelessWidget {
   const _CorpoMercado({
+    required this.listaId,
     required this.itens,
     required this.marcadosNaSessao,
     required this.podeEscrever,
@@ -166,6 +169,7 @@ class _CorpoMercado extends StatelessWidget {
     required this.onVoltarParaLista,
   });
 
+  final String listaId;
   final List<Item> itens;
 
   /// Quantidade de itens marcados nesta sessão e ainda concluídos no stream.
@@ -199,6 +203,7 @@ class _CorpoMercado extends StatelessWidget {
             ),
           ),
         ),
+        TotalCarrinho(listaId: listaId),
         Expanded(
           child: pendentes.isEmpty
               ? LayoutBuilder(

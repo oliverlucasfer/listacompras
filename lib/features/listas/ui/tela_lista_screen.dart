@@ -31,10 +31,12 @@ import '../../importacao/ui/modal_previsao_importacao.dart';
 import '../../sync/ui/indicador_sync.dart';
 import '../domain/categoria.dart';
 import '../domain/item.dart';
+import '../domain/preco.dart';
 import '../domain/sugestao_item.dart';
 import '../domain/unidade.dart';
 import '../providers/listas_providers.dart';
 import 'sheet_titulo_lista.dart';
+import 'total_carrinho.dart';
 
 /// Tela da Lista de Compras (doc 05 §6.3, wireframe 10 §3.1, RF-03/RF-04).
 /// Indicador de sync (F4-T07), IA (F4-T01) e drag-and-drop (F4-T05) chegam depois.
@@ -373,6 +375,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                     onLimparBusca: _limparBusca,
                   ),
                 ),
+                TotalCarrinho(listaId: listaId),
                 if (_papelNaLista(lista.id) != Papel.leitor)
                   SafeArea(
                     top: false,
@@ -932,15 +935,24 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
   );
   late Unidade _unidade = widget.item.unidade;
   late CategoriaItem _categoria = widget.item.categoria;
+  late final _preco = TextEditingController(
+    text: _precoInicial(widget.item.precoCentavos),
+  );
   String? _erroNome;
   String? _erroQuantidade;
+  String? _erroPreco;
 
   @override
   void dispose() {
     _nome.dispose();
     _quantidade.dispose();
+    _preco.dispose();
     super.dispose();
   }
+
+  String _precoInicial(int? centavos) => centavos == null
+      ? ''
+      : (centavos / 100).toStringAsFixed(2).replaceAll('.', ',');
 
   double? _quantidadeLida() {
     final bruto = _quantidade.text.trim().replaceAll(',', '.');
@@ -952,13 +964,21 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
   Future<void> _salvar() async {
     final nome = _nome.text.trim();
     final quantidade = _quantidadeLida();
+    int? preco;
+    var precoValido = true;
+    try {
+      preco = parsePrecoParaCentavos(_preco.text);
+    } on ArgumentError {
+      precoValido = false;
+    }
     setState(() {
       _erroNome = nome.isEmpty ? AppStrings.erroNomeVazio : null;
       _erroQuantidade = quantidade == null
           ? AppStrings.erroQuantidadeInvalida
           : null;
+      _erroPreco = precoValido ? null : AppStrings.erroPrecoInvalido;
     });
-    if (nome.isEmpty || quantidade == null) return;
+    if (nome.isEmpty || quantidade == null || !precoValido) return;
     await ref
         .read(listasRepositoryProvider)
         .editarItem(
@@ -967,6 +987,8 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
           quantidade: quantidade,
           unidade: _unidade,
           categoria: _categoria,
+          precoCentavos: preco,
+          limparPreco: preco == null,
         );
     if (mounted) Navigator.pop(context);
   }
@@ -1055,6 +1077,17 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
               ],
               onChanged: (c) {
                 if (c != null) setState(() => _categoria = c);
+              },
+            ),
+            const SizedBox(height: AppSpacing.md),
+            // Preço unitário opcional (RF-21, F25): vazio = sem preço.
+            AppCampoTexto(
+              controller: _preco,
+              label: AppStrings.preco,
+              erro: _erroPreco,
+              teclado: const TextInputType.numberWithOptions(decimal: true),
+              onChanged: (_) {
+                if (_erroPreco != null) setState(() => _erroPreco = null);
               },
             ),
           ],

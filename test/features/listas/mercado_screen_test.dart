@@ -171,4 +171,20 @@ void main() {
     expect(find.text('Arroz'), findsOneWidget);
     await fechar(tester);
   });
+
+  testWidgets('deve_mostrar_total_quando_ha_marcado_com_preco', (tester) async {
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      quantidade: 1,
+      precoCentavos: 549,
+    );
+    await repo.editarItem(item.id, concluido: true);
+
+    await abrir(tester, lista.id);
+
+    expect(find.textContaining(r'R$ 5,49'), findsOneWidget);
+    await fechar(tester);
+  });
 }

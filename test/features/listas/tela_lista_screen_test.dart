@@ -1714,6 +1714,53 @@ void main() {
 
     await fechar(tester);
   });
+
+  // ---- Faixa do total no rodapé (F25-T04, RF-21) ----
+
+  Future<String> abrirListaComPreco(
+    WidgetTester tester, {
+    required bool marcado,
+  }) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      precoCentavos: 549,
+    );
+    if (marcado) await repo.editarItem(item.id, concluido: true);
+    final sync = StreamController<SyncStatus>();
+    sync.add(const Sincronizado());
+    addTearDown(sync.close);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          papelRepositoryProvider.overrideWithValue(
+            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
+          ),
+          syncStatusProvider.overrideWith((ref) => sync.stream),
+        ],
+        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    return lista.id;
+  }
+
+  testWidgets('deve_mostrar_total_no_rodape_quando_ha_marcado_com_preco', (
+    tester,
+  ) async {
+    await abrirListaComPreco(tester, marcado: true);
+    expect(find.textContaining(r'R$ 5,49'), findsOneWidget);
+    await fechar(tester);
+  });
+
+  testWidgets('nao_deve_mostrar_total_quando_nada_marcado', (tester) async {
+    await abrirListaComPreco(tester, marcado: false);
+    expect(find.textContaining(AppStrings.noCarrinho), findsNothing);
+    await fechar(tester);
+  });
 }
 
 class _RepoLimparFalha extends ListasRepository {
