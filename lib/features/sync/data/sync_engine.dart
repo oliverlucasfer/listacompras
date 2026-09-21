@@ -224,6 +224,14 @@ class SyncEngine {
   /// Próximo grupo a drenar: da lista mais antiga, com coalescing por
   /// registro (mantém a última mutação — maior id; doc 03 §3). Null quando
   /// a fila não tem mutações enviáveis.
+  ///
+  /// O payload do lote é a **mescla** dos payloads do registro (última vence
+  /// por chave), não só o da última mutação. Desde o contrato do F26, updates
+  /// de lista que não são de arquivo **omitem** `arquivada_em`; descartar o
+  /// payload anterior perderia o arquivo (ex.: arquivar e depois renomear
+  /// offline). A chave só fica ausente se nunca apareceu no grupo, e um
+  /// `definirArquivada(false)` posterior traz `arquivada_em: null`, que vence
+  /// na mescla.
   Future<List<MutacaoSync>?> _proximoLote() async {
     final linhas =
         await (_db.select(_db.mutacaoPendente)
@@ -234,20 +242,33 @@ class SyncEngine {
     final listaId = linhas.first.listaId;
     final doGrupo = linhas.where((m) => m.listaId == listaId);
     final porRegistro = <String, MutacaoPendenteData>{};
+    final payloadMesclado = <String, Map<String, Object?>>{};
     for (final linha in doGrupo) {
+      final atual = jsonDecode(linha.payload) as Map<String, Object?>;
+      payloadMesclado.update(
+        linha.registroId,
+        (anterior) => {...anterior, ...atual},
+        ifAbsent: () => atual,
+      );
       porRegistro[linha.registroId] = linha;
     }
-    return [for (final linha in porRegistro.values) _paraSync(linha)];
+    return [
+      for (final linha in porRegistro.values)
+        _paraSync(linha, payload: payloadMesclado[linha.registroId]),
+    ];
   }
 
-  MutacaoSync _paraSync(MutacaoPendenteData linha) => MutacaoSync(
+  MutacaoSync _paraSync(
+    MutacaoPendenteData linha, {
+    Map<String, Object?>? payload,
+  }) => MutacaoSync(
     id: linha.id,
     tabela: linha.tabela,
     operacao: linha.operacao,
     registroId: linha.registroId,
     listaId: linha.listaId,
     tsLocal: linha.tsLocal,
-    payload: jsonDecode(linha.payload) as Map<String, Object?>,
+    payload: payload ?? jsonDecode(linha.payload) as Map<String, Object?>,
     tentativas: linha.tentativas,
   );
 

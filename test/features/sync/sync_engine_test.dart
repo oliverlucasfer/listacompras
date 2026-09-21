@@ -186,6 +186,39 @@ void main() {
     },
   );
 
+  test('deve_mesclar_payload_quando_coalescer_arquivo_e_rename', () async {
+    // F26: o update de rename omite `arquivada_em`; o coalescing não pode
+    // descartar o payload do arquivo (senão o servidor perde a arquivada).
+    final lista = await repo.criarLista(titulo: 'Antigo', donoId: 'user-a');
+    await repo.definirArquivada(lista.id, arquivada: true);
+    await repo.renomearLista(id: lista.id, titulo: 'Novo');
+
+    final remoto = RemotoFake();
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+    await aguardarSincronizado(engine);
+
+    final daLista = remoto.recebidas
+        .where((m) => m.registroId == lista.id)
+        .toList();
+    expect(daLista, hasLength(1));
+    expect(daLista.single.payload['titulo'], 'Novo');
+    expect(daLista.single.payload['arquivada_em'], isNotNull);
+
+    final local = await (db.select(
+      db.listaLocal,
+    )..where((l) => l.id.equals(lista.id))).getSingle();
+    expect(
+      daLista.single.payload['arquivada_em'],
+      local.arquivadaEm!.toUtc().toIso8601String(),
+    );
+  });
+
   test(
     'deve_manter_apenas_delete_soft_quando_criar_e_remover_offline',
     () async {

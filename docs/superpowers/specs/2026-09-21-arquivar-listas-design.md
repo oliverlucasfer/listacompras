@@ -93,7 +93,11 @@ Inalterados: arquivar é organização do painel. O ranking `watchItensFrequente
 **Unit — repositório (`listas_repository_test.dart`):**
 - `deve_gravar_e_enfileirar_arquivo_quando_arquivar` (payload `arquivada_em` preenchido).
 - `deve_limpar_arquivo_quando_desarquivar` (payload `arquivada_em` nulo).
+- `nao_de_enviar_arquivo_quando_renomear` (rename omite a chave; arquivar/desarquivar incluem).
 - `nao_deve_arquivar_lista_nova_quando_duplicar` (cópia nasce ativa).
+
+**Unit — sync (`sync_engine_test.dart`):**
+- `deve_mesclar_payload_quando_coalescer_arquivo_e_rename` (coalescing mescla os payloads do registro: arquivar + renomear offline mantém `arquivada_em`).
 
 **Unit — aplicador:** `deve_mapear_arquivo_ausente_para_null_quando_linha_antiga` e `deve_mapear_arquivo_quando_presente`.
 

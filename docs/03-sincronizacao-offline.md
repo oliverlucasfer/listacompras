@@ -55,7 +55,7 @@ Tabela local Drift (`mutacoes_pendentes`):
 
 **Regras:**
 * Fila **ordenada por lista**, drenada em sequência (mutações da mesma lista são aplicadas em ordem; listas distintas podem paralelizar).
-* **Coalescing:** se houver múltiplas mutações do mesmo registro na fila (ex.: criar + editar + concluir), o flush envia apenas a **última** (o payload final + maior `ts_local`) — reduz requisições e elimina conflitos intra-dispositivo.
+* **Coalescing:** se houver múltiplas mutações do mesmo registro na fila (ex.: criar + editar + concluir), o flush envia uma só — a **última** mutação (maior `ts_local`) define `id`/operação/ts, e o **payload é a mescla** dos payloads do registro (última vence por chave) — reduz requisições e elimina conflitos intra-dispositivo. A mescla é necessária porque updates de lista que não são de arquivo **omitem** `arquivada_em` (RF-22/F26): sem ela, arquivar e depois renomear offline perderia o arquivo no servidor.
 * Retry com **backoff exponencial** (1s → 2s → 4s → ... → máx. 5 min); após 10 tentativas, a mutação entra em estado `erro` visível na UI com ação "tentar de novo".
 * **Payload de itens inclui `categoria`** (enum fechado [01 §3.2](01-banco-de-dados.md), Fase 6/ADR-011). Clientes antigos (1.0.0+2) sem a coluna recebem o default no INSERT e o upsert LWW não toca a coluna fora do payload — categoria existente preservada ([01 §4.3](01-banco-de-dados.md)).
 * **Payload de itens inclui `preco_centavos`** (preço unitário em centavos [01 §4.3](01-banco-de-dados.md), RF-21/F25). O aplicador trata a coluna com **tolerância**: ausente ou não numérica → `null` (linha gravada por app antigo), como em `categoria`; no merge LWW a coluna só é tocada quando presente no payload.
@@ -66,7 +66,7 @@ Tabela local Drift (`mutacoes_pendentes`):
 ## 4. Fluxo de sincronização
 
 1. **Escrita:** UI chama o repositório → Drift aplica local + enfileira mutação → dispara o Sync Engine (se online).
-2. **Flush (online):** o Sync Engine drena a fila enviando ao Supabase:
+2. **Flush (online):** o Sync Engine drena a fila enviando ao Supabase (com coalescing por registro — payload **mesclado**, §3):
    * **Sem linha remota → `INSERT`** (F12-T04): o `upsert` do PostgREST avalia a policy de UPDATE e era negado para listas novas; ID client-side é UUID v4, colisão é improvável.
    * **Com linha remota → `UPDATE`** (LWW já decidiu — Seção 5).
 3. **Realtime (WebSocket):** mudanças remotas chegam → aplicadas ao Drift **se vencerem no LWW** → UI reage reativamente (Streams do Drift). O canal assina um **callback de status** (F20, R-12): a cada `SUBSCRIBED` — inclusive o primeiro e após uma reconexão — o bootstrap re-sincroniza o cache, cobrindo eventos perdidos em `CHANNEL_ERROR`/`TIMED_OUT` (Seção 7).
