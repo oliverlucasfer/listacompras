@@ -277,4 +277,16 @@ void main() {
       await fechar(tester);
     },
   );
+
+  testWidgets('nao_deve_mostrar_arquivar_para_membro', (tester) async {
+    final repo = ListasRepository(db);
+    await repo.criarLista(titulo: 'Do parceiro', donoId: 'user-b');
+    await abrirTela(tester, usuario: 'user-a');
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.arquivar), findsNothing);
+    await fechar(tester);
+  });
 }

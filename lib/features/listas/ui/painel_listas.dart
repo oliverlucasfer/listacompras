@@ -9,6 +9,7 @@ import '../../../core/utils/tempo_relativo.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_esqueleto.dart';
 import '../../../core/widgets/app_estado_erro.dart';
@@ -43,6 +44,7 @@ class PainelListas extends ConsumerStatefulWidget {
 class _PainelListasState extends ConsumerState<PainelListas> {
   final _busca = TextEditingController();
   bool _buscando = false;
+  bool _mostrarArquivadas = false;
 
   bool get _compartilhadas => widget.filtro == FiltroListas.compartilhadas;
 
@@ -73,6 +75,7 @@ class _PainelListasState extends ConsumerState<PainelListas> {
                     ? c.lista.donoId != usuario
                     : c.lista.donoId == usuario,
               )
+              .where((c) => _mostrarArquivadas || c.lista.arquivadaEm == null)
               .where(
                 (c) =>
                     consulta.isEmpty || contemBusca(c.lista.titulo, consulta),
@@ -103,6 +106,16 @@ class _PainelListasState extends ConsumerState<PainelListas> {
               onPressed: _fecharBusca,
             )
           else ...[
+            IconButton(
+              tooltip: AppStrings.mostrarArquivadas,
+              icon: Icon(
+                _mostrarArquivadas
+                    ? Icons.inventory_2
+                    : Icons.inventory_2_outlined,
+              ),
+              onPressed: () =>
+                  setState(() => _mostrarArquivadas = !_mostrarArquivadas),
+            ),
             IconButton(
               tooltip: AppStrings.buscar,
               icon: const Icon(Icons.search),
@@ -254,6 +267,8 @@ class _CardListaState extends ConsumerState<_CardLista> {
                 '${AppStrings.atualizada} ${tempoRelativo(lista.atualizadoEm, agora: DateTime.now())}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
+              if (lista.arquivadaEm != null)
+                const AppChip(rotulo: AppStrings.arquivada),
             ],
           ),
         ),
@@ -272,6 +287,13 @@ class _CardListaState extends ConsumerState<_CardLista> {
   int get _pendentes => widget.contagem.totalItens - widget.contagem.concluidos;
 
   List<PopupMenuEntry<String>> _itensDono(BuildContext context) => [
+    if (widget.contagem.lista.arquivadaEm == null)
+      const PopupMenuItem(value: 'arquivar', child: Text(AppStrings.arquivar))
+    else
+      const PopupMenuItem(
+        value: 'desarquivar',
+        child: Text(AppStrings.desarquivar),
+      ),
     if (_pendentes > 0)
       const PopupMenuItem(
         value: 'duplicar',
@@ -304,6 +326,10 @@ class _CardListaState extends ConsumerState<_CardLista> {
         _duplicar();
       case 'renomear':
         _abrirSheetRenomear();
+      case 'arquivar':
+        _definirArquivada(true);
+      case 'desarquivar':
+        _definirArquivada(false);
       case 'excluir':
         _confirmarExclusao();
       case 'membros':
@@ -351,6 +377,22 @@ class _CardListaState extends ConsumerState<_CardLista> {
           .read(listasRepositoryProvider)
           .renomearLista(id: widget.contagem.lista.id, titulo: nome),
     );
+  }
+
+  Future<void> _definirArquivada(bool arquivada) async {
+    try {
+      await ref
+          .read(listasRepositoryProvider)
+          .definirArquivada(widget.contagem.lista.id, arquivada: arquivada);
+      if (mounted) {
+        mostrarSnackBar(
+          context,
+          arquivada ? AppStrings.listaArquivada : AppStrings.listaDesarquivada,
+        );
+      }
+    } catch (_) {
+      if (mounted) mostrarSnackBar(context, AppStrings.erroGenerico);
+    }
   }
 
   Future<void> _confirmarExclusao() async {

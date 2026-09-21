@@ -460,4 +460,47 @@ void main() {
     expect(listas, hasLength(1));
     await fechar(tester);
   });
+
+  testWidgets('nao_deve_mostrar_arquivada_por_padrao_quando_painel', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Velha', donoId: 'user-a');
+    await repo.definirArquivada(lista.id, arquivada: true);
+    await abrirTela(tester);
+
+    expect(find.text('Velha'), findsNothing);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_arquivada_com_rotulo_quando_toggle_ligado', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Velha', donoId: 'user-a');
+    await repo.definirArquivada(lista.id, arquivada: true);
+    await abrirTela(tester);
+
+    await tester.tap(find.byTooltip(AppStrings.mostrarArquivadas));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Velha'), findsOneWidget);
+    expect(find.text(AppStrings.arquivada), findsOneWidget);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_arquivar_quando_dono_toca_menu', (tester) async {
+    final repo = ListasRepository(db);
+    await repo.criarLista(titulo: 'Ativa', donoId: 'user-a');
+    await abrirTela(tester);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.arquivar));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ativa'), findsNothing);
+    expect(find.text(AppStrings.listaArquivada), findsOneWidget);
+    await fechar(tester);
+  });
 }

@@ -66,6 +66,12 @@ abstract final class AppStrings {
   static const cancelar = 'Cancelar';
   static const renomear = 'Renomear';
   static const excluir = 'Excluir';
+  static const mostrarArquivadas = 'Mostrar arquivadas';
+  static const arquivar = 'Arquivar';
+  static const desarquivar = 'Desarquivar';
+  static const arquivada = 'Arquivada';
+  static const listaArquivada = 'Lista arquivada.';
+  static const listaDesarquivada = 'Lista desarquivada.';
 
   // Itens
   static const adicionarItem = 'Adicionar item';
