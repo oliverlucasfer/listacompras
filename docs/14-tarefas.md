@@ -635,6 +635,20 @@ Spec: [superpowers/specs/2026-09-21-arquivar-listas-design.md](superpowers/specs
   Dep: F26-T03 · Docs: [01](01-banco-de-dados.md), [03](03-sincronizacao-offline.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
   CP: RF-22 no 12 (tabela e rastreabilidade); docs donos refletem arquivo (coluna/índice/trigger, payload, toggle/rótulo); A2 do 16 concluído; Fase 26 na tabela de progresso (152/150).
 
+## Fase 27 — Adicionar itens de outra lista (RF-23)
+
+Spec: [superpowers/specs/2026-09-21-adicionar-de-outra-lista-design.md](superpowers/specs/2026-09-21-adicionar-de-outra-lista-design.md) · Requisito: RF-23 (adicionar itens de outra lista). · Docs donos: 05, 10, 12.
+
+- [x] **F27-T01** — Repositório: extrai a dedup e adiciona em lote
+  Dep: — · Docs: [05 §6.3](05-app-flutter.md)
+  CP: `ListasRepository.adicionarItemDedup` (mesmo nome normalizado → soma/replace) e `adicionarItensDedup` (lote; ignora preço e concluído); entrada rápida/chip passam a usar o método; unit tests verdes.
+- [x] **F27-T02** — UI: modal "Adicionar de outra lista" no menu ⋮
+  Dep: F27-T01 · Docs: [05 §6.3](05-app-flutter.md), [10 §3](10-wireframes-telas.md)
+  CP: item no menu `⋮` (dono/editor) abre modal com seletor de origem (todas menos a atual; arquivadas rotuladas) e pendentes com checkboxes + "Selecionar todos"; adiciona com dedup e SnackBar com a contagem; preço não é copiado; widget tests verdes.
+- [x] **F27-T03** — Docs donos e fechamento
+  Dep: F27-T02 · Docs: [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
+  CP: RF-23 no 12 (tabela e rastreabilidade); docs donos refletem o fluxo (menu/bullet, wireframe do modal); A3 do 16 concluído; Fase 27 na tabela de progresso (155/153).
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -663,7 +677,8 @@ Spec: [superpowers/specs/2026-09-21-arquivar-listas-design.md](superpowers/specs
 | F24 Transferência de dono | 5 | 5 |
 | F25 Preço e total | 5 | 5 |
 | F26 Arquivar listas | 4 | 4 |
-| **Total** | **152** | **150** |
+| F27 Itens de outra lista | 3 | 3 |
+| **Total** | **155** | **153** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

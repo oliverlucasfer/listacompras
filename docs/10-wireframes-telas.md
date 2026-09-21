@@ -324,6 +324,27 @@ AppBar `Membros · {título}`; cada membro mostra o UUID prefixado, o chip de pa
     o novo dono recebe "Você agora é dono de uma lista" pelo Realtime)
 ```
 
+### 3.8. Modal "Adicionar de outra lista" (F27/RF-23 — [05 §6.3](05-app-flutter.md))
+**Entrada:** item "Adicionar de outra lista" no menu `⋮` da tela da lista, visível só a **dono/editor**.
+
+```
+┌─────────────────────────────────┐
+│  Adicionar de outra lista    ✕  │
+├─────────────────────────────────┤
+│  Origem                         │
+│  [ Compras da Semana        ▾ ] │ ← todas menos a atual;
+│                                 │   arquivadas rotuladas "Arquivada"
+│  ☑ Selecionar todos             │
+│  ☑ Arroz            1 kg        │ ← só pendentes (alvo ≥48dp)
+│  ☐ Leite            2 un        │
+│                                 │
+│  1 de 2 selecionados            │
+│  (Cancelar)   (Adicionar 1)     │ ← desabilitado com 0
+└─────────────────────────────────┘
+   (confirma → adiciona com a dedup do app [05 §6.3], SnackBar com a
+    contagem; preço não é copiado; sem pendentes → vazio no modal)
+```
+
 ---
 
 ## 4. Importação de lista (RF-16 — [04](04-importacao-lista.md))
