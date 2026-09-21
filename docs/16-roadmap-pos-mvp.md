@@ -16,6 +16,7 @@
 | ID | Frente | Requisito | Fase | Spec | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | A1 | **Duplicar lista ("Comprar de novo")** | **RF-20** | F23 | [spec](superpowers/specs/2026-09-21-duplicar-lista-design.md) | concluído (F23-T01…T03) |
+| B1 | **Transferência de dono** | **RF-14** | F24 | [spec](superpowers/specs/2026-09-21-transferencia-dono-design.md) | concluído (F24-T01…T05) |
 
 ## Onda A — Uso diário e retenção
 

@@ -621,11 +621,44 @@ void main() {
       await expectLater(
         repoCom(servidor).transferirDono(listaId: _listaId, novoDonoId: 'U2'),
         throwsA(
-          isA<ErroConvite>().having(
-            (e) => e.message,
-            'message',
-            AppStrings.transferirDestinoInvalido,
-          ),
+          isA<ErroConvite>()
+              .having((e) => e.code, 'code', 'destino_invalido')
+              .having(
+                (e) => e.message,
+                'message',
+                AppStrings.transferirDestinoInvalido,
+              ),
+        ),
+      );
+    });
+
+    test('deve_mapear_destino_invalido_quando_transfere_para_si', () async {
+      final servidor = ServidorFake((req) {
+        if (req.method == 'POST' && req.url.path.contains('transferir_dono')) {
+          return (
+            400,
+            {
+              'code': 'P0001',
+              'message': 'NAO_PODE_TRANSFERIR_PARA_SI',
+              'details': null,
+              'hint': null,
+            },
+          );
+        }
+        return (500, {'message': 'inesperada: ${req.url.path}'});
+      });
+      addTearDown(servidor.close);
+
+      await expectLater(
+        repoCom(servidor).transferirDono(listaId: _listaId, novoDonoId: 'U2'),
+        throwsA(
+          isA<ErroConvite>()
+              .having((e) => e.code, 'code', 'destino_invalido')
+              .having(
+                (e) => e.message,
+                'message',
+                AppStrings.transferirDestinoInvalido,
+              ),
         ),
       );
     });

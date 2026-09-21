@@ -88,7 +88,7 @@ end;
 $$;
 
 -- R-17: convites.criado_por ganha cascade (a transferência torna o risco real).
-alter table public.convites drop constraint convites_criado_por_fkey;
+alter table public.convites drop constraint if exists convites_criado_por_fkey;
 alter table public.convites
   add constraint convites_criado_por_fkey
   foreign key (criado_por) references auth.users(id) on delete cascade;

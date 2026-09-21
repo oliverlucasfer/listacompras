@@ -590,6 +590,7 @@ Spec: [superpowers/specs/2026-09-21-transferencia-dono-design.md](superpowers/sp
 - [x] **F24-T03** — App: "Transferir dono" na tela de membros com confirmação dupla
   Dep: F24-T02 · Docs: [05 §6.6](05-app-flutter.md), [10 §3.7](10-wireframes-telas.md)
   CP: item no menu só para dono e alvo ≠ eu; confirmação dupla; sucesso atualiza o papel local (editor), invalida membros e mostra SnackBar; 3 widget tests verdes.
+  Nota: após a transferência, a tela da **lista** do ex-dono só converge para editor quando o UPDATE de `listas` chega pelo realtime (LWW) — a tela de membros já reflete na hora (janela real e transitória; o servidor rejeita ações obsoletas).
 - [x] **F24-T04** — App: aviso ao novo dono via Realtime
   Dep: F24-T03 · Docs: [08 §6](08-compartilhamento-colaborativo.md)
   CP: UPDATE de `lista_membros` para `dono` sinaliza `donoTransferido`; SnackBar genérico "Você agora é dono de uma lista" com guarda por `listaId`; testes de repositório e de tela verdes.

@@ -217,7 +217,7 @@ O trigger `sync_dono` ([01 §6](01-banco-de-dados.md)) **impede** remover/rebaix
 | Painel "Convites pendentes" (Minhas Listas) | Cards: "João convidou você para **Compras da Semana**" → Aceitar/Recusar |
 | Rota `/entrar?token=` | Contexto de aceite (autenticado ou pós-login); "Entrar com código" no painel de listas aceita token cru colado |
 
-* Wireframes destes componentes: [10 §4](10-wireframes-telas.md).
+* Wireframes destes componentes: [10 §3.7](10-wireframes-telas.md).
 * Comportamento de roles na UI (desabilitar ações de leitor): [05 §6.3](05-app-flutter.md).
 * Vazio e feedback (F14-T04/T05): a lista de membros vazia (só acontece sem cache local, ex.: cache apagado) mostra `AppEstadoVazio` **sem ações** — o papel não é confiável nesse estado (o dono é sempre mesclado por `membrosDaListaProvider`); trocar papel, remover membro e compartilhar o convite dão SnackBar (F14-T05, [05 §6](05-app-flutter.md)).
 * Identificador de membros: enquanto não há perfis/e-mails expostos (rodada futura), membros exibem o UUID prefixado (8 primeiros caracteres). A identificação por nome/e-mail exige RPC `security definer` + policy (docs 01/02) e fica para a **Fase 15** ([spec F14 §16](superpowers/specs/2026-09-14-ux-acessibilidade-design.md)).

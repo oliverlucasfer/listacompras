@@ -34,7 +34,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-11 | Exclusão de conta com delete físico em cascata (LGPD) | 06 §3.3.1 | F5 | [06 §3.3.1](06-mvp-entregas.md) |
 | RF-12 | Observabilidade: Sentry com privacidade (sem conteúdo de listas em logs) | 07 §4 | F5 | [07](07-qualidade-ci.md) |
 | RF-13 | Compartilhamento por convite (link/e-mail) com papéis — **Fase 6** (1ª rodada: link-only, [08 §1.1](08-compartilhamento-colaborativo.md)) | 08 | F7 | [08 §9](08-compartilhamento-colaborativo.md) |
-| RF-14 | Transferência de dono: o dono passa a lista para um membro e vira `editor`; novo dono avisado pelo Realtime | 08 §6 | F24 | [08 §9](08-compartilhamento-colaborativo.md) |
+| RF-14 | Transferência de dono: o dono passa a lista para um membro e vira `editor`; novo dono avisado pelo Realtime | 08 §6 | F24 | [08 §6](08-compartilhamento-colaborativo.md) |
 | RF-15 | Agrupamento da lista por categoria (enum fechado [01 §3](01-banco-de-dados.md)) com sugestão local em camadas (memória por nome → dicionário estático → `outros`) | 05 §6.3 + 01 §4.3 | F6 | [05 §8](05-app-flutter.md) + [03 §8](03-sincronizacao-offline.md) |
 | RF-16 | Importação de lista por texto livre (parser local determinístico, offline) com pré-visualização editável | 05 §6.4 + 10 §4 | F11 | [05 §8](05-app-flutter.md) |
 | RF-17 | Busca/filtro **local (offline)** de listas pelo título (painel) e de itens pelo nome (tela da lista) | 05 §6.2 + §6.3 | F16 | [05 §8](05-app-flutter.md) |

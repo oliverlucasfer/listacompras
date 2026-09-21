@@ -20,10 +20,11 @@ import '../providers/papel_providers.dart';
 import 'acao_sair_da_lista.dart';
 
 /// Membros da lista (doc 08 §5/§8, F7-T03, RF-13): FutureProvider.family por
-/// listaId via `membrosDaLista`; dono troca papel (editor↔leitor) e remove
-/// membro; não-dono sai da lista (doc 08 §5 — transferência de dono adiada,
-/// então o dono não sai). **Correção:** o dono é mesclado a partir da lista
-/// local (`donoId`) quando o servidor não devolve a linha — a tela nunca fica
+/// listaId via `membrosDaLista`; dono troca papel (editor↔leitor), remove
+/// membro e transfere o dono (RF-14, F24); não-dono sai da lista e, após
+/// transferir, o ex-dono vira `editor` e passa a poder sair (doc 08 §6).
+/// **Correção:** o dono é mesclado a partir da lista local (`donoId`) quando o
+/// servidor não devolve a linha — a tela nunca fica
 /// vazia para listas próprias (offline ou associação pendente).
 final membrosDaListaProvider = FutureProvider.family<List<MembroLista>, String>(
   (ref, listaId) async {
