@@ -79,7 +79,7 @@ create type public.categoria_item as enum (
 );
 ```
 
-A **ordem do enum define a ordem dos grupos na UI** (doc 05 §6.3). Labels pt-BR: Hortifrúti, Mercearia, Frios, Laticínios, Congelados, Padaria, Bebidas, Pet, Limpeza, Higiene, Outros.
+A **ordem do enum é o padrão da ordem dos grupos na UI** (doc 05 §6.3); o usuário pode reordenar as categorias — ordem pessoal, global e local por dispositivo (RF-24). Labels pt-BR: Hortifrúti, Mercearia, Frios, Laticínios, Congelados, Padaria, Bebidas, Pet, Limpeza, Higiene, Outros.
 
 | Valor | Significado |
 | :--- | :--- |

@@ -649,6 +649,20 @@ Spec: [superpowers/specs/2026-09-21-adicionar-de-outra-lista-design.md](superpow
   Dep: F27-T02 · Docs: [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
   CP: RF-23 no 12 (tabela e rastreabilidade); docs donos refletem o fluxo (menu/bullet, wireframe do modal); A3 do 16 concluído; Fase 27 na tabela de progresso (155/153).
 
+## Fase 28 — Ordem das categorias (RF-24)
+
+Spec: [superpowers/specs/2026-09-21-ordem-categorias-design.md](superpowers/specs/2026-09-21-ordem-categorias-design.md) · Requisito: RF-24 (ordem pessoal das categorias). · Docs donos: 01, 05, 10, 12.
+
+- [x] **F28-T01** — Domínio e provider local da ordem
+  Dep: — · Docs: [01 §3.2](01-banco-de-dados.md), [05 §6.3](05-app-flutter.md)
+  CP: `normalizarOrdem`/`serializarOrdem`/`desserializarOrdem`/`moverItem`/`indiceCruDeReordenacao` e `ordemCategoriasProvider` (`AsyncNotifier` sobre `SharedPreferences`, chave `ordem_categorias`, como o tema); unit/provider tests verdes.
+- [x] **F28-T02** — UI: tela de ordenação, Configurações e agrupamento na lista
+  Dep: F28-T01 · Docs: [05 §6](05-app-flutter.md), [10 §5](10-wireframes-telas.md)
+  CP: item "Ordenar categorias" em Configurações abre `/categorias`; `TelaOrdenarCategorias` (`ReorderableListView` + "Restaurar padrão" com confirmação); a tela da lista agrupa os pendentes na ordem salva (fallback: enum); o dropdown do editor mantém a ordem do enum; widget tests verdes.
+- [x] **F28-T03** — Docs donos e fechamento
+  Dep: F28-T02 · Docs: [01](01-banco-de-dados.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
+  CP: RF-24 no 12 (tabela e rastreabilidade); docs donos refletem a ordem pessoal (01 §3.2 padrão/fallback, 05 §6, wireframe 10 §5); A4 do 16 concluído; Fase 28 na tabela de progresso (158/156).
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -678,7 +692,8 @@ Spec: [superpowers/specs/2026-09-21-adicionar-de-outra-lista-design.md](superpow
 | F25 Preço e total | 5 | 5 |
 | F26 Arquivar listas | 4 | 4 |
 | F27 Itens de outra lista | 3 | 3 |
-| **Total** | **155** | **153** |
+| F28 Ordem das categorias | 3 | 3 |
+| **Total** | **158** | **156** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

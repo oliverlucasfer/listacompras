@@ -173,12 +173,12 @@ O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado
 | Elemento | Comportamento |
 | :--- | :--- |
 | Campo "Adicionar item" | Fixo no topo; Enter salva imediatamente (escrita local + fila) com a categoria sugerida pelas camadas locais (§3, Fase 6). **Reconhece quantidade/unidade no texto** (`1kg de banana` → Banana, 1 kg) via parser local (RF-16); sem unidade no texto, usa a **unidade escolhida no seletor** do campo (menu com o enum, padrão `un`) — F12-T06; texto que o parser descarta (ex.: só pontuação) → erro inline "Não entendi o item" (F14-T07) |
-| Itens pendentes | **Agrupados por categoria** na ordem do enum ([01 §3.2](01-banco-de-dados.md)); header por grupo: `Frios (3)` com contagem de pendentes; grupos vazios não renderizam (Fase 6, RF-15) |
-| Exibição | Ordenação determinística entre dispositivos: `(categoria, ordem, id)` |
+| Itens pendentes | **Agrupados por categoria** na **ordem salva** pelo usuário ([01 §3.2](01-banco-de-dados.md), fallback: ordem do enum — RF-24); header por grupo: `Frios (3)` com contagem de pendentes; grupos vazios não renderizam (Fase 6, RF-15) |
+| Exibição | Ordenação determinística entre dispositivos: `(categoria na ordem salva, ordem, id)` |
 | Item | Nome, quantidade + unidade, checkbox |
 | Checkbox marcada | Item move para seção dobrável "Itens Concluídos (n)" — **sem divisão por categoria** (Fase 6) |
 | Tocar no item | Abre o editor (mesmo diálogo do swipe): nome, quantidade, unidade, categoria, **Preço (R$)** e ação **Remover** com undo (F12-T06/F25); nome vazio/quantidade inválida/preço inválido geram erro inline no campo (F14-T07) |
-| Swipe direita/esquerda | Editar / Remover (com undo via SnackBar); edição inclui **dropdown de categoria** ao lado das unidades (Fase 6) |
+| Swipe direita/esquerda | Editar / Remover (com undo via SnackBar); edição inclui **dropdown de categoria** ao lado das unidades (Fase 6); o dropdown mantém a **ordem do enum**, não a ordem custom (RF-24) |
 | Botão de importação | Abre modal (6.4) |
 | Menu (⋮) | Ordem renderizada: "Desmarcar todos", "Limpar concluídos", "Renomear lista", "Adicionar de outra lista" (dono/editor), "Membros", "Convidar" (dono), "Excluir lista" (dono) |
 | Ações em massa | Reaproveitar lista (desmarcar todos) e limpar concluídos — confirmação para destrutivas; "desmarcar" devolve o item ao seu grupo; **limpar concluídos tem undo** (SnackBar 3s, restaura `id`/`ordem` originais — F14-T05) |
@@ -187,7 +187,7 @@ O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado
 | Botão do modo mercado | Ícone `shopping_cart_checkout` na AppBar (`tooltip` "Modo mercado"), **antes da lupa**; abre `/mercado/:listaId` via `push`. Visível apenas para dono/editor (papel efetivo com escrita); para `leitor` o botão não existe (RF-18) |
 | Faixa do total | Componente `TotalCarrinho` no **rodapé** da tela da lista e no **modo mercado** (§6.5): "No carrinho: R$ …" somando **itens marcados com preço**; se houver marcados sem preço, acrescenta "· N sem preço". Oculta quando não há nenhum item marcado (RF-21, F25) |
 
-* **Reordenar (Fase 6):** drag-and-drop restrito **ao grupo da categoria** — reordena só os itens do grupo (grava `ordem` local + fila); mudar de categoria é pelo dropdown do editar. Exibição continua `(categoria, ordem, id)` — sem coluna nova.
+* **Reordenar (Fase 6):** drag-and-drop restrito **ao grupo da categoria** — reordena só os itens do grupo (grava `ordem` local + fila); mudar de categoria é pelo dropdown do editar. Exibição continua `(categoria na ordem salva, ordem, id)` — sem coluna nova.
 * Quantidades: stepper + input direto; unidades restritas ao enum ([01 §3.1](01-banco-de-dados.md)).
 * **Preço do item (RF-21, F25):** campo **"Preço (R$)"** opcional no editor; aceita `5,49`, `5.49`, `5`; vazio → sem preço (`null`); inválido/negativo → erro inline. Gravado em centavos (`preco_centavos`, [01 §4.3](01-banco-de-dados.md)) via `editarItem(..., precoCentavos, limparPreco)`; o payload de sync inclui a coluna ([03 §3](03-sincronizacao-offline.md)) e `duplicarLista` copia o preço (RF-20).
 * **Faixa do total (RF-21, F25):** `TotalCarrinho` (`lib/features/listas/ui/total_carrinho.dart`, `Semantics` live region) deriva de `itensDaListaProvider` e mostra "No carrinho: R$ …" no rodapé da lista e no modo mercado; soma `round(quantidade × precoCentavos)` apenas de itens **marcados com preço**, com sufixo "· N sem preço" quando aplicável. Oculta sem marcados.
@@ -226,6 +226,11 @@ Rota `/membros/:listaId` (AppBar `Membros · {título}`). Lista os membros (UUID
 
 * **Transferir dono (RF-14, F24):** item "Transferir dono" no menu `⋮` de cada membro — visível **só para o dono** e **nunca no próprio usuário**. Abre **confirmação dupla** (a primeira explica que o dono deixará de ser dono e passará a `editor`; a segunda confirma). No sucesso, o papel local vira `editor` (o botão "Sair da lista" passa a aparecer), a lista de membros é recarregada e um SnackBar "Dono transferido." confirma. Operação **online-only** (papel não vive no Drift); offline → erro amigável.
 * **Aviso ao novo dono (Realtime):** quem recebe a lista vê o SnackBar genérico "Você agora é dono de uma lista" na tela da lista (sem nome — o RLS não expõe perfis).
+
+### 6.7. Tela de Configurações (RF-24)
+
+* **Aparência:** seletor de tema Claro/Escuro/Sistema (`SeletorTema`, doc [15 §2](15-design-system.md)).
+* **Ordenar categorias (RF-24, F28):** item abaixo do seletor abre `/categorias` (fora do shell), a `TelaOrdenarCategorias` — lista arrastável das 11 categorias com ação **"Restaurar padrão"** (volta à ordem do enum, com confirmação). A preferência é **global** e **local** (SharedPreferences, chave `ordem_categorias`, como o tema); sem schema/RLS/sync. Detalhe em [10 §5.1](10-wireframes-telas.md).
 
 ---
 

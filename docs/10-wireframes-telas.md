@@ -396,6 +396,7 @@ Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstad
 ├─────────────────────────────────┤
 │  Aparência                      │
 │  [ Claro | Sistema | Escuro ]   │ ← tema manual (doc 15)
+│  Ordenar categorias      (→)    │ ← corredores; arrastar-e-soltar (RF-24)
 │  Conta                          │
 │  oliveira@exemplo.com           │
 │  Sair                    (→)    │ ← logout (F10)
@@ -412,6 +413,23 @@ Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstad
 ```
 
 **Sair** pede confirmação destrutiva antes de encerrar a sessão (F14-T05).
+
+### 5.1. Tela "Ordenar categorias" (RF-24, F28)
+```
+┌─────────────────────────────────┐
+│  ← Ordenar categorias           │
+├─────────────────────────────────┤
+│  Arraste para a ordem dos       │
+│  corredores do seu mercado.     │
+│  ⠿ Hortifrúti                   │
+│  ⠿ Mercearia                    │
+│  ⠿ Frios                        │
+│  …                              │ ← as 11 categorias, alça ≥48dp
+│  ( Restaurar padrão )           │ ← volta à ordem do enum (confirma)
+└─────────────────────────────────┘
+```
+
+* Cada reordenação persiste na hora (preferência local, global); sem rede/schema.
 
 ---
 
