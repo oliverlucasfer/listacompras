@@ -26,6 +26,7 @@ Sistema multiplataforma (MVP: Android, iOS e Web) para gerenciamento de listas d
 | [13](docs/13-premodelo-tecnico.md) | **Pré-modelo Técnico** | Contexto condensado para implementação (ler primeiro) | Resumo — nunca sobrepõe o doc dono |
 | [14](docs/14-tarefas.md) | **Tarefas** | Breakdown executável por fase (F1–F18) com dependências e critério de pronto | Execução e progresso |
 | [15](docs/15-design-system.md) | **Design System** | Tokens, tema M3 Expressive, componentes, motion e acessibilidade | Design system (tokens, componentes, acessibilidade) |
+| [16](docs/16-roadmap-pos-mvp.md) | **Roadmap Pós-MVP** | Backlog de frentes futuras (ondas A–E), ainda sem spec; ordem combinada e governança | Backlog de frentes futuras |
 
 ---
 
