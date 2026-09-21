@@ -20,14 +20,24 @@ String _milhares(int n) {
   return buffer.toString();
 }
 
-/// Aceita '5,49', '5.49', '5', 'R$ 1.234,56'. Vazio/nulo -> null.
+/// Aceita '5,49', '5.49', '5', 'R$ 1.234,56' e '1.234' (ponto de milhar).
+/// Vazio/nulo -> null.
 /// Valor não numérico ou negativo -> ArgumentError (a UI mostra erro inline).
 int? parsePrecoParaCentavos(String? texto) {
   final bruto = (texto ?? '').replaceAll(RegExp(r'[R$\s]'), '').trim();
   if (bruto.isEmpty) return null;
-  final normalizado = bruto.contains(',')
-      ? bruto.replaceAll('.', '').replaceAll(',', '.')
-      : bruto;
+  final String normalizado;
+  if (bruto.contains(',')) {
+    normalizado = bruto.replaceAll('.', '').replaceAll(',', '.');
+  } else if (bruto.contains('.')) {
+    final grupos = bruto.split('.');
+    final ultimo = grupos.last;
+    normalizado = ultimo.length == 3
+        ? grupos.join()
+        : '${grupos.sublist(0, grupos.length - 1).join()}.$ultimo';
+  } else {
+    normalizado = bruto;
+  }
   final valor = double.tryParse(normalizado);
   if (valor == null) throw ArgumentError('preço inválido: $texto');
   if (valor < 0) throw ArgumentError('preço negativo: $texto');

@@ -35,6 +35,17 @@ void main() {
     expect(parsePrecoParaCentavos('5.49'), 549);
     expect(parsePrecoParaCentavos('5'), 500);
     expect(parsePrecoParaCentavos(r'R$ 1.234,56'), 123456);
+    expect(parsePrecoParaCentavos('1.234'), 123400);
+    expect(parsePrecoParaCentavos('1.234.567'), 123456700);
+    expect(parsePrecoParaCentavos('5.4'), 540);
+  });
+
+  test('deve_rejeitar_quando_preco_nao_numerico', () {
+    expect(() => parsePrecoParaCentavos('abc'), throwsArgumentError);
+  });
+
+  test('deve_formatar_negativo_quando_centavos_negativos', () {
+    expect(formatarReais(-549), r'-R$ 5,49');
   });
 
   test('deve_retornar_null_quando_preco_vazio', () {
