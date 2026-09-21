@@ -73,7 +73,8 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
   /// promove o usuário a dono sinaliza o notifier — sem nome, o RLS não
   /// expõe perfis.
   void _aoVirarDono() {
-    if (!mounted || _donoTransferido?.value == null) return;
+    final listaId = _donoTransferido?.value;
+    if (listaId == null || listaId != widget.listaId || !mounted) return;
     _papelRepo?.consumirDono();
     mostrarSnackBar(context, AppStrings.voceAgoraDono);
   }

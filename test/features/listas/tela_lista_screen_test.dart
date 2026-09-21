@@ -1700,6 +1700,20 @@ void main() {
 
     await fechar(tester);
   });
+
+  testWidgets('deve_ignorar_dono_de_outra_lista_quando_notificar', (
+    tester,
+  ) async {
+    final (papelRepo, _) = await abrirListaF7t07(tester);
+
+    papelRepo.notificarDono('outra-lista');
+    await tester.pump();
+
+    expect(find.text(AppStrings.voceAgoraDono), findsNothing);
+    expect(papelRepo.donoTransferido.value, 'outra-lista'); // não consumido
+
+    await fechar(tester);
+  });
 }
 
 class _RepoLimparFalha extends ListasRepository {
