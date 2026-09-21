@@ -6,6 +6,7 @@ import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_dropdown.dart';
 import '../domain/item.dart';
+import '../domain/quantidade.dart';
 import '../providers/listas_providers.dart';
 
 /// Modal "Adicionar de outra lista" (RF-23): escolhe a origem, marca os
@@ -75,7 +76,7 @@ class _ModalAdicionarDeOutraListaState
                     child: Text(
                       c.lista.arquivadaEm == null
                           ? c.lista.titulo
-                          : '${c.lista.titulo} · ${AppStrings.arquivada}',
+                          : AppStrings.tituloListaArquivada(c.lista.titulo),
                     ),
                   ),
               ],
@@ -123,7 +124,8 @@ class _ModalAdicionarDeOutraListaState
                           }),
                           title: Text(item.nome),
                           subtitle: Text(
-                            '${item.quantidade} ${item.unidade.valor}',
+                            '${formatarQuantidade(item.quantidade)} '
+                            '${item.unidade.valor}',
                           ),
                         ),
                     ],

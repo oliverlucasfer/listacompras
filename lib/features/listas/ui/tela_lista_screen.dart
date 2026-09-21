@@ -31,6 +31,7 @@ import '../../sync/ui/indicador_sync.dart';
 import '../domain/categoria.dart';
 import '../domain/item.dart';
 import '../domain/preco.dart';
+import '../domain/quantidade.dart';
 import '../domain/resultado_dedup.dart';
 import '../domain/sugestao_item.dart';
 import '../domain/unidade.dart';
@@ -825,7 +826,7 @@ class _LinhaItem extends ConsumerWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('${_formatarQuantidade(item.quantidade)} ${item.unidade.valor}'),
+          Text('${formatarQuantidade(item.quantidade)} ${item.unidade.valor}'),
           if (podeEscrever && index >= 0)
             ReorderableDragStartListener(
               index: index,
@@ -878,9 +879,6 @@ class _LinhaItem extends ConsumerWidget {
       onAcao: () => repo.restaurarItem(item.id),
     );
   }
-
-  String _formatarQuantidade(double q) =>
-      q == q.roundToDouble() ? q.toInt().toString() : q.toString();
 
   void _abrirDialogoEditar(BuildContext context, WidgetRef ref) {
     showDialog<void>(
@@ -937,7 +935,7 @@ class _DialogoEditarItem extends ConsumerStatefulWidget {
 class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
   late final _nome = TextEditingController(text: widget.item.nome);
   late final _quantidade = TextEditingController(
-    text: _formatarQuantidade(widget.item.quantidade),
+    text: formatarQuantidade(widget.item.quantidade),
   );
   late Unidade _unidade = widget.item.unidade;
   late CategoriaItem _categoria = widget.item.categoria;
@@ -1025,7 +1023,7 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
                   onPressed: () {
                     final atual = _quantidadeLida() ?? 1;
                     if (atual > 1) {
-                      _quantidade.text = _formatarQuantidade(atual - 1);
+                      _quantidade.text = formatarQuantidade(atual - 1);
                       if (_erroQuantidade != null) {
                         setState(() => _erroQuantidade = null);
                       }
@@ -1052,7 +1050,7 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
                   icon: const Icon(Icons.add_circle_outline),
                   onPressed: () {
                     final atual = _quantidadeLida() ?? 1;
-                    _quantidade.text = _formatarQuantidade(atual + 1);
+                    _quantidade.text = formatarQuantidade(atual + 1);
                     if (_erroQuantidade != null) {
                       setState(() => _erroQuantidade = null);
                     }
@@ -1123,7 +1121,4 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
       ],
     );
   }
-
-  String _formatarQuantidade(double q) =>
-      q == q.roundToDouble() ? q.toInt().toString() : q.toString();
 }

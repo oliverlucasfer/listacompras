@@ -210,6 +210,8 @@ abstract final class AppStrings {
   static const adicionarSelecionados = 'Adicionar';
   static const nenhumItemPendenteNaOrigem = 'Nenhum item pendente nesta lista.';
 
+  static String tituloListaArquivada(String titulo) => '$titulo · $arquivada';
+
   static String itensAdicionadosDeOutra(int n) => n == 1
       ? '1 item adicionado de outra lista.'
       : '$n itens adicionados de outra lista.';

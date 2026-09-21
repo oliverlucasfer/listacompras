@@ -9,6 +9,7 @@ import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/categorias/sugestao_categorias.dart';
 import 'package:lista_compras/core/widgets/app_banner.dart';
 import 'package:lista_compras/core/widgets/app_campo_texto.dart';
+import 'package:lista_compras/core/widgets/app_dropdown.dart';
 import 'package:lista_compras/core/widgets/app_esqueleto.dart';
 import 'package:lista_compras/core/widgets/app_estado_erro.dart';
 import 'package:lista_compras/drift/database.dart';
@@ -1880,6 +1881,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text(AppStrings.adicionarDeOutraLista));
     await tester.pumpAndSettle();
+    // Quantidade inteira é exibida sem casa decimal (2, não "2.0").
+    expect(find.text('2 un'), findsOneWidget);
+    expect(find.text('2.0 un'), findsNothing);
     await tester.tap(find.text(AppStrings.selecionarTodos));
     await tester.pumpAndSettle();
     await tester.tap(
@@ -1890,8 +1894,140 @@ void main() {
     final itens = await (db.select(
       db.itemLocal,
     )..where((i) => i.listaId.equals(atual.id))).get();
-    expect(itens.map((i) => i.nome), containsAll(['Arroz', 'Feijão']));
+    // "Feijão" só existe na origem — prova a transferência.
+    final feijao = itens.singleWhere((i) => i.nome == 'Feijão');
+    expect(feijao.quantidade, 1);
+    expect(feijao.unidade, 'un');
+    // "Arroz" já existia na lista atual com 1 un (harness) e veio com 2 un da
+    // origem: a dedup soma → 3 un (RF-10), sem duplicar a linha.
+    final arroz = itens.where((i) => i.nome == 'Arroz').toList();
+    expect(arroz, hasLength(1));
+    expect(arroz.single.quantidade, 3);
     expect(find.text(AppStrings.itensAdicionadosDeOutra(2)), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('nao_deve_mostrar_adicionar_de_outra_lista_para_leitor', (
+    tester,
+  ) async {
+    await listaComItens(tester, papel: Papel.leitor);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.adicionarDeOutraLista), findsNothing);
+    // O menu do leitor segue com o que lhe cabe (navegação a membros).
+    expect(find.text(AppStrings.membros), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_selecionar_todos_quando_toca', (tester) async {
+    final repo = ListasRepository(db);
+    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'user-a');
+    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
+    await repo.adicionarItem(listaId: origem.id, nome: 'Arroz', quantidade: 2);
+    await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
+    await abrirListaF7t07(tester, listaId: atual.id);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.adicionarDeOutraLista));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.selecionarTodos));
+    await tester.pumpAndSettle();
+
+    final checkboxes = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(Checkbox),
+    );
+    expect(checkboxes, findsNWidgets(2));
+    for (var i = 0; i < 2; i++) {
+      expect(tester.widget<Checkbox>(checkboxes.at(i)).value, isTrue);
+    }
+    final confirmar = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, AppStrings.adicionarSelecionados),
+    );
+    expect(confirmar.onPressed, isNotNull);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_desabilitar_confirmar_quando_nada_selecionado', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'user-a');
+    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
+    await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
+    await abrirListaF7t07(tester, listaId: atual.id);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.adicionarDeOutraLista));
+    await tester.pumpAndSettle();
+
+    final confirmar = find.widgetWithText(
+      FilledButton,
+      AppStrings.adicionarSelecionados,
+    );
+    expect(tester.widget<FilledButton>(confirmar).onPressed, isNull);
+
+    await tester.tap(confirmar);
+    await tester.pumpAndSettle();
+
+    // Nada foi adicionado e o modal segue aberto.
+    expect(find.text(AppStrings.escolherListaOrigem), findsOneWidget);
+    final itens = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.listaId.equals(atual.id))).get();
+    expect(itens.where((i) => i.nome == 'Feijão'), isEmpty);
+
+    await fechar(tester);
+  });
+
+  testWidgets('nao_de_listar_a_propria_lista_como_origem', (tester) async {
+    final repo = ListasRepository(db);
+    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'user-a');
+    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
+    await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
+    await abrirListaF7t07(tester, listaId: atual.id);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.adicionarDeOutraLista));
+    await tester.pumpAndSettle();
+
+    final dropdown = tester.widget<AppDropdown<String>>(
+      find.byType(AppDropdown<String>),
+    );
+    final ids = dropdown.itens.map((i) => i.value).toList();
+    expect(ids, isNot(contains(atual.id)));
+    expect(ids, contains(origem.id));
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_suportar_escala_de_texto_2x_quando_modal_de_outra_lista', (
+    tester,
+  ) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    final repo = ListasRepository(db);
+    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'user-a');
+    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
+    await repo.adicionarItem(listaId: origem.id, nome: 'Arroz', quantidade: 2);
+    await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
+    await abrirListaF7t07(tester, listaId: atual.id);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.adicionarDeOutraLista));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
 
     await fechar(tester);
   });
