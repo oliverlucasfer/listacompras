@@ -55,6 +55,7 @@ class AplicadorRemoto {
             ),
             concluido: Value(r['concluido'] as bool? ?? false),
             ordem: Value((r['ordem'] as num?)?.toInt() ?? 0),
+            precoCentavos: Value((r['preco_centavos'] as num?)?.toInt()),
             deletadoEm: Value(_dataOpcional(r['deletado_em'])),
           ),
         );

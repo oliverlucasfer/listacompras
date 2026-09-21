@@ -16,6 +16,7 @@ class ItemLocal extends Table {
   RealColumn get quantidade => real().withDefault(const Constant(1.0))();
   TextColumn get unidade => text().withDefault(const Constant('un'))();
   TextColumn get categoria => text().withDefault(const Constant('outros'))();
+  IntColumn get precoCentavos => integer().nullable()();
   BoolColumn get concluido => boolean().withDefault(const Constant(false))();
   IntColumn get ordem => integer().withDefault(const Constant(0))();
   DateTimeColumn get deletadoEm => dateTime().nullable()();

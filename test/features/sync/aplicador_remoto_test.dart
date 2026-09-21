@@ -194,4 +194,73 @@ void main() {
     )..where((i) => i.id.equals('item-2'))).getSingle();
     expect(item.categoria, 'outros');
   });
+
+  test('deve_mapear_preco_ausente_para_null_quando_linha_antiga', () async {
+    final aplicador = AplicadorRemoto(db);
+    await db
+        .into(db.listaLocal)
+        .insert(
+          ListaLocalCompanion.insert(
+            id: 'l-preco-1',
+            createdAt: DateTime.utc(2026, 9, 21),
+            updatedAt: DateTime.utc(2026, 9, 21),
+            titulo: 'X',
+            donoId: 'u',
+          ),
+        );
+
+    await aplicador.aplicar('itens_lista', {
+      'id': 'i-preco-1',
+      'lista_id': 'l-preco-1',
+      'nome': 'Arroz',
+      'quantidade': 1,
+      'unidade': 'un',
+      'categoria': 'outros',
+      'concluido': false,
+      'ordem': 0,
+      'created_at': '2026-09-21T12:00:00.000Z',
+      'updated_at': '2026-09-21T12:00:00.000Z',
+      'deletado_em': null,
+    });
+
+    final linha = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals('i-preco-1'))).getSingle();
+    expect(linha.precoCentavos, isNull);
+  });
+
+  test('deve_mapear_preco_quando_presente', () async {
+    final aplicador = AplicadorRemoto(db);
+    await db
+        .into(db.listaLocal)
+        .insert(
+          ListaLocalCompanion.insert(
+            id: 'l-preco-2',
+            createdAt: DateTime.utc(2026, 9, 21),
+            updatedAt: DateTime.utc(2026, 9, 21),
+            titulo: 'X',
+            donoId: 'u',
+          ),
+        );
+
+    await aplicador.aplicar('itens_lista', {
+      'id': 'i-preco-2',
+      'lista_id': 'l-preco-2',
+      'nome': 'Arroz',
+      'quantidade': 1,
+      'unidade': 'un',
+      'categoria': 'outros',
+      'concluido': false,
+      'ordem': 0,
+      'preco_centavos': 549,
+      'created_at': '2026-09-21T12:00:00.000Z',
+      'updated_at': '2026-09-21T12:00:00.000Z',
+      'deletado_em': null,
+    });
+
+    final linha = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals('i-preco-2'))).getSingle();
+    expect(linha.precoCentavos, 549);
+  });
 }

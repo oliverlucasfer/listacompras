@@ -212,6 +212,7 @@ class ListasRepository {
     double quantidade = 1.0,
     Unidade unidade = Unidade.un,
     CategoriaItem categoria = CategoriaItem.outros,
+    int? precoCentavos,
   }) async {
     if (quantidade <= 0) {
       throw ArgumentError('quantidade deve ser maior que zero');
@@ -231,6 +232,7 @@ class ListasRepository {
             quantidade: Value(quantidade),
             unidade: Value(unidade.valor),
             categoria: Value(categoria.valor),
+            precoCentavos: Value(precoCentavos),
             ordem: Value(ordem),
           ),
         );
@@ -253,6 +255,7 @@ class ListasRepository {
       ordem: ordem,
       criadoEm: agora,
       atualizadoEm: agora,
+      precoCentavos: precoCentavos,
     );
   }
 
@@ -263,6 +266,8 @@ class ListasRepository {
     Unidade? unidade,
     CategoriaItem? categoria,
     bool? concluido,
+    int? precoCentavos,
+    bool limparPreco = false,
   }) async {
     if (quantidade != null && quantidade <= 0) {
       throw ArgumentError('quantidade deve ser maior que zero');
@@ -279,6 +284,9 @@ class ListasRepository {
             ? const Value.absent()
             : Value(categoria.valor),
         concluido: concluido == null ? const Value.absent() : Value(concluido),
+        precoCentavos: precoCentavos != null
+            ? Value(precoCentavos)
+            : (limparPreco ? const Value(null) : const Value.absent()),
         updatedAt: Value(agora),
       ),
     );
@@ -447,6 +455,7 @@ class ListasRepository {
         quantidade: item.quantidade,
         unidade: Unidade.fromValor(item.unidade),
         categoria: CategoriaItem.fromValor(item.categoria),
+        precoCentavos: item.precoCentavos,
       );
     }
     return nova;
@@ -479,6 +488,7 @@ class ListasRepository {
       'categoria': i.categoria,
       'concluido': i.concluido,
       'ordem': i.ordem,
+      'preco_centavos': i.precoCentavos,
       'created_at': _iso(i.createdAt),
       'updated_at': _iso(i.updatedAt),
       'deletado_em': i.deletadoEm == null ? null : _iso(i.deletadoEm!),

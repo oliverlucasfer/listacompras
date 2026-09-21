@@ -444,4 +444,59 @@ void main() {
       );
     },
   );
+
+  test(
+    'deve_gravar_e_enfileirar_preco_quando_adicionar_item_com_preco',
+    () async {
+      final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+      final item = await repo.adicionarItem(
+        listaId: lista.id,
+        nome: 'Arroz',
+        precoCentavos: 549,
+      );
+
+      final local = await (db.select(
+        db.itemLocal,
+      )..where((i) => i.id.equals(item.id))).getSingle();
+      expect(local.precoCentavos, 549);
+
+      final mutacoes = await fila();
+      final payload = mutacoes.last['payload'] as Map<String, Object?>;
+      expect(payload['preco_centavos'], 549);
+    },
+  );
+
+  test('deve_preservar_preco_quando_editar_outro_campo', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    final item = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      precoCentavos: 549,
+    );
+
+    await repo.editarItem(item.id, nome: 'Arroz Tio João');
+
+    final local = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals(item.id))).getSingle();
+    expect(local.precoCentavos, 549);
+  });
+
+  test('deve_limpar_preco_quando_editar_com_limpar_preco', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    final item = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      precoCentavos: 549,
+    );
+
+    await repo.editarItem(item.id, limparPreco: true);
+
+    final local = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals(item.id))).getSingle();
+    expect(local.precoCentavos, isNull);
+    final payload = (await fila()).last['payload'] as Map<String, Object?>;
+    expect(payload['preco_centavos'], isNull);
+  });
 }

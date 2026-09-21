@@ -516,6 +516,17 @@ class $ItemLocalTable extends ItemLocal
     requiredDuringInsert: false,
     defaultValue: const Constant('outros'),
   );
+  static const VerificationMeta _precoCentavosMeta = const VerificationMeta(
+    'precoCentavos',
+  );
+  @override
+  late final GeneratedColumn<int> precoCentavos = GeneratedColumn<int>(
+    'preco_centavos',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _concluidoMeta = const VerificationMeta(
     'concluido',
   );
@@ -562,6 +573,7 @@ class $ItemLocalTable extends ItemLocal
     quantidade,
     unidade,
     categoria,
+    precoCentavos,
     concluido,
     ordem,
     deletadoEm,
@@ -633,6 +645,15 @@ class $ItemLocalTable extends ItemLocal
         categoria.isAcceptableOrUnknown(data['categoria']!, _categoriaMeta),
       );
     }
+    if (data.containsKey('preco_centavos')) {
+      context.handle(
+        _precoCentavosMeta,
+        precoCentavos.isAcceptableOrUnknown(
+          data['preco_centavos']!,
+          _precoCentavosMeta,
+        ),
+      );
+    }
     if (data.containsKey('concluido')) {
       context.handle(
         _concluidoMeta,
@@ -692,6 +713,10 @@ class $ItemLocalTable extends ItemLocal
         DriftSqlType.string,
         data['${effectivePrefix}categoria'],
       )!,
+      precoCentavos: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}preco_centavos'],
+      ),
       concluido: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}concluido'],
@@ -722,6 +747,7 @@ class ItemLocalData extends DataClass implements Insertable<ItemLocalData> {
   final double quantidade;
   final String unidade;
   final String categoria;
+  final int? precoCentavos;
   final bool concluido;
   final int ordem;
   final DateTime? deletadoEm;
@@ -734,6 +760,7 @@ class ItemLocalData extends DataClass implements Insertable<ItemLocalData> {
     required this.quantidade,
     required this.unidade,
     required this.categoria,
+    this.precoCentavos,
     required this.concluido,
     required this.ordem,
     this.deletadoEm,
@@ -749,6 +776,9 @@ class ItemLocalData extends DataClass implements Insertable<ItemLocalData> {
     map['quantidade'] = Variable<double>(quantidade);
     map['unidade'] = Variable<String>(unidade);
     map['categoria'] = Variable<String>(categoria);
+    if (!nullToAbsent || precoCentavos != null) {
+      map['preco_centavos'] = Variable<int>(precoCentavos);
+    }
     map['concluido'] = Variable<bool>(concluido);
     map['ordem'] = Variable<int>(ordem);
     if (!nullToAbsent || deletadoEm != null) {
@@ -767,6 +797,9 @@ class ItemLocalData extends DataClass implements Insertable<ItemLocalData> {
       quantidade: Value(quantidade),
       unidade: Value(unidade),
       categoria: Value(categoria),
+      precoCentavos: precoCentavos == null && nullToAbsent
+          ? const Value.absent()
+          : Value(precoCentavos),
       concluido: Value(concluido),
       ordem: Value(ordem),
       deletadoEm: deletadoEm == null && nullToAbsent
@@ -789,6 +822,7 @@ class ItemLocalData extends DataClass implements Insertable<ItemLocalData> {
       quantidade: serializer.fromJson<double>(json['quantidade']),
       unidade: serializer.fromJson<String>(json['unidade']),
       categoria: serializer.fromJson<String>(json['categoria']),
+      precoCentavos: serializer.fromJson<int?>(json['precoCentavos']),
       concluido: serializer.fromJson<bool>(json['concluido']),
       ordem: serializer.fromJson<int>(json['ordem']),
       deletadoEm: serializer.fromJson<DateTime?>(json['deletadoEm']),
@@ -806,6 +840,7 @@ class ItemLocalData extends DataClass implements Insertable<ItemLocalData> {
       'quantidade': serializer.toJson<double>(quantidade),
       'unidade': serializer.toJson<String>(unidade),
       'categoria': serializer.toJson<String>(categoria),
+      'precoCentavos': serializer.toJson<int?>(precoCentavos),
       'concluido': serializer.toJson<bool>(concluido),
       'ordem': serializer.toJson<int>(ordem),
       'deletadoEm': serializer.toJson<DateTime?>(deletadoEm),
@@ -821,6 +856,7 @@ class ItemLocalData extends DataClass implements Insertable<ItemLocalData> {
     double? quantidade,
     String? unidade,
     String? categoria,
+    Value<int?> precoCentavos = const Value.absent(),
     bool? concluido,
     int? ordem,
     Value<DateTime?> deletadoEm = const Value.absent(),
@@ -833,6 +869,9 @@ class ItemLocalData extends DataClass implements Insertable<ItemLocalData> {
     quantidade: quantidade ?? this.quantidade,
     unidade: unidade ?? this.unidade,
     categoria: categoria ?? this.categoria,
+    precoCentavos: precoCentavos.present
+        ? precoCentavos.value
+        : this.precoCentavos,
     concluido: concluido ?? this.concluido,
     ordem: ordem ?? this.ordem,
     deletadoEm: deletadoEm.present ? deletadoEm.value : this.deletadoEm,
@@ -849,6 +888,9 @@ class ItemLocalData extends DataClass implements Insertable<ItemLocalData> {
           : this.quantidade,
       unidade: data.unidade.present ? data.unidade.value : this.unidade,
       categoria: data.categoria.present ? data.categoria.value : this.categoria,
+      precoCentavos: data.precoCentavos.present
+          ? data.precoCentavos.value
+          : this.precoCentavos,
       concluido: data.concluido.present ? data.concluido.value : this.concluido,
       ordem: data.ordem.present ? data.ordem.value : this.ordem,
       deletadoEm: data.deletadoEm.present
@@ -868,6 +910,7 @@ class ItemLocalData extends DataClass implements Insertable<ItemLocalData> {
           ..write('quantidade: $quantidade, ')
           ..write('unidade: $unidade, ')
           ..write('categoria: $categoria, ')
+          ..write('precoCentavos: $precoCentavos, ')
           ..write('concluido: $concluido, ')
           ..write('ordem: $ordem, ')
           ..write('deletadoEm: $deletadoEm')
@@ -885,6 +928,7 @@ class ItemLocalData extends DataClass implements Insertable<ItemLocalData> {
     quantidade,
     unidade,
     categoria,
+    precoCentavos,
     concluido,
     ordem,
     deletadoEm,
@@ -901,6 +945,7 @@ class ItemLocalData extends DataClass implements Insertable<ItemLocalData> {
           other.quantidade == this.quantidade &&
           other.unidade == this.unidade &&
           other.categoria == this.categoria &&
+          other.precoCentavos == this.precoCentavos &&
           other.concluido == this.concluido &&
           other.ordem == this.ordem &&
           other.deletadoEm == this.deletadoEm);
@@ -915,6 +960,7 @@ class ItemLocalCompanion extends UpdateCompanion<ItemLocalData> {
   final Value<double> quantidade;
   final Value<String> unidade;
   final Value<String> categoria;
+  final Value<int?> precoCentavos;
   final Value<bool> concluido;
   final Value<int> ordem;
   final Value<DateTime?> deletadoEm;
@@ -928,6 +974,7 @@ class ItemLocalCompanion extends UpdateCompanion<ItemLocalData> {
     this.quantidade = const Value.absent(),
     this.unidade = const Value.absent(),
     this.categoria = const Value.absent(),
+    this.precoCentavos = const Value.absent(),
     this.concluido = const Value.absent(),
     this.ordem = const Value.absent(),
     this.deletadoEm = const Value.absent(),
@@ -942,6 +989,7 @@ class ItemLocalCompanion extends UpdateCompanion<ItemLocalData> {
     this.quantidade = const Value.absent(),
     this.unidade = const Value.absent(),
     this.categoria = const Value.absent(),
+    this.precoCentavos = const Value.absent(),
     this.concluido = const Value.absent(),
     this.ordem = const Value.absent(),
     this.deletadoEm = const Value.absent(),
@@ -960,6 +1008,7 @@ class ItemLocalCompanion extends UpdateCompanion<ItemLocalData> {
     Expression<double>? quantidade,
     Expression<String>? unidade,
     Expression<String>? categoria,
+    Expression<int>? precoCentavos,
     Expression<bool>? concluido,
     Expression<int>? ordem,
     Expression<DateTime>? deletadoEm,
@@ -974,6 +1023,7 @@ class ItemLocalCompanion extends UpdateCompanion<ItemLocalData> {
       if (quantidade != null) 'quantidade': quantidade,
       if (unidade != null) 'unidade': unidade,
       if (categoria != null) 'categoria': categoria,
+      if (precoCentavos != null) 'preco_centavos': precoCentavos,
       if (concluido != null) 'concluido': concluido,
       if (ordem != null) 'ordem': ordem,
       if (deletadoEm != null) 'deletado_em': deletadoEm,
@@ -990,6 +1040,7 @@ class ItemLocalCompanion extends UpdateCompanion<ItemLocalData> {
     Value<double>? quantidade,
     Value<String>? unidade,
     Value<String>? categoria,
+    Value<int?>? precoCentavos,
     Value<bool>? concluido,
     Value<int>? ordem,
     Value<DateTime?>? deletadoEm,
@@ -1004,6 +1055,7 @@ class ItemLocalCompanion extends UpdateCompanion<ItemLocalData> {
       quantidade: quantidade ?? this.quantidade,
       unidade: unidade ?? this.unidade,
       categoria: categoria ?? this.categoria,
+      precoCentavos: precoCentavos ?? this.precoCentavos,
       concluido: concluido ?? this.concluido,
       ordem: ordem ?? this.ordem,
       deletadoEm: deletadoEm ?? this.deletadoEm,
@@ -1038,6 +1090,9 @@ class ItemLocalCompanion extends UpdateCompanion<ItemLocalData> {
     if (categoria.present) {
       map['categoria'] = Variable<String>(categoria.value);
     }
+    if (precoCentavos.present) {
+      map['preco_centavos'] = Variable<int>(precoCentavos.value);
+    }
     if (concluido.present) {
       map['concluido'] = Variable<bool>(concluido.value);
     }
@@ -1064,6 +1119,7 @@ class ItemLocalCompanion extends UpdateCompanion<ItemLocalData> {
           ..write('quantidade: $quantidade, ')
           ..write('unidade: $unidade, ')
           ..write('categoria: $categoria, ')
+          ..write('precoCentavos: $precoCentavos, ')
           ..write('concluido: $concluido, ')
           ..write('ordem: $ordem, ')
           ..write('deletadoEm: $deletadoEm, ')
@@ -1937,6 +1993,7 @@ typedef $$ItemLocalTableCreateCompanionBuilder =
       Value<double> quantidade,
       Value<String> unidade,
       Value<String> categoria,
+      Value<int?> precoCentavos,
       Value<bool> concluido,
       Value<int> ordem,
       Value<DateTime?> deletadoEm,
@@ -1952,6 +2009,7 @@ typedef $$ItemLocalTableUpdateCompanionBuilder =
       Value<double> quantidade,
       Value<String> unidade,
       Value<String> categoria,
+      Value<int?> precoCentavos,
       Value<bool> concluido,
       Value<int> ordem,
       Value<DateTime?> deletadoEm,
@@ -2021,6 +2079,11 @@ class $$ItemLocalTableFilterComposer
 
   ColumnFilters<String> get categoria => $composableBuilder(
     column: $table.categoria,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get precoCentavos => $composableBuilder(
+    column: $table.precoCentavos,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2107,6 +2170,11 @@ class $$ItemLocalTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get precoCentavos => $composableBuilder(
+    column: $table.precoCentavos,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get concluido => $composableBuilder(
     column: $table.concluido,
     builder: (column) => ColumnOrderings(column),
@@ -2177,6 +2245,11 @@ class $$ItemLocalTableAnnotationComposer
 
   GeneratedColumn<String> get categoria =>
       $composableBuilder(column: $table.categoria, builder: (column) => column);
+
+  GeneratedColumn<int> get precoCentavos => $composableBuilder(
+    column: $table.precoCentavos,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get concluido =>
       $composableBuilder(column: $table.concluido, builder: (column) => column);
@@ -2249,6 +2322,7 @@ class $$ItemLocalTableTableManager
                 Value<double> quantidade = const Value.absent(),
                 Value<String> unidade = const Value.absent(),
                 Value<String> categoria = const Value.absent(),
+                Value<int?> precoCentavos = const Value.absent(),
                 Value<bool> concluido = const Value.absent(),
                 Value<int> ordem = const Value.absent(),
                 Value<DateTime?> deletadoEm = const Value.absent(),
@@ -2262,6 +2336,7 @@ class $$ItemLocalTableTableManager
                 quantidade: quantidade,
                 unidade: unidade,
                 categoria: categoria,
+                precoCentavos: precoCentavos,
                 concluido: concluido,
                 ordem: ordem,
                 deletadoEm: deletadoEm,
@@ -2277,6 +2352,7 @@ class $$ItemLocalTableTableManager
                 Value<double> quantidade = const Value.absent(),
                 Value<String> unidade = const Value.absent(),
                 Value<String> categoria = const Value.absent(),
+                Value<int?> precoCentavos = const Value.absent(),
                 Value<bool> concluido = const Value.absent(),
                 Value<int> ordem = const Value.absent(),
                 Value<DateTime?> deletadoEm = const Value.absent(),
@@ -2290,6 +2366,7 @@ class $$ItemLocalTableTableManager
                 quantidade: quantidade,
                 unidade: unidade,
                 categoria: categoria,
+                precoCentavos: precoCentavos,
                 concluido: concluido,
                 ordem: ordem,
                 deletadoEm: deletadoEm,

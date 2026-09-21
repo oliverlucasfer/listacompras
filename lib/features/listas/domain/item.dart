@@ -17,6 +17,7 @@ class Item {
     required this.ordem,
     required this.criadoEm,
     required this.atualizadoEm,
+    this.precoCentavos,
     this.deletadoEm,
   });
 
@@ -30,6 +31,7 @@ class Item {
   final int ordem;
   final DateTime criadoEm;
   final DateTime atualizadoEm;
+  final int? precoCentavos;
   final DateTime? deletadoEm;
 
   factory Item.fromLocal(ItemLocalData d) => Item(
@@ -43,6 +45,7 @@ class Item {
     ordem: d.ordem,
     criadoEm: d.createdAt,
     atualizadoEm: d.updatedAt,
+    precoCentavos: d.precoCentavos,
     deletadoEm: d.deletadoEm,
   );
 }
