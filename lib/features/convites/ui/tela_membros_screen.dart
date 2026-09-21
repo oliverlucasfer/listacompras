@@ -16,6 +16,7 @@ import '../../listas/providers/listas_providers.dart';
 import '../domain/convite.dart';
 import '../domain/papel.dart';
 import '../providers/convites_providers.dart';
+import '../providers/papel_providers.dart';
 import 'acao_sair_da_lista.dart';
 
 /// Membros da lista (doc 08 §5/§8, F7-T03, RF-13): FutureProvider.family por
@@ -72,6 +73,8 @@ class _TelaMembrosScreenState extends ConsumerState<TelaMembrosScreen> {
         _mudarPapel(context, ref, membro, Papel.leitor);
       case 'remover':
         _confirmarRemover(context, ref, membro);
+      case 'transferir':
+        _confirmarTransferencia(context, ref, membro);
     }
   }
 
@@ -122,6 +125,41 @@ class _TelaMembrosScreenState extends ConsumerState<TelaMembrosScreen> {
       if (context.mounted) {
         mostrarSnackBar(context, AppStrings.erroGenerico);
       }
+    }
+  }
+
+  Future<void> _confirmarTransferencia(
+    BuildContext context,
+    WidgetRef ref,
+    MembroLista membro,
+  ) async {
+    // Confirmação dupla (doc 08 §6): explica a perda de poderes e confirma.
+    final passo1 = await AppDialog.confirmarDestrutivo(
+      context,
+      titulo: AppStrings.transferirDonoTitulo,
+      mensagem: AppStrings.transferirDonoMensagem,
+      confirmar: AppStrings.continuar,
+    );
+    if (!passo1 || !context.mounted) return;
+    final passo2 = await AppDialog.confirmarDestrutivo(
+      context,
+      titulo: AppStrings.transferirDonoTitulo,
+      mensagem: AppStrings.transferirDonoMensagemFinal,
+      confirmar: AppStrings.transferirDono,
+    );
+    if (!passo2 || !context.mounted) return;
+
+    try {
+      await ref
+          .read(convitesRepositoryProvider)
+          .transferirDono(listaId: listaId, novoDonoId: membro.userId);
+      ref.read(papelRepositoryProvider).atualizar(listaId, Papel.editor);
+      ref.invalidate(membrosDaListaProvider(listaId));
+      if (context.mounted) mostrarSnackBar(context, AppStrings.donoTransferido);
+    } on ErroConvite catch (e) {
+      if (context.mounted) mostrarSnackBar(context, e.message);
+    } catch (_) {
+      if (context.mounted) mostrarSnackBar(context, AppStrings.erroGenerico);
     }
   }
 
@@ -212,6 +250,11 @@ class _TelaMembrosScreenState extends ConsumerState<TelaMembrosScreen> {
                               checked: membro.papel == Papel.leitor,
                               child: const Text(AppStrings.convidarPapelLeitor),
                             ),
+                            if (_eDono(membrosAsync, usuarioId) && !souEu)
+                              PopupMenuItem(
+                                value: 'transferir',
+                                child: Text(AppStrings.transferirDono),
+                              ),
                             PopupMenuItem(
                               value: 'remover',
                               child: Text(

@@ -11,6 +11,7 @@ import 'package:lista_compras/features/auth/providers/auth_providers.dart';
 import 'package:lista_compras/features/convites/data/convites_repository.dart';
 import 'package:lista_compras/features/convites/providers/convites_providers.dart';
 import 'package:lista_compras/features/convites/data/papel_repository.dart';
+import 'package:lista_compras/features/convites/domain/papel.dart';
 import 'package:lista_compras/features/convites/providers/papel_providers.dart';
 import 'package:lista_compras/features/convites/ui/tela_membros_screen.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
@@ -102,6 +103,7 @@ void main() {
           convitesRepositoryProvider.overrideWithValue(
             ConvitesRepository(cliente),
           ),
+          papelRepositoryProvider.overrideWithValue(PapelRepository(cliente)),
           donoAtualIdProvider.overrideWithValue(usuarioId),
           appDatabaseProvider.overrideWithValue(appDb),
         ],
@@ -531,6 +533,84 @@ void main() {
     // Papel não confiável no cache vazio: sem ações de dono (doc 08 §8).
     expect(find.byType(PopupMenuButton<String>), findsNothing);
 
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_transferir_dono_no_menu_do_membro', (tester) async {
+    final servidor = ServidorFake((req) {
+      if (req.method == 'GET' && req.url.path.contains('/lista_membros')) {
+        return (200, _linhasMembros());
+      }
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    await abrir(tester, servidor, usuarioId: 'U1');
+
+    await tester.tap(find.byIcon(Icons.more_vert).first);
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.transferirDono), findsOneWidget);
+    await fechar(tester);
+  });
+
+  testWidgets('nao_deve_transferir_quando_cancela_confirmacao', (tester) async {
+    final servidor = ServidorFake((req) {
+      if (req.method == 'GET' && req.url.path.contains('/lista_membros')) {
+        return (200, _linhasMembros());
+      }
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    await abrir(tester, servidor, usuarioId: 'U1');
+
+    await tester.tap(find.byIcon(Icons.more_vert).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.transferirDono));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.transferirDonoTitulo), findsOneWidget);
+    await tester.tap(find.widgetWithText(TextButton, AppStrings.cancelar));
+    await tester.pumpAndSettle();
+
+    expect(
+      servidor.pedidos.where((p) => p.url.path.contains('transferir_dono')),
+      isEmpty,
+    );
+    await fechar(tester);
+  });
+
+  testWidgets('deve_transferir_e_atualizar_papel_quando_confirma_duas_vezes', (
+    tester,
+  ) async {
+    final servidor = ServidorFake((req) {
+      if (req.method == 'POST' && req.url.path.contains('transferir_dono')) {
+        return (200, const <Object?>[]);
+      }
+      if (req.method == 'GET' && req.url.path.contains('/lista_membros')) {
+        return (200, _linhasMembros());
+      }
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    await abrir(tester, servidor, usuarioId: 'U1');
+
+    await tester.tap(find.byIcon(Icons.more_vert).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.transferirDono));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.continuar));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.widgetWithText(FilledButton, AppStrings.transferirDono),
+    );
+    await tester.pumpAndSettle();
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(TelaMembrosScreen)),
+    );
+    expect(
+      container.read(papelRepositoryProvider).papelDe(_listaId),
+      Papel.editor,
+    );
+    expect(find.text(AppStrings.donoTransferido), findsOneWidget);
     await fechar(tester);
   });
 }
