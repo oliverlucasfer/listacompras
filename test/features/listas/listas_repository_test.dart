@@ -5,6 +5,8 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/domain/categoria.dart';
+import 'package:lista_compras/features/listas/domain/item.dart';
+import 'package:lista_compras/features/listas/domain/resultado_dedup.dart';
 import 'package:lista_compras/features/listas/domain/unidade.dart';
 import 'package:lista_compras/drift/database.dart';
 
@@ -630,4 +632,124 @@ void main() {
     );
     expect(desarquivada.single.lista.arquivadaEm, isNull);
   });
+
+  test('deve_adicionar_quando_nome_nao_existe', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    final r = await repo.adicionarItemDedup(
+      listaId: lista.id,
+      nome: 'Arroz',
+      quantidade: 2,
+      unidade: Unidade.kg,
+      categoria: CategoriaItem.mercearia,
+    );
+    expect(r, ResultadoDedup.adicionado);
+    final itens = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.listaId.equals(lista.id))).get();
+    expect(itens.single.nome, 'Arroz');
+    expect(itens.single.quantidade, 2);
+  });
+
+  test('deve_somar_quando_mesmo_nome_e_unidade', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      quantidade: 2,
+      unidade: Unidade.kg,
+    );
+    final r = await repo.adicionarItemDedup(
+      listaId: lista.id,
+      nome: 'ARROZ',
+      quantidade: 1,
+      unidade: Unidade.kg,
+      categoria: CategoriaItem.outros,
+    );
+    expect(r, ResultadoDedup.somado);
+    final itens = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.listaId.equals(lista.id))).get();
+    expect(itens, hasLength(1));
+    expect(itens.single.quantidade, 3);
+  });
+
+  test('deve_substituir_quando_mesmo_nome_e_unidade_diferente', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      quantidade: 2,
+      unidade: Unidade.kg,
+    );
+    final r = await repo.adicionarItemDedup(
+      listaId: lista.id,
+      nome: 'Arroz',
+      quantidade: 5,
+      unidade: Unidade.un,
+      categoria: CategoriaItem.outros,
+    );
+    expect(r, ResultadoDedup.substituido);
+    final itens = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.listaId.equals(lista.id))).get();
+    expect(itens.single.quantidade, 5);
+    expect(itens.single.unidade, 'un');
+  });
+
+  test('deve_ignorar_preco_e_concluido_quando_adicionar_lote', () async {
+    final origem = await repo.criarLista(titulo: 'Origem', donoId: 'user-a');
+    final destino = await repo.criarLista(titulo: 'Destino', donoId: 'user-a');
+    final item = await repo.adicionarItem(
+      listaId: origem.id,
+      nome: 'Queijo',
+      quantidade: 0.5,
+      unidade: Unidade.kg,
+      categoria: CategoriaItem.frios,
+      precoCentavos: 4990,
+    );
+    await repo.editarItem(item.id, concluido: true);
+
+    final fonte = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals(item.id))).getSingle();
+    await repo.adicionarItensDedup(destino.id, [Item.fromLocal(fonte)]);
+
+    final novo = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.listaId.equals(destino.id))).getSingle();
+    expect(novo.nome, 'Queijo');
+    expect(novo.quantidade, 0.5);
+    expect(novo.unidade, 'kg');
+    expect(novo.categoria, 'frios');
+    expect(novo.concluido, isFalse);
+    expect(novo.precoCentavos, isNull);
+  });
+
+  test(
+    'deve_aplicar_dedup_por_nome_normalizado_quando_adicionar_lote',
+    () async {
+      final origem = await repo.criarLista(titulo: 'Origem', donoId: 'user-a');
+      final destino = await repo.criarLista(
+        titulo: 'Destino',
+        donoId: 'user-a',
+      );
+      await repo.adicionarItem(listaId: destino.id, nome: 'Café');
+      final itemOrigem = await repo.adicionarItem(
+        listaId: origem.id,
+        nome: 'CAFE',
+        quantidade: 2,
+      );
+
+      final fonte = await (db.select(
+        db.itemLocal,
+      )..where((i) => i.id.equals(itemOrigem.id))).getSingle();
+      await repo.adicionarItensDedup(destino.id, [Item.fromLocal(fonte)]);
+
+      final itens = await (db.select(
+        db.itemLocal,
+      )..where((i) => i.listaId.equals(destino.id))).get();
+      expect(itens, hasLength(1));
+      expect(itens.single.quantidade, 3);
+    },
+  );
 }

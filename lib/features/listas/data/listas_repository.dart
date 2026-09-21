@@ -9,6 +9,7 @@ import '../domain/categoria.dart';
 import '../domain/item.dart';
 import '../domain/lista.dart';
 import '../domain/lista_com_contagem.dart';
+import '../domain/resultado_dedup.dart';
 import '../domain/sugestao_item.dart';
 import '../domain/unidade.dart';
 
@@ -279,6 +280,63 @@ class ListasRepository {
       atualizadoEm: agora,
       precoCentavos: precoCentavos,
     );
+  }
+
+  /// Adiciona um item aplicando a dedup do app (RF-10): compara o nome
+  /// **normalizado** com os itens ativos da lista; mesmo nome e mesma unidade
+  /// → soma a quantidade; unidade diferente → substitui quantidade/unidade.
+  /// Sem existente → insere com a `categoria` recebida.
+  Future<ResultadoDedup> adicionarItemDedup({
+    required String listaId,
+    required String nome,
+    required double quantidade,
+    required Unidade unidade,
+    required CategoriaItem categoria,
+  }) async {
+    final itens = await (_db.select(
+      _db.itemLocal,
+    )..where((i) => i.listaId.equals(listaId) & i.deletadoEm.isNull())).get();
+    final alvo = normalizarTexto(nome);
+    ItemLocalData? existente;
+    for (final i in itens) {
+      if (normalizarTexto(i.nome) == alvo) {
+        existente = i;
+        break;
+      }
+    }
+    if (existente != null) {
+      if (existente.unidade == unidade.valor) {
+        await editarItem(
+          existente.id,
+          quantidade: existente.quantidade + quantidade,
+        );
+        return ResultadoDedup.somado;
+      }
+      await editarItem(existente.id, quantidade: quantidade, unidade: unidade);
+      return ResultadoDedup.substituido;
+    }
+    await adicionarItem(
+      listaId: listaId,
+      nome: nome,
+      quantidade: quantidade,
+      unidade: unidade,
+      categoria: categoria,
+    );
+    return ResultadoDedup.adicionado;
+  }
+
+  /// Adiciona um lote de itens (RF-23), um a um pela dedup. Copia nome/
+  /// quantidade/unidade/categoria; **ignora preço e concluído**.
+  Future<void> adicionarItensDedup(String listaId, Iterable<Item> itens) async {
+    for (final item in itens) {
+      await adicionarItemDedup(
+        listaId: listaId,
+        nome: item.nome,
+        quantidade: item.quantidade,
+        unidade: item.unidade,
+        categoria: item.categoria,
+      );
+    }
   }
 
   Future<void> editarItem(

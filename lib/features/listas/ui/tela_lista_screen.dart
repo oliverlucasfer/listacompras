@@ -8,7 +8,6 @@ import '../../../core/importacao/parser_lista_local.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/navigation/voltar_para_inicio.dart';
 import '../../../core/texto/busca.dart';
-import '../../../core/texto/normalizar.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/app_botao.dart';
@@ -32,6 +31,7 @@ import '../../sync/ui/indicador_sync.dart';
 import '../domain/categoria.dart';
 import '../domain/item.dart';
 import '../domain/preco.dart';
+import '../domain/resultado_dedup.dart';
 import '../domain/sugestao_item.dart';
 import '../domain/unidade.dart';
 import '../providers/listas_providers.dart';
@@ -468,60 +468,33 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
   }
 
   /// Núcleo de escrita compartilhado por `_adicionar` (entrada rápida) e
-  /// `_adicionarSugerido` (chip, RF-19): nunca duplica um nome ativo —
-  /// comparação normalizada. Mesma unidade → soma a quantidade; unidade
-  /// diferente → atualiza para a nova quantidade/unidade (RF-10). Sem
-  /// existente, insere com a categoria da cadeia local (F6-T03).
+  /// `_adicionarSugerido` (chip, RF-19): delega a dedup ao repositório (RF-10).
+  /// A sugestão de categoria continua aqui, na cadeia local (F6-T03).
   Future<void> _adicionarItemDedup({
     required String nome,
     required double quantidade,
     required Unidade unidade,
   }) async {
-    final repo = ref.read(listasRepositoryProvider);
-    final itens =
-        ref.read(itensDaListaProvider(widget.listaId)).value ?? const <Item>[];
-    final alvo = normalizarTexto(nome);
-    Item? existente;
-    for (final i in itens) {
-      if (normalizarTexto(i.nome) == alvo) {
-        existente = i;
-        break;
-      }
-    }
-    if (existente != null) {
-      if (existente.unidade == unidade) {
-        await repo.editarItem(
-          existente.id,
-          quantidade: existente.quantidade + quantidade,
-        );
-        if (mounted) {
-          mostrarSnackBar(context, '$nome ${AppStrings.itemDuplicadoSomado}');
-        }
-      } else {
-        // Unidade diferente: o item é único por nome no servidor, então
-        // atualiza para a nova quantidade/unidade (F12-T06).
-        await repo.editarItem(
-          existente.id,
+    final categoria = await ref
+        .read(sugestaoCategoriasProvider)
+        .sugerirCategoria(nome);
+    final resultado = await ref
+        .read(listasRepositoryProvider)
+        .adicionarItemDedup(
+          listaId: widget.listaId,
+          nome: nome,
           quantidade: quantidade,
           unidade: unidade,
+          categoria: categoria,
         );
-        if (mounted) {
-          mostrarSnackBar(context, '$nome: ${AppStrings.itemAtualizado}');
-        }
-      }
-    } else {
-      // Sugestão local em camadas (F6-T03, spec §4): memória → dicionário
-      // → outros; zero rede.
-      final categoria = await ref
-          .read(sugestaoCategoriasProvider)
-          .sugerirCategoria(nome);
-      await repo.adicionarItem(
-        listaId: widget.listaId,
-        nome: nome,
-        quantidade: quantidade,
-        unidade: unidade,
-        categoria: categoria,
-      );
+    if (!mounted) return;
+    switch (resultado) {
+      case ResultadoDedup.somado:
+        mostrarSnackBar(context, '$nome ${AppStrings.itemDuplicadoSomado}');
+      case ResultadoDedup.substituido:
+        mostrarSnackBar(context, '$nome: ${AppStrings.itemAtualizado}');
+      case ResultadoDedup.adicionado:
+        break;
     }
   }
 
