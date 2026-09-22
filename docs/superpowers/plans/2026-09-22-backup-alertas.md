@@ -34,8 +34,8 @@
 
 ```yaml
 # Backup agendado do banco de produção — doc dono: docs/09-runbook-operacoes.md §2.2
-# Dump + cifra (AES-256/PBKDF2) + artefato. Requer os secrets do repositório
-# SUPABASE_DB_URL e BACKUP_PASSPHRASE (Settings → Secrets and variables → Actions).
+# Dump (schema + dados) + cifra (AES-256/PBKDF2) + artefato. Requer os secrets do
+# repositório SUPABASE_DB_URL e BACKUP_PASSPHRASE (Settings → Secrets and variables → Actions).
 name: backup
 
 on:
@@ -46,34 +46,49 @@ on:
 jobs:
   dump:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v7
-      - uses: supabase/setup-cli@v3
-        with:
-          version: 2.116.0  # pinado ao CLI do dev
-      - name: Dump do banco de produção
-        id: dump
+      - name: Preflight (secrets obrigatórios)
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
           if [ -z "$SUPABASE_DB_URL" ]; then
             echo "secret SUPABASE_DB_URL ausente"; exit 1
           fi
-          data="$(date +%Y%m%d)"
-          echo "data=$data" >> "$GITHUB_OUTPUT"
-          supabase db dump --db-url "$SUPABASE_DB_URL" --file "backup_${data}.sql"
-      - name: Cifra o dump (AES-256 + PBKDF2)
-        env:
-          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
-        run: |
           if [ -z "$BACKUP_PASSPHRASE" ]; then
             echo "secret BACKUP_PASSPHRASE ausente"; exit 1
           fi
-          openssl enc -aes-256-cbc -pbkdf2 -salt \
-            -pass env:BACKUP_PASSPHRASE \
-            -in "backup_${{ steps.dump.outputs.data }}.sql" \
-            -out "backup_${{ steps.dump.outputs.data }}.sql.enc"
-          rm -f "backup_${{ steps.dump.outputs.data }}.sql"
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.116.0  # pinado ao CLI do dev
+      - name: Dump do banco de produção (schema + dados)
+        id: dump
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          data="$(date +%Y%m%d)"
+          echo "data=$data" >> "$GITHUB_OUTPUT"
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f "backup_${data}_schema.sql"
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f "backup_${data}_data.sql" --data-only --use-copy
+          if [ ! -s "backup_${data}_data.sql" ]; then
+            echo "dump de dados ausente/vazio"; exit 1
+          fi
+          if ! grep -qiE '^(COPY|INSERT INTO)' "backup_${data}_data.sql"; then
+            echo "dump de dados sem registros (sem COPY/INSERT)"; exit 1
+          fi
+      - name: Cifra os dumps (AES-256 + PBKDF2)
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          for f in backup_${{ steps.dump.outputs.data }}_*.sql; do
+            openssl enc -aes-256-cbc -pbkdf2 -salt \
+              -pass env:BACKUP_PASSPHRASE \
+              -in "$f" \
+              -out "$f.enc"
+          done
+          rm -f backup_${{ steps.dump.outputs.data }}_*.sql
       - name: Publica o artefato cifrado
         uses: actions/upload-artifact@v4
         with:
@@ -85,7 +100,7 @@ jobs:
 - [ ] **Step 2: Validar sintaxe do YAML**
 
 Run: `Get-Content .github/workflows/backup.yml -Raw | ConvertFrom-Yaml | Out-Null` (se o módulo `powershell-yaml` existir); caso contrário, validar visualmente a indentação e conferir que o arquivo é UTF-8.
-Expected: sem erro de parsing. (Não há runner local; a validação real é o `workflow_dispatch` após os secrets — documentado no 09.)
+Expected: sem erro de parsing. Conferir ainda: `permissions: contents: read` no job; preflight dos dois secrets antes do dump; dump em **dois** arquivos (`_schema.sql` + `_data.sql --data-only --use-copy`); checagem de conteúdo (`COPY`/`INSERT`) e de arquivo vazio; loop de cifra sobre `backup_<data>_*.sql` + remoção do `.sql` cru; sem `actions/checkout`. (Não há runner local; a validação real é o `workflow_dispatch` após os secrets — documentado no 09.)
 
 - [ ] **Step 3: Gate e commit**
 
@@ -108,13 +123,15 @@ git commit -m "F34-T01: workflow de backup agendado cifrado (RNF-08)"
 - [ ] **Step 1: doc 09 §2.2 — backup agendado + restore**
 
 Reescrever §2.2 para incluir, mantendo o formato do arquivo:
-- **Backup automatizado:** `.github/workflows/backup.yml` roda **mensal** (`0 6 1 * *`, dia 1 às 06:00 UTC) e sob demanda (Actions → *backup* → *Run workflow*); faz `supabase db dump` de produção, **cifra** o `.sql` e publica o artefato `backup-YYYYMMDD` (retenção 90 dias).
+- **Backup automatizado:** `.github/workflows/backup.yml` roda **mensal** (`0 6 1 * *`, dia 1 às 06:00 UTC) e sob demanda (Actions → *backup* → *Run workflow*); faz **dois** `supabase db dump` de produção (**schema** e **dados** com `--data-only --use-copy`), valida que o dump de dados tem `COPY`/`INSERT`, **cifra** os `.sql` e publica o artefato `backup-YYYYMMDD` (retenção 90 dias, só `*.sql.enc`).
+- **O que o backup contém:** schema + dados do app; o CLI exclui schemas gerenciados (`auth`/`storage`), então `auth.users` (contas) **não** vai no dump — recriar no projeto/target novo conforme o Supabase.
 - **Secrets necessários** (cadastrar em Settings → Secrets and variables → Actions; nunca no repo): `SUPABASE_DB_URL` (connection string do Postgres de produção) e `BACKUP_PASSPHRASE`.
-- **Restore a partir do artefato** (baixar `backup_YYYYMMDD.sql.enc`):
+- **Restore a partir do artefato** (baixar os dois `*.enc`, decifrar e aplicar schema → dados):
   ```bash
-  openssl enc -d -aes-256-cbc -pbkdf2 -pass env:BACKUP_PASSPHRASE \
-    -in backup_YYYYMMDD.sql.enc -out backup_YYYYMMDD.sql
-  psql "$DATABASE_URL" -f backup_YYYYMMDD.sql
+  openssl enc -d -aes-256-cbc -pbkdf2 -pass env:BACKUP_PASSPHRASE -in backup_YYYYMMDD_schema.sql.enc -out backup_YYYYMMDD_schema.sql
+  openssl enc -d -aes-256-cbc -pbkdf2 -pass env:BACKUP_PASSPHRASE -in backup_YYYYMMDD_data.sql.enc -out backup_YYYYMMDD_data.sql
+  psql "$SUPABASE_DB_URL" --single-transaction --variable ON_ERROR_STOP=1 -f backup_YYYYMMDD_schema.sql
+  psql "$SUPABASE_DB_URL" --single-transaction --variable ON_ERROR_STOP=1 -f backup_YYYYMMDD_data.sql
   ```
 - Manter o **dump manual** (`supabase db dump --file ...`) como **fallback** e a rotina mínima (antes de migration destrutiva).
 
@@ -126,7 +143,7 @@ Após a lista "Eventos mínimos monitorados", acrescentar a subseção **"Regras
 | :--- | :--- | :--- | :--- |
 | Fila travada | `sync_falha_fila_grande` (`fila`) | `fila > 10` | Error |
 | Muitas tentativas | `sync_falha_tentativas_altas` (`tentativas`) | `tentativas > 5` | Error |
-| Relógio divergente | `sync_relogio_adiantado` (`atraso_horas`) | `atraso_horas > 24` | Warning |
+| Relógio divergente | `sync_relogio_adiantado` (`atraso_horas`) | `atraso_horas >= 24` | Warning |
 
 Mais uma linha: passos no dashboard (Alerts → Create Alert → Issues; filtrar por mensagem/tag; canal **e-mail** do dono); nota de que os três eventos já são emitidos pelo Sync Engine e os códigos/tags vêm de `lib/features/sync/providers/sync_providers.dart` (`Sentry.captureMessage` + `setTag`); `sync_falha_tentativas_altas` é o único sem teste unitário (follow-up).
 

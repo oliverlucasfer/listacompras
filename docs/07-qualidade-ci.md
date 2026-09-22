@@ -165,7 +165,7 @@ Os três eventos abaixo **já são emitidos** pelo Sync Engine (apenas códigos 
 | :--- | :--- | :--- | :--- |
 | Fila travada | `sync_falha_fila_grande` (`fila`) | `fila > 10` | Error |
 | Muitas tentativas | `sync_falha_tentativas_altas` (`tentativas`) | `tentativas > 5` | Error |
-| Relógio divergente | `sync_relogio_adiantado` (`atraso_horas`) | `atraso_horas > 24` | Warning |
+| Relógio divergente | `sync_relogio_adiantado` (`atraso_horas`) | `atraso_horas >= 24` | Warning |
 
 **Configuração (dashboard Sentry):** *Alerts* → *Create Alert* → *Issues*; filtrar pela **mensagem** (`sync_*`) ou pela **tag** de contexto (`fila`/`tentativas`/`atraso_horas`) com a condição e a severidade da tabela; canal = **e-mail** do dono do projeto.
 

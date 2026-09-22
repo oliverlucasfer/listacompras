@@ -1,6 +1,6 @@
 # Backup agendado do banco de produção — doc dono: docs/09-runbook-operacoes.md §2.2
-# Dump + cifra (AES-256/PBKDF2) + artefato. Requer os secrets do repositório
-# SUPABASE_DB_URL e BACKUP_PASSPHRASE (Settings → Secrets and variables → Actions).
+# Dump (schema + dados) + cifra (AES-256/PBKDF2) + artefato. Requer os secrets do
+# repositório SUPABASE_DB_URL e BACKUP_PASSPHRASE (Settings → Secrets and variables → Actions).
 name: backup
 
 on:
@@ -11,34 +11,49 @@ on:
 jobs:
   dump:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v7
-      - uses: supabase/setup-cli@v3
-        with:
-          version: 2.116.0  # pinado ao CLI do dev
-      - name: Dump do banco de produção
-        id: dump
+      - name: Preflight (secrets obrigatórios)
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
           if [ -z "$SUPABASE_DB_URL" ]; then
             echo "secret SUPABASE_DB_URL ausente"; exit 1
           fi
-          data="$(date +%Y%m%d)"
-          echo "data=$data" >> "$GITHUB_OUTPUT"
-          supabase db dump --db-url "$SUPABASE_DB_URL" --file "backup_${data}.sql"
-      - name: Cifra o dump (AES-256 + PBKDF2)
-        env:
-          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
-        run: |
           if [ -z "$BACKUP_PASSPHRASE" ]; then
             echo "secret BACKUP_PASSPHRASE ausente"; exit 1
           fi
-          openssl enc -aes-256-cbc -pbkdf2 -salt \
-            -pass env:BACKUP_PASSPHRASE \
-            -in "backup_${{ steps.dump.outputs.data }}.sql" \
-            -out "backup_${{ steps.dump.outputs.data }}.sql.enc"
-          rm -f "backup_${{ steps.dump.outputs.data }}.sql"
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.116.0  # pinado ao CLI do dev
+      - name: Dump do banco de produção (schema + dados)
+        id: dump
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          data="$(date +%Y%m%d)"
+          echo "data=$data" >> "$GITHUB_OUTPUT"
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f "backup_${data}_schema.sql"
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f "backup_${data}_data.sql" --data-only --use-copy
+          if [ ! -s "backup_${data}_data.sql" ]; then
+            echo "dump de dados ausente/vazio"; exit 1
+          fi
+          if ! grep -qiE '^(COPY|INSERT INTO)' "backup_${data}_data.sql"; then
+            echo "dump de dados sem registros (sem COPY/INSERT)"; exit 1
+          fi
+      - name: Cifra os dumps (AES-256 + PBKDF2)
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          for f in backup_${{ steps.dump.outputs.data }}_*.sql; do
+            openssl enc -aes-256-cbc -pbkdf2 -salt \
+              -pass env:BACKUP_PASSPHRASE \
+              -in "$f" \
+              -out "$f.enc"
+          done
+          rm -f backup_${{ steps.dump.outputs.data }}_*.sql
       - name: Publica o artefato cifrado
         uses: actions/upload-artifact@v4
         with:

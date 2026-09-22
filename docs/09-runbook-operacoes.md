@@ -35,13 +35,15 @@
 ### 2.2. Backup e restore
 
 * **Free tier:** backups automáticos limitados; o banco é pequeno, mas **não confie só nisso**.
-* **Backup automatizado** (`.github/workflows/backup.yml`): roda **mensal** (`0 6 1 * *` — dia 1 às 06:00 UTC) e sob demanda (GitHub → **Actions** → *backup* → *Run workflow*). Faz `supabase db dump` de produção, **cifra** o `.sql` com `openssl` (AES-256 + PBKDF2) e publica o artefato `backup-YYYYMMDD` (apenas o `*.sql.enc`, **retenção 90 dias**). O `.sql` cru nunca é publicado.
-* **Secrets necessários** (GitHub → Settings → Secrets and variables → Actions; nunca no repo): `SUPABASE_DB_URL` (connection string do Postgres de produção) e `BACKUP_PASSPHRASE` (senha da cifra). Sem eles o job falha explicitamente.
-* **Restore a partir do artefato** (baixar `backup_YYYYMMDD.sql.enc` do run e decifrar):
+* **Backup automatizado** (`.github/workflows/backup.yml`): roda **mensal** (`0 6 1 * *` — dia 1 às 06:00 UTC) e sob demanda (GitHub → **Actions** → *backup* → *Run workflow*). Faz **dois** `supabase db dump` de produção — **schema** (`backup_YYYYMMDD_schema.sql`) e **dados** (`backup_YYYYMMDD_data.sql`, com `--data-only --use-copy`) — valida que o dump de dados tem registros (`COPY`/`INSERT INTO`), **cifra** os dois `.sql` com `openssl` (AES-256 + PBKDF2) e publica o artefato `backup-YYYYMMDD` (apenas os `*.sql.enc`, **retenção 90 dias**). O `.sql` cru nunca é publicado.
+* **O que o backup contém:** **schema + dados do app**. O `supabase db dump` **exclui os schemas gerenciados** (`auth`, `storage` e schemas de extensão) — **contas/usuários (`auth.users`) não vão no dump**; ao restaurar num projeto/target novo, recrie o projeto e os usuários conforme o procedimento padrão do Supabase.
+* **Secrets necessários** (GitHub → Settings → Secrets and variables → Actions; nunca no repo): `SUPABASE_DB_URL` (connection string do Postgres de produção) e `BACKUP_PASSPHRASE` (senha da cifra). Um preflight no início do job falha explicitamente se algum estiver vazio.
+* **Restore a partir do artefato** (baixar `backup_YYYYMMDD_schema.sql.enc` e `backup_YYYYMMDD_data.sql.enc` do run, decifrar e aplicar **schema primeiro, depois os dados**):
   ```bash
-  openssl enc -d -aes-256-cbc -pbkdf2 -pass env:BACKUP_PASSPHRASE \
-    -in backup_YYYYMMDD.sql.enc -out backup_YYYYMMDD.sql
-  psql "$DATABASE_URL" -f backup_YYYYMMDD.sql
+  openssl enc -d -aes-256-cbc -pbkdf2 -pass env:BACKUP_PASSPHRASE -in backup_YYYYMMDD_schema.sql.enc -out backup_YYYYMMDD_schema.sql
+  openssl enc -d -aes-256-cbc -pbkdf2 -pass env:BACKUP_PASSPHRASE -in backup_YYYYMMDD_data.sql.enc -out backup_YYYYMMDD_data.sql
+  psql "$SUPABASE_DB_URL" --single-transaction --variable ON_ERROR_STOP=1 -f backup_YYYYMMDD_schema.sql
+  psql "$SUPABASE_DB_URL" --single-transaction --variable ON_ERROR_STOP=1 -f backup_YYYYMMDD_data.sql
   ```
 * **Dump manual (fallback)** — máquina local com Supabase CLI linkado; use se o workflow falhar ou para conferência:
   ```powershell
@@ -142,7 +144,7 @@ O web usa `<origem>/login-callback` (http em dev, https em produção) como `red
 
 ## 5. Checklist mensal de operação
 
-- [ ] Backup manual (`supabase db dump`) baixado e guardado.
+- [ ] Artefato do backup mensal (`backup-YYYYMMDD`, cifrado — schema + dados) baixado e conferido.
 - [ ] Uso de quotas Supabase revisado (< 70%).
 - [ ] Sentry: issues abertas triadas; sem erro crítico antigo.
 - [ ] Migrations locais = produção (`supabase db push --dry-run` vazio).

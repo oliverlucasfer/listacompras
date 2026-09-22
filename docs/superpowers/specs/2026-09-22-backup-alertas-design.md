@@ -27,14 +27,16 @@ O free tier do Supabase tem backups automáticos limitados e o runbook só cobre
 `.github/workflows/backup.yml`:
 
 - **Gatilhos:** `schedule: '0 6 1 * *'` (mensal, alinhado ao doc 09) + `workflow_dispatch` (rodar sob demanda e testar).
-- **Job** (`ubuntu-latest`): `actions/checkout` → `supabase/setup-cli@v3` (versão pinada ao CLI do dev) → **dump** → **cifra** → `actions/upload-artifact@v4`.
-- **Dump:** `supabase db dump --db-url "$SUPABASE_DB_URL" --file backup_$(date +%Y%m%d).sql` (schema + dados).
-- **Cifra (obrigatória):** `openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:BACKUP_PASSPHRASE -in backup.sql -out backup.sql.enc` — o `.sql` cru **nunca** é enviado.
-- **Artefato:** nome `backup-YYYYMMDD`, `retention-days: 90`, apenas o `.enc`.
+- **Job** (`ubuntu-latest`, `permissions: contents: read`): preflight dos secrets → `supabase/setup-cli@v3` (versão pinada ao CLI do dev) → **dump** (schema + dados) → **validação de conteúdo** → **cifra** → `actions/upload-artifact@v4`. Sem `actions/checkout` (o job apenas dumpa um banco remoto).
+- **Dump (dois arquivos):** `supabase db dump --db-url "$SUPABASE_DB_URL" -f "backup_<data>_schema.sql"` e `supabase db dump --db-url "$SUPABASE_DB_URL" -f "backup_<data>_data.sql" --data-only --use-copy` — **schema e dados** do app (o dump padrão é só schema).
+- **Validação de conteúdo:** falha o job se o arquivo de dados estiver ausente/vazio ou sem `COPY`/`INSERT INTO` — um dump schema-only não passa.
+- **Limitação (schemas gerenciados):** o `supabase db dump` exclui `auth`, `storage` e schemas de extensão — **`auth.users` (contas) não entra no dump**; ao restaurar num projeto/target novo, recrie o projeto e os usuários pelo procedimento padrão do Supabase.
+- **Cifra (obrigatória):** `openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:BACKUP_PASSPHRASE` sobre cada `backup_<data>_*.sql` → `.enc`; o `.sql` cru é removido e **nunca** enviado.
+- **Artefato:** nome `backup-YYYYMMDD`, `retention-days: 90`, path `*.sql.enc` (os dois arquivos cifrados).
 - **Secrets (cadastrados pelo dono no GitHub; nunca no repo):** `SUPABASE_DB_URL` (connection string do Postgres de produção) e `BACKUP_PASSPHRASE`.
 - **Higiene:** nunca `set -x`, nunca `echo` de segredos; o GitHub mascara os secrets.
 
-**Restore (documentado no 09 §2.2):** baixar o artefato → `openssl enc -d -aes-256-cbc -pbkdf2 -pass env:BACKUP_PASSPHRASE -in backup.sql.enc -out backup.sql` → `psql "$DATABASE_URL" -f backup.sql` (projeto novo ou mesmo projeto). O dump manual (`supabase db dump`) permanece como **fallback**.
+**Restore (documentado no 09 §2.2):** baixar os dois arquivos `.enc` → `openssl enc -d -aes-256-cbc -pbkdf2 -pass env:BACKUP_PASSPHRASE -in backup_<data>_schema.sql.enc -out backup_<data>_schema.sql` (e idem para `_data`) → `psql "$SUPABASE_DB_URL" --single-transaction --variable ON_ERROR_STOP=1 -f backup_<data>_schema.sql` **e depois** `-f backup_<data>_data.sql` (schema primeiro, dados depois; projeto novo ou mesmo projeto). O dump manual (`supabase db dump`) permanece como **fallback**.
 
 ## 4. Alertas do Sentry (eventos 1-2)
 
@@ -44,7 +46,7 @@ Os três eventos já são emitidos pelo Sync Engine com tags de contexto (`sync_
 | :--- | :--- | :--- | :--- |
 | Fila travada | `sync_falha_fila_grande` (`fila`) | `fila > 10` | Error |
 | Muitas tentativas | `sync_falha_tentativas_altas` (`tentativas`) | `tentativas > 5` | Error |
-| Relógio divergente | `sync_relogio_adiantado` (`atraso_horas`) | `atraso_horas > 24` | Warning |
+| Relógio divergente | `sync_relogio_adiantado` (`atraso_horas`) | `atraso_horas >= 24` | Warning |
 
 - Passos no dashboard Sentry (Alerts → Create Alert → Issues): filtrar por mensagem/tag, severidade e canal (**e-mail** do dono).
 - Nota: `sync_falha_tentativas_altas` é o único dos três sem teste unitário hoje — fora do escopo desta frente (follow-up).
@@ -55,7 +57,7 @@ Os três eventos já são emitidos pelo Sync Engine com tags de contexto (`sync_
 - `14` (Fase 34) e `16` (C3 concluído).
 
 ## 6. Verificação
-- YAML do workflow válido; job roda com `workflow_dispatch` **após** o dono cadastrar os secrets → artefato `backup-YYYYMMDD` presente e cifrado.
+- YAML do workflow válido; job roda com `workflow_dispatch` **após** o dono cadastrar os secrets → artefato `backup-YYYYMMDD` presente e cifrado, com os dois `*.sql.enc` (schema + dados); conferir que o dump de dados contém `COPY`/`INSERT INTO` (o job falha se vier vazio/sem registros).
 - Gate de CI inalterado (nenhum teste novo de app); `dart format`/`flutter analyze`/`flutter test` seguem verdes.
 
 ## 7. Decisões registradas (22/09/2026)
