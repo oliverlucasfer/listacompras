@@ -486,8 +486,23 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
   /// Estado da captura por voz no campo (RF-26, F30-T02).
   EstadoVoz _estadoVoz = EstadoVoz.parado;
 
+  /// Reconhecedor capturado no `initState` para poder cancelar no `dispose`
+  /// sem tocar no `ref` de um elemento já em desmontagem.
+  late final ReconhecimentoVoz _voz;
+
+  @override
+  void initState() {
+    super.initState();
+    _voz = ref.read(reconhecimentoVozProvider);
+  }
+
   @override
   void dispose() {
+    // Sair da tela durante o ditado cancela o reconhecimento para não deixar
+    // o microfone quente (RF-26).
+    if (_estadoVoz == EstadoVoz.ouvindo) {
+      unawaited(_voz.cancelar());
+    }
     _controller.dispose();
     super.dispose();
   }
@@ -497,12 +512,11 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
   }
 
   Future<void> _ditar() async {
-    final voz = ref.read(reconhecimentoVozProvider);
     if (_estadoVoz == EstadoVoz.ouvindo) {
-      await voz.parar();
+      await _voz.parar();
       return;
     }
-    await voz.iniciar(
+    await _voz.iniciar(
       onTexto: (texto, _) {
         if (!mounted) return;
         setState(() {

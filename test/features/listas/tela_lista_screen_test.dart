@@ -2269,6 +2269,47 @@ void main() {
     expect(find.byTooltip(AppStrings.ditarItem), findsNothing);
     await fechar(tester);
   });
+
+  testWidgets('deve_cancelar_quando_sai_da_tela_durante_ditado', (
+    tester,
+  ) async {
+    final fake = FakeReconhecimentoVoz();
+    await abrirListaF7t07(tester, reconhecimento: fake);
+
+    await tester.tap(find.byTooltip(AppStrings.ditarItem));
+    await tester.pump();
+    expect(fake.cancelou, isFalse);
+
+    // Sair da tela durante o ditado cancela o reconhecimento (mic não fica
+    // quente). `fechar` desmonta a árvore → dispose do campo.
+    await fechar(tester);
+    expect(fake.cancelou, isTrue);
+  });
+
+  testWidgets('deve_confirmar_item_quando_enter_apos_ditar', (tester) async {
+    final fake = FakeReconhecimentoVoz();
+    final (_, listaId) = await abrirListaF7t07(tester, reconhecimento: fake);
+
+    await tester.tap(find.byTooltip(AppStrings.ditarItem));
+    await tester.pump();
+    fake.emitir('2 kg de arroz', finalizado: true);
+    await tester.pump();
+
+    // Confirma pelo teclado (Enter) no campo preenchido pela voz.
+    await tester.tap(find.widgetWithText(TextField, AppStrings.adicionarItem));
+    await tester.pump();
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    final itens = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.listaId.equals(listaId))).get();
+    final arroz = itens.singleWhere((i) => i.nome == 'Arroz');
+    expect(arroz.quantidade, 2);
+    expect(arroz.unidade, 'kg');
+
+    await fechar(tester);
+  });
 }
 
 class _RepoLimparFalha extends ListasRepository {
