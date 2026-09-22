@@ -779,6 +779,111 @@ void main() {
       expect(convite.id, 'c1');
     });
 
+    test('nao_deve_reusar_convite_expirado_quando_criar', () async {
+      var inseriu = false;
+      final expirado = [
+        {
+          'id': 'c1',
+          'lista_id': _listaId,
+          'criado_por': 'U1',
+          'token': 't1',
+          'tipo': 'email',
+          'email': 'a@b.com',
+          'papel_oferecido': 'editor',
+          'estado': 'pendente',
+          'expira_em': '2020-01-01T00:00:00.000Z',
+          'created_at': '2019-12-25T12:00:00.000Z',
+          'atualizado_em': '2019-12-25T12:00:00.000Z',
+        },
+      ];
+      final servidor = ServidorFake((req) {
+        if (req.method == 'GET' && req.url.path.contains('/convites')) {
+          final filtrouExpiracao = req.url.queryParameters.containsKey(
+            'expira_em',
+          );
+          return (200, filtrouExpiracao ? const <Object?>[] : expirado);
+        }
+        if (req.method == 'POST' && req.url.path.contains('/convites')) {
+          inseriu = true;
+          return (
+            200,
+            {
+              'id': 'c2',
+              'lista_id': _listaId,
+              'criado_por': 'U1',
+              'token': 't2',
+              'tipo': 'email',
+              'email': 'a@b.com',
+              'papel_oferecido': 'editor',
+              'estado': 'pendente',
+              'expira_em': '2099-12-31T12:00:00.000Z',
+              'created_at': '2026-09-22T12:00:00.000Z',
+              'atualizado_em': '2026-09-22T12:00:00.000Z',
+            },
+          );
+        }
+        return (500, {'message': 'inesperada: ${req.url.path}'});
+      });
+      addTearDown(servidor.close);
+
+      final convite = await repoCom(servidor).criarConviteEmail(
+        listaId: _listaId,
+        email: 'a@b.com',
+        papel: Papel.editor,
+      );
+
+      final filtro = servidor.pedidos
+          .firstWhere((p) => p.method == 'GET')
+          .url
+          .queryParameters;
+      expect(filtro['expira_em'], startsWith('gt.'));
+      expect(inseriu, isTrue);
+      expect(convite.id, 'c2');
+    });
+
+    test('deve_atualizar_papel_quando_reusa_com_papel_diferente', () async {
+      final servidor = ServidorFake((req) {
+        if (req.method == 'GET' && req.url.path.contains('/convites')) {
+          return (
+            200,
+            [
+              {
+                'id': 'c1',
+                'lista_id': _listaId,
+                'criado_por': 'U1',
+                'token': 't1',
+                'tipo': 'email',
+                'email': 'a@b.com',
+                'papel_oferecido': 'editor',
+                'estado': 'pendente',
+                'expira_em': '2099-12-31T12:00:00.000Z',
+                'created_at': '2026-09-22T12:00:00.000Z',
+                'atualizado_em': '2026-09-22T12:00:00.000Z',
+              },
+            ],
+          );
+        }
+        if (req.method == 'PATCH' && req.url.path.contains('/convites')) {
+          return (200, const <Object?>[]);
+        }
+        return (500, {'message': 'inesperada: ${req.url.path}'});
+      });
+      addTearDown(servidor.close);
+
+      final convite = await repoCom(servidor).criarConviteEmail(
+        listaId: _listaId,
+        email: 'a@b.com',
+        papel: Papel.leitor,
+      );
+
+      final indicePatch = servidor.pedidos.indexWhere(
+        (p) => p.method == 'PATCH',
+      );
+      final corpo = jsonDecode(servidor.corpoDe(indicePatch));
+      expect((corpo as Map<String, Object?>)['papel_oferecido'], 'leitor');
+      expect(convite.papelOferecido, Papel.leitor);
+    });
+
     test('deve_listar_meus_convites_pendentes', () async {
       final servidor = ServidorFake((req) {
         if (req.method == 'POST' &&

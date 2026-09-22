@@ -55,8 +55,9 @@ class ConvitesRepository {
     }
   }
 
-  /// Cria um convite por e-mail (doc 08 §4): reusa um convite pendente do
-  /// mesmo e-mail nesta lista (doc 08 §2) ou insere um novo. Online-only.
+  /// Cria um convite por e-mail (doc 08 §4): reusa um convite pendente e não
+  /// expirado do mesmo e-mail nesta lista (doc 08 §2) ou insere um novo.
+  /// Online-only.
   Future<Convite> criarConviteEmail({
     required String listaId,
     required String email,
@@ -68,7 +69,8 @@ class ConvitesRepository {
           .select()
           .eq('lista_id', listaId)
           .eq('tipo', 'email')
-          .eq('estado', 'pendente');
+          .eq('estado', 'pendente')
+          .gt('expira_em', DateTime.now().toUtc().toIso8601String());
       final alvo = email.trim().toLowerCase();
       for (final linha in linhas as List) {
         final mapa = Map<String, Object?>.from(linha as Map);

@@ -97,7 +97,7 @@ Future<void> recusarConvite(String id);
 ```
 
 - `ConvitePendente { String id; String listaTitulo; Papel papelOferecido; DateTime expiraEm; }` em `lib/features/convites/domain/`.
-- `criarConviteEmail` reusa: SELECT `convites` (dono vê pela policy) `tipo='email'`, `estado='pendente'`, `lower(email)` igual na lista; se existir, `UPDATE papel_oferecido` (se mudou) e devolve; senão `INSERT`.
+- `criarConviteEmail` reusa: SELECT `convites` (dono vê pela policy) `tipo='email'`, `estado='pendente'`, **não expirados** (`expira_em >= now`) e `lower(email)` igual na lista; se existir, `UPDATE papel_oferecido` (se mudou) e devolve; senão `INSERT`. Um convite `pendente` com `expira_em` no passado não é reusado (ele nunca é marcado `expirado`; o painel e o aceite já o rejeitam) — nesse caso insere um novo.
 - Erros mapeados como os demais (`ErroConvite`): e-mail inválido (validação na UI), `lista_nao_sincronizada` (FK/RLS), `sem_conexao`, `inesperado`.
 
 ## 5. UI
