@@ -26,6 +26,10 @@
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>Usamos o microfone para você ditar itens da lista.</string>
+		<key>NSSpeechRecognitionUsageDescription</key>
+		<string>Usamos o reconhecimento de voz, no aparelho, para ditar itens.</string>
 		<key>UIApplicationSceneManifest</key>
 		<dict>
 			<key>UIApplicationSupportsMultipleScenes</key>

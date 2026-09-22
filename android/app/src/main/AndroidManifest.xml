@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Comunicação com o Supabase (API + Realtime) -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Reconhecimento de voz on-device (RF-26) -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <application
         android:label="Lista de Compras"
         android:name="${applicationName}"
