@@ -91,7 +91,31 @@ Uma fase só está "pronta" quando:
 
 * Os cabeçalhos **COOP `same-origin` + COEP `require-corp`** (exigidos pelo Drift/WASM, que usa SharedArrayBuffer) e o `robots.txt`/`noindex` existiram enquanto o Web era servido pelo Firebase Hosting — **removidos em 18/09/2026** junto com os artefatos de publicação (ADR-013).
 * Em **uso local** os cabeçalhos não são aplicados pelo app: quem serve `build/web` (dev server do `flutter run` ou um static server próprio) deve configurá-los se quiser exercitar os caminhos de WASM/OPFS. O `flutter run -d chrome` já funciona sem configuração extra.
-* Endurecimento futuro (ex.: CSP) só volta a fazer sentido se a publicação for retomada.
+* **CSP recomendada (R-21)** — aplicar **quando o Web for servido por um static server ou a publicação for retomada** (não se aplica ao `flutter run -d chrome`, que já funciona sem configuração extra). Prefira **header HTTP**: em `<meta>`, `frame-ancestors`, `report-uri`/`report-to` e `sandbox` são ignorados.
+
+  ```
+  Content-Security-Policy:
+    default-src 'self';
+    script-src 'self' 'wasm-unsafe-eval';
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' data: blob:;
+    font-src 'self' data:;
+    connect-src 'self' https://SEU-PROJETO.supabase.co wss://SEU-PROJETO.supabase.co;
+    worker-src 'self' blob:;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+    frame-ancestors 'none'
+  ```
+
+  Cabeçalhos de isolamento (SharedArrayBuffer/OPFS do Drift WASM):
+
+  ```
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  ```
+
+  Notas: `script-src 'wasm-unsafe-eval'` cobre o CanvasKit/skwasm; `style-src 'unsafe-inline'` é exigido pelos estilos inline do Flutter; `worker-src 'self' blob:` cobre o `drift_worker.js` (`sqlite3.wasm`/`drift_worker.js` vêm do próprio `build/web`); `connect-src` precisa das origens **https e wss** do projeto Supabase (ajuste `SEU-PROJETO`); com COEP `require-corp`, recursos cross-origin exigem CORP — os assets do Flutter são locais, então é compatível.
 
 ---
 
