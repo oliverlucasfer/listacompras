@@ -187,4 +187,22 @@ void main() {
     expect(find.textContaining(r'R$ 5,49'), findsOneWidget);
     await fechar(tester);
   });
+
+  testWidgets('deve_mostrar_orcamento_quando_definido', (tester) async {
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      quantidade: 1,
+      precoCentavos: 549,
+    );
+    await repo.editarItem(item.id, concluido: true);
+    await repo.definirOrcamento(lista.id, centavos: 1000);
+
+    await abrir(tester, lista.id);
+
+    expect(find.textContaining(r'de R$ 10,00'), findsOneWidget);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    await fechar(tester);
+  });
 }

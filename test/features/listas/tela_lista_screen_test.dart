@@ -1846,6 +1846,7 @@ void main() {
   Future<String> abrirListaComPreco(
     WidgetTester tester, {
     required bool marcado,
+    int? orcamentoCentavos,
   }) async {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
@@ -1855,6 +1856,9 @@ void main() {
       precoCentavos: 549,
     );
     if (marcado) await repo.editarItem(item.id, concluido: true);
+    if (orcamentoCentavos != null) {
+      await repo.definirOrcamento(lista.id, centavos: orcamentoCentavos);
+    }
     final sync = StreamController<SyncStatus>();
     sync.add(const Sincronizado());
     addTearDown(sync.close);
@@ -1927,6 +1931,20 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining(r'R$ 999,00'), findsNothing);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_orcamento_quando_definido', (tester) async {
+    await abrirListaComPreco(tester, marcado: true, orcamentoCentavos: 1000);
+    expect(find.textContaining(r'de R$ 10,00'), findsOneWidget);
+    expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_alertar_quando_total_ultrapassa_orcamento', (tester) async {
+    await abrirListaComPreco(tester, marcado: true, orcamentoCentavos: 300);
+    expect(find.text(AppStrings.acimaDoOrcamento), findsOneWidget);
+    expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
     await fechar(tester);
   });
 

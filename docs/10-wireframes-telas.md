@@ -228,7 +228,9 @@ A seção aparece no topo do filtro **Minhas** só quando há convites por e-mai
 │                                 │
 │  No carrinho: R$ 17,47 · 1 sem  │ ← faixa do total (RF-21/F25):
 │  preço                          │    soma itens marcados com preço;
-│                                 │    oculta sem marcados
+│                                 │    oculta sem marcados; com
+│                                 │    orçamento: "de R$ Y" + barra;
+│                                 │    acima → alerta (RF-28)
 │  (Importar lista)               │
 └─────────────────────────────────┘
 ```
@@ -306,7 +308,9 @@ O trecho "para todos os participantes" aparece quando há membros conhecidos (be
 ├─────────────────────────────────┤
 │  3 de 12                        │ ← marcados nesta sessão / total ativo
 │  No carrinho: R$ 15,98          │    (live region); faixa do total
-│                                 │    (RF-21/F25) logo abaixo
+│                                 │    (RF-21/F25) logo abaixo; com
+│                                 │    orçamento: "de R$ Y" + barra;
+│                                 │    acima → alerta (RF-28)
 │  ☐ Arroz            1 kg        │ ← lista generosa de pendentes;
 │  ☐ Leite            2 un        │    toque na linha marca (alvo ≥48dp)
 │  ☐ Café             1 pacote    │

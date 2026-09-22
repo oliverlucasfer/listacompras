@@ -154,6 +154,17 @@ abstract final class AppStrings {
       ? 'No carrinho: $valor'
       : 'No carrinho: $valor · $semPreco sem preço';
 
+  // Faixa do total com orçamento (RF-28, F36-T04)
+  static String totalComOrcamento(
+    String valor,
+    String orcamento,
+    int semPreco,
+  ) => semPreco == 0
+      ? 'No carrinho: $valor de $orcamento'
+      : 'No carrinho: $valor de $orcamento · $semPreco sem preço';
+
+  static const acimaDoOrcamento = 'Acima do orçamento';
+
   static const diminuir = 'Diminuir';
   static const aumentar = 'Aumentar';
   static const menu = 'Menu';
