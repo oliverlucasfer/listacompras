@@ -157,6 +157,20 @@ jobs:
   2. Divergência grosseira de relógio (`ts_local` vs `now()` do servidor — RPC `agora_servidor`, ver [03 §5](03-sincronizacao-offline.md)).
 * Dashboards: Sentry issues + métricas da Seção 5 de [06](06-mvp-entregas.md) (manual no MVP).
 
+### Regras de alerta (Sentry)
+
+Os três eventos abaixo **já são emitidos** pelo Sync Engine (apenas códigos + tags de contexto, nunca conteúdo de listas) via `Sentry.captureMessage` + `setTag` em `lib/features/sync/providers/sync_providers.dart`; falta cadastrar a **regra de alerta** no dashboard:
+
+| Regra (Issue Alert) | Evento/tag | Condição | Severidade |
+| :--- | :--- | :--- | :--- |
+| Fila travada | `sync_falha_fila_grande` (`fila`) | `fila > 10` | Error |
+| Muitas tentativas | `sync_falha_tentativas_altas` (`tentativas`) | `tentativas > 5` | Error |
+| Relógio divergente | `sync_relogio_adiantado` (`atraso_horas`) | `atraso_horas > 24` | Warning |
+
+**Configuração (dashboard Sentry):** *Alerts* → *Create Alert* → *Issues*; filtrar pela **mensagem** (`sync_*`) ou pela **tag** de contexto (`fila`/`tentativas`/`atraso_horas`) com a condição e a severidade da tabela; canal = **e-mail** do dono do projeto.
+
+**Follow-up:** `sync_falha_tentativas_altas` é o único dos três **sem teste unitário** hoje (`test/features/sync/sync_engine_test.dart` cobre fila grande e relógio adiantado) — adicionar teste quando o caminho for tocado.
+
 ---
 
 ## 5. Checklist de qualidade por PR (disciplina leve)

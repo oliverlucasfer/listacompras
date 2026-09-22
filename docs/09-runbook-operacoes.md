@@ -35,15 +35,19 @@
 ### 2.2. Backup e restore
 
 * **Free tier:** backups automáticos limitados; o banco é pequeno, mas **não confie só nisso**.
-* Backup manual sob demanda (máquina local com Supabase CLI linkado):
+* **Backup automatizado** (`.github/workflows/backup.yml`): roda **mensal** (`0 6 1 * *` — dia 1 às 06:00 UTC) e sob demanda (GitHub → **Actions** → *backup* → *Run workflow*). Faz `supabase db dump` de produção, **cifra** o `.sql` com `openssl` (AES-256 + PBKDF2) e publica o artefato `backup-YYYYMMDD` (apenas o `*.sql.enc`, **retenção 90 dias**). O `.sql` cru nunca é publicado.
+* **Secrets necessários** (GitHub → Settings → Secrets and variables → Actions; nunca no repo): `SUPABASE_DB_URL` (connection string do Postgres de produção) e `BACKUP_PASSPHRASE` (senha da cifra). Sem eles o job falha explicitamente.
+* **Restore a partir do artefato** (baixar `backup_YYYYMMDD.sql.enc` do run e decifrar):
+  ```bash
+  openssl enc -d -aes-256-cbc -pbkdf2 -pass env:BACKUP_PASSPHRASE \
+    -in backup_YYYYMMDD.sql.enc -out backup_YYYYMMDD.sql
+  psql "$DATABASE_URL" -f backup_YYYYMMDD.sql
+  ```
+* **Dump manual (fallback)** — máquina local com Supabase CLI linkado; use se o workflow falhar ou para conferência:
   ```powershell
   supabase db dump --file backup_$(Get-Date -Format yyyyMMdd).sql
   ```
-* **Restore** (projeto novo ou mesmo projeto):
-  ```bash
-  psql "$DATABASE_URL" -f backup_YYYYMMDD.sql
-  ```
-* Rotina mínima recomendada: dump mensal + antes de qualquer migration destrutiva.
+* Rotina mínima recomendada: o agendamento mensal cobre o ciclo normal; faça um dump manual **antes de qualquer migration destrutiva**.
 
 ### 2.3. Monitorar uso e limites
 
