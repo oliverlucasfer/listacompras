@@ -165,6 +165,8 @@ create policy "listas_delete_dono"
   using (dono_id = auth.uid());
 ```
 
+> **Orçamento da lista (RF-28, F36):** `orcamento_centavos` **não cria policy** — herda o UPDATE de `listas` (`listas_update_editores`, dono/editor).
+
 ### 4.2. `itens_lista`
 
 ```sql
