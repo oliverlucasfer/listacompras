@@ -39,7 +39,7 @@ Fluxo de UX completo (modal, pré-visualização, confirmação) está em [05 §
 4. Converte quantidade com vírgula (`1,5` → `1.5`); capitaliza o nome; ignora segmentos vazios.
 5. `interpretarItemAvulso(texto, {unidadePadrao})` é usado pelo campo "Adicionar item" (F12-T06): unidade explícita do texto vence; sem unidade, usa a do seletor.
 
-**Frações (RF-25, F29):** a quantidade é interpretada por `parseQuantidade` (`lib/features/listas/domain/quantidade.dart`) e o parser reconhece fração numérica (`1/2 kg`), **mista separada** (`1 1/2 kg` → inteiro + fração) e glifos (`½ kg`, `1½ kg`), com ou sem unidade colada (`½kg`). `parseQuantidade` trata **um token único**; o misto espaçado é combinado pelo parser. Fração inválida (`1/0`) não quebra o fluxo: cai na regra de quantidade ausente (`1` + token no nome, com `aviso`). O contrato vale para a **entrada rápida** e a **importação** — unidade e demais campos ficam inalterados.
+**Frações (RF-25, F29):** a quantidade é interpretada por `parseQuantidade` (`lib/features/listas/domain/quantidade.dart`) e o parser reconhece fração numérica (`1/2 kg`), **mista separada** (`1 1/2 kg` → inteiro + fração) e glifos (`½ kg`, `1½ kg`), com ou sem unidade colada (`½kg`). `parseQuantidade` trata **um token único**; o misto espaçado é combinado pelo parser. Fração inválida (`1/0`) não quebra o fluxo: cai na regra de quantidade ausente (`1` + token no nome, unidade `un`, com `aviso`; a unidade explícita do texto também é descartada). O contrato vale para a **entrada rápida** e a **importação** — unidade e demais campos ficam inalterados.
 
 ## 4. Enums
 
