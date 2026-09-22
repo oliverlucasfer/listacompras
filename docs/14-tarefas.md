@@ -703,7 +703,7 @@ Spec: [superpowers/specs/2026-09-21-boas-vindas-estados-vazios-design.md](superp
   CP: rota `/boas-vindas` protegida; `BoasVindasScreen` com marca, título/subtítulo, 4 destaques e "Começar" (`marcarVisto` + `/listas`); guard na home autenticada abre a tela uma vez quando a flag é falsa; widget tests verdes.
 - [x] **F31-T03** — Dica do vazio, docs donos e fechamento
   Dep: F31-T02 · Docs: [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
-  CP: `nenhumItemDica` aponta os caminhos (campo/importar/ditar) com teste do vazio; RF-27 no 12 (tabela e rastreabilidade); docs donos refletem boas-vindas e o vazio; A7 do 16 concluído; Fase 31 na tabela de progresso (167/165).
+  CP: `nenhumItemDica` aponta os caminhos (campo/importar) com teste do vazio; RF-27 no 12 (tabela e rastreabilidade); docs donos refletem boas-vindas e o vazio; A7 do 16 concluído; Fase 31 na tabela de progresso (167/165).
 
 ## Progresso por fase (atualize ao concluir)
 

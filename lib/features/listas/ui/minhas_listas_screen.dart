@@ -19,6 +19,7 @@ class _MinhasListasScreenState extends ConsumerState<MinhasListasScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
       final visto = await ref.read(onboardingVistoProvider.future);
       if (!visto && mounted) context.push('/boas-vindas');
     });

@@ -204,7 +204,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(AppStrings.nenhumItem), findsOneWidget);
-    expect(find.text(AppStrings.nenhumItemDica), findsOneWidget);
+    expect(
+      find.text('Adicione no campo acima ou importe uma lista.'),
+      findsOneWidget,
+    );
 
     await fechar(tester);
   });

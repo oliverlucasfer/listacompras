@@ -6,6 +6,7 @@ import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_logo.dart';
+import '../../voz/providers/reconhecimento_voz_provider.dart';
 import '../providers/onboarding_provider.dart';
 
 /// Tela de boas-vindas (RF-27), mostrada uma vez na primeira vez no app.
@@ -54,11 +55,12 @@ class BoasVindasScreen extends ConsumerWidget {
                     titulo: AppStrings.boasVindasImportar,
                     dica: AppStrings.boasVindasImportarDica,
                   ),
-                  const _Destaque(
-                    icone: Icons.mic_none,
-                    titulo: AppStrings.boasVindasDitar,
-                    dica: AppStrings.boasVindasDitarDica,
-                  ),
+                  if (plataformaComVoz())
+                    const _Destaque(
+                      icone: Icons.mic_none,
+                      titulo: AppStrings.boasVindasDitar,
+                      dica: AppStrings.boasVindasDitarDica,
+                    ),
                   const SizedBox(height: AppSpacing.xl),
                   AppBotao(
                     rotulo: AppStrings.comecar,
