@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/categorias/sugestao_categorias.dart';
 import '../../../drift/database.dart';
+import '../data/historico_precos_repository.dart';
 import '../data/listas_repository.dart';
+import '../domain/historico_preco.dart';
 import '../domain/item.dart';
 import '../domain/lista.dart';
 import '../domain/lista_com_contagem.dart';
@@ -50,3 +52,13 @@ final itensFrequentesProvider =
       (ref, listaId) =>
           ref.watch(listasRepositoryProvider).watchItensFrequentes(listaId),
     );
+
+/// Último preço pago pelo item (histórico local, RF-29, F37). Chave: nome.
+final historicoPrecoProvider = FutureProvider.family<HistoricoPreco?, String>((
+  ref,
+  nome,
+) async {
+  return HistoricoPrecosRepository(
+    ref.watch(appDatabaseProvider),
+  ).porNome(nome);
+});

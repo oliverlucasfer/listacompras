@@ -31,6 +31,7 @@ import '../../sync/ui/indicador_sync.dart';
 import '../../voz/domain/reconhecimento_voz.dart';
 import '../../voz/providers/reconhecimento_voz_provider.dart';
 import '../domain/categoria.dart';
+import '../domain/historico_preco.dart';
 import '../domain/item.dart';
 import '../domain/preco.dart';
 import '../domain/quantidade.dart';
@@ -1192,6 +1193,55 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
     return valor;
   }
 
+  int? _precoLido() {
+    try {
+      return parsePrecoParaCentavos(_preco.text);
+    } on ArgumentError {
+      return null;
+    }
+  }
+
+  /// Linha de histórico de preços (RF-29, F37): último preço pago + variação
+  /// vs o preço atual, apenas quando as unidades casam.
+  Widget _linhaHistoricoPreco(HistoricoPreco hist) {
+    final registradoEm = hist.registradoEm.toLocal();
+    final diaMes =
+        '${registradoEm.day.toString().padLeft(2, '0')}/'
+        '${registradoEm.month.toString().padLeft(2, '0')}';
+
+    final atual = _precoLido();
+    String? variacao;
+    Color? corVariacao;
+    if (atual != null && _unidade.valor == hist.unidade) {
+      final diff = atual - hist.precoCentavos;
+      if (diff == 0) {
+        variacao = AppStrings.mesmoPreco;
+      } else if (diff > 0) {
+        variacao = AppStrings.precoSubiu(formatarReais(diff));
+        corVariacao = Theme.of(context).colorScheme.error;
+      } else {
+        variacao = AppStrings.precoBaixou(formatarReais(-diff));
+        corVariacao = Theme.of(context).colorScheme.primary;
+      }
+    }
+
+    final estilo = Theme.of(context).textTheme.bodySmall;
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppStrings.ultimaCompra(formatarReais(hist.precoCentavos), diaMes),
+            style: estilo,
+          ),
+          if (variacao != null)
+            Text(variacao, style: estilo?.copyWith(color: corVariacao)),
+        ],
+      ),
+    );
+  }
+
   Future<void> _salvar() async {
     final nome = _nome.text.trim();
     final quantidade = _quantidadeLida();
@@ -1226,6 +1276,7 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
 
   @override
   Widget build(BuildContext context) {
+    final hist = ref.watch(historicoPrecoProvider(widget.item.nome)).value;
     return AlertDialog(
       title: const Text(AppStrings.editarItem),
       content: SingleChildScrollView(
@@ -1315,10 +1366,11 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
               label: AppStrings.preco,
               erro: _erroPreco,
               teclado: const TextInputType.numberWithOptions(decimal: true),
-              onChanged: (_) {
-                if (_erroPreco != null) setState(() => _erroPreco = null);
-              },
+              // Rebuild a cada digitação: a variação (RF-29) acompanha o texto.
+              onChanged: (_) => setState(() => _erroPreco = null),
             ),
+            // Última compra + variação (RF-29, F37), quando houver histórico.
+            if (hist != null) _linhaHistoricoPreco(hist),
           ],
         ),
       ),

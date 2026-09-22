@@ -142,6 +142,13 @@ abstract final class AppStrings {
   static const preco = 'Preço (R\$)';
   static const erroPrecoInvalido = 'Preço inválido.';
 
+  // Histórico de preços no editor (RF-29, F37)
+  static String ultimaCompra(String valor, String data) =>
+      'Última compra: $valor ($data)';
+  static const mesmoPreco = 'Mesmo preço';
+  static String precoSubiu(String diff) => '↑ $diff';
+  static String precoBaixou(String diff) => '↓ $diff';
+
   // Orçamento por lista (RF-28, F36-T03)
   static const orcamento = 'Orçamento';
   static const campoOrcamento = 'Orçamento (R\$)';
