@@ -307,6 +307,11 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
               carregando: _enviandoEmail,
               onPressed: _enviarConviteEmail,
             ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              AppStrings.conviteEmailAviso,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ] else ...[
             const SizedBox(height: AppSpacing.lg),
             AppCampoTexto(controller: _linkController, readOnly: true),

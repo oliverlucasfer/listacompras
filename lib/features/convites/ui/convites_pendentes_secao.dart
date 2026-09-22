@@ -6,15 +6,27 @@ import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_snack_bar.dart';
+import '../../listas/providers/listas_providers.dart';
 import '../domain/convite.dart';
 import '../domain/convite_pendente.dart';
+import '../domain/papel.dart';
 import '../providers/convites_providers.dart';
 
 /// Meus convites por e-mail pendentes (RF-13, fluxo B, F32).
 final meusConvitesPendentesProvider = FutureProvider<List<ConvitePendente>>(
   (ref) => ref.watch(convitesRepositoryProvider).meusConvitesPendentes(),
 );
+
+String _rotuloPapel(Papel papel) => switch (papel) {
+  Papel.dono => AppStrings.papelDono,
+  Papel.editor => AppStrings.convidarPapelEditor,
+  Papel.leitor => AppStrings.convidarPapelLeitor,
+};
+
+int _diasRestantes(DateTime expiraEm) =>
+    expiraEm.difference(DateTime.now()).inDays;
 
 /// Seção "Convites pendentes" no topo do painel Minhas Listas.
 class ConvitesPendentesSecao extends ConsumerWidget {
@@ -54,6 +66,13 @@ class ConvitesPendentesSecao extends ConsumerWidget {
                 children: [
                   Text(AppStrings.convitePara(convite.listaTitulo)),
                   const SizedBox(height: AppSpacing.sm),
+                  AppChip(rotulo: _rotuloPapel(convite.papelOferecido)),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    AppStrings.expiraEmDias(_diasRestantes(convite.expiraEm)),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
                   Row(
                     children: [
                       Expanded(
@@ -91,6 +110,7 @@ class ConvitesPendentesSecao extends ConsumerWidget {
       final listaId = await ref
           .read(convitesRepositoryProvider)
           .aceitar(convite.token);
+      ref.invalidate(listasComContagemProvider);
       if (context.mounted) context.push('/lista/$listaId');
     } on ErroConvite catch (e) {
       if (context.mounted) mostrarSnackBar(context, e.message);

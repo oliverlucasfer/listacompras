@@ -268,10 +268,19 @@ abstract final class AppStrings {
   static const enviarConvite = 'Enviar convite';
   static const conviteCriado =
       'Convite criado. A pessoa verá no app ao entrar.';
+  static const conviteEmailAviso =
+      'O convite aparece no app da pessoa; não enviamos e-mail automático.';
   static const aceitar = 'Aceitar';
   static const recusar = 'Recusar';
 
   static String convitePara(String titulo) => 'Convite para $titulo';
+
+  static String expiraEmDias(int dias) {
+    if (dias <= 0) return 'expira hoje';
+    if (dias == 1) return 'expira em 1 dia';
+    return 'expira em $dias dias';
+  }
+
   static const compartilharIndisponivel =
       'Compartilhamento indisponível aqui. Use "Copiar link".';
   static const papelAtualizado = 'Papel atualizado.';

@@ -457,4 +457,17 @@ void main() {
     expect(find.text(AppStrings.erroEmailInvalido), findsOneWidget);
     await fechar(tester);
   });
+
+  testWidgets('deve_mostrar_aviso_de_email_automatico_quando_abre', (
+    tester,
+  ) async {
+    final servidor = ServidorFake(
+      (req) => (500, {'message': 'requisicao inesperada'}),
+    );
+    addTearDown(servidor.close);
+    await abrir(tester, servidor);
+
+    expect(find.text(AppStrings.conviteEmailAviso), findsOneWidget);
+    await fechar(tester);
+  });
 }
