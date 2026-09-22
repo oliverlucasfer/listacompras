@@ -567,6 +567,28 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_aceitar_fracao_quando_digitada_no_editor', (tester) async {
+    await listaComItens(tester);
+
+    await tester.tap(find.text('Arroz'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.quantidade),
+      '1/2',
+    );
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.pumpAndSettle();
+
+    final itens = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.deletadoEm.isNull())).get();
+    final arroz = itens.singleWhere((i) => i.nome == 'Arroz');
+    expect(arroz.quantidade, 0.5);
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_mostrar_erro_inline_quando_nome_e_quantidade_invalidos', (
     tester,
   ) async {

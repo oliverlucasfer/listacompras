@@ -270,6 +270,34 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  testWidgets('deve_ler_fracao_quando_stepper_na_edicao_inline', (
+    tester,
+  ) async {
+    await abrir(
+      tester,
+      RespostaParse(
+        itens: const [
+          ItemExtraido(nome: 'Queijo', quantidade: 0.5, unidade: Unidade.kg),
+        ],
+        aviso: null,
+      ),
+    );
+
+    await tester.tap(find.byIcon(Icons.expand_more).first);
+    await tester.pumpAndSettle();
+    // Campo semeado com o glifo ½ (formatarQuantidade).
+    expect(find.widgetWithText(TextField, '½'), findsOneWidget);
+
+    await tester.tap(find.byTooltip(AppStrings.aumentar));
+    await tester.pumpAndSettle();
+
+    // ½ + 1 = 1½ (e não 2): prova que a fração semeada foi lida de volta.
+    expect(find.widgetWithText(TextField, '1½'), findsOneWidget);
+    expect(find.text(AppStrings.erroQuantidadeInvalida), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('deve_gravar_itens_via_repositorio_quando_confirmar', (
     tester,
   ) async {

@@ -163,4 +163,34 @@ void main() {
     expect(r.itens.single.quantidade, 1);
     expect(r.aviso, isNotNull);
   });
+
+  test('deve_ler_fracao_quando_glifo', () {
+    final r = analisarListaLocal('½ kg de queijo');
+    expect(r.itens.single.quantidade, 0.5);
+    expect(r.itens.single.unidade, Unidade.kg);
+  });
+
+  test('deve_ler_fracao_quando_numerica', () {
+    final r = analisarListaLocal('1/2 kg de queijo');
+    expect(r.itens.single.quantidade, 0.5);
+    expect(r.itens.single.unidade, Unidade.kg);
+  });
+
+  test('deve_ler_misto_quando_espacado', () {
+    final r = analisarListaLocal('1 1/2 kg de queijo');
+    expect(r.itens.single.quantidade, 1.5);
+    expect(r.itens.single.unidade, Unidade.kg);
+  });
+
+  test('deve_ler_misto_quando_colado', () {
+    final r = analisarListaLocal('1½ kg de queijo');
+    expect(r.itens.single.quantidade, 1.5);
+    expect(r.itens.single.unidade, Unidade.kg);
+  });
+
+  test('deve_ler_fracao_quando_avulso', () {
+    final item = interpretarItemAvulso('1/2 kg banana');
+    expect(item!.quantidade, 0.5);
+    expect(item.unidade, Unidade.kg);
+  });
 }

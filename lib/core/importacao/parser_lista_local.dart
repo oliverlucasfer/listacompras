@@ -1,4 +1,5 @@
 import '../../core/l10n/app_strings.dart';
+import '../../features/listas/domain/quantidade.dart';
 import '../../features/listas/domain/unidade.dart';
 import '../texto/normalizar.dart';
 import 'resposta_import.dart';
@@ -35,8 +36,16 @@ const Map<String, Unidade> _unidades = {
 const _conectivos = {'de', 'do', 'da', 'em', 'dos', 'das'};
 
 final _separadores = RegExp(r'[\n,;]+|\s+e\s+', caseSensitive: false);
-final _soNumero = RegExp(r'^(\d+(?:[.,]\d+)?)$');
-final _numeroColado = RegExp(r'^(\d+(?:[.,]\d+)?)([a-zA-ZÀ-ÿ]+)$');
+const _qtd =
+    r'(\d+(?:[.,]\d+)?|\d+\s*/\s*\d+|[' +
+    glifosFracao +
+    r']|\d+[' +
+    glifosFracao +
+    r'])';
+final _soNumero = RegExp('^$_qtd\$');
+final _numeroColado = RegExp('^$_qtd([a-zA-ZÀ-ÿ]+)\$');
+final _soFracaoSo = RegExp(r'^(\d+\s*/\s*\d+|[½¼¾⅓⅔])$');
+final _soInteiro = RegExp(r'^\d+$');
 final _decimalComVirgula = RegExp(r'(\d),(\d)');
 
 /// Vírgula **entre dígitos** é decimal (`1,5`), não separador de itens — o
@@ -96,9 +105,9 @@ double _quantidadeValida(double bruta) => bruta > 0 ? bruta : 1.0;
 
 double? _numeroDoToken(String token) {
   final colado = _numeroColado.firstMatch(token);
-  if (colado != null) return _paraDouble(colado.group(1)!);
+  if (colado != null) return parseQuantidade(colado.group(1)!);
   final numero = _soNumero.firstMatch(token);
-  if (numero != null) return _paraDouble(numero.group(1)!);
+  if (numero != null) return parseQuantidade(numero.group(1)!);
   return null;
 }
 
@@ -158,22 +167,25 @@ _Segmento? _lerSegmento(String bruto) {
   if (colado != null) {
     final unidade = _unidades[normalizarTexto(colado.group(2)!)];
     if (unidade != null) {
-      return (
-        _quantidadeValida(_paraDouble(colado.group(1)!)),
-        unidade,
-        1,
-        true,
-      );
+      final q = parseQuantidade(colado.group(1)!)!;
+      return (_quantidadeValida(q), unidade, 1, true);
     }
   }
   final numero = _soNumero.firstMatch(t.first);
   if (numero == null) return null;
-  final qtd = _quantidadeValida(_paraDouble(numero.group(1)!));
-  if (t.length > 1) {
-    final unidade = _unidades[normalizarTexto(t[1])];
-    if (unidade != null) return (qtd, unidade, 2, true);
+  var qtd = parseQuantidade(numero.group(1)!)!;
+  var consumidos = 1;
+  if (t.length > 1 && _soFracaoSo.hasMatch(t[1])) {
+    qtd += parseQuantidade(t[1])!;
+    consumidos = 2;
   }
-  return (qtd, Unidade.un, 1, false);
+  if (t.length > consumidos) {
+    final unidade = _unidades[normalizarTexto(t[consumidos])];
+    if (unidade != null) {
+      return (_quantidadeValida(qtd), unidade, consumidos + 1, true);
+    }
+  }
+  return (_quantidadeValida(qtd), Unidade.un, consumidos, false);
 }
 
 (double, Unidade, int, bool)? _qtdFim(List<String> t) {
@@ -181,22 +193,26 @@ _Segmento? _lerSegmento(String bruto) {
   if (colado != null) {
     final unidade = _unidades[normalizarTexto(colado.group(2)!)];
     if (unidade != null) {
-      return (
-        _quantidadeValida(_paraDouble(colado.group(1)!)),
-        unidade,
-        t.length - 1,
-        true,
-      );
+      final q = parseQuantidade(colado.group(1)!)!;
+      return (_quantidadeValida(q), unidade, t.length - 1, true);
     }
   }
   final numero = _soNumero.firstMatch(t.last);
   if (numero == null) return null;
-  final qtd = _quantidadeValida(_paraDouble(numero.group(1)!));
-  if (t.length > 1) {
-    final unidade = _unidades[normalizarTexto(t[t.length - 2])];
-    if (unidade != null) return (qtd, unidade, t.length - 2, true);
+  var qtd = parseQuantidade(numero.group(1)!)!;
+  var inicioNome = t.length - 1;
+  if (t.length >= 2 &&
+      _soInteiro.hasMatch(t[t.length - 2]) &&
+      _soFracaoSo.hasMatch(t.last)) {
+    qtd += parseQuantidade(t[t.length - 2])!;
+    inicioNome = t.length - 2;
   }
-  return (qtd, Unidade.un, t.length - 1, false);
+  final idxUnidade = inicioNome - 1;
+  if (idxUnidade >= 0) {
+    final unidade = _unidades[normalizarTexto(t[idxUnidade])];
+    if (unidade != null) {
+      return (_quantidadeValida(qtd), unidade, idxUnidade, true);
+    }
+  }
+  return (_quantidadeValida(qtd), Unidade.un, inicioNome, false);
 }
-
-double _paraDouble(String valor) => double.parse(valor.replaceAll(',', '.'));

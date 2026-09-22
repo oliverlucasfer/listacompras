@@ -968,8 +968,7 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
       : (centavos / 100).toStringAsFixed(2).replaceAll('.', ',');
 
   double? _quantidadeLida() {
-    final bruto = _quantidade.text.trim().replaceAll(',', '.');
-    final valor = double.tryParse(bruto);
+    final valor = parseQuantidade(_quantidade.text);
     if (valor == null || valor <= 0) return null;
     return valor;
   }

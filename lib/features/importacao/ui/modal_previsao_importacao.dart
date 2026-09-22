@@ -253,7 +253,7 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
   }
 
   double? _quantidadeLida() {
-    final valor = double.tryParse(_quantidade.text.trim().replaceAll(',', '.'));
+    final valor = parseQuantidade(_quantidade.text);
     if (valor == null || valor <= 0) return null;
     return valor;
   }
