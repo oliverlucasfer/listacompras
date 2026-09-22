@@ -736,6 +736,20 @@ Spec: [superpowers/specs/2026-09-21-fluxos-criticos-design.md](superpowers/specs
   Dep: F33-T02 · Docs: [07 §1](07-qualidade-ci.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
   CP: 07 §1 com a linha "Fluxos críticos (E2E no widget)" e o registro dos adiados (goldens sensíveis à plataforma Windows×Linux; `integration_test` exige device); C2 do 16 concluído; Fase 33 na tabela de progresso (174/172).
 
+## Fase 34 — Backup agendado + alertas do Sentry (RNF-08)
+
+Spec: [superpowers/specs/2026-09-22-backup-alertas-design.md](superpowers/specs/2026-09-22-backup-alertas-design.md) · Requisito: RNF-08 (backup automatizado do banco de produção e regras de alerta do Sentry). · Docs donos: 07, 09.
+
+- [x] **F34-T01** — Workflow de backup agendado
+  Dep: — · Docs: [09 §2.2](09-runbook-operacoes.md)
+  CP: `.github/workflows/backup.yml` roda mensal (`0 6 1 * *`) e sob demanda, faz `supabase db dump` de produção, cifra o `.sql` (AES-256/PBKDF2) e publica o artefato `backup-YYYYMMDD` (retenção 90 dias); usa apenas os secrets `SUPABASE_DB_URL`/`BACKUP_PASSPHRASE`, com guarda de ausência e sem segredo no repo.
+- [x] **F34-T02** — Docs donos: backup (09) e observabilidade (07)
+  Dep: F34-T01 · Docs: [09 §2.2](09-runbook-operacoes.md), [07 §4](07-qualidade-ci.md)
+  CP: 09 §2.2 com o backup automatizado (cadência, secrets, retenção, restore a partir do artefato) e o dump manual como fallback; 07 §4 com a subseção "Regras de alerta (Sentry)" (tabela dos eventos 1-2 + passos no dashboard).
+- [x] **F34-T03** — Fechamento
+  Dep: F34-T02 · Docs: [14](14-tarefas.md), [16](16-roadmap-pos-mvp.md)
+  CP: Fase 34 na tabela de progresso (177/175); C3 do 16 concluído.
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -771,7 +785,8 @@ Spec: [superpowers/specs/2026-09-21-fluxos-criticos-design.md](superpowers/specs
 | F31 Boas-vindas e vazios | 3 | 3 |
 | F32 Convite por e-mail | 4 | 4 |
 | F33 Fluxos críticos | 3 | 3 |
-| **Total** | **174** | **172** |
+| F34 Backup + alertas | 3 | 3 |
+| **Total** | **177** | **175** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
