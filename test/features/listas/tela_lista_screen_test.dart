@@ -178,6 +178,37 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_mostrar_dica_com_caminhos_quando_lista_vazia', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(
+      titulo: 'Compras da Semana',
+      donoId: 'user-a',
+    );
+    final sync = StreamController<SyncStatus>();
+    sync.add(const Sincronizado());
+    addTearDown(sync.close);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          papelRepositoryProvider.overrideWithValue(
+            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
+          ),
+          syncStatusProvider.overrideWith((ref) => sync.stream),
+        ],
+        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.nenhumItem), findsOneWidget);
+    expect(find.text(AppStrings.nenhumItemDica), findsOneWidget);
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_agrupar_pendentes_na_ordem_do_enum_quando_exibir_f6t04', (
     tester,
   ) async {

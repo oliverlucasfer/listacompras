@@ -30,7 +30,7 @@ Foco: fazer a lista recorrente render mais, tudo **offline-first**, sem schema/R
 | A4 | Reordenar categorias por corredor | RF-24 | 01, 05, 10, 12 | Médio | P | concluído (F28-T01…T03) — ordem pessoal das 11 categorias, persistida local |
 | A5 | Quantidades em fração/embalagem ("½ kg") | RF-25 | 04, 05 | Médio | M | concluído (F29-T01…T03) — parser/entrada e exibição com glifos, sem mudar schema (reais já suportam) |
 | A6 | Adicionar item por voz | RF-26 | 05, 04 | Médio | M | concluído (F30-T01…T03) — microfone on-device (pt-BR) preenche o campo; Android pode cair para o reconhecedor de rede (limitação do plugin/SO); Web/Desktop ocultam |
-| A7 | Onboarding curto + estados vazios | novo/RNF-06 | 05, 10, 15 | Médio | P | Primeira execução e telas vazias explicativas |
+| A7 | Onboarding curto + estados vazios | RF-27 | 05, 10, 15 | Médio | P | concluído (F31-T01…T03) — boas-vindas uma vez (flag local) + dica do vazio com caminhos |
 
 ## Onda B — Colaboração completa
 

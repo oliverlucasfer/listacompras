@@ -70,6 +70,27 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
     link expirado → erro amigável + "Pedir novo link")
 ```
 
+### 1.4. Boas-vindas (primeiro acesso — F31/RF-27)
+```
+┌─────────────────────────────────┐
+│             🛒 Logo             │
+│   Bem-vindo ao Lista de Compras │
+│   Organize suas compras e       │
+│   compartilhe com quem quiser.  │
+│                                 │
+│   ☁ Funciona offline            │ ← destaques (ícone + texto);
+│     Suas listas ficam no        │   4 itens: offline, compartilhar,
+│     aparelho e sincronizam...   │   importar por texto, ditar item
+│   👥 Compartilhe a lista         │
+│   ➕ Importe por texto           │
+│   🎤 Dite um item                │
+│                                 │
+│   (        Começar        )     │ ← grava a flag e vai p/ /listas
+└─────────────────────────────────┘
+```
+   (página única, rolável; aparece **uma vez** no primeiro acesso
+    autenticado, via flag local `onboarding_visto` — RF-27; sem "Pular")
+
 ---
 
 ## 2. Minhas Listas
@@ -210,6 +231,8 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 **Busca (F16):** lupa na AppBar revela um campo (rótulo "Buscar item", hint de exemplo "Nome do item"); campo com rótulo acessível (label) e hint de exemplo; os grupos de categoria permanecem (vazios somem) e o drag fica desabilitado; sem resultado → vazio "Nenhum item encontrado" + "Limpar busca".
 
 **Chips de itens frequentes (F22/RF-19):** faixa horizontal acima do campo "Adicionar item", exibida só quando o campo está vazio e há sugestões; toque adiciona o item (1 `un`, categoria pela cadeia local); o botão do modo mercado (`shopping_cart_checkout`) fica na AppBar, visível a dono/editor.
+
+**Estado vazio da lista (RF-27/F31):** sem itens, o dono/editor vê o `AppEstadoVazio` "Nenhum item ainda" com a dica **"Adicione no campo acima, importe uma lista ou dite um item."** (aponta os três caminhos); o leitor mantém o vazio instrucional que não aponta para um campo que ele não tem (F14-T04).
 
 **Quantidades em fração (RF-25/F29):** a linha do item e o editor exibem a quantidade com glifos comuns (`½ kg`, `1½ un`, `1¼`); decimais longos são cortados para ≤ 3 casas. A entrada aceita `1/2`, `½`, `1½` e decimais no editor; a mista espaçada (`1 1/2`) é aceita na entrada rápida e na importação (parser).
 
@@ -442,7 +465,7 @@ Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstad
 | Tela | Carregando | Vazio | Erro | Offline |
 | :--- | :--- | :--- | :--- | :--- |
 | Minhas Listas | `AppEsqueleto` (F14-T09) | 2.2 | `AppEstadoErro` com retry | Banner global + lista local (usável) |
-| Tela da Lista | `AppEsqueleto` (F14-T09) | 3.1 — vazio instrui por papel (F14-T04) | `AppEstadoErro` com retry (F14-T04) | 3.2 — funcional |
+| Tela da Lista | `AppEsqueleto` (F14-T09) | 3.1 — vazio instrui por papel (F14-T04) + caminhos (RF-27/F31) | `AppEstadoErro` com retry (F14-T04) | 3.2 — funcional |
 | Membros | `AppEsqueleto` (F14-T09) | `AppEstadoVazio` com orientação (F14-T04) | `AppEstadoErro` com retry | — |
 | Importar lista | Botão com spinner | "Nada foi reconhecido" (4.2, F14-T04) | Mensagem amigável (4.1) | Botão desabilitado c/ dica |
 | Login | Spinner no botão | — | Inline por campo | Banner |

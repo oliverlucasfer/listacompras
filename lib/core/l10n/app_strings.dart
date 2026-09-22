@@ -153,7 +153,8 @@ abstract final class AppStrings {
   static const listaNaoEncontrada = 'Lista não encontrada.';
   static const voltarParaListas = 'Voltar para as listas';
   static const nenhumItem = 'Nenhum item ainda';
-  static const nenhumItemDica = 'Adicione o primeiro item no campo acima.';
+  static const nenhumItemDica =
+      'Adicione no campo acima, importe uma lista ou dite um item.';
   static const listaVazia = 'Lista vazia';
   static const listaVaziaDica = 'Ainda não há itens nesta lista.';
 

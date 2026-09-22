@@ -114,6 +114,7 @@ O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado
 | `/lista/:listaId` | Tela da Lista (fora do shell) | exige autenticação + pertencimento |
 | `/mercado/:listaId` | Modo mercado (fora do shell) — entrada pelo botão `shopping_cart_checkout` da AppBar da lista, visível só a dono/editor (F22/RF-18) | exige autenticação + pertencimento |
 | `/membros/:listaId` | Membros da lista (fora do shell) | exige autenticação + pertencimento |
+| `/boas-vindas` | Boas-vindas (primeiro acesso, aberta **uma vez** pela home autenticada — RF-27) | exige autenticação |
 | `/design` | Design System (só `kDebugMode`) | público em debug |
 
 * **Navegação por abas (F10):** `NavigationBar` inferior com 3 destinos (**Minhas**, **Compartilhadas**, **Configurações**) que vira `NavigationRail` a partir de ~600dp; o `StatefulShellRoute.indexedStack` preserva o estado de cada aba e o AppBar de cada aba usa o mesmo texto do destino.
@@ -196,6 +197,7 @@ O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado
 * Item duplicado (mesmo nome ativo, comparação normalizada): **mesma unidade → soma** a quantidade; **unidade diferente → atualiza** o item para a nova quantidade/unidade — nunca duplica o nome ativo (unique parcial no servidor) (F12-T06).
 * **Rótulo do campo de nome (F14-T06):** no editor, o campo usa "Nome do item" — "Adicionar item" vale só para a entrada rápida.
 * **Erro e vazio (F14-T04):** falha de carga usa `AppEstadoErro` **com retry** (não texto puro, como fazia); "Lista não encontrada" ganha CTA para `/listas`; o vazio do leitor **instrui** ("Peça a um editor para adicionar") em vez de apontar para um campo que ele não tem.
+* **Vazio da lista explicativo (RF-27, F31):** para dono/editor a lista sem itens não diz só "vazio" — a dica aponta os caminhos existentes: `Adicione no campo acima, importe uma lista ou dite um item.` (adicionar no campo, botão "Importar lista" no rodapé ou microfone; a copy fica só em `AppStrings`). O vazio do leitor segue instrucional (F14-T04).
 * **Banner de leitura (F14-T08):** usa `AppBannerTipo.leitura` ([15 §3](15-design-system.md)), não um `Container` manual.
 * **Busca (F16, RF-17):** a lupa na AppBar (todas as roles) revela um campo que filtra os itens pelo **nome** (offline, sem acento/caixa); mantém os grupos de categoria (escondendo vazios) e a seção de concluídos (contagens filtradas); **drag desabilitado** enquanto filtra; ao **adicionar** um item a busca é limpa; sem resultado → `AppEstadoVazio` "Nenhum item encontrado" com "Limpar busca"; campo com rótulo acessível (label) e hint de exemplo.
 * **Adicionar de outra lista (RF-23, F27):** item no menu `⋮` (dono/editor) abre o modal "Adicionar de outra lista" — seletor da lista de origem (todas as listas do usuário menos a atual; arquivadas rotuladas "Arquivada") e os **pendentes** da origem em multi-seleção com "Selecionar todos"; a ação "Adicionar" (estática; desabilitada com 0 selecionados) insere com a **dedup do app** (`adicionarItensDedup`, soma/replace) e a tela mostra um SnackBar com a contagem (`AppStrings.itensAdicionadosDeOutra`); **preço não é copiado**. Tudo local + fila ([03](03-sincronizacao-offline.md)).
@@ -233,6 +235,14 @@ Rota `/membros/:listaId` (AppBar `Membros · {título}`). Lista os membros (UUID
 
 * **Aparência:** seletor de tema Claro/Escuro/Sistema (`SeletorTema`, doc [15 §2](15-design-system.md)).
 * **Ordenar categorias (RF-24, F28):** item abaixo do seletor abre `/categorias` (fora do shell), a `TelaOrdenarCategorias` — lista arrastável das 11 categorias com ação **"Restaurar padrão"** (volta à ordem do enum, com confirmação). A preferência é **global** e **local** (SharedPreferences, chave `ordem_categorias`, como o tema); sem schema/RLS/sync. Detalhe em [10 §5.1](10-wireframes-telas.md).
+
+### 6.8. Tela de boas-vindas (RF-27, F31)
+
+Primeiro acesso ao app **autenticado** — apresenta o valor em **uma** página (rolável, escala de fonte respeitada, RNF-06) e sai de cena depois:
+
+* **Rota:** `/boas-vindas` (top-level, **protegida**; não está na lista de rotas públicas). O guard fica na home autenticada (`MinhasListasScreen`): quando `onboardingVistoProvider` resolve **falso**, faz `context.push('/boas-vindas')` **uma única vez**; não mexe no `redirect` do `go_router`.
+* **Flag local (F31-T01):** `onboardingVistoProvider` (`AsyncNotifierProvider<OnboardingNotifier, bool>`) lê/grava `SharedPreferences` (chave `onboarding_visto`), como o tema — sem rede/Drift/schema. `marcarVisto()` grava e nunca mais reabre.
+* **Conteúdo:** marca (`AppLogo`) + título (`boasVindasTitulo`) e subtítulo; **4 destaques** com ícone (offline, compartilhar, importar por texto, ditar um item) e o botão **"Começar"** (`AppBotao`) → `marcarVisto()` + `context.go('/listas')`. Sem "Pular" (página única). Wireframe em [10 §1.4](10-wireframes-telas.md).
 
 ---
 

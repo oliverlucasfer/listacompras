@@ -691,6 +691,20 @@ Spec: [superpowers/specs/2026-09-21-adicionar-por-voz-design.md](superpowers/spe
   Dep: F30-T02 · Docs: [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
   CP: RF-26 no 12 (tabela e rastreabilidade); docs donos refletem a voz (05 §2.1 permissões + §6.3 microfone/limite on-device, 10 nota); A6 do 16 concluído; Fase 30 na tabela de progresso (164/162).
 
+## Fase 31 — Boas-vindas e estados vazios (RF-27)
+
+Spec: [superpowers/specs/2026-09-21-boas-vindas-estados-vazios-design.md](superpowers/specs/2026-09-21-boas-vindas-estados-vazios-design.md) · Requisito: RF-27 (boas-vindas uma vez + estados vazios explicativos). · Docs donos: 05, 10, 12.
+
+- [x] **F31-T01** — Flag local das boas-vindas
+  Dep: — · Docs: [05 §6.8](05-app-flutter.md)
+  CP: `onboardingVistoProvider` (`AsyncNotifierProvider<OnboardingNotifier, bool>`) lê/grava `onboarding_visto` em `SharedPreferences` (`marcarVisto`); sem rede/Drift/schema; unit tests verdes.
+- [x] **F31-T02** — Tela `/boas-vindas` e exibição uma vez
+  Dep: F31-T01 · Docs: [05 §6.8](05-app-flutter.md), [10 §1.4](10-wireframes-telas.md)
+  CP: rota `/boas-vindas` protegida; `BoasVindasScreen` com marca, título/subtítulo, 4 destaques e "Começar" (`marcarVisto` + `/listas`); guard na home autenticada abre a tela uma vez quando a flag é falsa; widget tests verdes.
+- [x] **F31-T03** — Dica do vazio, docs donos e fechamento
+  Dep: F31-T02 · Docs: [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
+  CP: `nenhumItemDica` aponta os caminhos (campo/importar/ditar) com teste do vazio; RF-27 no 12 (tabela e rastreabilidade); docs donos refletem boas-vindas e o vazio; A7 do 16 concluído; Fase 31 na tabela de progresso (167/165).
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -723,7 +737,8 @@ Spec: [superpowers/specs/2026-09-21-adicionar-por-voz-design.md](superpowers/spe
 | F28 Ordem das categorias | 3 | 3 |
 | F29 Quantidades em fração | 3 | 3 |
 | F30 Adicionar por voz | 3 | 3 |
-| **Total** | **164** | **162** |
+| F31 Boas-vindas e vazios | 3 | 3 |
+| **Total** | **167** | **165** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
