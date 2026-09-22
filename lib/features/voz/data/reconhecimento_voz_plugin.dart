@@ -1,14 +1,16 @@
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:speech_to_text_platform_interface/speech_to_text_platform_interface.dart';
 
 import '../domain/reconhecimento_voz.dart';
 
-/// Reconhecimento **no dispositivo** (RF-26): exige modelo local em pt-BR e
-/// nunca usa rede. No Android o plugin cai silenciosamente para o reconhecedor
-/// de rede quando o modo on-device não está disponível; por isso consultamos
-/// [SpeechToTextPlatform.hasOnDeviceSupport] antes de ouvir e recusamos a sessão
-/// quando não há suporte local. Erros permanentes (modelo ausente, permissão
-/// negada) viram [onIndisponivel]; erros transitórios apenas param o estado.
+/// Reconhecimento de voz (RF-26). O app **pede** reconhecimento **no
+/// dispositivo** (`onDevice: true`, pt-BR) e nunca inicia uma chamada de rede
+/// por conta própria. Limitação do plugin/OS: no Android, quando não há modelo
+/// on-device para o idioma, o próprio sistema pode cair para o reconhecedor de
+/// rede — o `speech_to_text` não expõe forma de verificar/forçar on-device, e
+/// `SpeechToTextPlatform.hasOnDeviceSupport` não tem handler nativo em 7.5.0
+/// (lança `MissingPluginException`), então esse fallback não pode ser impedido.
+/// Erros permanentes (modelo ausente, permissão negada) viram [onIndisponivel];
+/// erros transitórios apenas param o estado.
 class ReconhecimentoVozPlugin implements ReconhecimentoVoz {
   final _speech = stt.SpeechToText();
 
@@ -29,14 +31,6 @@ class ReconhecimentoVozPlugin implements ReconhecimentoVoz {
       },
     );
     if (!disponivel) {
-      onEstado(EstadoVoz.indisponivel);
-      onIndisponivel();
-      return false;
-    }
-    final onDevice = await SpeechToTextPlatform.instance.hasOnDeviceSupport(
-      localeId: 'pt_BR',
-    );
-    if (!onDevice) {
       onEstado(EstadoVoz.indisponivel);
       onIndisponivel();
       return false;

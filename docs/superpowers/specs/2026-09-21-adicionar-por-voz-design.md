@@ -28,6 +28,7 @@ A fala é só uma **entrada alternativa** para o campo "Adicionar item": o texto
 - **Android** (`android/app/src/main/AndroidManifest.xml`): `<uses-permission android:name="android.permission.RECORD_AUDIO"/>`. (O plugin cuida do resto; `INTERNET` já existe no app.)
 - **iOS** (`ios/Runner/Info.plist`): `NSMicrophoneUsageDescription` e `NSSpeechRecognitionUsageDescription` (texto pt-BR explicando o uso).
 - **Web/Desktop:** o microfone **não aparece** (reconhecimento on-device não é garantido); comportamento documentado. Nada de código específico além de esconder o botão.
+- **On-device — limite conhecido:** o app **pede** reconhecimento no dispositivo (`onDevice: true`, pt-BR) e nunca inicia uma chamada de rede por conta própria. Porém o `speech_to_text` **não** expõe forma de verificar/forçar on-device (`SpeechToTextPlatform.hasOnDeviceSupport` não tem handler nativo em 7.5.0). No Android, quando não há modelo on-device para o idioma, o **próprio SO** pode usar o reconhecedor de rede. É limitação do plugin/SO, documentada; não há como impedir esse fallback.
 
 ## 4. Abstração testável
 
@@ -53,7 +54,7 @@ abstract interface class ReconhecimentoVoz {
 }
 ```
 
-- Implementação real `ReconhecimentoVozPlugin` (`lib/features/voz/data/reconhecimento_voz_plugin.dart`) sobre `SpeechToText`: `initialize(onError:, onStatus:)` → `listen(onDevice: true, localeId: 'pt_BR', onResult:)`; mapeia erros para `onIndisponivel` (ex.: modelo ausente, permissão negada).
+- Implementação real `ReconhecimentoVozPlugin` (`lib/features/voz/data/reconhecimento_voz_plugin.dart`) sobre `SpeechToText`: `initialize(onError:, onStatus:)` → `listen(onDevice: true, localeId: 'pt_BR', onResult:)`; em erro, volta a `parado` e só chama `onIndisponivel` quando o erro é permanente (ex.: modelo ausente, permissão negada).
 - **Fake** `FakeReconhecimentoVoz` (em `test/`) que emite texto/estado sob comando do teste.
 - Provider `reconhecimentoVozProvider` (Riverpod), sobrescrito nos testes.
 
@@ -88,7 +89,7 @@ abstract interface class ReconhecimentoVoz {
 ## 8. Decisões registradas (21/09/2026)
 
 1. A voz **preenche o campo** (o usuário confirma); não adiciona direto.
-2. **Só on-device** (`onDevice: true`), pt-BR; sem rede; indisponível → aviso amigável.
+2. **On-device solicitado** (`onDevice: true`, pt-BR): o app pede reconhecimento no dispositivo e nunca inicia chamada de rede própria; no Android o SO pode usar o reconhecedor de rede quando não há modelo on-device — limitação do plugin/SO, documentada (não há API para verificar/forçar em `speech_to_text` 7.5.0). Indisponível → aviso amigável.
 3. Plugin **`speech_to_text`** (sem segredo/serviço de nuvem); microfone **só em Android/iOS**.
 4. Abstração `ReconhecimentoVoz` + fake para testes; plugin real é smoke em device.
 5. Sem schema/RLS/sync; **sem ADR novo**. Fase **30**, requisito **RF-26**.
