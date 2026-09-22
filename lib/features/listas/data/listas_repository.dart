@@ -229,6 +229,26 @@ class ListasRepository {
     );
   }
 
+  /// Define/limpa o orçamento da lista (RF-28, F36). Offline-first: Drift +
+  /// fila. `centavos == null` remove o orçamento; `0` é um orçamento válido.
+  Future<void> definirOrcamento(String id, {required int? centavos}) async {
+    final agora = DateTime.now().toUtc();
+    await (_db.update(_db.listaLocal)..where((l) => l.id.equals(id))).write(
+      ListaLocalCompanion(
+        orcamentoCentavos: Value(centavos),
+        updatedAt: Value(agora),
+      ),
+    );
+    await _enfileirar(
+      tabela: 'listas',
+      operacao: 'UPDATE',
+      registroId: id,
+      listaId: id,
+      tsLocal: agora,
+      payload: await _payloadLista(id),
+    );
+  }
+
   Future<Item> adicionarItem({
     required String listaId,
     required String nome,
@@ -562,6 +582,7 @@ class ListasRepository {
       'created_at': _iso(l.createdAt),
       'updated_at': _iso(l.updatedAt),
       'deletado_em': l.deletadoEm == null ? null : _iso(l.deletadoEm!),
+      'orcamento_centavos': l.orcamentoCentavos,
       if (incluirArquivo)
         'arquivada_em': l.arquivadaEm == null ? null : _iso(l.arquivadaEm!),
     };

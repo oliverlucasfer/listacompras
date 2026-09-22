@@ -31,6 +31,8 @@ class AplicadorRemoto {
             donoId: r['dono_id'] as String,
             deletadoEm: Value(_dataOpcional(r['deletado_em'])),
             arquivadaEm: Value(_dataOpcional(r['arquivada_em'])),
+            // Tolerância (spec F36 §4): ausente ou não-numérico → null.
+            orcamentoCentavos: Value(_intOpcional(r['orcamento_centavos'])),
           ),
         );
   }
@@ -71,4 +73,11 @@ class AplicadorRemoto {
 
   DateTime? _dataOpcional(Object? iso) =>
       iso is String ? DateTime.parse(iso).toUtc() : null;
+
+  int? _intOpcional(Object? v) {
+    if (v == null) return null;
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    return int.tryParse(v.toString());
+  }
 }

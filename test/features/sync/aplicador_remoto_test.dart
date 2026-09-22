@@ -331,4 +331,57 @@ void main() {
     )..where((l) => l.id.equals('l-arq-2'))).getSingle();
     expect(lista.arquivadaEm, isNotNull);
   });
+
+  test('deve_mapear_orcamento_ausente_para_null_quando_linha_antiga', () async {
+    final aplicador = AplicadorRemoto(db);
+    await aplicador.aplicar('listas', {
+      'id': 'l-orc-1',
+      'titulo': 'X',
+      'dono_id': 'u',
+      'created_at': '2026-09-22T12:00:00.000Z',
+      'updated_at': '2026-09-22T12:00:00.000Z',
+      'deletado_em': null,
+    });
+    final lista = await (db.select(
+      db.listaLocal,
+    )..where((l) => l.id.equals('l-orc-1'))).getSingle();
+    expect(lista.orcamentoCentavos, isNull);
+  });
+
+  test('deve_mapear_orcamento_quando_presente', () async {
+    final aplicador = AplicadorRemoto(db);
+    await aplicador.aplicar('listas', {
+      'id': 'l-orc-2',
+      'titulo': 'X',
+      'dono_id': 'u',
+      'orcamento_centavos': 25000,
+      'created_at': '2026-09-22T12:00:00.000Z',
+      'updated_at': '2026-09-22T12:00:00.000Z',
+      'deletado_em': null,
+    });
+    final lista = await (db.select(
+      db.listaLocal,
+    )..where((l) => l.id.equals('l-orc-2'))).getSingle();
+    expect(lista.orcamentoCentavos, 25000);
+  });
+
+  test(
+    'deve_mapear_orcamento_nao_numerico_para_null_quando_tolerancia',
+    () async {
+      final aplicador = AplicadorRemoto(db);
+      await aplicador.aplicar('listas', {
+        'id': 'l-orc-3',
+        'titulo': 'X',
+        'dono_id': 'u',
+        'orcamento_centavos': 'abc',
+        'created_at': '2026-09-22T12:00:00.000Z',
+        'updated_at': '2026-09-22T12:00:00.000Z',
+        'deletado_em': null,
+      });
+      final lista = await (db.select(
+        db.listaLocal,
+      )..where((l) => l.id.equals('l-orc-3'))).getSingle();
+      expect(lista.orcamentoCentavos, isNull);
+    },
+  );
 }

@@ -583,6 +583,68 @@ void main() {
     expect(payload['arquivada_em'], isNull);
   });
 
+  test('deve_gravar_e_enfileirar_orcamento_quando_definir', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+
+    await repo.definirOrcamento(lista.id, centavos: 25000);
+
+    final local = await (db.select(
+      db.listaLocal,
+    )..where((l) => l.id.equals(lista.id))).getSingle();
+    expect(local.orcamentoCentavos, 25000);
+    final mutacoes = await fila();
+    expect(mutacoes.last['operacao'], 'UPDATE');
+    expect(mutacoes.last['tabela'], 'listas');
+    final payload = mutacoes.last['payload'] as Map<String, Object?>;
+    expect(payload['orcamento_centavos'], 25000);
+  });
+
+  test('deve_limpar_orcamento_quando_definir_null', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    await repo.definirOrcamento(lista.id, centavos: 25000);
+
+    await repo.definirOrcamento(lista.id, centavos: null);
+
+    final local = await (db.select(
+      db.listaLocal,
+    )..where((l) => l.id.equals(lista.id))).getSingle();
+    expect(local.orcamentoCentavos, isNull);
+    final payload = (await fila()).last['payload'] as Map<String, Object?>;
+    expect(payload['orcamento_centavos'], isNull);
+  });
+
+  test('deve_gravar_orcamento_zero_quando_definir_zero', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+
+    await repo.definirOrcamento(lista.id, centavos: 0);
+
+    final local = await (db.select(
+      db.listaLocal,
+    )..where((l) => l.id.equals(lista.id))).getSingle();
+    expect(local.orcamentoCentavos, 0);
+    final payload = (await fila()).last['payload'] as Map<String, Object?>;
+    expect(payload['orcamento_centavos'], 0);
+  });
+
+  test('deve_incluir_orcamento_nulo_no_payload_quando_criar_lista', () async {
+    await repo.criarLista(titulo: 'X', donoId: 'user-a');
+
+    final payload = (await fila()).single['payload'] as Map<String, Object?>;
+    expect(payload.containsKey('orcamento_centavos'), isTrue);
+    expect(payload['orcamento_centavos'], isNull);
+  });
+
+  test('deve_expor_orcamento_no_stream_quando_definir', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    await repo.definirOrcamento(lista.id, centavos: 12345);
+
+    final lida = await repo
+        .watchLista(lista.id)
+        .first
+        .timeout(const Duration(seconds: 2));
+    expect(lida?.orcamentoCentavos, 12345);
+  });
+
   test('nao_deve_enviar_arquivo_quando_renomear', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
 

@@ -10,6 +10,7 @@ class Lista {
     required this.atualizadoEm,
     this.deletadoEm,
     this.arquivadaEm,
+    this.orcamentoCentavos,
   });
 
   final String id;
@@ -20,6 +21,9 @@ class Lista {
   final DateTime? deletadoEm;
   final DateTime? arquivadaEm;
 
+  /// Orçamento da lista em centavos (RF-28, F36). `null` = sem orçamento.
+  final int? orcamentoCentavos;
+
   factory Lista.fromLocal(ListaLocalData d) => Lista(
     id: d.id,
     titulo: d.titulo,
@@ -28,5 +32,6 @@ class Lista {
     atualizadoEm: d.updatedAt,
     deletadoEm: d.deletadoEm,
     arquivadaEm: d.arquivadaEm,
+    orcamentoCentavos: d.orcamentoCentavos,
   );
 }
