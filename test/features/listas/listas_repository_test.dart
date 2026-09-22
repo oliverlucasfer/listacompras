@@ -824,6 +824,8 @@ void main() {
       precoCentavos: 1850,
     );
 
+    final antes = await fila();
+
     await repo.editarItem(item.id, concluido: true);
 
     final rows = await db.select(db.historicoPrecoLocal).get();
@@ -832,9 +834,13 @@ void main() {
     expect(rows.single.precoCentavos, 1850);
     expect(rows.single.unidade, 'pacote');
 
-    // Local-only: nenhuma mutação de histórico é enfileirada.
-    final mutacoes = await fila();
-    expect(mutacoes.every((m) => m['tabela'] != 'historico_preco'), isTrue);
+    // Local-only: o registro de histórico não enfileira nada — a única
+    // mutação nova é o UPDATE do próprio item.
+    final depois = await fila();
+    expect(depois.length, antes.length + 1);
+    expect(depois.last['tabela'], 'itens_lista');
+    expect(depois.last['operacao'], 'UPDATE');
+    expect(depois.last['registro_id'], item.id);
   });
 
   test('deve_nao_registrar_historico_quando_concluir_item_sem_preco', () async {
