@@ -160,7 +160,7 @@ $$;
 | :--- | :--- |
 | Convidado **já tem conta** | O convite aparece no app: painel **"Convites pendentes"** no Minhas Listas, alimentado pela RPC `meus_convites_pendentes()` (título da lista, papel ofertado e prazo) → **Aceitar** (reusa `aceitar_convite`) / **Recusar** (`recusar_convite`) |
 | Convidado **não tem conta** | Convite fica `pendente` vinculado ao e-mail; ao se registrar com aquele e-mail, o painel mostra o convite pendente → aceite via mesmo RPC |
-| E-mail de usuário já membro | RPC retorna erro amigável "Este usuário já participa" (o dono vê na lista de membros) |
+| E-mail de usuário já membro | O convite **é criado** normalmente (não há guarda de membro): fica `pendente` vinculado ao e-mail. O aceite é **idempotente** — `aceitar_convite` faz `on conflict (lista_id, user_id) do nothing` e apenas navega para a lista (o dono vê o membro na lista de membros) |
 
 **Criação (dono):** o sheet "Convidar" ganha o campo **"E-mail do convidado"** + **"Enviar convite"**; `criarConviteEmail` reusa um convite pendente **não expirado** do mesmo e-mail na lista (atualiza o papel ofertado se mudou) ou insere um novo (`tipo='email'`). É **online-only** — o convite não vai ao Drift. `meus_convites_pendentes()` e `recusar_convite(id)` são `security definer` (o RLS de `convites` fica **intacto**; [02 §4.7](02-seguranca-rls.md)); o aceite **não** tem RPC novo — reusa `aceitar_convite` ([§3.1](#31-rpc-aceitar_convite)). O `recusar_convite` só revoga o convite do **próprio** e-mail e exige `expira_em >= now()` (guarda de expiração). Copy sem nome do convidante (o RLS não expõe perfis).
 

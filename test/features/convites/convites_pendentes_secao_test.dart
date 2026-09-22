@@ -37,7 +37,7 @@ ConvitesRepository _repo(ServidorFake servidor) => ConvitesRepository(
   ),
 );
 
-Future<void> _abrir(WidgetTester tester, ServidorFake servidor) async {
+Future<GoRouter> _abrir(WidgetTester tester, ServidorFake servidor) async {
   final router = GoRouter(
     initialLocation: '/',
     routes: [
@@ -61,6 +61,7 @@ Future<void> _abrir(WidgetTester tester, ServidorFake servidor) async {
     ),
   );
   await tester.pumpAndSettle();
+  return router;
 }
 
 void main() {
@@ -108,6 +109,36 @@ void main() {
       isTrue,
     );
     expect(find.text('lista-$_listaId'), findsOneWidget);
+  });
+
+  testWidgets('deve_remover_card_quando_aceitar_e_voltar', (tester) async {
+    // O provider não é autoDispose: sem invalidar, o card aceito reapareceria
+    // ao voltar para o painel. O fake só devolve o pendente na 1ª chamada.
+    var chamadas = 0;
+    final servidor = ServidorFake((req) {
+      if (req.method == 'POST' &&
+          req.url.path.contains('meus_convites_pendentes')) {
+        chamadas++;
+        return (200, chamadas == 1 ? [_convitePendente()] : const <Object?>[]);
+      }
+      if (req.method == 'POST' && req.url.path.contains('aceitar_convite')) {
+        return (200, _listaId);
+      }
+      return (500, {'message': 'inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    final router = await _abrir(tester, servidor);
+    expect(find.text(AppStrings.convitesPendentes), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.aceitar));
+    await tester.pumpAndSettle();
+    expect(find.text('lista-$_listaId'), findsOneWidget);
+
+    router.pop();
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.convitesPendentes), findsNothing);
+    expect(chamadas, greaterThanOrEqualTo(2));
   });
 
   testWidgets('deve_recusar_e_remover_quando_toca', (tester) async {

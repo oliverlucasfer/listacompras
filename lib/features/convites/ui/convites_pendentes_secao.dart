@@ -111,6 +111,9 @@ class ConvitesPendentesSecao extends ConsumerWidget {
           .read(convitesRepositoryProvider)
           .aceitar(convite.token);
       ref.invalidate(listasComContagemProvider);
+      // O card aceito sairia do painel: sem isto, o cache (não autoDispose)
+      // ainda exibiria "Aceitar" ao voltar para Minhas Listas.
+      ref.invalidate(meusConvitesPendentesProvider);
       if (context.mounted) context.push('/lista/$listaId');
     } on ErroConvite catch (e) {
       if (context.mounted) mostrarSnackBar(context, e.message);

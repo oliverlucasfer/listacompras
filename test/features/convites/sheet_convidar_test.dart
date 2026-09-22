@@ -438,6 +438,55 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_recarregar_pendentes_quando_cria_convite_email', (
+    tester,
+  ) async {
+    // O convite por e-mail recém-criado precisa aparecer na lista de
+    // pendentes do sheet (e ficar revogável) sem reabrir.
+    var gets = 0;
+    final servidor = ServidorFake((req) {
+      if (req.method == 'GET' && req.url.path.contains('/convites')) {
+        gets++;
+        return (
+          200,
+          gets == 1
+              ? const <Object?>[]
+              : [
+                  _linhaConvite(
+                    papel: 'editor',
+                    tipo: 'email',
+                    email: 'a@b.com',
+                  ),
+                ],
+        );
+      }
+      if (req.method == 'POST' && req.url.path.contains('/convites')) {
+        return (200, _linhaConvite(papel: 'editor', tipo: 'email'));
+      }
+      return (500, {'message': 'inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    await abrir(tester, servidor);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.emailDoConvidado),
+      'a@b.com',
+    );
+    await tester.tap(
+      find.widgetWithText(OutlinedButton, AppStrings.enviarConvite),
+    );
+    await tester.pumpAndSettle();
+
+    expect(gets, greaterThanOrEqualTo(2));
+    expect(find.text(AppStrings.convitesPendentes), findsOneWidget);
+    expect(
+      find.widgetWithText(TextButton, AppStrings.revogarConvitePendente),
+      findsOneWidget,
+    );
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_validar_email_quando_invalido', (tester) async {
     final servidor = ServidorFake(
       (req) => (500, {'message': 'nao deveria chamar'}),

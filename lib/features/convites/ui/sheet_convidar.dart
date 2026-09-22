@@ -147,6 +147,9 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
       if (mounted) {
         mostrarSnackBar(context, AppStrings.conviteCriado);
         _email.clear();
+        // O convite por e-mail recém-criado entra na lista de pendentes da
+        // lista (e fica revogável) sem precisar reabrir o sheet.
+        await _carregarPendentes();
       }
     } on ErroConvite catch (e) {
       if (mounted) setState(() => _erroEmail = e.message);

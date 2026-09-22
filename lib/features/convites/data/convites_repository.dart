@@ -119,11 +119,18 @@ class ConvitesRepository {
 
   /// Meus convites por e-mail pendentes (RPC `meus_convites_pendentes`).
   Future<List<ConvitePendente>> meusConvitesPendentes() async {
-    final linhas = await _client.rpc('meus_convites_pendentes');
-    return [
-      for (final linha in linhas as List)
-        ConvitePendente.fromMap(Map<String, Object?>.from(linha as Map)),
-    ];
+    try {
+      final linhas = await _client.rpc('meus_convites_pendentes');
+      return [
+        for (final linha in linhas as List)
+          ConvitePendente.fromMap(Map<String, Object?>.from(linha as Map)),
+      ];
+    } catch (e) {
+      if (ehSemConexao(e)) {
+        throw const ErroConvite('sem_conexao', AppStrings.conviteSemConexao);
+      }
+      rethrow;
+    }
   }
 
   /// Recusa o próprio convite por e-mail (RPC `recusar_convite`).

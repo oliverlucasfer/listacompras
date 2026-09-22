@@ -912,6 +912,26 @@ void main() {
       expect(pendentes.single.token, 't1');
     });
 
+    test('deve_mapear_sem_conexao_quando_socket_ao_listar_pendentes', () async {
+      final servidor = ServidorFake((req) {
+        throw const SocketException('sem rota');
+      });
+      addTearDown(servidor.close);
+
+      await expectLater(
+        repoCom(servidor).meusConvitesPendentes(),
+        throwsA(
+          isA<ErroConvite>()
+              .having((e) => e.code, 'code', 'sem_conexao')
+              .having(
+                (e) => e.message,
+                'message',
+                AppStrings.conviteSemConexao,
+              ),
+        ),
+      );
+    });
+
     test('deve_recusar_convite', () async {
       final servidor = ServidorFake((req) {
         if (req.method == 'POST' && req.url.path.contains('recusar_convite')) {
