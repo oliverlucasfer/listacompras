@@ -54,4 +54,29 @@ void main() {
     expect(indisponivel1, isEmpty);
     expect(indisponivel2, [true]);
   });
+
+  test('nao_deve_listar_quando_cancela_antes_do_initialize_concluir', () async {
+    final metodos = <String>[];
+    mensageiro.setMockMethodCallHandler(canal, (call) async {
+      metodos.add(call.method);
+      if (call.method == 'initialize' || call.method == 'listen') return true;
+      return null;
+    });
+
+    final plugin = ReconhecimentoVozPlugin();
+    final iniciarFut = plugin.iniciar(
+      onTexto: (_, _) {},
+      onIndisponivel: () {},
+      onEstado: (_) {},
+    );
+    // Cancela antes de `iniciar` retomar de `initialize` — como faz o
+    // `dispose` da tela. Sem o guard, `listen` ainda seria disparado e o
+    // microfone ficaria quente.
+    final cancelarFut = plugin.cancelar();
+    final iniciou = await iniciarFut;
+    await cancelarFut;
+
+    expect(iniciou, isFalse);
+    expect(metodos, isNot(contains('listen')));
+  });
 }

@@ -15,6 +15,10 @@ import '../domain/reconhecimento_voz.dart';
 class ReconhecimentoVozPlugin implements ReconhecimentoVoz {
   final _speech = stt.SpeechToText();
 
+  /// Cancelamento pedido durante o `await initialize`: impede o `listen`
+  /// subsequente de ligar o microfone de uma tela que já foi desmontada.
+  bool _cancelado = false;
+
   @override
   Future<bool> iniciar({
     required void Function(String texto, bool finalizado) onTexto,
@@ -22,6 +26,7 @@ class ReconhecimentoVozPlugin implements ReconhecimentoVoz {
     required void Function(EstadoVoz) onEstado,
   }) async {
     onEstado(EstadoVoz.parado);
+    _cancelado = false;
 
     void aoErro(SpeechRecognitionError e) {
       onEstado(EstadoVoz.parado);
@@ -49,6 +54,9 @@ class ReconhecimentoVozPlugin implements ReconhecimentoVoz {
       onIndisponivel();
       return false;
     }
+    // `cancelar()`/`parar()` podem ter chegado enquanto `initialize` corria
+    // (ex.: `dispose` da tela). Nesse caso não ligamos o microfone.
+    if (_cancelado) return false;
     onEstado(EstadoVoz.ouvindo);
     try {
       await _speech.listen(
@@ -68,8 +76,14 @@ class ReconhecimentoVozPlugin implements ReconhecimentoVoz {
   }
 
   @override
-  Future<void> parar() => _speech.stop();
+  Future<void> parar() {
+    _cancelado = true;
+    return _speech.stop();
+  }
 
   @override
-  Future<void> cancelar() => _speech.cancel();
+  Future<void> cancelar() {
+    _cancelado = true;
+    return _speech.cancel();
+  }
 }
