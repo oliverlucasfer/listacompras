@@ -27,19 +27,21 @@ A feature é 100% local: **entrada** aceita frações e **exibição** mostra gl
 
 ```dart
 /// Interpreta uma quantidade: inteiro/decimal pt-BR (`2`, `1,5`, `1.5`),
-/// fração simples (`1/2`), glifo (`½`) ou mista (`1½`). `null` se não for
-/// quantidade (ou inválida: denominador 0, negativo).
+/// fração simples (`1/2`), glifo (`½`) ou mista colada (`1½`). Processa um
+/// **token único** — o misto espaçado (`1 1/2`) é combinado pelo parser.
+/// `null` se não for quantidade (ou inválida: denominador 0, negativo).
 double? parseQuantidade(String texto);
 
 /// Formata para exibição: inteiro → `2`; parte fracionária que casa um glifo
-/// comum (½ ¼ ¾ ⅓ ⅔, com tolerância) → misto (`1½`, `2⅓`); senão arredonda
-/// para ≤ 3 casas e corta zeros (`0.333`, `1.25`).
+/// comum (½ ¼ ¾ ⅓ ⅔, com tolerância) → misto (`1½`, `1¼`, `2⅓`); senão
+/// arredonda para ≤ 3 casas e corta zeros (`1.2`, `0.143`).
 String formatarQuantidade(double q);
 ```
 
-- Glifos: `½ ¼ ¾ ⅓ ⅔` (mais comuns). Casamento com tolerância (ex.: `1/3` ≈ `0.3333…` → `⅓`).
-- Misto: parte inteira + glifo (`1½`, `2⅓`); sem parte inteira → só o glifo (`½`).
-- Corte: `q.toStringAsFixed(3)` com remoção de zeros finais (`1.250` → `1.25`, `0.3333` → `0.333`).
+- Glifos: `½ ¼ ¾ ⅓ ⅔` (mais comuns). Casamento com tolerância de `0.001` (ex.: `1/3` e `0.333` ≈ `0.3333…` → `⅓`).
+- Misto: parte inteira + glifo (`1½`, `1¼`, `2⅓`); sem parte inteira → só o glifo (`½`).
+- Corte: só depois de descartar a tolerância de glifo; `q.toStringAsFixed(3)` com remoção de zeros finais (`1.200` → `1.2`, `1/7` → `0.143`). Valores que casam um glifo viram glifo antes do corte (`1.25` → `1¼`, `0.333` → `⅓`).
+- `parseQuantidade` trata **um token**; o **misto espaçado** (`1 1/2`) é combinado pelo parser, não por ela.
 - `formatarQuantidade` é a **fonte única** já usada pela linha do item, editor, modo mercado, importação e "adicionar de outra lista" — a mudança vale para todos.
 
 ## 4. Parser compartilhado (`lib/core/importacao/parser_lista_local.dart`)
@@ -60,8 +62,8 @@ Isso beneficia **entrada rápida** (`interpretarItemAvulso`) e **importação** 
 ## 6. Testes
 
 **Unit — `quantidade.dart`:**
-- `parseQuantidade`: `2`→2; `1,5`/`1.5`→1.5; `1/2`→0.5; `1 1/2`→1.5; `½`→0.5; `1½`→1.5; inválido (`abc`, `1/0`)→null.
-- `formatarQuantidade`: `2`→`2`; `0.5`→`½`; `1.5`→`1½`; `1/3`→`⅓`; `0.25`→`¼`; `1.25`→`1.25`; `1/3` exato não vira decimal longo.
+- `parseQuantidade`: `2`→2; `1,5`/`1.5`→1.5; `1/2`→0.5; `½`→0.5; `1½`→1.5; **token único** — o misto espaçado (`1 1/2`) é combinado pelo parser, então aqui → `null`; inválido (`abc`, `1/0`, negativo)→null.
+- `formatarQuantidade`: `2`→`2`; `0.5`→`½`; `1.5`→`1½`; `0.25`→`¼`; `1/3`→`⅓`; `1.25`→`1¼`; por tolerância, `0.333` também → `⅓`; fora dos glifos corta para ≤ 3 casas (`1/7`→`0.143`, `1.2`→`1.2`).
 
 **Parser (`parser_lista_local_test.dart`):**
 - `deve_ler_fracao_quando_glifo` (`½ kg de queijo` → 0.5 kg).

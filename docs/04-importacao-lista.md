@@ -34,15 +34,19 @@ Fluxo de UX completo (modal, pré-visualização, confirmação) está em [05 §
 `analisarListaLocal(texto)`:
 
 1. Normaliza a vírgula **entre dígitos** como decimal (`1,5` → `1.5`) e só então segmenta o texto por `,`, `;`, quebra de linha e o conectivo ` e ` — vírgula entre itens continua separador (`arroz, leite` → 2 itens).
-2. Para cada segmento, lê quantidade/unidade no **início** ou no **fim** (`1kg de arroz`, `arroz 1kg`, `2 leites`, `leite 2`).
+2. Para cada segmento, lê quantidade/unidade no **início** ou no **fim** (`1kg de arroz`, `arroz 1kg`, `2 leites`, `leite 2`). A quantidade aceita decimal pt-BR (`1,5`), **fração numérica** (`1/2`), **mista** (`1 1/2`) e **glifos** (`½`, `1½`) — RF-25.
 3. Sem quantidade → `1 un` e marca `aviso`; quantidade **`≤ 0`** é tratada como ausente (entra `1` com a unidade explícita do texto, ex.: `0 kg de arroz` → `1 kg`) e também marca `aviso` — `ItemExtraido.quantidade` é sempre `> 0`.
 4. Converte quantidade com vírgula (`1,5` → `1.5`); capitaliza o nome; ignora segmentos vazios.
 5. `interpretarItemAvulso(texto, {unidadePadrao})` é usado pelo campo "Adicionar item" (F12-T06): unidade explícita do texto vence; sem unidade, usa a do seletor.
+
+**Frações (RF-25, F29):** a quantidade é interpretada por `parseQuantidade` (`lib/features/listas/domain/quantidade.dart`) e o parser reconhece fração numérica (`1/2 kg`), **mista separada** (`1 1/2 kg` → inteiro + fração) e glifos (`½ kg`, `1½ kg`), com ou sem unidade colada (`½kg`). `parseQuantidade` trata **um token único**; o misto espaçado é combinado pelo parser. Fração inválida (`1/0`) não quebra o fluxo: cai na regra de quantidade ausente (`1` + token no nome, com `aviso`). O contrato vale para a **entrada rápida** e a **importação** — unidade e demais campos ficam inalterados.
 
 ## 4. Enums
 
 - **Unidades** (fonte única [01 §3.1](01-banco-de-dados.md)): `un, kg, g, l, ml, caixa, pacote, pct, dz` — replicado em `lib/features/listas/domain/unidade.dart`.
 - **Categorias** (fonte única [01 §3.2](01-banco-de-dados.md)): `hortifruti, mercearia, frios, laticinios, congelados, padaria, bebidas, pet, limpeza, higiene, outros`.
+
+As frações (RF-25) **não alteram** os enums: a quantidade continua `numeric` e a unidade segue esta mesma lista.
 
 ## 5. Sugestão de categoria
 

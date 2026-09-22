@@ -663,6 +663,20 @@ Spec: [superpowers/specs/2026-09-21-ordem-categorias-design.md](superpowers/spec
   Dep: F28-T02 · Docs: [01](01-banco-de-dados.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
   CP: RF-24 no 12 (tabela e rastreabilidade); docs donos refletem a ordem pessoal (01 §3.2 padrão/fallback, 05 §6, wireframe 10 §5); A4 do 16 concluído; Fase 28 na tabela de progresso (158/156).
 
+## Fase 29 — Quantidades em fração (RF-25)
+
+Spec: [superpowers/specs/2026-09-21-quantidades-fracao-design.md](superpowers/specs/2026-09-21-quantidades-fracao-design.md) · Requisito: RF-25 (quantidades em fração na entrada e exibição). · Docs donos: 04, 05, 10, 12.
+
+- [x] **F29-T01** — Domínio: `parseQuantidade` e glifos na formatação
+  Dep: — · Docs: [05 §6.3](05-app-flutter.md)
+  CP: `parseQuantidade`/`formatarQuantidade`/`glifosFracao` em `lib/features/listas/domain/quantidade.dart`; decimal pt-BR, fração (`1/2`), glifo (`½`) e misto colado (`1½`); negativo/inválido (`1/0`) → `null`; exibição com glifos comuns (incl. misto `1½`/`1¼`) e corte ≤ 3 casas; unit tests verdes.
+- [x] **F29-T02** — Parser e editor aceitam frações
+  Dep: F29-T01 · Docs: [04 §3](04-importacao-lista.md), [05 §6.3](05-app-flutter.md)
+  CP: parser reconhece fração numérica, glifo e misto separado (`1 1/2 kg`) na entrada rápida e na importação; fração inválida (`1/0`) não quebra (quantidade 1 + token no nome); editor do item e previsão de importação leem a quantidade com `parseQuantidade`; parser/widget tests verdes.
+- [x] **F29-T03** — Docs donos e fechamento
+  Dep: F29-T02 · Docs: [04](04-importacao-lista.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
+  CP: RF-25 no 12 (tabela e rastreabilidade); docs donos refletem as frações (04 §3/§4 contrato, 05 §6.3 entrada/editor/exibição, 10 nota de exibição); A5 do 16 concluído; Fase 29 na tabela de progresso (161/159).
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -693,7 +707,8 @@ Spec: [superpowers/specs/2026-09-21-ordem-categorias-design.md](superpowers/spec
 | F26 Arquivar listas | 4 | 4 |
 | F27 Itens de outra lista | 3 | 3 |
 | F28 Ordem das categorias | 3 | 3 |
-| **Total** | **158** | **156** |
+| F29 Quantidades em fração | 3 | 3 |
+| **Total** | **161** | **159** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

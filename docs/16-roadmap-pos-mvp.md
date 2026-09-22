@@ -28,7 +28,7 @@ Foco: fazer a lista recorrente render mais, tudo **offline-first**, sem schema/R
 | A2 | Arquivar/desarquivar listas | RF-22 | 05, 10, 01 | Médio | M | concluído (F26-T01…T04) — coluna `arquivada_em` + trigger do dono, sem policy nova |
 | A3 | Adicionar itens de outra lista | RF-23 | 05, 10 | Médio | M | concluído (F27-T01…T03) — lote a partir de uma lista escolhida, dedup do app (soma/replace), sem preço |
 | A4 | Reordenar categorias por corredor | RF-24 | 01, 05, 10, 12 | Médio | P | concluído (F28-T01…T03) — ordem pessoal das 11 categorias, persistida local |
-| A5 | Quantidades em fração/embalagem ("½ kg") | novo | 04, 05 | Médio | M | Parser + entrada; sem mudar schema (reais já suportam) |
+| A5 | Quantidades em fração/embalagem ("½ kg") | RF-25 | 04, 05 | Médio | M | concluído (F29-T01…T03) — parser/entrada e exibição com glifos, sem mudar schema (reais já suportam) |
 | A6 | Adicionar item por voz | novo | 05, 04 | Médio | M | Reconhecimento no dispositivo; alimenta o parser local |
 | A7 | Onboarding curto + estados vazios | novo/RNF-06 | 05, 10, 15 | Médio | P | Primeira execução e telas vazias explicativas |
 

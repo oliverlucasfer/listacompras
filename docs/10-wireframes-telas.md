@@ -211,6 +211,8 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 
 **Chips de itens frequentes (F22/RF-19):** faixa horizontal acima do campo "Adicionar item", exibida só quando o campo está vazio e há sugestões; toque adiciona o item (1 `un`, categoria pela cadeia local); o botão do modo mercado (`shopping_cart_checkout`) fica na AppBar, visível a dono/editor.
 
+**Quantidades em fração (RF-25/F29):** a linha do item e o editor exibem a quantidade com glifos comuns (`½ kg`, `1½ un`, `1¼`); decimais longos são cortados para ≤ 3 casas. A entrada aceita `1/2`, `1 1/2`, `½` e `1½`.
+
 **Diálogo do item (F12-T06 + preço RF-21/F25):**
 ```
 ┌─────────────────────────────────┐
