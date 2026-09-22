@@ -705,6 +705,23 @@ Spec: [superpowers/specs/2026-09-21-boas-vindas-estados-vazios-design.md](superp
   Dep: F31-T02 · Docs: [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
   CP: `nenhumItemDica` aponta os caminhos (campo/importar) com teste do vazio; RF-27 no 12 (tabela e rastreabilidade); docs donos refletem boas-vindas e o vazio; A7 do 16 concluído; Fase 31 na tabela de progresso (167/165).
 
+## Fase 32 — Convite por e-mail (RF-13, fluxo B)
+
+Spec: [superpowers/specs/2026-09-21-convite-email-design.md](superpowers/specs/2026-09-21-convite-email-design.md) · Requisito: RF-13 (completa o fluxo B — criar por e-mail, painel de pendentes, aceitar/recusar; envio automático segue adiado). · Docs donos: 01, 02, 08 §4.
+
+- [x] **F32-T01** — Banco: migration `0019` (RPCs) + testes SQL + CI
+  Dep: — · Docs: [01 §4.4](01-banco-de-dados.md), [02 §4.7](02-seguranca-rls.md), [08 §4](08-compartilhamento-colaborativo.md)
+  CP: `0019_convites_email.sql` com `meus_convites_pendentes()` (devolve `id`, `token`, `lista_titulo`, `papel_oferecido`, `expira_em`; filtra `tipo='email'`, `estado='pendente'`, `expira_em >= now()` e o e-mail do chamador) e `recusar_convite(p_id)` (revoga só o convite do próprio e-mail e **também exige `expira_em >= now()`**); grants só a `authenticated`; RLS de `convites` intacto; `convites_email_tests.sql` (CE-01…CE-04 + CE-02b) verde e no CI.
+- [x] **F32-T02** — Repositório: criar/reusar, listar e recusar
+  Dep: F32-T01 · Docs: [08 §4](08-compartilhamento-colaborativo.md)
+  CP: `ConvitePendente`; `criarConviteEmail` reusa pendente **não expirado** do mesmo e-mail na lista (atualiza o papel) ou insere; `meusConvitesPendentes()` e `recusarConvite(id)`; o aceite reusa `aceitar_convite`; unit tests verdes.
+- [x] **F32-T03** — UI: e-mail no sheet "Convidar" e painel de pendentes
+  Dep: F32-T02 · Docs: [05 §6.2](05-app-flutter.md), [10 §2.4/§3.9](10-wireframes-telas.md)
+  CP: campo "E-mail do convidado" + "Enviar convite" (validação local + aviso de que não há e-mail automático) no sheet; seção "Convites pendentes" no Minhas Listas (card `Convite para <título>`, chip do papel, "expira em …", Aceitar/Recusar) sem nome do convidante; widget tests do sheet e da seção verdes.
+- [x] **F32-T04** — Docs donos e fechamento
+  Dep: F32-T03 · Docs: [01](01-banco-de-dados.md), [02 §4.7](02-seguranca-rls.md), [08 §4](08-compartilhamento-colaborativo.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
+  CP: docs donos refletem o fluxo B entregue (RPCs/grants + guarda de expiração do `recusar_convite`; painel e campo de e-mail; RF-13 no 12; B2 no 16); Fase 32 na tabela de progresso (171/169).
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -738,7 +755,8 @@ Spec: [superpowers/specs/2026-09-21-boas-vindas-estados-vazios-design.md](superp
 | F29 Quantidades em fração | 3 | 3 |
 | F30 Adicionar por voz | 3 | 3 |
 | F31 Boas-vindas e vazios | 3 | 3 |
-| **Total** | **167** | **165** |
+| F32 Convite por e-mail | 4 | 4 |
+| **Total** | **171** | **169** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

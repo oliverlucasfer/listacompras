@@ -29,7 +29,7 @@ Papéis já definidos no enum de `lista_membros.papel` ([01 §4.2](01-banco-de-d
 
 ### 1.1. Decisões da rodada (2026-09-10 — spec [`superpowers/specs/2026-09-10-compartilhamento-link-design.md`](superpowers/specs/2026-09-10-compartilhamento-link-design.md))
 
-Primeira rodada da fase é **link-only**: fluxos `email` (§4) e Edge Function `enviar-convite` ficam para uma rodada futura — o schema as prevê, o app ainda não as usa. O **link compartilhável depende da plataforma** (ADR-012, [05 §2.1](05-app-flutter.md)): no **web** é `https://<origem>/entrar?token=...` (URL normal do navegador, graças ao path URL strategy) e no **nativo** é o **custom scheme** `br.com.oliverlucas.listacompras://entrar?token=...` (host `entrar`, mais um intent-filter igual ao do login-callback da F3-T03); em ambos a UI aceita colar o token cru. No web a URL do convite chega direto ao `go_router`; a ponte `deeplinkConviteProvider` só escuta o `app_links` no nativo. Enquanto a hospedagem pública não sai (F5-T06 adiada), a origem do link https é `Uri.base.origin` em dev ou `APP_WEB_URL` no nativo; universal link fica para uma rodada futura. **Transferência de dono (§6) entregue na F24 (RF-14)**: o dono transfere a lista para um membro, vira `editor` e pode sair; o `sync_dono` v3 (migration `0016`) reconhece a marca da transferência. Realtime: `lista_membros` e `convites` vão ao publication (§7); o painel de pendências faz fetch ao abrir — o canal de `convites` empurra evento, mas a UI não depende dele nesta rodada (sem e-mail, o painel não tem entradas).
+Primeira rodada da fase é **link-only** para o caminho por link; o fluxo `email` (§4) foi **entregue na Fase 32** (RF-13): o dono cria o convite por e-mail e o convidado vê/aceita/recusa no painel "Convites pendentes". O **envio automático** de e-mail (Edge Function `enviar-convite`) segue para uma rodada futura — o schema já o previa. O **link compartilhável depende da plataforma** (ADR-012, [05 §2.1](05-app-flutter.md)): no **web** é `https://<origem>/entrar?token=...` (URL normal do navegador, graças ao path URL strategy) e no **nativo** é o **custom scheme** `br.com.oliverlucas.listacompras://entrar?token=...` (host `entrar`, mais um intent-filter igual ao do login-callback da F3-T03); em ambos a UI aceita colar o token cru. No web a URL do convite chega direto ao `go_router`; a ponte `deeplinkConviteProvider` só escuta o `app_links` no nativo. Enquanto a hospedagem pública não sai (F5-T06 adiada), a origem do link https é `Uri.base.origin` em dev ou `APP_WEB_URL` no nativo; universal link fica para uma rodada futura. **Transferência de dono (§6) entregue na F24 (RF-14)**: o dono transfere a lista para um membro, vira `editor` e pode sair; o `sync_dono` v3 (migration `0016`) reconhece a marca da transferência. Realtime: `lista_membros` e `convites` vão ao publication (§7); o painel de pendências faz fetch ao abrir — o canal de `convites` empurra evento, mas a UI não depende dele (o painel recarrega ao abrir).
 
 ---
 
@@ -154,15 +154,17 @@ $$;
 * **Guarda de anonimato:** o RPC é executável por `anon` por padrão; sem `auth.uid()` rejeita com `CONVITE_INVALIDO` logo no início — o aceite exige sessão autenticada (§3: não autenticado vai ao login e retoma depois).
 * Concorre com o trigger `sync_dono` sem risco: `papel_oferecido` nunca é `dono`.
 
-## 4. Fluxo B — Convite por e-mail
+## 4. Fluxo B — Convite por e-mail (entregue na Fase 32, RF-13)
 
 | Situação | Comportamento |
 | :--- | :--- |
-| Convidado **já tem conta** | Convite aparece no app ("Convites pendentes" no painel Minhas Listas, alimentado por SELECT nos convites com o próprio e-mail) + opcionalmente e-mail transacional via Edge Function |
+| Convidado **já tem conta** | O convite aparece no app: painel **"Convites pendentes"** no Minhas Listas, alimentado pela RPC `meus_convites_pendentes()` (título da lista, papel ofertado e prazo) → **Aceitar** (reusa `aceitar_convite`) / **Recusar** (`recusar_convite`) |
 | Convidado **não tem conta** | Convite fica `pendente` vinculado ao e-mail; ao se registrar com aquele e-mail, o painel mostra o convite pendente → aceite via mesmo RPC |
 | E-mail de usuário já membro | RPC retorna erro amigável "Este usuário já participa" (o dono vê na lista de membros) |
 
-**Envio de e-mail (opcional, Fase 6):** Edge Function `enviar-convite` chamando provedor transacional (Resend/SMTP). Semprovedor definido — decisão adiada; o app cobre o caso via convites pendentes no painel.
+**Criação (dono):** o sheet "Convidar" ganha o campo **"E-mail do convidado"** + **"Enviar convite"**; `criarConviteEmail` reusa um convite pendente **não expirado** do mesmo e-mail na lista (atualiza o papel ofertado se mudou) ou insere um novo (`tipo='email'`). É **online-only** — o convite não vai ao Drift. `meus_convites_pendentes()` e `recusar_convite(id)` são `security definer` (o RLS de `convites` fica **intacto**; [02 §4.7](02-seguranca-rls.md)); o aceite **não** tem RPC novo — reusa `aceitar_convite` ([§3.1](#31-rpc-aceitar_convite)). O `recusar_convite` só revoga o convite do **próprio** e-mail e exige `expira_em >= now()` (guarda de expiração). Copy sem nome do convidante (o RLS não expõe perfis).
+
+**Envio de e-mail (adiado):** Edge Function `enviar-convite` chamando provedor transacional (Resend/SMTP). Sem provedor definido — decisão adiada; o app cobre a descoberta via painel de convites pendentes.
 
 ## 5. Remoção de membro e revogação
 
@@ -211,10 +213,10 @@ O trigger `sync_dono` ([01 §6](01-banco-de-dados.md)) **impede** remover/rebaix
 
 | Tela/Modal | Conteúdo |
 | :--- | :--- |
-| Sheet "Convidar" (dono/editor) | Escolha de papel + gerar link; o link completo e o código têm botões distintos ("Copiar link" × "Copiar código", com tooltip) (F14-T06); lista os **convites pendentes anteriores** da lista com ação "Revogar" (F21-T03 — `pendentesDaLista`) |
+| Sheet "Convidar" (dono/editor) | Escolha de papel + gerar link; o link completo e o código têm botões distintos ("Copiar link" × "Copiar código", com tooltip) (F14-T06); lista os **convites pendentes anteriores** da lista com ação "Revogar" (F21-T03 — `pendentesDaLista`); campo **"E-mail do convidado"** + **"Enviar convite"** com aviso de que não há e-mail automático (F32 — [§4](#4-fluxo-b--convite-por-e-mail-entregue-na-fase-32-rf-13)) |
 | Lista de membros | Nome, papel, ações do dono (mudar papel entre editor↔leitor, remover, transferir dono) |
 | Banner "Você é leitor" | Lista em modo somente leitura para `leitor` (inputs desabilitados com dica) |
-| Painel "Convites pendentes" (Minhas Listas) | Cards: "João convidou você para **Compras da Semana**" → Aceitar/Recusar |
+| Painel "Convites pendentes" (Minhas Listas) | Cards `Convite para **Compras da Semana**` + chip do papel ofertado + "expira em …" → Aceitar/Recusar (sem nome do convidante — F32) |
 | Rota `/entrar?token=` | Contexto de aceite (autenticado ou pós-login); "Entrar com código" no painel de listas aceita token cru colado |
 
 * Wireframes destes componentes: [10 §3.7](10-wireframes-telas.md).

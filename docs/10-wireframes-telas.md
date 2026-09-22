@@ -157,21 +157,24 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 └─────────────────────────────────┘
 ```
 
-### 2.4. Convites pendentes (Fase 6 — [08 §7](08-compartilhamento-colaborativo.md))
+### 2.4. Convites pendentes (RF-13, Fase 32 — [08 §4](08-compartilhamento-colaborativo.md))
 ```
 ┌─────────────────────────────────┐
 │  Minhas Listas                  │
 ├─────────────────────────────────┤
 │  ── Convites pendentes ──       │
 │  ┌───────────────────────────┐  │
-│  │ João convidou você para   │  │
+│  │ Convite para              │  │
 │  │ "Compras da Semana"       │  │
+│  │ [editor]                  │  │ ← chip do papel ofertado
+│  │ expira em 7 dias          │  │ ← prazo restante
 │  │ (Aceitar)   (Recusar)     │  │
 │  └───────────────────────────┘  │
 │  ── Minhas listas ──            │
 │  ...                            │
 └─────────────────────────────────┘
 ```
+A seção aparece no topo do filtro **Minhas** só quando há convites por e-mail pendentes dirigidos ao seu e-mail (RPC `meus_convites_pendentes()`, sem Drift); **Aceitar** reusa `aceitar_convite` e abre a lista, **Recusar** chama `recusar_convite`. A copy é neutra — **sem nome do convidante** (o RLS não expõe perfis). Comportamento em [05 §6.2](05-app-flutter.md).
 
 ### 2.5. Sheet "Comprar de novo" (F23/RF-20)
 
@@ -373,6 +376,27 @@ AppBar `Membros · {título}`; cada membro mostra o UUID prefixado, o chip de pa
     contagem; preço não é copiado)
    (origem sem pendentes → "Nenhum item pendente nesta lista.")
 ```
+
+### 3.9. Sheet "Convidar" — campo de e-mail (RF-13, F32 — [08 §4](08-compartilhamento-colaborativo.md))
+Abaixo do bloco de link, o sheet (dono) ganha a seção **"Convidar por e-mail"**: campo **"E-mail do convidado"** (teclado de e-mail, validação local) + botão **"( Enviar convite )"** e o aviso de que o convite aparece no app da pessoa — **não há e-mail automático** nesta rodada. O papel ofertado é o mesmo seletor de rádio do bloco de link.
+
+```
+┌─────────────────────────────────┐
+│  Convidar                    ✕  │
+├─────────────────────────────────┤
+│  (o) Editor    ( ) Leitor       │ ← papel ofertado
+│  (      Gerar link       )      │
+│  ──────────────────────────     │
+│  Convidar por e-mail            │
+│  E-mail do convidado            │
+│  [________________________ ]    │
+│  (     Enviar convite    )      │ ← outlined; sucesso → SnackBar
+│  O convite aparece no app da    │   "Convite criado..."
+│  pessoa; não enviamos e-mail    │
+│  automático.                    │
+└─────────────────────────────────┘
+```
+Comportamento em [05 §6.3](05-app-flutter.md).
 
 ---
 

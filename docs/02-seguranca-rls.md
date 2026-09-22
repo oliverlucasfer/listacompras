@@ -381,6 +381,55 @@ grant execute on function public.transferir_dono(uuid, uuid) to authenticated;
 
 > **Nenhuma policy nova:** o RPC é `security definer` (dono `postgres`, migration `0016`) e atravessa o `force row level security` de `lista_membros`, como `aceitar_convite`/`excluir_conta`. A autorização é interna (só o dono da lista) e `listas.dono_id` continua sendo ajustado **só pelo trigger** `sync_dono` ([01 §6](01-banco-de-dados.md)). O `set_config` de namespace customizado não é acessível via PostgREST — clientes não forjam `app.transferindo_dono`. Fluxo e UX em [08 §6](08-compartilhamento-colaborativo.md).
 
+### 4.7. RPCs de convite por e-mail (RF-13, F32)
+
+O convidado por e-mail **não é membro** da lista: o RLS de `convites` só lhe permite SELECT do convite dirigido ao próprio e-mail ([§4.4](#44-convites-fase-6--08-2)) — ele não lê `listas` (para o título) nem faz UPDATE (para recusar). O caminho para o painel e a recusa são RPCs `security definer` (migration `0019`):
+
+```sql
+create or replace function public.meus_convites_pendentes()
+returns table (
+  id uuid, token uuid, lista_titulo text,
+  papel_oferecido text, expira_em timestamptz
+)
+language sql security definer set search_path = public stable
+as $$
+  select c.id, c.token, l.titulo, c.papel_oferecido, c.expira_em
+  from public.convites c
+  join public.listas l on l.id = c.lista_id
+  where c.tipo = 'email'
+    and c.estado = 'pendente'
+    and c.expira_em >= now()
+    and lower(c.email) = lower(public.email_autenticado())
+  order by c.created_at desc
+$$;
+
+create or replace function public.recusar_convite(p_id uuid)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  update public.convites
+  set estado = 'revogado', atualizado_em = now()
+  where id = p_id
+    and tipo = 'email'
+    and estado = 'pendente'
+    and expira_em >= now()
+    and lower(email) = lower(public.email_autenticado());
+  if not found then
+    raise exception 'CONVITE_INVALIDO';
+  end if;
+end;
+$$;
+
+revoke execute on function public.meus_convites_pendentes() from public, anon;
+revoke execute on function public.recusar_convite(uuid) from public, anon;
+grant execute on function public.meus_convites_pendentes() to authenticated;
+grant execute on function public.recusar_convite(uuid) to authenticated;
+```
+
+> **Nenhuma policy nova:** os dois RPCs são `security definer` (dono `postgres`, migration `0019`) e atravessam o RLS de `convites`, como `aceitar_convite`/`transferir_dono`. A autorização é interna: o filtro `lower(email) = lower(public.email_autenticado())` garante que cada usuário só vê/recusa o convite dirigido ao **próprio** e-mail. O aceite **não** tem RPC novo — reusa `aceitar_convite` (idempotente, [08 §3.1](08-compartilhamento-colaborativo.md)).
+> **Guarda de expiração:** as duas funções exigem `expira_em >= now()` — `meus_convites_pendentes` não lista convites vencidos e `recusar_convite` rejeita com `CONVITE_INVALIDO` a recusa de um convite expirado do próprio e-mail (o estado `expirado` nunca é gravado, [08 §2](08-compartilhamento-colaborativo.md)); `recusar_convite` também exige `estado = 'pendente'`, então não "recusa" um convite já aceito.
+
 ---
 
 ## 5. Testes de Negação (obrigatórios na Fase 1)
@@ -430,6 +479,8 @@ Casos que **DEVEM passar**:
 Ferramentas: testes de integração com dois usuários reais (ver [07 Qualidade](07-qualidade-ci.md)) ou script SQL com `set local role authenticated; set local request.jwt.claims = ...` em ambiente dev.
 
 > **Transferência de dono (RF-14, F24):** coberta por `supabase/tests/transferir_dono_tests.sql` (T-01…T-07) rodado no CI — papéis e `listas.dono_id` após a transferência (editor e leitor viram dono), erros `APENAS_O_DONO_PODE_TRANSFERIR`/`NOVO_DONO_PRECISA_SER_MEMBRO`/`NAO_PODE_TRANSFERIR_PARA_SI`, defesa em profundidade sem a flag (o downgrade direto segue bloqueado) e a cascata de `convites.criado_por` (R-17).
+
+> **Convite por e-mail (RF-13, F32):** coberto por `supabase/tests/convites_email_tests.sql` (CE-01…CE-04 + CE-02b) rodado no CI — `meus_convites_pendentes()` devolve o convite do próprio e-mail (com título e token) e esconde o alheio (CE-01) e o expirado (CE-03); `recusar_convite` revoga só o próprio e rejeita o alheio com `CONVITE_INVALIDO` (CE-02); a **guarda de expiração** rejeita a recusa de um convite vencido do próprio e-mail (CE-02b); `anon` não executa os RPCs — grant restrito a `authenticated` (CE-04).
 
 ---
 

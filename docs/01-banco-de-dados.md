@@ -45,7 +45,13 @@ supabase/
     ├── 0005_excluir_conta.sql   # RPC de exclusão de conta (ver 06)
     ├── 0006_categorias.sql      # enum de categorias + coluna (ver §3.2, ADR-011)
     ├── ...                      # 0007–0012 (ver histórico de migrations)
-    └── 0013_remover_ia_rate_limit.sql # remove rate limit da IA (F17)
+    ├── 0013_remover_ia_rate_limit.sql # remove rate limit da IA (F17)
+    ├── 0014_agora_servidor.sql  # RPC do relógio do servidor (ver 02 §4.5)
+    ├── 0015_membros_insert_dono_e_convites_updated.sql # R-18 + touch de convites
+    ├── 0016_transferir_dono.sql # RPC transferir_dono + sync_dono v3 (RF-14)
+    ├── 0017_preco_item.sql      # coluna preco_centavos (RF-21)
+    ├── 0018_arquivar_listas.sql # coluna arquivada_em + trigger (RF-22)
+    └── 0019_convites_email.sql  # RPCs de convite por e-mail (RF-13, ver 02 §4.7)
 ```
 
 ---
@@ -219,6 +225,7 @@ Tabela de convites por link/e-mail: `id`, `lista_id` (CASCADE), `criado_por` (FK
 * **Dono do detalhe:** [08 §2](08-compartilhamento-colaborativo.md) (tabela e índices) e [02 §4.4](02-seguranca-rls.md) (policies). Migration `0007`; entram no publication (§7).
 * **`atualizado_em`:** carimbado pelo trigger `trg_convites_updated` (`touch_convites_updated_at`, migration `0015`) — mesmo contrato de `listas`/`itens_lista` (§5).
 * **R-17 resolvido (migration `0016`):** `criado_por` ganhou `ON DELETE CASCADE` — com a transferência de dono (RF-14), o ex-dono pode deixar de ser dono e ainda ter convites criados; sem a cascata, excluir a conta dele falharia por FK.
+* **RPCs de convite por e-mail (RF-13, F32 — migration `0019`):** `meus_convites_pendentes()` (devolve `id`, `token`, `lista_titulo`, `papel_oferecido`, `expira_em` — só convites `email` `pendente` **não expirados** dirigidos ao e-mail do chamador) e `recusar_convite(p_id)` (revoga só o convite do próprio e-mail, exigindo `expira_em >= now()`). Ambos `security definer` com grant apenas a `authenticated`; o RLS de `convites` fica **intacto** — SQL e racional em [02 §4.7](02-seguranca-rls.md).
 
 ---
 
