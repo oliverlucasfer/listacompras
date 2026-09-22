@@ -14,6 +14,7 @@ import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/sync/domain/sync_status.dart';
 import 'package:lista_compras/features/sync/providers/sync_providers.dart';
 import 'package:lista_compras/router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'fakes.dart';
@@ -52,6 +53,10 @@ class _RepoRecuperacao extends FakeAuthRepository {
 
 void main() {
   setUpAll(inicializarSupabaseTeste);
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({'onboarding_visto': true});
+  });
 
   Future<void> abrirTela(WidgetTester tester, FakeAuthRepository repo) async {
     // Router mínimo: a tela navega com go_router (sucesso → /listas;

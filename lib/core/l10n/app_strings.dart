@@ -349,4 +349,21 @@ abstract final class AppStrings {
   static const excluindoConta = 'Excluindo conta...';
   static const callbackLoginFalhou = 'Não foi possível concluir a verificação.';
   static const voltarAoLogin = 'Voltar ao login';
+
+  // Boas-vindas (RF-27, F31-T02)
+  static const boasVindasTitulo = 'Bem-vindo ao Lista de Compras';
+  static const boasVindasSubtitulo =
+      'Organize suas compras e compartilhe com quem quiser.';
+  static const boasVindasOffline = 'Funciona offline';
+  static const boasVindasOfflineDica =
+      'Suas listas ficam no aparelho e sincronizam quando a internet volta.';
+  static const boasVindasCompartilhar = 'Compartilhe a lista';
+  static const boasVindasCompartilharDica =
+      'Convide alguém por link e comprem juntos.';
+  static const boasVindasImportar = 'Importe por texto';
+  static const boasVindasImportarDica =
+      'Cole uma anotação e o app organiza os itens.';
+  static const boasVindasDitar = 'Dite um item';
+  static const boasVindasDitarDica = 'Use o microfone para adicionar falando.';
+  static const comecar = 'Começar';
 }

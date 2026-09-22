@@ -11,6 +11,7 @@ import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/sync/domain/sync_status.dart';
 import 'package:lista_compras/features/sync/providers/sync_providers.dart';
 import 'package:lista_compras/router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/auth/fakes.dart';
@@ -39,6 +40,10 @@ class _AuthAutenticado extends SupabaseAuthRepository {
 
 void main() {
   setUpAll(inicializarSupabaseTeste);
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({'onboarding_visto': true});
+  });
 
   Future<void> montar(
     WidgetTester tester, {

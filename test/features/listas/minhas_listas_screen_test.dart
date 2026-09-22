@@ -15,6 +15,7 @@ import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
 import 'package:lista_compras/features/sync/ui/indicador_sync.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../auth/fakes.dart';
 
@@ -25,6 +26,7 @@ void main() {
   late FakeAuthRepository authRepo;
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({'onboarding_visto': true});
     db = AppDatabase(NativeDatabase.memory());
     authRepo = FakeAuthRepository();
   });
@@ -44,6 +46,10 @@ void main() {
             appBar: AppBar(),
             body: Text('lista-${state.pathParameters['id']}'),
           ),
+        ),
+        GoRoute(
+          path: '/boas-vindas',
+          builder: (_, _) => const Scaffold(body: Text('boas-vindas')),
         ),
       ],
     );
@@ -67,6 +73,20 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));
   }
+
+  testWidgets('deve_abrir_boas_vindas_quando_nao_visto', (tester) async {
+    SharedPreferences.setMockInitialValues({'onboarding_visto': false});
+    await abrirTela(tester);
+    expect(find.text('boas-vindas'), findsOneWidget);
+    await fechar(tester);
+  });
+
+  testWidgets('nao_deve_abrir_boas_vindas_quando_ja_visto', (tester) async {
+    SharedPreferences.setMockInitialValues({'onboarding_visto': true});
+    await abrirTela(tester);
+    expect(find.text('boas-vindas'), findsNothing);
+    await fechar(tester);
+  });
 
   testWidgets('deve_exibir_estado_vazio_quando_nenhuma_lista', (tester) async {
     await abrirTela(tester);
