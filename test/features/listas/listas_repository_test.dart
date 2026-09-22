@@ -814,4 +814,51 @@ void main() {
       expect(itens.single.quantidade, 3);
     },
   );
+
+  test('deve_registrar_historico_quando_concluir_item_com_preco', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    final item = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Café',
+      unidade: Unidade.pacote,
+      precoCentavos: 1850,
+    );
+
+    await repo.editarItem(item.id, concluido: true);
+
+    final rows = await db.select(db.historicoPrecoLocal).get();
+    expect(rows, hasLength(1));
+    expect(rows.single.nomeNormalizado, 'cafe');
+    expect(rows.single.precoCentavos, 1850);
+    expect(rows.single.unidade, 'pacote');
+
+    // Local-only: nenhuma mutação de histórico é enfileirada.
+    final mutacoes = await fila();
+    expect(mutacoes.every((m) => m['tabela'] != 'historico_preco'), isTrue);
+  });
+
+  test('deve_nao_registrar_historico_quando_concluir_item_sem_preco', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Café');
+
+    await repo.editarItem(item.id, concluido: true);
+
+    expect(await db.select(db.historicoPrecoLocal).get(), isEmpty);
+  });
+
+  test('deve_manter_historico_quando_desmarcar_item_concluido', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    final item = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Café',
+      precoCentavos: 1850,
+    );
+
+    await repo.editarItem(item.id, concluido: true);
+    await repo.editarItem(item.id, concluido: false);
+
+    final rows = await db.select(db.historicoPrecoLocal).get();
+    expect(rows, hasLength(1));
+    expect(rows.single.precoCentavos, 1850);
+  });
 }

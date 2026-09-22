@@ -1748,6 +1748,347 @@ class MutacaoPendenteCompanion extends UpdateCompanion<MutacaoPendenteData> {
   }
 }
 
+class $HistoricoPrecoLocalTable extends HistoricoPrecoLocal
+    with TableInfo<$HistoricoPrecoLocalTable, HistoricoPrecoLocalData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HistoricoPrecoLocalTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _nomeNormalizadoMeta = const VerificationMeta(
+    'nomeNormalizado',
+  );
+  @override
+  late final GeneratedColumn<String> nomeNormalizado = GeneratedColumn<String>(
+    'nome_normalizado',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _precoCentavosMeta = const VerificationMeta(
+    'precoCentavos',
+  );
+  @override
+  late final GeneratedColumn<int> precoCentavos = GeneratedColumn<int>(
+    'preco_centavos',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unidadeMeta = const VerificationMeta(
+    'unidade',
+  );
+  @override
+  late final GeneratedColumn<String> unidade = GeneratedColumn<String>(
+    'unidade',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _registradoEmMeta = const VerificationMeta(
+    'registradoEm',
+  );
+  @override
+  late final GeneratedColumn<DateTime> registradoEm = GeneratedColumn<DateTime>(
+    'registrado_em',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    nomeNormalizado,
+    precoCentavos,
+    unidade,
+    registradoEm,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'historico_preco_local';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HistoricoPrecoLocalData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('nome_normalizado')) {
+      context.handle(
+        _nomeNormalizadoMeta,
+        nomeNormalizado.isAcceptableOrUnknown(
+          data['nome_normalizado']!,
+          _nomeNormalizadoMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_nomeNormalizadoMeta);
+    }
+    if (data.containsKey('preco_centavos')) {
+      context.handle(
+        _precoCentavosMeta,
+        precoCentavos.isAcceptableOrUnknown(
+          data['preco_centavos']!,
+          _precoCentavosMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_precoCentavosMeta);
+    }
+    if (data.containsKey('unidade')) {
+      context.handle(
+        _unidadeMeta,
+        unidade.isAcceptableOrUnknown(data['unidade']!, _unidadeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_unidadeMeta);
+    }
+    if (data.containsKey('registrado_em')) {
+      context.handle(
+        _registradoEmMeta,
+        registradoEm.isAcceptableOrUnknown(
+          data['registrado_em']!,
+          _registradoEmMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_registradoEmMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {nomeNormalizado};
+  @override
+  HistoricoPrecoLocalData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HistoricoPrecoLocalData(
+      nomeNormalizado: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}nome_normalizado'],
+      )!,
+      precoCentavos: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}preco_centavos'],
+      )!,
+      unidade: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unidade'],
+      )!,
+      registradoEm: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}registrado_em'],
+      )!,
+    );
+  }
+
+  @override
+  $HistoricoPrecoLocalTable createAlias(String alias) {
+    return $HistoricoPrecoLocalTable(attachedDatabase, alias);
+  }
+}
+
+class HistoricoPrecoLocalData extends DataClass
+    implements Insertable<HistoricoPrecoLocalData> {
+  final String nomeNormalizado;
+  final int precoCentavos;
+  final String unidade;
+  final DateTime registradoEm;
+  const HistoricoPrecoLocalData({
+    required this.nomeNormalizado,
+    required this.precoCentavos,
+    required this.unidade,
+    required this.registradoEm,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['nome_normalizado'] = Variable<String>(nomeNormalizado);
+    map['preco_centavos'] = Variable<int>(precoCentavos);
+    map['unidade'] = Variable<String>(unidade);
+    map['registrado_em'] = Variable<DateTime>(registradoEm);
+    return map;
+  }
+
+  HistoricoPrecoLocalCompanion toCompanion(bool nullToAbsent) {
+    return HistoricoPrecoLocalCompanion(
+      nomeNormalizado: Value(nomeNormalizado),
+      precoCentavos: Value(precoCentavos),
+      unidade: Value(unidade),
+      registradoEm: Value(registradoEm),
+    );
+  }
+
+  factory HistoricoPrecoLocalData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HistoricoPrecoLocalData(
+      nomeNormalizado: serializer.fromJson<String>(json['nomeNormalizado']),
+      precoCentavos: serializer.fromJson<int>(json['precoCentavos']),
+      unidade: serializer.fromJson<String>(json['unidade']),
+      registradoEm: serializer.fromJson<DateTime>(json['registradoEm']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'nomeNormalizado': serializer.toJson<String>(nomeNormalizado),
+      'precoCentavos': serializer.toJson<int>(precoCentavos),
+      'unidade': serializer.toJson<String>(unidade),
+      'registradoEm': serializer.toJson<DateTime>(registradoEm),
+    };
+  }
+
+  HistoricoPrecoLocalData copyWith({
+    String? nomeNormalizado,
+    int? precoCentavos,
+    String? unidade,
+    DateTime? registradoEm,
+  }) => HistoricoPrecoLocalData(
+    nomeNormalizado: nomeNormalizado ?? this.nomeNormalizado,
+    precoCentavos: precoCentavos ?? this.precoCentavos,
+    unidade: unidade ?? this.unidade,
+    registradoEm: registradoEm ?? this.registradoEm,
+  );
+  HistoricoPrecoLocalData copyWithCompanion(HistoricoPrecoLocalCompanion data) {
+    return HistoricoPrecoLocalData(
+      nomeNormalizado: data.nomeNormalizado.present
+          ? data.nomeNormalizado.value
+          : this.nomeNormalizado,
+      precoCentavos: data.precoCentavos.present
+          ? data.precoCentavos.value
+          : this.precoCentavos,
+      unidade: data.unidade.present ? data.unidade.value : this.unidade,
+      registradoEm: data.registradoEm.present
+          ? data.registradoEm.value
+          : this.registradoEm,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HistoricoPrecoLocalData(')
+          ..write('nomeNormalizado: $nomeNormalizado, ')
+          ..write('precoCentavos: $precoCentavos, ')
+          ..write('unidade: $unidade, ')
+          ..write('registradoEm: $registradoEm')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(nomeNormalizado, precoCentavos, unidade, registradoEm);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HistoricoPrecoLocalData &&
+          other.nomeNormalizado == this.nomeNormalizado &&
+          other.precoCentavos == this.precoCentavos &&
+          other.unidade == this.unidade &&
+          other.registradoEm == this.registradoEm);
+}
+
+class HistoricoPrecoLocalCompanion
+    extends UpdateCompanion<HistoricoPrecoLocalData> {
+  final Value<String> nomeNormalizado;
+  final Value<int> precoCentavos;
+  final Value<String> unidade;
+  final Value<DateTime> registradoEm;
+  final Value<int> rowid;
+  const HistoricoPrecoLocalCompanion({
+    this.nomeNormalizado = const Value.absent(),
+    this.precoCentavos = const Value.absent(),
+    this.unidade = const Value.absent(),
+    this.registradoEm = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HistoricoPrecoLocalCompanion.insert({
+    required String nomeNormalizado,
+    required int precoCentavos,
+    required String unidade,
+    required DateTime registradoEm,
+    this.rowid = const Value.absent(),
+  }) : nomeNormalizado = Value(nomeNormalizado),
+       precoCentavos = Value(precoCentavos),
+       unidade = Value(unidade),
+       registradoEm = Value(registradoEm);
+  static Insertable<HistoricoPrecoLocalData> custom({
+    Expression<String>? nomeNormalizado,
+    Expression<int>? precoCentavos,
+    Expression<String>? unidade,
+    Expression<DateTime>? registradoEm,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (nomeNormalizado != null) 'nome_normalizado': nomeNormalizado,
+      if (precoCentavos != null) 'preco_centavos': precoCentavos,
+      if (unidade != null) 'unidade': unidade,
+      if (registradoEm != null) 'registrado_em': registradoEm,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HistoricoPrecoLocalCompanion copyWith({
+    Value<String>? nomeNormalizado,
+    Value<int>? precoCentavos,
+    Value<String>? unidade,
+    Value<DateTime>? registradoEm,
+    Value<int>? rowid,
+  }) {
+    return HistoricoPrecoLocalCompanion(
+      nomeNormalizado: nomeNormalizado ?? this.nomeNormalizado,
+      precoCentavos: precoCentavos ?? this.precoCentavos,
+      unidade: unidade ?? this.unidade,
+      registradoEm: registradoEm ?? this.registradoEm,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (nomeNormalizado.present) {
+      map['nome_normalizado'] = Variable<String>(nomeNormalizado.value);
+    }
+    if (precoCentavos.present) {
+      map['preco_centavos'] = Variable<int>(precoCentavos.value);
+    }
+    if (unidade.present) {
+      map['unidade'] = Variable<String>(unidade.value);
+    }
+    if (registradoEm.present) {
+      map['registrado_em'] = Variable<DateTime>(registradoEm.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HistoricoPrecoLocalCompanion(')
+          ..write('nomeNormalizado: $nomeNormalizado, ')
+          ..write('precoCentavos: $precoCentavos, ')
+          ..write('unidade: $unidade, ')
+          ..write('registradoEm: $registradoEm, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1756,6 +2097,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $MutacaoPendenteTable mutacaoPendente = $MutacaoPendenteTable(
     this,
   );
+  late final $HistoricoPrecoLocalTable historicoPrecoLocal =
+      $HistoricoPrecoLocalTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1764,6 +2107,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     listaLocal,
     itemLocal,
     mutacaoPendente,
+    historicoPrecoLocal,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -2862,6 +3206,209 @@ typedef $$MutacaoPendenteTableProcessedTableManager =
       MutacaoPendenteData,
       PrefetchHooks Function()
     >;
+typedef $$HistoricoPrecoLocalTableCreateCompanionBuilder =
+    HistoricoPrecoLocalCompanion Function({
+      required String nomeNormalizado,
+      required int precoCentavos,
+      required String unidade,
+      required DateTime registradoEm,
+      Value<int> rowid,
+    });
+typedef $$HistoricoPrecoLocalTableUpdateCompanionBuilder =
+    HistoricoPrecoLocalCompanion Function({
+      Value<String> nomeNormalizado,
+      Value<int> precoCentavos,
+      Value<String> unidade,
+      Value<DateTime> registradoEm,
+      Value<int> rowid,
+    });
+
+class $$HistoricoPrecoLocalTableFilterComposer
+    extends Composer<_$AppDatabase, $HistoricoPrecoLocalTable> {
+  $$HistoricoPrecoLocalTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get nomeNormalizado => $composableBuilder(
+    column: $table.nomeNormalizado,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get precoCentavos => $composableBuilder(
+    column: $table.precoCentavos,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unidade => $composableBuilder(
+    column: $table.unidade,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get registradoEm => $composableBuilder(
+    column: $table.registradoEm,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HistoricoPrecoLocalTableOrderingComposer
+    extends Composer<_$AppDatabase, $HistoricoPrecoLocalTable> {
+  $$HistoricoPrecoLocalTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get nomeNormalizado => $composableBuilder(
+    column: $table.nomeNormalizado,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get precoCentavos => $composableBuilder(
+    column: $table.precoCentavos,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unidade => $composableBuilder(
+    column: $table.unidade,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get registradoEm => $composableBuilder(
+    column: $table.registradoEm,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HistoricoPrecoLocalTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HistoricoPrecoLocalTable> {
+  $$HistoricoPrecoLocalTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get nomeNormalizado => $composableBuilder(
+    column: $table.nomeNormalizado,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get precoCentavos => $composableBuilder(
+    column: $table.precoCentavos,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get unidade =>
+      $composableBuilder(column: $table.unidade, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get registradoEm => $composableBuilder(
+    column: $table.registradoEm,
+    builder: (column) => column,
+  );
+}
+
+class $$HistoricoPrecoLocalTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HistoricoPrecoLocalTable,
+          HistoricoPrecoLocalData,
+          $$HistoricoPrecoLocalTableFilterComposer,
+          $$HistoricoPrecoLocalTableOrderingComposer,
+          $$HistoricoPrecoLocalTableAnnotationComposer,
+          $$HistoricoPrecoLocalTableCreateCompanionBuilder,
+          $$HistoricoPrecoLocalTableUpdateCompanionBuilder,
+          (
+            HistoricoPrecoLocalData,
+            BaseReferences<
+              _$AppDatabase,
+              $HistoricoPrecoLocalTable,
+              HistoricoPrecoLocalData
+            >,
+          ),
+          HistoricoPrecoLocalData,
+          PrefetchHooks Function()
+        > {
+  $$HistoricoPrecoLocalTableTableManager(
+    _$AppDatabase db,
+    $HistoricoPrecoLocalTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HistoricoPrecoLocalTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HistoricoPrecoLocalTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$HistoricoPrecoLocalTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> nomeNormalizado = const Value.absent(),
+                Value<int> precoCentavos = const Value.absent(),
+                Value<String> unidade = const Value.absent(),
+                Value<DateTime> registradoEm = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HistoricoPrecoLocalCompanion(
+                nomeNormalizado: nomeNormalizado,
+                precoCentavos: precoCentavos,
+                unidade: unidade,
+                registradoEm: registradoEm,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String nomeNormalizado,
+                required int precoCentavos,
+                required String unidade,
+                required DateTime registradoEm,
+                Value<int> rowid = const Value.absent(),
+              }) => HistoricoPrecoLocalCompanion.insert(
+                nomeNormalizado: nomeNormalizado,
+                precoCentavos: precoCentavos,
+                unidade: unidade,
+                registradoEm: registradoEm,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HistoricoPrecoLocalTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HistoricoPrecoLocalTable,
+      HistoricoPrecoLocalData,
+      $$HistoricoPrecoLocalTableFilterComposer,
+      $$HistoricoPrecoLocalTableOrderingComposer,
+      $$HistoricoPrecoLocalTableAnnotationComposer,
+      $$HistoricoPrecoLocalTableCreateCompanionBuilder,
+      $$HistoricoPrecoLocalTableUpdateCompanionBuilder,
+      (
+        HistoricoPrecoLocalData,
+        BaseReferences<
+          _$AppDatabase,
+          $HistoricoPrecoLocalTable,
+          HistoricoPrecoLocalData
+        >,
+      ),
+      HistoricoPrecoLocalData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2872,4 +3419,6 @@ class $AppDatabaseManager {
       $$ItemLocalTableTableManager(_db, _db.itemLocal);
   $$MutacaoPendenteTableTableManager get mutacaoPendente =>
       $$MutacaoPendenteTableTableManager(_db, _db.mutacaoPendente);
+  $$HistoricoPrecoLocalTableTableManager get historicoPrecoLocal =>
+      $$HistoricoPrecoLocalTableTableManager(_db, _db.historicoPrecoLocal);
 }

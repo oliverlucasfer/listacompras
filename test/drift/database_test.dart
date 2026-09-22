@@ -563,4 +563,91 @@ void main() {
       expect(atualizada.orcamentoCentavos, 25000);
     },
   );
+
+  test('deve_criar_historico_preco_quando_migrar_v6_para_v7', () async {
+    // Banco real na versão v6 (com orcamento_centavos, sem
+    // historico_preco_local): DDL espelhando o schema v6 gerado, dados
+    // gravados e user_version = 6.
+    final arquivo = File(
+      '${Directory.systemTemp.path}/v6_para_v7_${DateTime.now().microsecondsSinceEpoch}.sqlite',
+    );
+    addTearDown(() {
+      if (arquivo.existsSync()) arquivo.deleteSync();
+    });
+
+    final antigo = sq3.sqlite3.open(arquivo.path);
+    antigo.execute('''
+        CREATE TABLE lista_local (
+          id TEXT NOT NULL PRIMARY KEY,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          titulo TEXT NOT NULL,
+          dono_id TEXT NOT NULL,
+          deletado_em TEXT NULL,
+          arquivada_em TEXT NULL,
+          orcamento_centavos INTEGER NULL,
+          FOREIGN KEY (dono_id) REFERENCES lista_local (id) ON DELETE CASCADE
+        );
+        CREATE TABLE item_local (
+          id TEXT NOT NULL PRIMARY KEY,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          lista_id TEXT NOT NULL REFERENCES lista_local (id) ON DELETE CASCADE,
+          nome TEXT NOT NULL,
+          quantidade REAL NOT NULL DEFAULT 1.0,
+          unidade TEXT NOT NULL DEFAULT 'un',
+          categoria TEXT NOT NULL DEFAULT 'outros',
+          concluido INTEGER NOT NULL DEFAULT 0,
+          ordem INTEGER NOT NULL DEFAULT 0,
+          deletado_em TEXT NULL,
+          preco_centavos INTEGER NULL
+        );
+        CREATE TABLE mutacao_pendente (
+          id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+          tabela TEXT NOT NULL,
+          operacao TEXT NOT NULL,
+          registro_id TEXT NOT NULL,
+          payload TEXT NOT NULL,
+          ts_local TEXT NOT NULL,
+          tentativas INTEGER NOT NULL DEFAULT 0,
+          lista_id TEXT NOT NULL
+        );
+        PRAGMA user_version = 6;
+      ''');
+    antigo.execute(
+      "INSERT INTO lista_local (id, created_at, updated_at, titulo, dono_id) "
+      "VALUES ('77777777-7777-7777-7777-777777777777', "
+      "'2026-01-01T00:00:00.000000Z', '2026-01-01T00:00:00.000000Z', "
+      "'Antiga', 'user-a')",
+    );
+    antigo.close();
+
+    final migrado = AppDatabase(NativeDatabase(arquivo));
+    addTearDown(migrado.close);
+
+    final lista =
+        await (migrado.select(migrado.listaLocal)..where(
+              (l) => l.id.equals('77777777-7777-7777-7777-777777777777'),
+            ))
+            .getSingle();
+    expect(lista.titulo, 'Antiga');
+
+    // Tabela nova existe e aceita escrita/leitura após a migração.
+    final quando = DateTime.utc(2026, 9, 20, 12);
+    await migrado
+        .into(migrado.historicoPrecoLocal)
+        .insert(
+          HistoricoPrecoLocalCompanion.insert(
+            nomeNormalizado: 'cafe',
+            precoCentavos: 1850,
+            unidade: 'pacote',
+            registradoEm: quando,
+          ),
+        );
+    final hist = await migrado.select(migrado.historicoPrecoLocal).getSingle();
+    expect(hist.nomeNormalizado, 'cafe');
+    expect(hist.precoCentavos, 1850);
+    expect(hist.unidade, 'pacote');
+    expect(hist.registradoEm.toUtc(), quando);
+  });
 }

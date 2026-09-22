@@ -12,6 +12,7 @@ import '../domain/lista_com_contagem.dart';
 import '../domain/resultado_dedup.dart';
 import '../domain/sugestao_item.dart';
 import '../domain/unidade.dart';
+import 'historico_precos_repository.dart';
 
 /// Repositório de listas/itens (doc 03 §2, RF-02/RF-03/RF-04): toda
 /// escrita aplica no Drift (fonte de verdade local) e enfileira a mutação
@@ -396,6 +397,17 @@ class ListasRepository {
       ),
     );
     final item = await _lerItem(id);
+    // Histórico local de preços (RF-29, F37): registra ao concluir com preço.
+    // Local-only — não enfileira mutação; marcar sem preço não registra e
+    // desmarcar não apaga.
+    if (item.concluido && item.precoCentavos != null) {
+      await HistoricoPrecosRepository(_db).registrar(
+        nome: item.nome,
+        precoCentavos: item.precoCentavos!,
+        unidade: Unidade.fromValor(item.unidade),
+        quando: agora,
+      );
+    }
     await _enfileirar(
       tabela: 'itens_lista',
       operacao: 'UPDATE',

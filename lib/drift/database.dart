@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import 'conexao/conexao.dart';
+import 'tables/historico_preco_local.dart';
 import 'tables/item_local.dart';
 import 'tables/lista_local.dart';
 import 'tables/mutacao_pendente.dart';
@@ -9,12 +10,14 @@ part 'database.g.dart';
 
 /// Fonte de verdade local (doc 03 §1). Espelha o schema Postgres (doc 01).
 /// Testes injetam um executor (ex.: NativeDatabase.memory()).
-@DriftDatabase(tables: [ListaLocal, ItemLocal, MutacaoPendente])
+@DriftDatabase(
+  tables: [ListaLocal, ItemLocal, MutacaoPendente, HistoricoPrecoLocal],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   /// Datas como texto ISO-8601 com microssegundos: o armazenamento padrão
   /// (unix segundos) truncava `updated_at` e criava empates artificiais no
@@ -59,6 +62,11 @@ class AppDatabase extends _$AppDatabase {
       if (de < 6) {
         // v5 → v6: coluna orcamento_centavos (doc 01 §4.1, RF-28, F36).
         await m.addColumn(listaLocal, listaLocal.orcamentoCentavos);
+      }
+      if (de < 7) {
+        // v6 → v7: tabela local de histórico de preços (doc 05 §6.3,
+        // RF-29, F37). Local-only: não sincroniza.
+        await m.createTable(historicoPrecoLocal);
       }
     },
     beforeOpen: (details) async {
