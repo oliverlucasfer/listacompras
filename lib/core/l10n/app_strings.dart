@@ -261,6 +261,17 @@ abstract final class AppStrings {
   static const convitesPendentes = 'Convites pendentes';
   static const convitePendenteAjuda =
       'Este link ainda dá acesso à lista. Revogue para invalidá-lo.';
+
+  // Convite por e-mail e pendentes dirigidos ao usuário (doc 08 §4, RF-13, F32)
+  static const convidarPorEmail = 'Convidar por e-mail';
+  static const emailDoConvidado = 'E-mail do convidado';
+  static const enviarConvite = 'Enviar convite';
+  static const conviteCriado =
+      'Convite criado. A pessoa verá no app ao entrar.';
+  static const aceitar = 'Aceitar';
+  static const recusar = 'Recusar';
+
+  static String convitePara(String titulo) => 'Convite para $titulo';
   static const compartilharIndisponivel =
       'Compartilhamento indisponível aqui. Use "Copiar link".';
   static const papelAtualizado = 'Papel atualizado.';

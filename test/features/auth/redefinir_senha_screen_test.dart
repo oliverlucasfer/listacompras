@@ -10,6 +10,8 @@ import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/auth/data/supabase_auth_repository.dart';
 import 'package:lista_compras/features/auth/providers/auth_providers.dart';
 import 'package:lista_compras/features/auth/ui/redefinir_senha_screen.dart';
+import 'package:lista_compras/features/convites/domain/convite_pendente.dart';
+import 'package:lista_compras/features/convites/ui/convites_pendentes_secao.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/sync/domain/sync_status.dart';
 import 'package:lista_compras/features/sync/providers/sync_providers.dart';
@@ -171,6 +173,9 @@ void main() {
         appDatabaseProvider.overrideWithValue(db),
         syncStatusProvider.overrideWith(
           (ref) => Stream<SyncStatus>.value(const Sincronizado()),
+        ),
+        meusConvitesPendentesProvider.overrideWith(
+          (ref) async => const <ConvitePendente>[],
         ),
       ],
     );

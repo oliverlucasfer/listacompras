@@ -17,14 +17,18 @@ const _listaId = '11111111-1111-2222-3333-444444444444';
 const _token = 'aaaaaaaa-1111-2222-3333-bbbbbbbbbbbb';
 final _link = 'br.com.oliverlucas.listacompras://entrar?token=$_token';
 
-Map<String, Object?> _linhaConvite({required String papel}) {
+Map<String, Object?> _linhaConvite({
+  required String papel,
+  String tipo = 'link',
+  String? email,
+}) {
   return {
     'id': _token,
     'lista_id': _listaId,
     'criado_por': 'U1',
     'token': _token,
-    'tipo': 'link',
-    'email': null,
+    'tipo': tipo,
+    'email': email,
     'papel_oferecido': papel,
     'estado': 'pendente',
     'expira_em': '2026-09-17T12:00:00.000Z',
@@ -154,7 +158,10 @@ void main() {
       find.widgetWithText(FilledButton, AppStrings.gerarLink),
       findsOneWidget,
     );
-    expect(find.byType(TextField), findsNothing);
+    expect(
+      find.byWidgetPredicate((w) => w is TextField && w.readOnly),
+      findsNothing,
+    );
 
     await fechar(tester);
   });
@@ -394,6 +401,60 @@ void main() {
       'estado': 'revogado',
     });
 
+    await fechar(tester);
+  });
+
+  testWidgets('deve_criar_convite_email_quando_email_valido', (tester) async {
+    final servidor = ServidorFake((req) {
+      if (req.method == 'GET' && req.url.path.contains('/convites')) {
+        return (200, const <Object?>[]);
+      }
+      if (req.method == 'POST' && req.url.path.contains('/convites')) {
+        return (200, _linhaConvite(papel: 'editor', tipo: 'email'));
+      }
+      return (500, {'message': 'inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    await abrir(tester, servidor);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.emailDoConvidado),
+      'a@b.com',
+    );
+    await tester.tap(
+      find.widgetWithText(OutlinedButton, AppStrings.enviarConvite),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.conviteCriado), findsOneWidget);
+
+    final postIndex = servidor.pedidos.indexWhere((p) => p.method == 'POST');
+    final corpo =
+        jsonDecode(servidor.corpoDe(postIndex)) as Map<String, Object?>;
+    expect(corpo['tipo'], 'email');
+    expect(corpo['email'], 'a@b.com');
+    expect(corpo['lista_id'], _listaId);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_validar_email_quando_invalido', (tester) async {
+    final servidor = ServidorFake(
+      (req) => (500, {'message': 'nao deveria chamar'}),
+    );
+    addTearDown(servidor.close);
+    await abrir(tester, servidor);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, AppStrings.emailDoConvidado),
+      'invalido',
+    );
+    await tester.tap(
+      find.widgetWithText(OutlinedButton, AppStrings.enviarConvite),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.erroEmailInvalido), findsOneWidget);
     await fechar(tester);
   });
 }

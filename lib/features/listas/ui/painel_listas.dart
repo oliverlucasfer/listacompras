@@ -23,6 +23,7 @@ import '../../convites/domain/papel.dart';
 import '../../convites/providers/convites_providers.dart';
 import '../../convites/providers/papel_providers.dart';
 import '../../convites/ui/acao_sair_da_lista.dart';
+import '../../convites/ui/convites_pendentes_secao.dart';
 import '../domain/lista_com_contagem.dart';
 import '../providers/listas_providers.dart';
 import 'sheet_titulo_lista.dart';
@@ -157,6 +158,7 @@ class _PainelListasState extends ConsumerState<PainelListas> {
                 onChanged: (_) => setState(() {}),
               ),
             ),
+          if (!_compartilhadas) const ConvitesPendentesSecao(),
           Expanded(
             child: listasAsync.when(
               loading: () => const AppEsqueleto(linhas: 4),

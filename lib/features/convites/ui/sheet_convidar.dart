@@ -35,6 +35,9 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
   Convite? _convite;
   TextEditingController? _linkController;
   List<Convite> _pendentes = const [];
+  final _email = TextEditingController();
+  bool _enviandoEmail = false;
+  String? _erroEmail;
 
   @override
   void initState() {
@@ -48,6 +51,7 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
   @override
   void dispose() {
     _linkController?.dispose();
+    _email.dispose();
     super.dispose();
   }
 
@@ -120,6 +124,36 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
       if (mounted) setState(() => _erro = AppStrings.erroGenerico);
     }
     if (mounted) setState(() => _gerando = false);
+  }
+
+  Future<void> _enviarConviteEmail() async {
+    final email = _email.text.trim();
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      setState(() => _erroEmail = AppStrings.erroEmailInvalido);
+      return;
+    }
+    setState(() {
+      _erroEmail = null;
+      _enviandoEmail = true;
+    });
+    try {
+      await ref
+          .read(convitesRepositoryProvider)
+          .criarConviteEmail(
+            listaId: widget.listaId,
+            email: email,
+            papel: _papel,
+          );
+      if (mounted) {
+        mostrarSnackBar(context, AppStrings.conviteCriado);
+        _email.clear();
+      }
+    } on ErroConvite catch (e) {
+      if (mounted) setState(() => _erroEmail = e.message);
+    } catch (_) {
+      if (mounted) setState(() => _erroEmail = AppStrings.erroGenerico);
+    }
+    if (mounted) setState(() => _enviandoEmail = false);
   }
 
   Future<void> _copiar(String valor, String mensagem) async {
@@ -253,6 +287,25 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
               rotulo: AppStrings.gerarLink,
               carregando: _gerando,
               onPressed: _gerar,
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            Text(
+              AppStrings.convidarPorEmail,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            AppCampoTexto(
+              controller: _email,
+              label: AppStrings.emailDoConvidado,
+              erro: _erroEmail,
+              teclado: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            AppBotao(
+              rotulo: AppStrings.enviarConvite,
+              variante: AppBotaoVariante.outlined,
+              carregando: _enviandoEmail,
+              onPressed: _enviarConviteEmail,
             ),
           ] else ...[
             const SizedBox(height: AppSpacing.lg),
