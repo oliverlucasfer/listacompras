@@ -54,11 +54,10 @@ final itensFrequentesProvider =
     );
 
 /// Último preço pago pelo item (histórico local, RF-29, F37). Chave: nome.
-final historicoPrecoProvider = FutureProvider.family<HistoricoPreco?, String>((
-  ref,
-  nome,
-) async {
-  return HistoricoPrecosRepository(
-    ref.watch(appDatabaseProvider),
-  ).porNome(nome);
-});
+/// `autoDispose`: o editor descarta a leitura ao fechar, re-lendo ao reabrir.
+final historicoPrecoProvider = FutureProvider.autoDispose
+    .family<HistoricoPreco?, String>((ref, nome) async {
+      return HistoricoPrecosRepository(
+        ref.watch(appDatabaseProvider),
+      ).porNome(nome);
+    });

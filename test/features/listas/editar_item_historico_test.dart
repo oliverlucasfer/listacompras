@@ -255,4 +255,34 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));
   });
+
+  testWidgets('deve_reler_historico_quando_reabre_editor_apos_registro', (
+    tester,
+  ) async {
+    await abrirLista(tester);
+    // Primeira abertura: sem histórico (leitura é descartada ao fechar,
+    // graças ao autoDispose do provider).
+    await abrirEditor(tester);
+    expect(find.textContaining('Última compra'), findsNothing);
+    await tester.tap(find.widgetWithText(TextButton, AppStrings.cancelar));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.editarItem), findsNothing);
+
+    // Registra o histórico (equivale a concluir a compra com preço).
+    await registrarHistorico(
+      nome: 'Arroz',
+      precoCentavos: 500,
+      unidade: Unidade.un,
+    );
+
+    // Reabrir deve re-ler o histórico novo.
+    await abrirEditor(tester);
+    expect(
+      find.text(AppStrings.ultimaCompra('R\$ 5,00', dataEsperada())),
+      findsOneWidget,
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
+  });
 }
