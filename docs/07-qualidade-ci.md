@@ -14,12 +14,16 @@
 | **RLS** (integração SQL) | Testes com 2 usuários reais em Supabase dev | Casos N-01…N-10 e P-01…P-05 de [02 §5](02-seguranca-rls.md) | **Máxima** (RNF-03) |
 | **Repositórios** (unit) | `flutter_test` + Drift in-memory | CRUD local + enfileiramento de mutações | Alta (RF-03) |
 | **Widgets** | `flutter_test` + `golden_toolkit` (opcional) | Telas críticas: lista, importação local, auth | Média (RF-01…RF-05, RF-16) |
+| **Fluxos críticos** (E2E no widget) | `flutter_test` + router real + Drift in-memory | Caminhos criar/adicionar/marcar/limpar, importar, entrar por código e offline — roda no CI | Alta (RNF-08) |
 | **E2E** (integração app) | `integration_test` (opcional, pós-MVP) | Fluxo completo offline→online | Baixa (RNF-02) |
 
 **Convenções:**
 * Nomes: `deve_<resultado>_quando_<condição>` (ex.: `deve_manter_item_removido_offline_ao_receber_edicao_remota_antiga`).
 * Sync Engine testado com fake de conectividade + fake do Supabase (determinístico, sem rede real no CI).
 * Fila de mutações testada com cenários do checklist [03 §8](03-sincronizacao-offline.md).
+* **Fluxos críticos (E2E no widget, F33, RNF-08):** rodam no CI via `flutter test` — o harness `test/fluxos/fluxo_harness.dart` monta o app real (router + Drift in-memory, sessão/sync/convites fake) e cobre criar/adicionar/marcar/limpar/desfazer, importar por texto, entrar por código e offline (item local + fila).
+
+**Adiados (não rodam no CI atual):** **goldens** são sensíveis à plataforma — o dev gera no Windows e o CI roda Linux; revisitar quando houver runner Linux dedicado. **`integration_test` (device/emulador)** exige device; é validado por smoke manual, como o deep link físico. Nenhum dos dois bloqueia o merge.
 
 ## 2. O que é testado vs. aceito sem teste
 

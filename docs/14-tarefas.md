@@ -722,6 +722,20 @@ Spec: [superpowers/specs/2026-09-21-convite-email-design.md](superpowers/specs/2
   Dep: F32-T03 · Docs: [01](01-banco-de-dados.md), [02 §4.7](02-seguranca-rls.md), [08 §4](08-compartilhamento-colaborativo.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
   CP: docs donos refletem o fluxo B entregue (RPCs/grants + guarda de expiração do `recusar_convite`; painel e campo de e-mail; RF-13 no 12; B2 no 16); Fase 32 na tabela de progresso (171/169).
 
+## Fase 33 — Fluxos críticos (E2E no widget) (RNF-08)
+
+Spec: [superpowers/specs/2026-09-21-fluxos-criticos-design.md](superpowers/specs/2026-09-21-fluxos-criticos-design.md) · Requisito: RNF-08 (testes dos fluxos críticos ponta a ponta na camada UI+Drift, rodando em `flutter test`). · Docs donos: 07.
+
+- [x] **F33-T01** — Harness de fluxo (router real + Drift in-memory)
+  Dep: — · Docs: [07 §1](07-qualidade-ci.md)
+  CP: `test/fluxos/fluxo_harness.dart` monta o app real (`routerProvider`) com Drift in-memory, sessão autenticada fake e sync/convites controláveis (`montarApp`/`fechar`); compila sem issues e sem alterar `lib/`.
+- [x] **F33-T02** — Os quatro fluxos críticos
+  Dep: F33-T01 · Docs: [07 §1](07-qualidade-ci.md)
+  CP: `fluxo_lista_test` (criar/adicionar/marcar/limpar/desfazer), `fluxo_importar_test` (colar→extrair→confirmar), `fluxo_entrar_codigo_test` (token→RPC→navega) e `fluxo_offline_test` (item local + fila) verdes em `flutter test test/fluxos/`.
+- [x] **F33-T03** — Docs donos e fechamento
+  Dep: F33-T02 · Docs: [07 §1](07-qualidade-ci.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
+  CP: 07 §1 com a linha "Fluxos críticos (E2E no widget)" e o registro dos adiados (goldens sensíveis à plataforma Windows×Linux; `integration_test` exige device); C2 do 16 concluído; Fase 33 na tabela de progresso (174/172).
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -756,7 +770,8 @@ Spec: [superpowers/specs/2026-09-21-convite-email-design.md](superpowers/specs/2
 | F30 Adicionar por voz | 3 | 3 |
 | F31 Boas-vindas e vazios | 3 | 3 |
 | F32 Convite por e-mail | 4 | 4 |
-| **Total** | **171** | **169** |
+| F33 Fluxos críticos | 3 | 3 |
+| **Total** | **174** | **172** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
