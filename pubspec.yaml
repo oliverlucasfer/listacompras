@@ -49,6 +49,7 @@ dependencies:
   package_info_plus: ^9.0.0
   share_plus: ^12.0.2
   speech_to_text: ^7.5.0
+  speech_to_text_platform_interface: ^2.5.0
 
 dev_dependencies:
   flutter_test:
