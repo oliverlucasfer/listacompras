@@ -79,6 +79,11 @@ abstract final class AppStrings {
   static const reordenar = 'Reordenar';
   static const sugestoes = 'Sugestões';
 
+  // Adicionar por voz (RF-26)
+  static const ditarItem = 'Ditar item';
+  static const vozIndisponivel =
+      'Reconhecimento de voz indisponível neste aparelho.';
+
   static String adicionarSugerido(String nome) => 'Adicionar $nome';
 
   // Modo mercado (RF-18, wireframe 10 §3.5)

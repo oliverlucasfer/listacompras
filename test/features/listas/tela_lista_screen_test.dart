@@ -31,11 +31,14 @@ import 'package:lista_compras/features/listas/domain/unidade.dart';
 import 'package:lista_compras/features/listas/ui/tela_lista_screen.dart';
 import 'package:lista_compras/features/sync/domain/sync_status.dart';
 import 'package:lista_compras/features/sync/providers/sync_providers.dart';
+import 'package:lista_compras/features/voz/domain/reconhecimento_voz.dart';
+import 'package:lista_compras/features/voz/providers/reconhecimento_voz_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../convites/servidor_fake.dart';
 import '../auth/fakes.dart';
+import '../voz/fake_reconhecimento_voz.dart';
 
 void main() {
   setUpAll(inicializarSupabaseTeste);
@@ -1245,6 +1248,7 @@ void main() {
   Future<(PapelRepository, String)> abrirListaF7t07(
     WidgetTester tester, {
     String? listaId,
+    ReconhecimentoVoz? reconhecimento,
   }) async {
     final repo = ListasRepository(db);
     final id =
@@ -1270,6 +1274,8 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           papelRepositoryProvider.overrideWithValue(papelRepo),
+          if (reconhecimento != null)
+            reconhecimentoVozProvider.overrideWithValue(reconhecimento),
           syncStatusProvider.overrideWith((ref) => sync.stream),
         ],
         child: MaterialApp(home: TelaListaScreen(listaId: id)),
@@ -2208,6 +2214,59 @@ void main() {
 
     expect(tester.widget<FilledButton>(confirmar).onPressed, isNull);
 
+    await fechar(tester);
+  });
+
+  // ---- Adicionar item por voz (F30-T02, RF-26) ----
+
+  testWidgets('deve_preencher_campo_quando_reconhece', (tester) async {
+    final fake = FakeReconhecimentoVoz();
+    await abrirListaF7t07(tester, reconhecimento: fake);
+
+    await tester.tap(find.byTooltip(AppStrings.ditarItem));
+    await tester.pump();
+    fake.emitir('meio quilo de queijo');
+    await tester.pump();
+
+    expect(
+      tester
+          .widget<TextField>(
+            find.widgetWithText(TextField, AppStrings.adicionarItem),
+          )
+          .controller!
+          .text,
+      'meio quilo de queijo',
+    );
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_snackbar_quando_indisponivel', (tester) async {
+    final fake = FakeReconhecimentoVoz(disponivel: false);
+    await abrirListaF7t07(tester, reconhecimento: fake);
+
+    await tester.tap(find.byTooltip(AppStrings.ditarItem));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.vozIndisponivel), findsOneWidget);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_parar_quando_toca_de_novo', (tester) async {
+    final fake = FakeReconhecimentoVoz();
+    await abrirListaF7t07(tester, reconhecimento: fake);
+
+    await tester.tap(find.byTooltip(AppStrings.ditarItem));
+    await tester.pump();
+    await tester.tap(find.byTooltip(AppStrings.ditarItem));
+    await tester.pump();
+
+    expect(fake.parou, isTrue);
+    await fechar(tester);
+  });
+
+  testWidgets('nao_deve_mostrar_microfone_para_leitor', (tester) async {
+    await listaComItens(tester, papel: Papel.leitor);
+    expect(find.byTooltip(AppStrings.ditarItem), findsNothing);
     await fechar(tester);
   });
 }

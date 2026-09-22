@@ -28,6 +28,8 @@ import '../../convites/ui/tela_membros_screen.dart';
 import '../../importacao/ui/modal_importar.dart';
 import '../../importacao/ui/modal_previsao_importacao.dart';
 import '../../sync/ui/indicador_sync.dart';
+import '../../voz/domain/reconhecimento_voz.dart';
+import '../../voz/providers/reconhecimento_voz_provider.dart';
 import '../domain/categoria.dart';
 import '../domain/item.dart';
 import '../domain/preco.dart';
@@ -481,10 +483,38 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
   /// Erro inline quando o parser descarta o texto digitado (F14-T07).
   String? _erro;
 
+  /// Estado da captura por voz no campo (RF-26, F30-T02).
+  EstadoVoz _estadoVoz = EstadoVoz.parado;
+
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  void _aoEstadoVoz(EstadoVoz estado) {
+    if (mounted) setState(() => _estadoVoz = estado);
+  }
+
+  Future<void> _ditar() async {
+    final voz = ref.read(reconhecimentoVozProvider);
+    if (_estadoVoz == EstadoVoz.ouvindo) {
+      await voz.parar();
+      return;
+    }
+    await voz.iniciar(
+      onTexto: (texto, _) {
+        if (!mounted) return;
+        setState(() {
+          _controller.text = texto;
+          _erro = null;
+        });
+      },
+      onIndisponivel: () {
+        if (mounted) mostrarSnackBar(context, AppStrings.vozIndisponivel);
+      },
+      onEstado: _aoEstadoVoz,
+    );
   }
 
   Future<void> _adicionar() async {
@@ -621,6 +651,16 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
                     ),
                   ),
                 ),
+                if (plataformaComVoz())
+                  IconButton(
+                    tooltip: AppStrings.ditarItem,
+                    icon: Icon(
+                      _estadoVoz == EstadoVoz.ouvindo
+                          ? Icons.mic
+                          : Icons.mic_none,
+                    ),
+                    onPressed: _ditar,
+                  ),
                 IconButton(
                   tooltip: AppStrings.adicionarItem,
                   icon: const Icon(Icons.add),
