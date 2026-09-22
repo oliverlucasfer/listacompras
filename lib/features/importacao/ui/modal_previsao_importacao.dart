@@ -316,7 +316,7 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
                 child: AppCampoTexto(
                   controller: _quantidade,
                   erro: _erroQuantidade,
-                  teclado: const TextInputType.numberWithOptions(decimal: true),
+                  teclado: TextInputType.text,
                   onChanged: (_) => _notificar(),
                 ),
               ),

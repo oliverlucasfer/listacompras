@@ -188,6 +188,20 @@ void main() {
     expect(r.itens.single.unidade, Unidade.kg);
   });
 
+  test('deve_ler_misto_quando_espacado_no_fim', () {
+    final r = analisarListaLocal('arroz 1 1/2');
+    expect(r.itens.single.nome, 'Arroz');
+    expect(r.itens.single.quantidade, 1.5);
+    expect(r.itens.single.unidade, Unidade.un);
+  });
+
+  test('deve_ler_fracao_quando_colada_no_fim', () {
+    final r = analisarListaLocal('arroz 1/2kg');
+    expect(r.itens.single.nome, 'Arroz');
+    expect(r.itens.single.quantidade, 0.5);
+    expect(r.itens.single.unidade, Unidade.kg);
+  });
+
   test('deve_ler_fracao_quando_avulso', () {
     final item = interpretarItemAvulso('1/2 kg banana');
     expect(item!.quantidade, 0.5);

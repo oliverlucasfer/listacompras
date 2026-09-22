@@ -16,7 +16,7 @@ A feature é 100% local: **entrada** aceita frações e **exibição** mostra gl
 ## 2. Escopo
 
 **Dentro:**
-- Entrada aceita fração simples (`1/2`), mista (`1 1/2`), glifos unicode (`½`, `1½`) — na **entrada rápida**, no **editor do item** e na **importação** (mesmo parser).
+- Entrada aceita fração simples (`1/2`), glifos unicode (`½`, `1½`) e decimais (`0,5`) no **editor do item** e na **entrada rápida**; a mista espaçada (`1 1/2`) é combinada pelo **parser** (entrada rápida e importação), não pelo editor.
 - Exibição com glifos comuns (`½ ¼ ¾ ⅓ ⅔`, mistos como `1½`) e corte de decimais longos (≤ 3 casas).
 
 **Fora:** palavras (`meio`/`meia`), embalagem ("pacote de 5"), mudança de schema (a quantidade continua `numeric`).

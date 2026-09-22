@@ -44,7 +44,7 @@ const _qtd =
     r'])';
 final _soNumero = RegExp('^$_qtd\$');
 final _numeroColado = RegExp('^$_qtd([a-zA-ZÀ-ÿ]+)\$');
-final _soFracaoSo = RegExp(r'^(\d+\s*/\s*\d+|[½¼¾⅓⅔])$');
+final _soFracaoSo = RegExp(r'^(\d+\s*/\s*\d+|[' + glifosFracao + r'])$');
 final _soInteiro = RegExp(r'^\d+$');
 final _decimalComVirgula = RegExp(r'(\d),(\d)');
 

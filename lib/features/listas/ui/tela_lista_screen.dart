@@ -1043,9 +1043,7 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
                     controller: _quantidade,
                     label: AppStrings.quantidade,
                     erro: _erroQuantidade,
-                    teclado: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
+                    teclado: TextInputType.text,
                     onChanged: (_) {
                       if (_erroQuantidade != null) {
                         setState(() => _erroQuantidade = null);
