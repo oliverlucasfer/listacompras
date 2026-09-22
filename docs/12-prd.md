@@ -49,6 +49,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-26 | Adicionar item por voz (reconhecimento on-device, pt-BR, preenche o campo) | 05 §6.3 | F30 | [05 §8](05-app-flutter.md) |
 | RF-27 | Boas-vindas (uma vez) + estados vazios explicativos | 05 §6.8 + 10 §1.4 | F31 | [05 §8](05-app-flutter.md) |
 | RF-28 | Orçamento (limite de gasto) por lista, sincronizado, comparado ao total do carrinho (RF-21), editável por dono/editor | 05 §6.3/§6.5 + 10 §3.1/§3.5 + 01 §4.1 + 03 | F36 | [05 §8](05-app-flutter.md) |
+| RF-29 | Comparação de preços entre idas: "Última compra: R$ X (dd/mm)" + variação no editor, a partir do histórico **local por dispositivo (não sincronizado)** | 05 §6.3 + 10 §3.1 + 03 | F37 | [05 §8](05-app-flutter.md) |
 
 ## 3. Requisitos Não-Funcionais
 
@@ -150,11 +151,12 @@ Cada requisito liga story → design → tarefas ([14](14-tarefas.md)) → verif
 | RF-26 | US-01 | F30 | F30-T01, F30-T02 | Unit fake + widgets (plugin real: smoke em device) |
 | RF-27 | US-01 | F31 | F31-T01, F31-T02 | Unit provider + widgets |
 | RF-28 | US-01 | F36 | F36-T02…T04 | Unit repo/aplicador + widgets |
+| RF-29 | US-01 | F37 | F37-T01, F37-T02 | Unit repo/histórico + widgets |
 | RNF-06 | — | F8 · F14 | F14-T01…T02 | Guidelines de a11y + escala de fonte |
 
 ## 7. Fora de escopo (MVP)
 
-Receitas/menus e comparação entre idas (o **preço por item + total dos marcados** é o RF-21, entregue na F25; o **orçamento por lista** é o RF-28, entregue na F36), histórico de compras, cupons, push notifications, scan de código de barras, importação de foto/nota fiscal, app iOS (F6), publicação de desktop (o suporte a Desktop — Windows/Linux/macOS — entra na Fase 18; a **publicação Web** entra na **Fase 19**), compartilhamento na UI (F6).
+Receitas/menus (o **preço por item + total dos marcados** é o RF-21, entregue na F25; o **orçamento por lista** é o RF-28, entregue na F36; a **comparação entre idas** é o RF-29, entregue na F37), histórico de compras, cupons, push notifications, scan de código de barras, importação de foto/nota fiscal, app iOS (F6), publicação de desktop (o suporte a Desktop — Windows/Linux/macOS — entra na Fase 18; a **publicação Web** entra na **Fase 19**), compartilhamento na UI (F6).
 
 ---
 

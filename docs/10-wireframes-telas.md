@@ -245,7 +245,7 @@ A seção aparece no topo do filtro **Minhas** só quando há convites por e-mai
 
 **Adicionar por voz (RF-26/F30):** em Android/iOS, o campo "Adicionar item" (dono/editor) ganha um ícone de **microfone** à direita que **preenche o campo** com o texto reconhecido on-device (pt-BR); o usuário confirma (Enter). Ouvindo, o ícone muda (`mic`/`mic_none`); indisponível/permissão negada → SnackBar; ao sair da tela o ditado é cancelado. Web/Desktop não mostram o microfone.
 
-**Diálogo do item (F12-T06 + preço RF-21/F25):**
+**Diálogo do item (F12-T06 + preço RF-21/F25 + última compra RF-29/F37):**
 ```
 ┌─────────────────────────────────┐
 │  Editar item                 ✕  │
@@ -258,9 +258,14 @@ A seção aparece no topo do filtro **Minhas** só quando há convites por e-mai
 │  Preço (R$)                     │
 │  [5,49______________________ ]  │ ← opcional; vazio = sem preço;
 │                                 │    inválido → erro inline
+│  Última compra: R$ 4,99 (12/09) │ ← histórico local por dispositivo
+│  ↑ R$ 0,50                      │    (RF-29/F37); ↑/↓ só com a
+│                                 │    mesma unidade; não sincroniza
 │  (Remover)         (Salvar)     │
 └─────────────────────────────────┘
 ```
+
+**Última compra (RF-29/F37):** abaixo do campo de preço, quando há histórico local para o nome, aparece "Última compra: R$ X (dd/mm)" e — se o preço atual existir **e** a unidade atual for a mesma do registro — a variação (`↑`/`↓ R$diferença` ou "Mesmo preço"); com unidade diferente ou sem preço atual, só a linha do último preço. O histórico é **local por dispositivo e não sincroniza** ([03 §3](03-sincronizacao-offline.md)).
 
 ### 3.2. Estados do indicador de sync (AppBar, [03 §6](03-sincronizacao-offline.md))
 ```

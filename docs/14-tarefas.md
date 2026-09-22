@@ -781,6 +781,20 @@ Spec: [docs/superpowers/specs/2026-09-22-orcamento-lista-design.md](superpowers/
   Dep: F36-T04 · Docs: [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
   CP: RF-28 no 12 (tabela e rastreabilidade; fora de escopo sem "orçamento/limite", mantendo "comparação entre idas"); D1 do 16 com preço/total (F25) e orçamento (F36) concluídos e comparação entre idas pendente; Fase 36 na tabela de progresso (184/182).
 
+## Fase 37 — Comparação entre idas (RF-29)
+
+Spec: [docs/superpowers/specs/2026-09-22-comparacao-idas-design.md](superpowers/specs/2026-09-22-comparacao-idas-design.md) · Requisito: RF-29 (comparação de preços entre idas — último preço local + variação no editor). · Docs donos: 05, 03, 10, 12.
+
+- [x] **F37-T01** — Drift local + registro no repositório
+  Dep: — · Docs: [05 §6.3](05-app-flutter.md), [03](03-sincronizacao-offline.md)
+  CP: tabela Drift `HistoricoPrecoLocal` (schemaVersion 7; migração v6→v7) + `HistoricoPrecosRepository.registrar/porNome`; `editarItem` grava o histórico quando o item fica concluído **com** preço (sem preço não grava; desmarcar não apaga); local-only (sem fila/sync); unit tests verdes.
+- [x] **F37-T02** — Provider + linha no editor do item
+  Dep: F37-T01 · Docs: [05 §6.3](05-app-flutter.md), [10 §3.1](10-wireframes-telas.md)
+  CP: `historicoPrecoProvider` + strings; `_DialogoEditarItem` mostra "Última compra: R$ X (dd/mm)" e a variação ↑/↓/"Mesmo preço" **só com a mesma unidade** (preço atual ausente → só o último preço); o texto reage ao digitar; widget tests verdes.
+- [x] **F37-T03** — RF-29 no 12, docs donos e fechamento
+  Dep: F37-T02 · Docs: [05 §6.3](05-app-flutter.md), [03](03-sincronizacao-offline.md), [10 §3.1](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
+  CP: RF-29 no 12 (tabela e rastreabilidade; fora de escopo sem "comparação entre idas"); docs donos 05 §6.3 / 03 / 10 §3.1 refletem a linha e o caráter local/não sincronizado; D1 do 16 concluído (F25+F36+F37); Fase 37 na tabela de progresso (187/185).
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -819,7 +833,8 @@ Spec: [docs/superpowers/specs/2026-09-22-orcamento-lista-design.md](superpowers/
 | F34 Backup + alertas | 3 | 3 |
 | F35 CSP no Web | 2 | 2 |
 | F36 Orçamento | 5 | 5 |
-| **Total** | **184** | **182** |
+| F37 Comparação entre idas | 3 | 3 |
+| **Total** | **187** | **185** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
