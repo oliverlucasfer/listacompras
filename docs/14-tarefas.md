@@ -761,6 +761,26 @@ Spec: [docs/superpowers/specs/2026-09-22-csp-web-design.md](superpowers/specs/20
   Dep: F35-T01 · Docs: [14](14-tarefas.md), [16](16-roadmap-pos-mvp.md)
   CP: Fase 35 na tabela de progresso (179/177); C4 do 16 concluído.
 
+## Fase 36 — Orçamento por lista (RF-28)
+
+Spec: [docs/superpowers/specs/2026-09-22-orcamento-lista-design.md](superpowers/specs/2026-09-22-orcamento-lista-design.md) · Requisito: RF-28 (orçamento por lista — limite de gasto sincronizado e editável por dono/editor). · Docs donos: 01, 02, 03, 05, 10, 12.
+
+- [x] **F36-T01** — Banco: migration `0020` + testes SQL + CI + docs 01/02
+  Dep: — · Docs: [01 §4.1](01-banco-de-dados.md), [02 §4.1](02-seguranca-rls.md)
+  CP: `0020_orcamento_lista.sql` adiciona `listas.orcamento_centavos integer` (CHECK `null ou 0..99999999`; `0` válido; negativo rejeitado; **sem policy nova** — herda o UPDATE de `listas`); `orcamento_lista_tests.sql` (ORC-01…ORC-03) verde e no CI; docs 01 §4.1 e 02 §4.1 refletem a coluna e a herança de policy.
+- [x] **F36-T02** — Drift + domínio + repositório + sync
+  Dep: F36-T01 · Docs: [03](03-sincronizacao-offline.md)
+  CP: `Lista.orcamentoCentavos` (`int?`) e coluna no Drift (schemaVersion 6); `ListasRepository.definirOrcamento(id, {required int? centavos})` grava local e enfileira UPDATE com `orcamento_centavos` no payload; aplicador tolera ausente/não numérico → `null`; doc 03 registra o campo; unit tests verdes.
+- [x] **F36-T03** — UI: definir/limpar orçamento na tela da lista
+  Dep: F36-T02 · Docs: [05 §6.3](05-app-flutter.md)
+  CP: item de menu "Orçamento" (só dono/editor) abre diálogo com campo em R$ (valor atual prefixado), erro inline para valor inválido e "Salvar"/"Remover orçamento" com SnackBar; o leitor não vê o item; widget tests verdes.
+- [x] **F36-T04** — UI: `TotalCarrinho` com orçamento
+  Dep: F36-T03 · Docs: [05 §6.3/§6.5](05-app-flutter.md), [10 §3.1/§3.5](10-wireframes-telas.md)
+  CP: `TotalCarrinho` lê o orçamento da lista e mostra progresso (`LinearProgressIndicator`) + alerta "Acima do orçamento" (cor/ícone) quando o total excede; sem orçamento mantém o comportamento atual; docs 05 §6.3/§6.5 e 10 §3.1/§3.5 anotam o estado com orçamento; widget tests verdes.
+- [x] **F36-T05** — RF-28 no 12 e fechamento
+  Dep: F36-T04 · Docs: [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
+  CP: RF-28 no 12 (tabela e rastreabilidade; fora de escopo sem "orçamento/limite", mantendo "comparação entre idas"); D1 do 16 com preço/total (F25) e orçamento (F36) concluídos e comparação entre idas pendente; Fase 36 na tabela de progresso (184/182).
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -798,7 +818,8 @@ Spec: [docs/superpowers/specs/2026-09-22-csp-web-design.md](superpowers/specs/20
 | F33 Fluxos críticos | 3 | 3 |
 | F34 Backup + alertas | 3 | 3 |
 | F35 CSP no Web | 2 | 2 |
-| **Total** | **179** | **177** |
+| F36 Orçamento | 5 | 5 |
+| **Total** | **184** | **182** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
