@@ -750,6 +750,17 @@ Spec: [superpowers/specs/2026-09-22-backup-alertas-design.md](superpowers/specs/
   Dep: F34-T02 · Docs: [14](14-tarefas.md), [16](16-roadmap-pos-mvp.md)
   CP: Fase 34 na tabela de progresso (177/175); C3 do 16 concluído.
 
+## Fase 35 — CSP recomendada no Web (R-21)
+
+Spec: [docs/superpowers/specs/2026-09-22-csp-web-design.md](superpowers/specs/2026-09-22-csp-web-design.md) · Referência: R-21 · ADR: ADR-013 · Docs donos: 06.
+
+- [x] **F35-T01** — doc 06 §3.4.1: CSP recomendada
+  Dep: — · Docs: [06 §3.4.1](06-mvp-entregas.md)
+  CP: 06 §3.4.1 com a CSP recomendada (header HTTP) + cabeçalhos COOP/COEP e as notas (`wasm-unsafe-eval`, `unsafe-inline`, `worker-src`, `connect-src` do Supabase https/wss), aplicável só quando o Web for servido/publicado; sem `<meta>`/`_headers` ao vivo (ADR-013).
+- [x] **F35-T02** — Fechamento
+  Dep: F35-T01 · Docs: [14](14-tarefas.md), [16](16-roadmap-pos-mvp.md)
+  CP: Fase 35 na tabela de progresso (179/177); C4 do 16 concluído.
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -786,7 +797,8 @@ Spec: [superpowers/specs/2026-09-22-backup-alertas-design.md](superpowers/specs/
 | F32 Convite por e-mail | 4 | 4 |
 | F33 Fluxos críticos | 3 | 3 |
 | F34 Backup + alertas | 3 | 3 |
-| **Total** | **177** | **175** |
+| F35 CSP no Web | 2 | 2 |
+| **Total** | **179** | **177** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
