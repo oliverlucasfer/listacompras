@@ -10,8 +10,9 @@ final Map<double, String> _glifos = {
 };
 
 /// Interpreta uma quantidade: decimal pt-BR (`2`, `1,5`, `1.5`), fração
-/// simples (`1/2`), glifo (`½`) ou mista colada (`1½`). `null` se não for
-/// quantidade (ou inválida: denominador 0).
+/// simples (`1/2`), glifo (`½`) ou mista colada (`1½`). Processa **um token**
+/// (o misto espaçado, `1 1/2`, é combinado pelo parser). `null` se não for
+/// quantidade ou for inválida (negativa, não finita, denominador 0).
 double? parseQuantidade(String texto) {
   final t = texto.trim();
   if (t.isEmpty) return null;
@@ -26,25 +27,30 @@ double? parseQuantidade(String texto) {
     final inteiro = prefixo.isEmpty
         ? 0.0
         : double.tryParse(prefixo.replaceAll(',', '.'));
-    if (inteiro == null || inteiro < 0) return null;
+    if (inteiro == null || !inteiro.isFinite || inteiro < 0) return null;
     return inteiro + e.key;
   }
 
   final fracao = RegExp(r'^(\d+)\s*/\s*(\d+)$').firstMatch(t);
   if (fracao != null) {
-    final numerador = int.parse(fracao.group(1)!);
-    final denominador = int.parse(fracao.group(2)!);
-    if (denominador == 0) return null;
+    final numerador = int.tryParse(fracao.group(1)!);
+    final denominador = int.tryParse(fracao.group(2)!);
+    if (numerador == null || denominador == null || denominador == 0) {
+      return null;
+    }
     return numerador / denominador;
   }
 
-  return double.tryParse(t.replaceAll(',', '.'));
+  final valor = double.tryParse(t.replaceAll(',', '.'));
+  if (valor == null || !valor.isFinite || valor < 0) return null;
+  return valor;
 }
 
 /// Formata para exibição: inteiro → `2`; parte fracionária que casa um glifo
 /// comum (½ ¼ ¾ ⅓ ⅔, com tolerância) → misto (`1½`, `1¼`, `2⅓`); senão
 /// arredonda para ≤ 3 casas e corta zeros (`1.2`, `0.143`).
 String formatarQuantidade(double q) {
+  if (!q.isFinite) return q.toString();
   if (q == q.roundToDouble()) return q.toInt().toString();
   final inteiro = q.truncate();
   final fracao = q - inteiro;

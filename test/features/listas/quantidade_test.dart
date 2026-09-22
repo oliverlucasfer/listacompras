@@ -23,6 +23,17 @@ void main() {
     expect(parseQuantidade('abc'), isNull);
     expect(parseQuantidade('1/0'), isNull);
     expect(parseQuantidade(''), isNull);
+    expect(parseQuantidade('-2'), isNull);
+    expect(
+      parseQuantidade('1 1/2'),
+      isNull,
+    ); // misto espaçado é do parser (Task 2)
+    expect(parseQuantidade('99999999999999999999/2'), isNull);
+    expect(parseQuantidade('1e400'), isNull);
+  });
+
+  test('deve_ter_glifos_fracao_quando_constante', () {
+    expect(glifosFracao, '½¼¾⅓⅔');
   });
 
   test('deve_formatar_quando_inteiro', () {
@@ -44,5 +55,10 @@ void main() {
     expect(formatarQuantidade(1.2), '1.2');
     expect(formatarQuantidade(1 / 7), '0.143');
     expect(formatarQuantidade(0.3333), '⅓'); // tolerância casa 1/3
+  });
+
+  test('deve_nao_quebrar_quando_nao_finito', () {
+    expect(formatarQuantidade(double.nan), 'NaN');
+    expect(formatarQuantidade(double.infinity), 'Infinity');
   });
 }
