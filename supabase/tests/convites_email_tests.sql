@@ -5,6 +5,7 @@
 --          token) e NÃO devolve o de outro e-mail.
 --   CE-02: recusar_convite(id) revoga só o meu; o de outro e-mail →
 --          CONVITE_INVALIDO (e o convite alheio permanece pendente).
+--   CE-02b: convite expirado do próprio não é recusável (guarda de expiração).
 --   CE-03: convite expirado não aparece em meus_convites_pendentes().
 --   CE-04: anon não executa os RPCs (grant restrito).
 -- Transação com ROLLBACK final.
@@ -71,6 +72,30 @@ begin
     raise exception 'FALHOU CE-02: convite alheio foi alterado';
   end if;
   raise notice 'OK CE-02: revoga o proprio e rejeita o alheio (permanece pendente)';
+end $$;
+
+-- ===== CE-02b: convite expirado do próprio não é recusável =====
+do $$
+declare v_msg text; v_expirado uuid;
+begin
+  select id into v_expirado from public.convites where token = 'b2222222-2222-2222-2222-222222222222';
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"a1000000-0000-0000-0000-000000000000","role":"authenticated"}', true);
+  begin
+    perform public.recusar_convite(v_expirado);
+    perform set_config('role', 'postgres', true);
+    raise exception 'FALHOU CE-02b: recusou convite expirado do proprio';
+  exception when others then
+    get stacked diagnostics v_msg = message_text;
+    perform set_config('role', 'postgres', true);
+    if v_msg not like '%CONVITE_INVALIDO%' then
+      raise exception 'FALHOU CE-02b: erro inesperado %', v_msg;
+    end if;
+  end;
+  if (select estado from public.convites where token = 'b2222222-2222-2222-2222-222222222222') is distinct from 'pendente' then
+    raise exception 'FALHOU CE-02b: convite expirado foi alterado';
+  end if;
+  raise notice 'OK CE-02b: guarda de expiracao rejeita a recusa';
 end $$;
 
 -- ===== CE-03: convite expirado não aparece =====

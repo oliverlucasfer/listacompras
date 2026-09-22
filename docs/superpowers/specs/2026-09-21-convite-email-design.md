@@ -59,6 +59,7 @@ begin
   where id = p_id
     and tipo = 'email'
     and estado = 'pendente'
+    and expira_em >= now()
     and lower(email) = lower(public.email_autenticado());
   if not found then
     raise exception 'CONVITE_INVALIDO';
