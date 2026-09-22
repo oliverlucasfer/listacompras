@@ -87,7 +87,7 @@ Uma fase só está "pronta" quando:
 
 * Não direcionado a menores de 16 (texto na política). Sem rastreamento publicitário; sem consentimento de cookies no Web MVP (sem cookies de marketing).
 
-### 3.4.1. Cabeçalhos de segurança no Web (histórico)
+### 3.4.1. Cabeçalhos de segurança no Web
 
 * Os cabeçalhos **COOP `same-origin` + COEP `require-corp`** (exigidos pelo Drift/WASM, que usa SharedArrayBuffer) e o `robots.txt`/`noindex` existiram enquanto o Web era servido pelo Firebase Hosting — **removidos em 18/09/2026** junto com os artefatos de publicação (ADR-013).
 * Em **uso local** os cabeçalhos não são aplicados pelo app: quem serve `build/web` (dev server do `flutter run` ou um static server próprio) deve configurá-los se quiser exercitar os caminhos de WASM/OPFS. O `flutter run -d chrome` já funciona sem configuração extra.
@@ -96,17 +96,19 @@ Uma fase só está "pronta" quando:
   ```
   Content-Security-Policy:
     default-src 'self';
-    script-src 'self' 'wasm-unsafe-eval';
+    script-src 'self' 'wasm-unsafe-eval' https://www.gstatic.com;
     style-src 'self' 'unsafe-inline';
     img-src 'self' data: blob:;
-    font-src 'self' data:;
-    connect-src 'self' https://SEU-PROJETO.supabase.co wss://SEU-PROJETO.supabase.co;
+    font-src 'self' data: https://fonts.gstatic.com;
+    connect-src 'self' https://SEU-PROJETO.supabase.co wss://SEU-PROJETO.supabase.co https://www.gstatic.com;
     worker-src 'self' blob:;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none'
   ```
+
+  > **CanvasKit (CDN por padrão):** `flutter build web` usa `--web-resources-cdn` por padrão, então o CanvasKit é carregado de `https://www.gstatic.com/flutter-canvaskit/<rev>/`. O `canvaskit.js` é buscado por `import()` dinâmico (→ `script-src`) e o `canvaskit.wasm` por fetch (→ `connect-src`) — por isso `https://www.gstatic.com` aparece nas duas diretivas. **Alternativa mais restrita:** compilar com `flutter build web --no-web-resources-cdn` empacota o CanvasKit em `build/web`; aí `script-src 'self' 'wasm-unsafe-eval'` (sem gstatic) é exato e o `connect-src` pode dispensar a origem do gstatic. Recomendado se você quer a política `'self'`-only mais apertada.
 
   Cabeçalhos de isolamento (SharedArrayBuffer/OPFS do Drift WASM):
 
@@ -115,7 +117,13 @@ Uma fase só está "pronta" quando:
   Cross-Origin-Embedder-Policy: require-corp
   ```
 
-  Notas: `script-src 'wasm-unsafe-eval'` cobre o CanvasKit/skwasm; `style-src 'unsafe-inline'` é exigido pelos estilos inline do Flutter; `worker-src 'self' blob:` cobre o `drift_worker.js` (`sqlite3.wasm`/`drift_worker.js` vêm do próprio `build/web`); `connect-src` precisa das origens **https e wss** do projeto Supabase (ajuste `SEU-PROJETO`); com COEP `require-corp`, recursos cross-origin exigem CORP — os assets do Flutter são locais, então é compatível.
+  Notas:
+  - `script-src 'wasm-unsafe-eval'` cobre o CanvasKit/skwasm; `style-src 'unsafe-inline'` é exigido pelos estilos inline do Flutter.
+  - `worker-src 'self' blob:` cobre o `drift_worker.js` (`sqlite3.wasm`/`drift_worker.js` vêm do próprio `build/web` — ou do CDN junto com o CanvasKit no build padrão).
+  - `connect-src` precisa das origens **https e wss** do projeto Supabase (ajuste `SEU-PROJETO`) e, no build padrão, de `https://www.gstatic.com` (fetch do `canvaskit.wasm`).
+  - `font-src` inclui `https://fonts.gstatic.com` para a fonte de fallback que o Flutter baixa.
+  - Se `SENTRY_DSN` estiver definido no build Web (o init do Sentry só roda com DSN não vazio), inclua também a origem de ingest do Sentry (ex.: `https://o*.ingest.sentry.io`) em `connect-src`.
+  - Com COEP `require-corp`, recursos cross-origin exigem CORP — os assets locais do `build/web` são same-origin e, no build padrão, o próprio gstatic serve o CanvasKit com CORP. Fetches cross-origin por **CORS** (Supabase REST) e **WebSocket** (Realtime) **não** são governados por CORP, então funcionam sem header CORP.
 
 ---
 
