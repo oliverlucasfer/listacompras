@@ -867,4 +867,49 @@ void main() {
     expect(rows, hasLength(1));
     expect(rows.single.precoCentavos, 1850);
   });
+
+  test(
+    'deve_manter_registradoEm_quando_editar_item_ja_concluido_sem_mudar_preco',
+    () async {
+      final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+      final item = await repo.adicionarItem(
+        listaId: lista.id,
+        nome: 'Café',
+        precoCentavos: 1850,
+      );
+
+      await repo.editarItem(item.id, concluido: true);
+      final registrado =
+          (await db.select(db.historicoPrecoLocal).get()).single.registradoEm;
+
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+      // Edição não relacionada (quantidade) num item já concluído com preço
+      // não deve re-registrar o histórico (RF-29, F37).
+      await repo.editarItem(item.id, quantidade: 3);
+
+      final rows = await db.select(db.historicoPrecoLocal).get();
+      expect(rows, hasLength(1));
+      expect(rows.single.registradoEm, registrado);
+    },
+  );
+
+  test(
+    'deve_atualizar_historico_quando_preco_muda_com_item_concluido',
+    () async {
+      final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+      final item = await repo.adicionarItem(
+        listaId: lista.id,
+        nome: 'Café',
+        precoCentavos: 1850,
+      );
+
+      await repo.editarItem(item.id, concluido: true);
+      // Corrigir o preço de um item já concluído atualiza o histórico.
+      await repo.editarItem(item.id, precoCentavos: 2000);
+
+      final rows = await db.select(db.historicoPrecoLocal).get();
+      expect(rows, hasLength(1));
+      expect(rows.single.precoCentavos, 2000);
+    },
+  );
 }

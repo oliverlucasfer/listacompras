@@ -379,6 +379,7 @@ class ListasRepository {
       throw ArgumentError('quantidade deve ser maior que zero');
     }
     final agora = DateTime.now().toUtc();
+    final anterior = await _lerItem(id);
     await (_db.update(_db.itemLocal)..where((i) => i.id.equals(id))).write(
       ItemLocalCompanion(
         nome: nome == null ? const Value.absent() : Value(nome),
@@ -397,10 +398,14 @@ class ListasRepository {
       ),
     );
     final item = await _lerItem(id);
-    // Histórico local de preços (RF-29, F37): registra ao concluir com preço.
-    // Local-only — não enfileira mutação; marcar sem preço não registra e
-    // desmarcar não apaga.
-    if (item.concluido && item.precoCentavos != null) {
+    // Histórico local de preços (RF-29, F37): registra na transição para
+    // concluído com preço, ou quando o preço muda com o item já concluído.
+    // Evita atualizar `registradoEm` em edições não relacionadas (ex.: merge
+    // de dedup, mudança de quantidade). Local-only — não enfileira mutação;
+    // marcar sem preço não registra e desmarcar não apaga.
+    if (item.concluido &&
+        item.precoCentavos != null &&
+        (!anterior.concluido || anterior.precoCentavos != item.precoCentavos)) {
       await HistoricoPrecosRepository(_db).registrar(
         nome: item.nome,
         precoCentavos: item.precoCentavos!,
