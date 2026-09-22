@@ -677,6 +677,20 @@ Spec: [superpowers/specs/2026-09-21-quantidades-fracao-design.md](superpowers/sp
   Dep: F29-T02 · Docs: [04](04-importacao-lista.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
   CP: RF-25 no 12 (tabela e rastreabilidade); docs donos refletem as frações (04 §3/§4 contrato, 05 §6.3 entrada/editor/exibição, 10 nota de exibição); A5 do 16 concluído; Fase 29 na tabela de progresso (161/159).
 
+## Fase 30 — Adicionar item por voz (RF-26)
+
+Spec: [superpowers/specs/2026-09-21-adicionar-por-voz-design.md](superpowers/specs/2026-09-21-adicionar-por-voz-design.md) · Requisito: RF-26 (adicionar item por voz, reconhecimento on-device, pt-BR). · Docs donos: 05, 10, 12.
+
+- [x] **F30-T01** — Abstração, plugin, provider e plataforma
+  Dep: — · Docs: [05 §2.1](05-app-flutter.md)
+  CP: `ReconhecimentoVoz`/`EstadoVoz` em `lib/features/voz/domain/reconhecimento_voz.dart`; `ReconhecimentoVozPlugin` sobre `speech_to_text` (on-device, pt-BR; erros transitórios/permanentes discriminados); `reconhecimentoVozProvider` e `plataformaComVoz()` (Android/iOS); `RECORD_AUDIO` (Android) e `NSMicrophoneUsageDescription`/`NSSpeechRecognitionUsageDescription` (iOS); unit tests verdes.
+- [x] **F30-T02** — UI: microfone no campo + testes com o fake
+  Dep: F30-T01 · Docs: [05 §6.3](05-app-flutter.md), [10](10-wireframes-telas.md)
+  CP: microfone no campo "Adicionar item" (dono/editor) preenche o campo com o texto reconhecido; toque de novo para; cancelado ao sair da tela; indisponível/permissão negada → SnackBar; oculto em Web/Desktop; widget tests com o fake verdes.
+- [x] **F30-T03** — Docs donos e fechamento
+  Dep: F30-T02 · Docs: [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
+  CP: RF-26 no 12 (tabela e rastreabilidade); docs donos refletem a voz (05 §2.1 permissões + §6.3 microfone/limite on-device, 10 nota); A6 do 16 concluído; Fase 30 na tabela de progresso (164/162).
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -708,7 +722,8 @@ Spec: [superpowers/specs/2026-09-21-quantidades-fracao-design.md](superpowers/sp
 | F27 Itens de outra lista | 3 | 3 |
 | F28 Ordem das categorias | 3 | 3 |
 | F29 Quantidades em fração | 3 | 3 |
-| **Total** | **161** | **159** |
+| F30 Adicionar por voz | 3 | 3 |
+| **Total** | **164** | **162** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

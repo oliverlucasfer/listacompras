@@ -213,6 +213,8 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 
 **Quantidades em fração (RF-25/F29):** a linha do item e o editor exibem a quantidade com glifos comuns (`½ kg`, `1½ un`, `1¼`); decimais longos são cortados para ≤ 3 casas. A entrada aceita `1/2`, `½`, `1½` e decimais no editor; a mista espaçada (`1 1/2`) é aceita na entrada rápida e na importação (parser).
 
+**Adicionar por voz (RF-26/F30):** em Android/iOS, o campo "Adicionar item" (dono/editor) ganha um ícone de **microfone** à direita que **preenche o campo** com o texto reconhecido on-device (pt-BR); o usuário confirma (Enter). Ouvindo, o ícone muda (`mic`/`mic_none`); indisponível/permissão negada → SnackBar; ao sair da tela o ditado é cancelado. Web/Desktop não mostram o microfone.
+
 **Diálogo do item (F12-T06 + preço RF-21/F25):**
 ```
 ┌─────────────────────────────────┐
