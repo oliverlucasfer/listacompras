@@ -683,4 +683,172 @@ void main() {
       );
     });
   });
+
+  group('convite_email', () {
+    ConvitesRepository repoCom(ServidorFake servidor) => ConvitesRepository(
+      SupabaseClient(
+        'http://127.0.0.1:54321',
+        'test-key',
+        httpClient: servidor,
+      ),
+    );
+
+    test('deve_criar_convite_email_quando_nao_existe', () async {
+      final servidor = ServidorFake((req) {
+        if (req.method == 'GET' && req.url.path.contains('/convites')) {
+          return (200, const <Object?>[]);
+        }
+        if (req.method == 'POST' && req.url.path.contains('/convites')) {
+          return (
+            200,
+            {
+              'id': 'c1',
+              'lista_id': _listaId,
+              'criado_por': 'U1',
+              'token': 't1',
+              'tipo': 'email',
+              'email': 'a@b.com',
+              'papel_oferecido': 'editor',
+              'estado': 'pendente',
+              'expira_em': '2026-09-28T12:00:00.000Z',
+              'created_at': '2026-09-21T12:00:00.000Z',
+              'atualizado_em': '2026-09-21T12:00:00.000Z',
+            },
+          );
+        }
+        return (500, {'message': 'inesperada: ${req.url.path}'});
+      });
+      addTearDown(servidor.close);
+
+      await repoCom(servidor).criarConviteEmail(
+        listaId: _listaId,
+        email: 'a@b.com',
+        papel: Papel.editor,
+      );
+
+      final corpo =
+          jsonDecode(
+                servidor.corpoDe(
+                  servidor.pedidos.indexWhere((p) => p.method == 'POST'),
+                ),
+              )
+              as Map<String, Object?>;
+      expect(corpo['tipo'], 'email');
+      expect(corpo['email'], 'a@b.com');
+      expect(corpo['papel_oferecido'], 'editor');
+    });
+
+    test('deve_reusar_convite_email_quando_ja_pendente', () async {
+      var inseriu = false;
+      final servidor = ServidorFake((req) {
+        if (req.method == 'GET' && req.url.path.contains('/convites')) {
+          return (
+            200,
+            [
+              {
+                'id': 'c1',
+                'lista_id': _listaId,
+                'criado_por': 'U1',
+                'token': 't1',
+                'tipo': 'email',
+                'email': 'a@b.com',
+                'papel_oferecido': 'editor',
+                'estado': 'pendente',
+                'expira_em': '2026-09-28T12:00:00.000Z',
+                'created_at': '2026-09-21T12:00:00.000Z',
+                'atualizado_em': '2026-09-21T12:00:00.000Z',
+              },
+            ],
+          );
+        }
+        if (req.method == 'POST' && req.url.path.contains('/convites')) {
+          inseriu = true;
+          return (500, {'message': 'nao deveria inserir'});
+        }
+        return (200, const <Object?>[]);
+      });
+      addTearDown(servidor.close);
+
+      final convite = await repoCom(servidor).criarConviteEmail(
+        listaId: _listaId,
+        email: 'A@B.com',
+        papel: Papel.editor,
+      );
+
+      expect(inseriu, isFalse);
+      expect(convite.id, 'c1');
+    });
+
+    test('deve_listar_meus_convites_pendentes', () async {
+      final servidor = ServidorFake((req) {
+        if (req.method == 'POST' &&
+            req.url.path.contains('meus_convites_pendentes')) {
+          return (
+            200,
+            [
+              {
+                'id': 'c1',
+                'token': 't1',
+                'lista_titulo': 'Compras',
+                'papel_oferecido': 'editor',
+                'expira_em': '2026-09-28T12:00:00.000Z',
+              },
+            ],
+          );
+        }
+        return (500, {'message': 'inesperada: ${req.url.path}'});
+      });
+      addTearDown(servidor.close);
+
+      final pendentes = await repoCom(servidor).meusConvitesPendentes();
+
+      expect(pendentes, hasLength(1));
+      expect(pendentes.single.listaTitulo, 'Compras');
+      expect(pendentes.single.token, 't1');
+    });
+
+    test('deve_recusar_convite', () async {
+      final servidor = ServidorFake((req) {
+        if (req.method == 'POST' && req.url.path.contains('recusar_convite')) {
+          return (200, const <Object?>[]);
+        }
+        return (500, {'message': 'inesperada: ${req.url.path}'});
+      });
+      addTearDown(servidor.close);
+
+      await repoCom(servidor).recusarConvite('c1');
+
+      final corpo = jsonDecode(servidor.corpoDe(0)) as Map<String, Object?>;
+      expect(corpo['p_id'], 'c1');
+    });
+
+    test('deve_mapear_convite_invalido_quando_recusar_falha', () async {
+      final servidor = ServidorFake((req) {
+        if (req.method == 'POST' && req.url.path.contains('recusar_convite')) {
+          return (
+            400,
+            {
+              'code': 'P0001',
+              'message': 'CONVITE_INVALIDO',
+              'details': null,
+              'hint': null,
+            },
+          );
+        }
+        return (500, {'message': 'inesperada: ${req.url.path}'});
+      });
+      addTearDown(servidor.close);
+
+      await expectLater(
+        repoCom(servidor).recusarConvite('c1'),
+        throwsA(
+          isA<ErroConvite>().having(
+            (e) => e.message,
+            'message',
+            AppStrings.conviteInvalido,
+          ),
+        ),
+      );
+    });
+  });
 }

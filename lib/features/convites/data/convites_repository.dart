@@ -4,6 +4,7 @@ import '../../../core/config/links.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/rede/erro_rede.dart';
 import '../domain/convite.dart';
+import '../domain/convite_pendente.dart';
 import '../domain/papel.dart';
 
 /// Operações de compartilhamento (doc 08 §2–3.2, RF-13): criacao de link,
@@ -49,6 +50,89 @@ class ConvitesRepository {
     } catch (e) {
       if (ehSemConexao(e)) {
         throw const ErroConvite('sem_conexao', AppStrings.conviteSemConexao);
+      }
+      rethrow;
+    }
+  }
+
+  /// Cria um convite por e-mail (doc 08 §4): reusa um convite pendente do
+  /// mesmo e-mail nesta lista (doc 08 §2) ou insere um novo. Online-only.
+  Future<Convite> criarConviteEmail({
+    required String listaId,
+    required String email,
+    required Papel papel,
+  }) async {
+    try {
+      final linhas = await _client
+          .from('convites')
+          .select()
+          .eq('lista_id', listaId)
+          .eq('tipo', 'email')
+          .eq('estado', 'pendente');
+      final alvo = email.trim().toLowerCase();
+      for (final linha in linhas as List) {
+        final mapa = Map<String, Object?>.from(linha as Map);
+        final existente = (mapa['email'] as String?)?.toLowerCase();
+        if (existente == alvo) {
+          final atual = Convite.fromMap(mapa);
+          if (atual.papelOferecido != papel) {
+            await _client
+                .from('convites')
+                .update({'papel_oferecido': papel.valor})
+                .eq('id', atual.id);
+            return Convite.fromMap({...mapa, 'papel_oferecido': papel.valor});
+          }
+          return atual;
+        }
+      }
+      final criadoPor = _client.auth.currentUser?.id;
+      final conteudo = {
+        'lista_id': listaId,
+        'tipo': 'email',
+        'email': email.trim(),
+        'papel_oferecido': papel.valor,
+      };
+      if (criadoPor != null) conteudo['criado_por'] = criadoPor;
+      final nova = await _client
+          .from('convites')
+          .insert(conteudo)
+          .select()
+          .single();
+      return Convite.fromMap(Map<String, Object?>.from(nova as Map));
+    } on PostgrestException catch (e) {
+      if (e.code == '23503' || e.code == '42501') {
+        throw const ErroConvite(
+          'lista_nao_sincronizada',
+          AppStrings.conviteListaNaoSincronizada,
+        );
+      }
+      throw const ErroConvite('inesperado', AppStrings.conviteInesperado);
+    } catch (e) {
+      if (ehSemConexao(e)) {
+        throw const ErroConvite('sem_conexao', AppStrings.conviteSemConexao);
+      }
+      rethrow;
+    }
+  }
+
+  /// Meus convites por e-mail pendentes (RPC `meus_convites_pendentes`).
+  Future<List<ConvitePendente>> meusConvitesPendentes() async {
+    final linhas = await _client.rpc('meus_convites_pendentes');
+    return [
+      for (final linha in linhas as List)
+        ConvitePendente.fromMap(Map<String, Object?>.from(linha as Map)),
+    ];
+  }
+
+  /// Recusa o próprio convite por e-mail (RPC `recusar_convite`).
+  Future<void> recusarConvite(String id) async {
+    try {
+      await _client.rpc('recusar_convite', params: {'p_id': id});
+    } on PostgrestException catch (e) {
+      throw ErroConvite.fromCodigoDoContrato(e.message);
+    } catch (e) {
+      if (ehSemConexao(e)) {
+        throw const ErroConvite('sem_conexao', AppStrings.erroSemConexao);
       }
       rethrow;
     }
