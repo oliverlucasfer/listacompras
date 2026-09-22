@@ -138,6 +138,8 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
           mensagemSucesso: AppStrings.listaRenomeada,
           onSalvar: (nome) => repo.renomearLista(id: idLista, titulo: nome),
         );
+      case 'orcamento':
+        _abrirDialogoOrcamento(context, ref, idLista);
       case 'excluir':
         _confirmarExcluirLista(context, ref, idLista);
       case 'convidar':
@@ -147,6 +149,30 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
       case 'outraLista':
         _adicionarDeOutraLista(context, ref, idLista);
     }
+  }
+
+  /// Abre o diálogo de orçamento da lista (RF-28, F36-T03): campo em R$ com
+  /// erro inline, Salvar e Remover orçamento. Escrita offline-first (Drift +
+  /// fila via repositório); o leitor não vê a ação no menu.
+  Future<void> _abrirDialogoOrcamento(
+    BuildContext context,
+    WidgetRef ref,
+    String idLista,
+  ) {
+    final orcamento = ref
+        .read(listaPorIdProvider(idLista))
+        .value
+        ?.orcamentoCentavos;
+    final repo = ref.read(listasRepositoryProvider);
+    return showDialog<void>(
+      context: context,
+      builder: (_) => _DialogoOrcamento(
+        orcamentoCentavos: orcamento,
+        onSalvar: (centavos) =>
+            repo.definirOrcamento(idLista, centavos: centavos),
+        onRemover: () => repo.definirOrcamento(idLista, centavos: null),
+      ),
+    );
   }
 
   /// Adicionar itens pendentes de outra lista (F27-T02, RF-23): abre o modal,
@@ -352,6 +378,11 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                         const PopupMenuItem(
                           value: 'renomear',
                           child: Text(AppStrings.renomearLista),
+                        ),
+                      if (podeEscrever)
+                        const PopupMenuItem(
+                          value: 'orcamento',
+                          child: Text(AppStrings.orcamento),
                         ),
                       if (podeEscrever)
                         const PopupMenuItem(
@@ -989,6 +1020,124 @@ class _FundoSwipe extends StatelessWidget {
       alignment: alinhamento,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
       child: Icon(icone),
+    );
+  }
+}
+
+class _DialogoOrcamento extends StatefulWidget {
+  const _DialogoOrcamento({
+    required this.orcamentoCentavos,
+    required this.onSalvar,
+    required this.onRemover,
+  });
+
+  /// Orçamento atual em centavos; `null` = lista sem orçamento.
+  final int? orcamentoCentavos;
+
+  /// Grava o orçamento (offline-first, via repositório).
+  final Future<void> Function(int centavos) onSalvar;
+
+  /// Remove o orçamento existente.
+  final Future<void> Function() onRemover;
+
+  @override
+  State<_DialogoOrcamento> createState() => _DialogoOrcamentoState();
+}
+
+class _DialogoOrcamentoState extends State<_DialogoOrcamento> {
+  late final _campo = TextEditingController(
+    text: widget.orcamentoCentavos == null
+        ? ''
+        : formatarReais(widget.orcamentoCentavos!),
+  );
+  String? _erro;
+  bool _ocupado = false;
+
+  @override
+  void dispose() {
+    _campo.dispose();
+    super.dispose();
+  }
+
+  /// Executa a escrita (salvar/remover), fecha o diálogo e mostra o feedback;
+  /// em falha mantém o diálogo aberto com o erro genérico inline.
+  Future<void> _executar(Future<void> Function() acao, String mensagem) async {
+    setState(() {
+      _erro = null;
+      _ocupado = true;
+    });
+    try {
+      await acao();
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _erro = AppStrings.erroGenerico;
+          _ocupado = false;
+        });
+      }
+      return;
+    }
+    if (!mounted) return;
+    mostrarSnackBar(context, mensagem);
+    Navigator.pop(context);
+  }
+
+  Future<void> _salvar() async {
+    int? lido;
+    try {
+      lido = parsePrecoParaCentavos(_campo.text);
+    } on ArgumentError {
+      setState(() => _erro = AppStrings.erroOrcamentoInvalido);
+      return;
+    }
+    if (lido == null) {
+      setState(() => _erro = AppStrings.erroOrcamentoInvalido);
+      return;
+    }
+    final centavos = lido;
+    await _executar(
+      () => widget.onSalvar(centavos),
+      AppStrings.orcamentoDefinido,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text(AppStrings.orcamento),
+      content: AppCampoTexto(
+        controller: _campo,
+        label: AppStrings.campoOrcamento,
+        erro: _erro,
+        autofocus: true,
+        teclado: const TextInputType.numberWithOptions(decimal: true),
+        onChanged: (_) {
+          if (_erro != null) setState(() => _erro = null);
+        },
+      ),
+      actions: [
+        if (widget.orcamentoCentavos != null)
+          TextButton(
+            onPressed: _ocupado
+                ? null
+                : () =>
+                      _executar(widget.onRemover, AppStrings.orcamentoRemovido),
+            child: Text(
+              AppStrings.removerOrcamento,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text(AppStrings.cancelar),
+        ),
+        AppBotao(
+          rotulo: AppStrings.salvar,
+          expandido: false,
+          carregando: _ocupado,
+          onPressed: _salvar,
+        ),
+      ],
     );
   }
 }

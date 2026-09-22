@@ -142,6 +142,14 @@ abstract final class AppStrings {
   static const preco = 'Preço (R\$)';
   static const erroPrecoInvalido = 'Preço inválido.';
 
+  // Orçamento por lista (RF-28, F36-T03)
+  static const orcamento = 'Orçamento';
+  static const campoOrcamento = 'Orçamento (R\$)';
+  static const removerOrcamento = 'Remover orçamento';
+  static const orcamentoDefinido = 'Orçamento salvo.';
+  static const orcamentoRemovido = 'Orçamento removido.';
+  static const erroOrcamentoInvalido = 'Valor de orçamento inválido.';
+
   static String totalNoCarrinho(String valor, int semPreco) => semPreco == 0
       ? 'No carrinho: $valor'
       : 'No carrinho: $valor · $semPreco sem preço';
