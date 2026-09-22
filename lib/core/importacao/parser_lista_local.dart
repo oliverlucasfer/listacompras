@@ -167,17 +167,23 @@ _Segmento? _lerSegmento(String bruto) {
   if (colado != null) {
     final unidade = _unidades[normalizarTexto(colado.group(2)!)];
     if (unidade != null) {
-      final q = parseQuantidade(colado.group(1)!)!;
+      final q = parseQuantidade(colado.group(1)!);
+      if (q == null) return null;
       return (_quantidadeValida(q), unidade, 1, true);
     }
   }
   final numero = _soNumero.firstMatch(t.first);
   if (numero == null) return null;
-  var qtd = parseQuantidade(numero.group(1)!)!;
+  final primeiro = parseQuantidade(numero.group(1)!);
+  if (primeiro == null) return null;
+  var qtd = primeiro;
   var consumidos = 1;
   if (t.length > 1 && _soFracaoSo.hasMatch(t[1])) {
-    qtd += parseQuantidade(t[1])!;
-    consumidos = 2;
+    final segundo = parseQuantidade(t[1]);
+    if (segundo != null) {
+      qtd += segundo;
+      consumidos = 2;
+    }
   }
   if (t.length > consumidos) {
     final unidade = _unidades[normalizarTexto(t[consumidos])];
@@ -193,19 +199,25 @@ _Segmento? _lerSegmento(String bruto) {
   if (colado != null) {
     final unidade = _unidades[normalizarTexto(colado.group(2)!)];
     if (unidade != null) {
-      final q = parseQuantidade(colado.group(1)!)!;
+      final q = parseQuantidade(colado.group(1)!);
+      if (q == null) return null;
       return (_quantidadeValida(q), unidade, t.length - 1, true);
     }
   }
   final numero = _soNumero.firstMatch(t.last);
   if (numero == null) return null;
-  var qtd = parseQuantidade(numero.group(1)!)!;
+  final ultimo = parseQuantidade(numero.group(1)!);
+  if (ultimo == null) return null;
+  var qtd = ultimo;
   var inicioNome = t.length - 1;
   if (t.length >= 2 &&
       _soInteiro.hasMatch(t[t.length - 2]) &&
       _soFracaoSo.hasMatch(t.last)) {
-    qtd += parseQuantidade(t[t.length - 2])!;
-    inicioNome = t.length - 2;
+    final inteiro = parseQuantidade(t[t.length - 2]);
+    if (inteiro != null) {
+      qtd += inteiro;
+      inicioNome = t.length - 2;
+    }
   }
   final idxUnidade = inicioNome - 1;
   if (idxUnidade >= 0) {

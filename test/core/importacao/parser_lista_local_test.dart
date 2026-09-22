@@ -193,4 +193,26 @@ void main() {
     expect(item!.quantidade, 0.5);
     expect(item.unidade, Unidade.kg);
   });
+
+  test('nao_deve_lancar_quando_denominador_zero_no_meio', () {
+    final r = analisarListaLocal('abc 1/0');
+    expect(r.itens, hasLength(1));
+    expect(r.itens.single.nome, 'Abc 1/0');
+    expect(r.itens.single.quantidade, 1);
+    expect(r.itens.single.unidade, Unidade.un);
+  });
+
+  test('nao_deve_lancar_quando_denominador_zero_no_avulso', () {
+    final item = interpretarItemAvulso('1/0 kg banana');
+    expect(item, isNotNull);
+    expect(item!.nome, '1/0 kg banana');
+    expect(item.quantidade, 1);
+    expect(item.unidade, Unidade.un);
+  });
+
+  test('deve_ler_misto_colado_com_unidade_quando_1_meio_kg', () {
+    final r = analisarListaLocal('1½kg de queijo');
+    expect(r.itens.single.quantidade, 1.5);
+    expect(r.itens.single.unidade, Unidade.kg);
+  });
 }
