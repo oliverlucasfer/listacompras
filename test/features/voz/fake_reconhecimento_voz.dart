@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:lista_compras/features/voz/domain/reconhecimento_voz.dart';
 
 class FakeReconhecimentoVoz implements ReconhecimentoVoz {
@@ -6,6 +8,11 @@ class FakeReconhecimentoVoz implements ReconhecimentoVoz {
   bool disponivel;
   bool parou = false;
   bool cancelou = false;
+
+  /// Quando definido, `iniciar` aguarda este completer antes de sinalizar
+  /// `ouvindo` e retornar — simula a janela em que a tela é desmontada com o
+  /// `iniciar` ainda no ar.
+  Completer<void>? adiarInicio;
 
   void Function(String texto, bool finalizado)? _onTexto;
   void Function(EstadoVoz)? _onEstado;
@@ -23,6 +30,7 @@ class FakeReconhecimentoVoz implements ReconhecimentoVoz {
       onIndisponivel();
       return false;
     }
+    if (adiarInicio != null) await adiarInicio!.future;
     onEstado(EstadoVoz.ouvindo);
     return true;
   }

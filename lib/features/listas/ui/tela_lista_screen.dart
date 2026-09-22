@@ -486,37 +486,52 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
   /// Estado da captura por voz no campo (RF-26, F30-T02).
   EstadoVoz _estadoVoz = EstadoVoz.parado;
 
+  /// Sessão de voz iniciada e ainda não concluída. Fica `true` **antes** de
+  /// aguardar `iniciar` para cobrir a janela em que a tela é desmontada com o
+  /// `iniciar` ainda no ar e `_estadoVoz` ainda em `parado` (RF-26).
+  bool _sessaoVozAtiva = false;
+
   /// Reconhecedor capturado no `initState` para poder cancelar no `dispose`
-  /// sem tocar no `ref` de um elemento já em desmontagem.
-  late final ReconhecimentoVoz _voz;
+  /// sem tocar no `ref` de um elemento já em desmontagem. Só é resolvido em
+  /// Android/iOS — Web/Desktop escondem o botão e não instanciam o plugin.
+  ReconhecimentoVoz? _voz;
 
   @override
   void initState() {
     super.initState();
-    _voz = ref.read(reconhecimentoVozProvider);
+    if (plataformaComVoz()) _voz = ref.read(reconhecimentoVozProvider);
   }
 
   @override
   void dispose() {
     // Sair da tela durante o ditado cancela o reconhecimento para não deixar
-    // o microfone quente (RF-26).
-    if (_estadoVoz == EstadoVoz.ouvindo) {
-      unawaited(_voz.cancelar());
+    // o microfone quente (RF-26). A flag cobre o `iniciar` ainda pendente.
+    final voz = _voz;
+    if (voz != null && (_sessaoVozAtiva || _estadoVoz == EstadoVoz.ouvindo)) {
+      unawaited(voz.cancelar());
     }
     _controller.dispose();
     super.dispose();
   }
 
   void _aoEstadoVoz(EstadoVoz estado) {
+    if (estado == EstadoVoz.indisponivel ||
+        (estado == EstadoVoz.parado && _estadoVoz == EstadoVoz.ouvindo)) {
+      _sessaoVozAtiva = false;
+    }
     if (mounted) setState(() => _estadoVoz = estado);
   }
 
   Future<void> _ditar() async {
+    final voz = _voz;
+    if (voz == null) return;
     if (_estadoVoz == EstadoVoz.ouvindo) {
-      await _voz.parar();
+      await voz.parar();
+      _sessaoVozAtiva = false;
       return;
     }
-    await _voz.iniciar(
+    _sessaoVozAtiva = true;
+    final iniciou = await voz.iniciar(
       onTexto: (texto, _) {
         if (!mounted) return;
         setState(() {
@@ -529,6 +544,7 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
       },
       onEstado: _aoEstadoVoz,
     );
+    if (!iniciou) _sessaoVozAtiva = false;
   }
 
   Future<void> _adicionar() async {

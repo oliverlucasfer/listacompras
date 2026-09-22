@@ -2264,7 +2264,7 @@ void main() {
     await fechar(tester);
   });
 
-  testWidgets('nao_deve_mostrar_microfone_para_leitor', (tester) async {
+  testWidgets('nao_deve_mostrar_microfone_quando_leitor', (tester) async {
     await listaComItens(tester, papel: Papel.leitor);
     expect(find.byTooltip(AppStrings.ditarItem), findsNothing);
     await fechar(tester);
@@ -2284,6 +2284,24 @@ void main() {
     // quente). `fechar` desmonta a árvore → dispose do campo.
     await fechar(tester);
     expect(fake.cancelou, isTrue);
+  });
+
+  testWidgets('deve_cancelar_quando_sai_da_tela_antes_do_iniciar_concluir', (
+    tester,
+  ) async {
+    final fake = FakeReconhecimentoVoz()..adiarInicio = Completer<void>();
+    await abrirListaF7t07(tester, reconhecimento: fake);
+
+    // `iniciar` fica pendente: a tela ainda não está `ouvindo`.
+    await tester.tap(find.byTooltip(AppStrings.ditarItem));
+    await tester.pump();
+    expect(fake.cancelou, isFalse);
+
+    await fechar(tester);
+    expect(fake.cancelou, isTrue);
+
+    fake.adiarInicio!.complete();
+    await tester.pump();
   });
 
   testWidgets('deve_confirmar_item_quando_enter_apos_ditar', (tester) async {

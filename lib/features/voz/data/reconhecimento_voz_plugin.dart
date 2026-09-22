@@ -1,3 +1,4 @@
+import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 import '../domain/reconhecimento_voz.dart';
@@ -21,14 +22,27 @@ class ReconhecimentoVozPlugin implements ReconhecimentoVoz {
     required void Function(EstadoVoz) onEstado,
   }) async {
     onEstado(EstadoVoz.parado);
+
+    void aoErro(SpeechRecognitionError e) {
+      onEstado(EstadoVoz.parado);
+      if (e.permanent) onIndisponivel();
+    }
+
+    void aoStatus(String s) {
+      if (s == 'done' || s == 'notListening') onEstado(EstadoVoz.parado);
+    }
+
+    // Invariante: `_speech` é um singleton que vive por todo o app e
+    // `initialize` retorna cedo (`_initWorked`) sem reatribuir os listeners a
+    // partir da segunda chamada. Reafixamos os campos públicos a cada
+    // `iniciar` para que erros permanentes e mudanças de status cheguem à tela
+    // atual — e não à primeira (já desmontada), que só faria no-ops.
+    _speech
+      ..errorListener = aoErro
+      ..statusListener = aoStatus;
     final disponivel = await _speech.initialize(
-      onError: (e) {
-        onEstado(EstadoVoz.parado);
-        if (e.permanent) onIndisponivel();
-      },
-      onStatus: (s) {
-        if (s == 'done' || s == 'notListening') onEstado(EstadoVoz.parado);
-      },
+      onError: aoErro,
+      onStatus: aoStatus,
     );
     if (!disponivel) {
       onEstado(EstadoVoz.indisponivel);

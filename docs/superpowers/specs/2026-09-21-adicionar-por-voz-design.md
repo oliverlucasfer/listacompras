@@ -64,7 +64,7 @@ abstract interface class ReconhecimentoVoz {
   - visível só a **dono/editor** e só em **Android/iOS** (`Platform`/`defaultTargetPlatform`; Web/Desktop ocultam);
   - toque → `iniciar(...)`; enquanto `ouvindo`, o ícone indica o estado (`Icons.mic` ativo / `Icons.mic_none`), com `tooltip` "Ditar item";
   - toque de novo → `parar()`.
-- **Preenchimento:** a cada resultado (parcial ou final) o campo recebe o texto reconhecido (parcial atualiza; final fixa). Ao final, o reconhecimento para e o foco volta ao campo — o usuário confirma (Enter), caindo no fluxo atual.
+- **Preenchimento:** a cada resultado (parcial ou final) o campo recebe o texto reconhecido (parcial atualiza; final fixa). Ao final, o reconhecimento para; o campo **não** recebe foco automaticamente — o usuário toca no botão de adicionar (ou no campo) para confirmar, caindo no fluxo atual.
 - **Feedback:** indisponível/permissão negada → SnackBar `AppStrings.vozIndisponivel` ("Reconhecimento de voz indisponível neste aparelho."). Ouvindo → SnackBar/semântica opcional; acessibilidade: `Semantics` de ação no botão (RNF-06).
 - Não cria item sozinho; nada muda no parser.
 
