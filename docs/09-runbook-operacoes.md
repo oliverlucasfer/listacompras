@@ -45,9 +45,11 @@
   psql "$SUPABASE_DB_URL" --single-transaction --variable ON_ERROR_STOP=1 -f backup_YYYYMMDD_schema.sql
   psql "$SUPABASE_DB_URL" --single-transaction --variable ON_ERROR_STOP=1 -f backup_YYYYMMDD_data.sql
   ```
-* **Dump manual (fallback)** — máquina local com Supabase CLI linkado; use se o workflow falhar ou para conferência:
+* **Dump manual (fallback)** — máquina local com Supabase CLI linkado; use se o workflow falhar ou para conferência. Assim como o automatizado, exige **schema + dados** (o `supabase db dump` sem flags é **schema-only**):
   ```powershell
-  supabase db dump --file backup_$(Get-Date -Format yyyyMMdd).sql
+  $d = Get-Date -Format yyyyMMdd
+  supabase db dump --file "backup_${d}_schema.sql"
+  supabase db dump --file "backup_${d}_data.sql" --data-only --use-copy
   ```
 * Rotina mínima recomendada: o agendamento mensal cobre o ciclo normal; faça um dump manual **antes de qualquer migration destrutiva**.
 
