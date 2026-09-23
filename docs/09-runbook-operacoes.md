@@ -105,6 +105,7 @@ supabase db push
   SHA-1). **Ação de segurança (humana):** no console do Firebase, restringir a API key ao package
   `br.com.oliverlucas.listacompras` e aos SHA-1 de debug/release. Arquivos realmente secretos
   (`dart_defines_prod.json`, `android/key.properties`) seguem fora do git.
+- **Fase 39 — Consistência arquitetural (23/09/2026):** fase **interna** (RNF-08), **sem mudança de comportamento** e **sem tocar em `supabase/`**. Vocabulário compartilhado movido para `lib/core/dominio/` (elimina `core → features`), providers de rede para `convites/providers/`, dedup de `emailValido`/`Papel.rotulo`, docs donos atualizados e `.gitignore` corrigido. O Drift subiu para **`schemaVersion 8`** espelhando as barreiras do Postgres (`CHECK`s de `itens_lista`/`listas` + índice único parcial `uq_item_ativo`, com dedup defensivo antes do índice). App **`1.5.0+10`** (release assinado, `dart_defines_prod.json`) distribuído ao grupo `testadores` (Firebase App Distribution, release `1.5.0 (10)`) para exercitar a migração local v7→v8. CI: jobs `flutter`/`desktop` verdes; o job `supabase` falhou por **rate-limit do `ghcr.io`** ao subir o stack local (falha de infraestrutura externa, alheia a esta fase) — rerunar depois.
 
 ### 2.7. Auth → URL Configuration (web + nativo)
 
