@@ -803,8 +803,8 @@ Spec: [superpowers/specs/2026-09-23-notificacoes-push-design.md](superpowers/spe
   Dep: — · Docs: [12](12-prd.md), [00 §5](00-visao-geral.md), [14](14-tarefas.md), [16](16-roadmap-pos-mvp.md), [08 §7](08-compartilhamento-colaborativo.md)
   CP: RF-30 no 12 (tabela §2 e rastreabilidade §6; fora de escopo sem "push notifications"); ADR-014 no 00 §5 (FCM Android-first, disparo server-side via `pg_net`); Fase 38 no 14 com as 9 tarefas e a linha de progresso (196/185); B3 do 16 em execução (F38); 08 §7 com a nota do push (RF-30, F38).
 - [ ] **F38-T02** — Banco: tabela `push_tokens` + RLS + testes SQL
-  Dep: F38-T01 · Docs: [01 §4.5](01-banco-de-dados.md), [02 §3/§4.5/§5](02-seguranca-rls.md)
-  CP: migration `0021_push_tokens.sql` (`push_tokens` com `token unique`, `plataforma` com check e índice `idx_push_tokens_user`; RLS por `auth.uid()` com SELECT/INSERT/UPDATE/DELETE); `push_tokens_tests.sql` (N-18…N-20 + P-06) verde e no CI; 01 §4.5 e 02 §3/§4.5/§5 refletem a tabela e as negações.
+  Dep: F38-T01 · Docs: [01 §4.5](01-banco-de-dados.md), [02 §3/§4.8/§5](02-seguranca-rls.md)
+  CP: migration `0021_push_tokens.sql` (`push_tokens` com `token unique`, `plataforma` com check e índice `idx_push_tokens_user`; RLS por `auth.uid()` com SELECT/INSERT/UPDATE/DELETE; RPC `registrar_push_token` `security definer` que reatribui o token a `auth.uid()`); `push_tokens_tests.sql` (N-19…N-22 + P-12 (reatribuição)) verde e no CI; 01 §4.5 e 02 §3/§4.8/§5 refletem a tabela e as negações.
 - [ ] **F38-T03** — Banco: triggers `pg_net` de notificação
   Dep: F38-T02 · Docs: [01 §7](01-banco-de-dados.md)
   CP: migration `0022_notificar_push.sql` (`pg_net`; `public.notificar_push()` `security definer` lê URL/segredo do Vault e faz `net.http_post`; triggers `trg_convites_push`/`trg_membros_push`); `notificar_push_tests.sql` (NP-01…NP-04) verde e no CI; 01 §7 com o sub-bloco "Notificações push (RF-30)".

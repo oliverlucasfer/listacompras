@@ -1099,14 +1099,11 @@ class PushTokensRepository {
     required String token,
     required String plataforma,
   }) async {
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) return;
-    await _client.from('push_tokens').upsert({
-      'token': token,
-      'user_id': userId,
-      'plataforma': plataforma,
-      'atualizado_em': DateTime.now().toUtc().toIso8601String(),
-    }, onConflict: 'token');
+    if (_client.auth.currentUser == null) return;
+    await _client.rpc('registrar_push_token', params: {
+      'p_token': token,
+      'p_plataforma': plataforma,
+    });
   }
 
   Future<void> remover(String token) async {

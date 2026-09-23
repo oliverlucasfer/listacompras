@@ -4,7 +4,8 @@
 --   N-19: A não lê token de B.
 --   N-20: A não insere token para B (with check).
 --   N-21: A não apaga token de B.
---   P-12: A lê/insere/apaga o próprio; upsert reatribui o token a outro dono.
+--   N-22: anon não executa registrar_push_token (grant restrito).
+--   P-12: A lê/insere/apaga o próprio; o RPC reatribui o token a outro dono.
 -- Transação com ROLLBACK final.
 -- ============================================================================
 
@@ -61,8 +62,9 @@ begin
   raise notice 'OK N-21: A nao apaga o token de B';
 end $$;
 
--- ===== P-12: A gerencia o próprio; upsert reatribui o token =====
+-- ===== P-12: A gerencia o próprio; o RPC reatribui o token a B =====
 do $$
+declare v_dono uuid; v_qtd int;
 begin
   perform set_config('role', 'authenticated', true);
   perform set_config('request.jwt.claims', '{"sub":"c0000000-0000-0000-0000-000000000000","role":"authenticated"}', true);
@@ -70,12 +72,33 @@ begin
   if (select count(*) from public.push_tokens) <> 1 then
     raise exception 'FALHOU P-12: A nao ve apenas o proprio token';
   end if;
-  delete from public.push_tokens where token = 'token-do-a';
-  perform set_config('role', 'postgres', true);
-  if exists (select 1 from public.push_tokens where token = 'token-do-a') then
-    raise exception 'FALHOU P-12: A nao apagou o proprio token';
+
+  perform set_config('request.jwt.claims', '{"sub":"c1000000-0000-0000-0000-000000000000","role":"authenticated"}', true);
+  perform public.registrar_push_token('token-do-a', 'android');
+  if (select count(*) from public.push_tokens where token = 'token-do-a') <> 1 then
+    raise exception 'FALHOU P-12: B nao ve o token reatribuido';
   end if;
-  raise notice 'OK P-12: A gerencia o proprio token';
+
+  perform set_config('role', 'postgres', true);
+  select count(*), (array_agg(user_id))[1] into v_qtd, v_dono
+    from public.push_tokens where token = 'token-do-a';
+  if v_qtd <> 1 then raise exception 'FALHOU P-12: % linhas para o token', v_qtd; end if;
+  if v_dono <> 'c1000000-0000-0000-0000-000000000000'::uuid then
+    raise exception 'FALHOU P-12: token ainda pertence a %', v_dono;
+  end if;
+  raise notice 'OK P-12: A gerencia o proprio e o RPC reatribui o token a B';
+end $$;
+
+-- ===== N-22: anon não executa registrar_push_token =====
+do $$
+begin
+  perform set_config('role', 'anon', true);
+  perform public.registrar_push_token('token-anon', 'android');
+  raise exception 'FALHOU N-22: anon executou registrar_push_token';
+exception
+  when insufficient_privilege then
+    perform set_config('role', 'postgres', true);
+    raise notice 'OK N-22: permissao negada a anon em registrar_push_token';
 end $$;
 
 rollback;

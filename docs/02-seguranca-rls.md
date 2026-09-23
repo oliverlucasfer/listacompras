@@ -459,6 +459,35 @@ create policy push_tokens_delete on public.push_tokens
 
 > **Device-only:** `push_tokens` **não** entra no Realtime nem no sync; o app faz upsert pelo `token` (unique) e apaga o próprio token no logout. A Edge Function `enviar-push` (F38) lê a tabela com `service_role` para resolver os destinatários — nunca a partir do cliente. Migration `0021`; schema em [01 §4.5](01-banco-de-dados.md).
 
+A reatribuição de um token a outro dono (*device handoff*) **não** é possível pelo cliente sob a policy owner-only (o `on conflict (token) do update` esbarraria no `using` do UPDATE, que exige `user_id = auth.uid()`). Por isso o caminho é o RPC `security definer` abaixo — grant restrito a `authenticated`:
+
+```sql
+create or replace function public.registrar_push_token(p_token text, p_plataforma text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'SEM_SESSAO';
+  end if;
+  delete from public.push_tokens where token = p_token and user_id <> auth.uid();
+  insert into public.push_tokens (user_id, token, plataforma)
+  values (auth.uid(), p_token, p_plataforma)
+  on conflict (token) do update
+    set user_id = auth.uid(),
+        plataforma = excluded.plataforma,
+        atualizado_em = now();
+end;
+$$;
+
+revoke execute on function public.registrar_push_token(text, text) from public, anon;
+grant execute on function public.registrar_push_token(text, text) to authenticated;
+```
+
+> **Reatribuição (RF-30, F38):** o RPC roda como dono (`postgres`), então atravessa o `force row level security` de `push_tokens` como `aceitar_convite`/`transferir_dono`; a autorização é interna — o token passa a pertencer a `auth.uid()` (nunca a um `user_id` arbitrário) e a linha antiga de outro dono é removida antes. `anon` não executa (sem grant).
+
 ---
 
 ## 5. Testes de Negação (obrigatórios na Fase 1)
@@ -487,6 +516,7 @@ Casos que **DEVEM falhar** (executados como usuário autenticado sem acesso, via
 | N-19 | Usuário A faz SELECT do token de push de B | 0 linhas (F38) |
 | N-20 | Usuário A insere token de push para B | violação de policy (`with check`, F38) |
 | N-21 | Usuário A apaga o token de push de B | 0 linhas (F38) |
+| N-22 | `anon` executa `registrar_push_token` | permissão negada (grant restrito, F38) |
 | R-19 | UPDATE em `convites` como dono | `atualizado_em` carimbado pelo trigger (`0015`) |
 
 > N-12 é **positivo** apesar do prefixo N (cobria a leitura legítima dos convites pelo dono) — movido para a tabela "DEVEM passar" abaixo.
@@ -507,7 +537,7 @@ Casos que **DEVEM passar**:
 | P-09 | Dono renomeia lista com >1 lista no banco | 1 linha (F12-T04) |
 | P-10 | Dono tenta mudar `listas.dono_id` via UPDATE | violação de policy (F12-T04) |
 | P-11 | Dono se insere como `dono` em lista nova | sucesso (`0015`, R-18) |
-| P-12 | Usuário A lê/insere/apaga o próprio token de push; upsert reatribui o token | sucesso (F38) |
+| P-12 | Usuário A lê/insere/apaga o próprio token de push; o RPC `registrar_push_token` reatribui o token de A para B | sucesso (F38) |
 
 Ferramentas: testes de integração com dois usuários reais (ver [07 Qualidade](07-qualidade-ci.md)) ou script SQL com `set local role authenticated; set local request.jwt.claims = ...` em ambiente dev.
 
@@ -515,7 +545,7 @@ Ferramentas: testes de integração com dois usuários reais (ver [07 Qualidade]
 
 > **Convite por e-mail (RF-13, F32):** coberto por `supabase/tests/convites_email_tests.sql` (CE-01…CE-04 + CE-02b) rodado no CI — `meus_convites_pendentes()` devolve o convite do próprio e-mail (com título e token) e esconde o alheio (CE-01) e o expirado (CE-03); `recusar_convite` revoga só o próprio e rejeita o alheio com `CONVITE_INVALIDO` (CE-02); a **guarda de expiração** rejeita a recusa de um convite vencido do próprio e-mail (CE-02b); `anon` não executa os RPCs — grant restrito a `authenticated` (CE-04).
 
-> **Tokens de push (RF-30, F38):** coberto por `supabase/tests/push_tokens_tests.sql` (N-19…N-21 + P-12) rodado no CI — A não lê (N-19), não insere para (N-20, `with check`) e não apaga (N-21) o token de B; A lê/insere/apaga o próprio token e o upsert reatribui o token (P-12).
+> **Tokens de push (RF-30, F38):** coberto por `supabase/tests/push_tokens_tests.sql` (N-19…N-22 + P-12) rodado no CI — A não lê (N-19), não insere para (N-20, `with check`) e não apaga (N-21) o token de B; `anon` não executa `registrar_push_token` (N-22); A lê/insere/apaga o próprio token e o RPC `registrar_push_token` reatribui o token de A para B (P-12).
 
 ---
 

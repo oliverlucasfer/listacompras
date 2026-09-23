@@ -51,7 +51,9 @@ supabase/
     ├── 0016_transferir_dono.sql # RPC transferir_dono + sync_dono v3 (RF-14)
     ├── 0017_preco_item.sql      # coluna preco_centavos (RF-21)
     ├── 0018_arquivar_listas.sql # coluna arquivada_em + trigger (RF-22)
-    └── 0019_convites_email.sql  # RPCs de convite por e-mail (RF-13, ver 02 §4.7)
+    ├── 0019_convites_email.sql  # RPCs de convite por e-mail (RF-13, ver 02 §4.7)
+    ├── 0020_orcamento_lista.sql # coluna orcamento_centavos (RF-28, F36)
+    └── 0021_push_tokens.sql     # tabela push_tokens + RLS + RPC (RF-30, F38)
 ```
 
 ---
@@ -247,6 +249,8 @@ Tabela de convites por link/e-mail: `id`, `lista_id` (CASCADE), `criado_por` (FK
 | `created_at` | `timestamptz` | `now()` |
 
 Índice `idx_push_tokens_user (user_id)`. Device-only: **não** entra no Realtime nem no sync.
+
+* **RPC `registrar_push_token(p_token, p_plataforma)` (RF-30, F38 — migration `0021`):** `security definer`; reatribui o token a `auth.uid()` (apaga a linha de outro dono com o mesmo token e insere/atualiza a do chamador), viabilizando o *device handoff* — o RLS owner-only impede o upsert direto do cliente sobre a linha de outro dono. Grant apenas a `authenticated` (anon não executa). SQL e racional em [02 §4.8](02-seguranca-rls.md).
 
 ---
 
