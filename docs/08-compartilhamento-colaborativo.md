@@ -207,7 +207,7 @@ O trigger `sync_dono` ([01 §6](01-banco-de-dados.md)) **impede** remover/rebaix
   ```
 * Eventos geram feedback na UI: "Fulano entrou na lista", "Você foi removido da lista X", "Novo convite pendente".
 * Rodada link-only (F7-T07): o feedback de entrada é o SnackBar **"Um novo membro entrou na lista"** na tela da lista aberta — sem nome, pois o RLS não expõe o perfil de outros membros.
-* Sem push notifications no MVP da feature (Fase 6); painel de convites pendentes cobre a descoberta.
+* **Push notifications (RF-30, F38):** os eventos `convite_email_criado` e `membro_entrou` disparam notificação push (Android) via Edge Function `enviar-push` (detalhes em §11). O painel de convites pendentes continua sendo o caminho in-app.
 
 ## 8. UI necessária (complementa [05](05-app-flutter.md))
 
