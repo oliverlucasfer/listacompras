@@ -33,8 +33,13 @@ Deno.serve(async (req) => {
   }
 
   const tipo = tipoDoEvento(corpo.evento);
-  const mensagem = montarMensagem(corpo.evento, corpo.titulo_lista ?? "uma lista");
-  if (!tipo || !mensagem) return json(200, { ok: true, ignorado: "evento_desconhecido" });
+  const mensagem = montarMensagem(
+    corpo.evento,
+    corpo.titulo_lista ?? "uma lista",
+  );
+  if (!tipo || !mensagem) {
+    return json(200, { ok: true, ignorado: "evento_desconhecido" });
+  }
 
   const contaBruta = Deno.env.get("FCM_SERVICE_ACCOUNT");
   if (!contaBruta) return json(200, { ok: true, ignorado: "sem_fcm" });
@@ -43,15 +48,23 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
-  const { data: linhas } = await admin
+  const { data: linhas, error } = await admin
     .from("push_tokens")
     .select("token")
     .eq("user_id", corpo.destinatario_id);
+  if (error) return json(500, { code: "db_erro" });
   const tokens = (linhas ?? []).map((l) => l.token as string);
-  if (tokens.length === 0) return json(200, { ok: true, ignorado: "sem_token" });
+  if (tokens.length === 0) {
+    return json(200, { ok: true, ignorado: "sem_token" });
+  }
 
   const conta = JSON.parse(contaBruta) as ServiceAccount;
-  const accessToken = await obterAccessToken(conta);
+  let accessToken: string;
+  try {
+    accessToken = await obterAccessToken(conta);
+  } catch (_) {
+    return json(500, { code: "fcm_erro" });
+  }
   const data: Record<string, string> = {
     tipo,
     lista_id: String(corpo.lista_id),

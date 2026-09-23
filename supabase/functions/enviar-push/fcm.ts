@@ -9,7 +9,9 @@ export async function obterAccessToken(
   conta: ServiceAccount,
   fetchFn: typeof fetch = fetch,
 ): Promise<string> {
-  const { importPKCS8, SignJWT } = await import("https://deno.land/x/jose@v5.9.6/mod.ts");
+  const { importPKCS8, SignJWT } = await import(
+    "https://deno.land/x/jose@v5.9.6/index.ts"
+  );
   const chave = await importPKCS8(conta.private_key, "RS256");
   const agora = Math.floor(Date.now() / 1000);
   const tokenUri = conta.token_uri ?? "https://oauth2.googleapis.com/token";
@@ -30,8 +32,14 @@ export async function obterAccessToken(
       assertion: jwt,
     }),
   });
+  if (!resp.ok) {
+    throw new Error(`oauth_falhou:${resp.status}`);
+  }
   const json = await resp.json();
-  return json.access_token as string;
+  if (typeof json.access_token !== "string" || json.access_token.length === 0) {
+    throw new Error("oauth_sem_token");
+  }
+  return json.access_token;
 }
 
 export async function enviarFcm(
@@ -63,12 +71,10 @@ export async function enviarFcm(
     );
     if (!resp.ok) {
       const corpo = await resp.text();
-      if (
-        resp.status === 404 || corpo.includes("UNREGISTERED") ||
-        corpo.includes("INVALID_ARGUMENT")
-      ) {
-        invalidos.push(token);
-      }
+      const tokenInvalido = resp.status === 404 ||
+        corpo.includes("UNREGISTERED") ||
+        corpo.includes("registration token");
+      if (tokenInvalido) invalidos.push(token);
     }
   }
   return invalidos;
