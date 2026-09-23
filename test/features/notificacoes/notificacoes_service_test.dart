@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/features/notificacoes/data/notificacoes_service.dart';
+import 'package:lista_compras/features/notificacoes/domain/notificacoes_push.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fake_notificacoes_push.dart';
@@ -45,6 +46,36 @@ void main() {
     await servico.definirAtivas(false);
     expect(repo.removidos, ['token-fake']);
     expect(push.apagouToken, isTrue);
+  });
+
+  test('deve_nao_ativar_quando_permissao_negada', () async {
+    final push = NotificacoesPushFake(permissao: PermissaoPush.negada);
+    final repo = RepositorioTokensFake();
+    final servico = NotificacoesService(
+      push: push,
+      repositorio: repo,
+      plataforma: 'android',
+    );
+    expect(await servico.talvezPedirPermissao(), isFalse);
+    expect(await servico.ativas(), isFalse);
+    expect(repo.registrados, isEmpty);
+  });
+
+  test('deve_nao_consumir_pedido_quando_plugin_falha', () async {
+    final push = NotificacoesPushFake()..falharPedido = true;
+    final repo = RepositorioTokensFake();
+    final servico = NotificacoesService(
+      push: push,
+      repositorio: repo,
+      plataforma: 'android',
+    );
+    expect(await servico.talvezPedirPermissao(), isFalse);
+    push
+      ..falharPedido = false
+      ..permissao = PermissaoPush.concedida;
+    expect(await servico.talvezPedirPermissao(), isTrue);
+    expect(push.pedidos, 2);
+    expect(repo.registrados, ['token-fake']);
   });
 
   test('deve_nao_pedir_quando_plataforma_sem_suporte', () async {

@@ -11,6 +11,7 @@ class NotificacoesPushFake implements NotificacoesPush {
   PermissaoPush permissao;
   String? token = 'token-fake';
   bool apagouToken = false;
+  bool falharPedido = false;
   int pedidos = 0;
 
   final _refresh = <String>[];
@@ -21,6 +22,7 @@ class NotificacoesPushFake implements NotificacoesPush {
   @override
   Future<PermissaoPush> pedirPermissao() async {
     pedidos++;
+    if (falharPedido) throw Exception('plugin');
     return permissao;
   }
 

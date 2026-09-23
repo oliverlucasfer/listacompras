@@ -27,8 +27,14 @@ class NotificacoesService {
     if (!_push.suportado) return false;
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getBool(_chavePedido) ?? false) return false;
+    final PermissaoPush permissao;
+    try {
+      permissao = await _push.pedirPermissao();
+    } on Exception {
+      return false; // não consome o pedido; tenta de novo depois
+    }
     await prefs.setBool(_chavePedido, true);
-    if (await _pedirPermissao() != PermissaoPush.concedida) return false;
+    if (permissao != PermissaoPush.concedida) return false;
     await prefs.setBool(_chaveAtivas, true);
     await _registrarToken();
     return true;

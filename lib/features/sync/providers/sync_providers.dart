@@ -60,7 +60,7 @@ final syncBootstrapProvider = Provider<SupabaseBootstrap>((ref) {
     if (autenticado) {
       unawaited(ref.read(notificacoesServiceProvider).registrarSeAtivo());
     }
-  });
+  }, fireImmediately: true);
   return bootstrap;
 });
 
