@@ -799,31 +799,31 @@ Spec: [docs/superpowers/specs/2026-09-22-comparacao-idas-design.md](superpowers/
 
 Spec: [superpowers/specs/2026-09-23-notificacoes-push-design.md](superpowers/specs/2026-09-23-notificacoes-push-design.md) · Plano: [superpowers/plans/2026-09-23-notificacoes-push.md](superpowers/plans/2026-09-23-notificacoes-push.md) · Requisito: RF-30 (notificação push Android de convite por e-mail recebido e de novo membro numa lista sua). · Docs donos: 08, 09, 01, 02, 05, 12.
 
-- [ ] **F38-T01** — Planejamento: RF-30, ADR-014, Fase 38 e docs de roadmap
+- [x] **F38-T01** — Planejamento: RF-30, ADR-014, Fase 38 e docs de roadmap
   Dep: — · Docs: [12](12-prd.md), [00 §5](00-visao-geral.md), [14](14-tarefas.md), [16](16-roadmap-pos-mvp.md), [08 §7](08-compartilhamento-colaborativo.md)
   CP: RF-30 no 12 (tabela §2 e rastreabilidade §6; fora de escopo sem "push notifications"); ADR-014 no 00 §5 (FCM Android-first, disparo server-side via `pg_net`); Fase 38 no 14 com as 9 tarefas e a linha de progresso (196/185); B3 do 16 em execução (F38); 08 §7 com a nota do push (RF-30, F38).
-- [ ] **F38-T02** — Banco: tabela `push_tokens` + RLS + testes SQL
+- [x] **F38-T02** — Banco: tabela `push_tokens` + RLS + testes SQL
   Dep: F38-T01 · Docs: [01 §4.5](01-banco-de-dados.md), [02 §3/§4.8/§5](02-seguranca-rls.md)
   CP: migration `0021_push_tokens.sql` (`push_tokens` com `token unique`, `plataforma` com check e índice `idx_push_tokens_user`; RLS por `auth.uid()` com SELECT/INSERT/UPDATE/DELETE; RPC `registrar_push_token` `security definer` que reatribui o token a `auth.uid()`); `push_tokens_tests.sql` (N-19…N-22 + P-12 (reatribuição)) verde e no CI; 01 §4.5 e 02 §3/§4.8/§5 refletem a tabela e as negações.
-- [ ] **F38-T03** — Banco: triggers `pg_net` de notificação
+- [x] **F38-T03** — Banco: triggers `pg_net` de notificação
   Dep: F38-T02 · Docs: [01 §7](01-banco-de-dados.md)
   CP: migration `0022_notificar_push.sql` (`pg_net`; `public.notificar_push()` `security definer` lê URL/segredo do Vault e faz `net.http_post`; triggers `trg_convites_push`/`trg_membros_push`); `notificar_push_tests.sql` (NP-01…NP-04) verde e no CI; 01 §7 com o sub-bloco "Notificações push (RF-30)".
-- [ ] **F38-T04** — Edge Function `enviar-push` + testes Deno + CI
+- [x] **F38-T04** — Edge Function `enviar-push` + testes Deno + CI
   Dep: F38-T03 · Docs: [07 §1/§2/§3](07-qualidade-ci.md)
   CP: `enviar-push` (`mensagem.ts`, `fcm.ts`, `index.ts`) valida o segredo, resolve os tokens (`service_role`), envia pelo FCM HTTP v1 e remove tokens inválidos; `mensagem_test.ts`/`fcm_test.ts` verdes (6 testes); `setup-deno` + `deno test` no CI; 07 §1/§2/§3 refletem a function e o smoke manual (sem FCM real no CI).
-- [ ] **F38-T05** — App: dependências, init do Firebase e abstração `NotificacoesPush`
+- [x] **F38-T05** — App: dependências, init do Firebase e abstração `NotificacoesPush`
   Dep: F38-T01 · Docs: [05](05-app-flutter.md)
   CP: `firebase_core`/`firebase_messaging` no pubspec + plugin google-services no Gradle + init do Firebase no `main.dart` (Android); domínio `NotificacoesPush`/`PermissaoPush`, impl `NotificacoesPushFirebase`, `plataformaComPush()` e `notificacoesPushProvider` com fake; `flutter analyze`/`flutter test test/features/notificacoes` verdes.
-- [ ] **F38-T06** — App: repositório de tokens, serviço e strings
+- [x] **F38-T06** — App: repositório de tokens, serviço e strings
   Dep: F38-T05 · Docs: [05](05-app-flutter.md)
   CP: `PushTokensRepository.registrar`/`remover` (upsert por `token`); `NotificacoesService` (`ativas`, `talvezPedirPermissao`, `definirAtivas`, `registrarSeAtivo`, `aoSair`, best-effort offline); `pushTokensRepositoryProvider`, `notificacoesServiceProvider` e `notificacoesAtivasProvider`; strings de notificações; 6 testes verdes.
-- [ ] **F38-T07** — App: toggle em Configurações e permissão contextual
+- [x] **F38-T07** — App: toggle em Configurações e permissão contextual
   Dep: F38-T06 · Docs: [05](05-app-flutter.md), [10](10-wireframes-telas.md)
   CP: `SwitchListTile` "Notificações" em Configurações (só onde há push); `talvezPedirPermissao()` após criar lista/aceitar convite; `registrarSeAtivo()` no start logado e `aoSair()` no logout; widget test do toggle verde.
-- [ ] **F38-T08** — App: deep link no toque e SnackBar em primeiro plano
+- [x] **F38-T08** — App: deep link no toque e SnackBar em primeiro plano
   Dep: F38-T07 · Docs: [05](05-app-flutter.md)
   CP: `rotaDaNotificacao(data)` (convite → `/entrar?token=…`; membro → `/lista/:id`); `pushNavegacaoProvider` (toque inicial + `onMessageOpenedApp`) e `notificacoesForegroundProvider` com SnackBar via `scaffoldMessengerKey`; 3 testes da rota + `flutter test` verdes.
-- [ ] **F38-T09** — Docs donos finais, runbook, fechamento e distribuição
+- [x] **F38-T09** — Docs donos finais, runbook, fechamento e distribuição
   Dep: F38-T08 · Docs: [08 §11/§10](08-compartilhamento-colaborativo.md), [09 §2](09-runbook-operacoes.md), [14](14-tarefas.md), [16](16-roadmap-pos-mvp.md)
   CP: 08 §11 (arquitetura do push) + §10 (checklist de 2 aparelhos); 09 §2 (secrets/Vault/deploy/smoke/rotação); F38-T01…T09 marcadas e tabela de progresso (196/194); B3 do 16 concluído; versão `1.5.0+9`; `flutter analyze`/`flutter test` e testes SQL verdes.
 
@@ -866,8 +866,8 @@ Spec: [superpowers/specs/2026-09-23-notificacoes-push-design.md](superpowers/spe
 | F35 CSP no Web | 2 | 2 |
 | F36 Orçamento | 5 | 5 |
 | F37 Comparação entre idas | 3 | 3 |
-| F38 Notificações push | 9 | 0 |
-| **Total** | **196** | **185** |
+| F38 Notificações push | 9 | 9 |
+| **Total** | **196** | **194** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

@@ -258,6 +258,20 @@ limpeza. A perda de acesso deve ser decidida por outros caminhos:
 - [ ] Itens do membro removido permanecem na lista.
 - [ ] Transferência de dono: novo dono tem poderes completos; antigo vira editor; sem duplicidade de donos.
 - [ ] Testes de negação das policies de `convites` adicionados ao [02 §5](02-seguranca-rls.md) (N-11…N-14).
+- [ ] Push de convite e de entrada chegam ao aparelho (2 dispositivos); toque abre a tela certa.
+- [ ] Token some ao desativar o toggle e ao sair da conta.
+
+## 11. Notificações push (RF-30, F38)
+
+Dois eventos disparam push (Android): **convite por e-mail recebido** e **novo membro numa lista sua**.
+O disparo é server-side: triggers em `convites` (INSERT `tipo='email'`, `estado='pendente'`) e
+`lista_membros` (INSERT `papel <> 'dono'`) chamam `public.notificar_push()`, que faz `net.http_post`
+para a Edge Function `enviar-push` (URL/segredo no Vault). A função resolve os tokens em `push_tokens`
+(service_role), envia pelo FCM HTTP v1 e remove tokens inválidos. No app: permissão contextual
+(primeira lista criada ou primeiro convite aceito) + toggle "Notificações" em Configurações; token
+registrado por dispositivo (`push_tokens`, RLS `user_id = auth.uid()`), apagado no logout. O toque
+abre `/entrar?token=…` (convite) ou `/lista/:id` (entrada); em primeiro plano, SnackBar. Limites:
+sem retry no `pg_net`; iOS/Web fora (iOS na Onda E; Web é local, ADR-013).
 
 ---
 

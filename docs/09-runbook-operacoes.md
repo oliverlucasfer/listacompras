@@ -112,6 +112,18 @@ Dashboard Supabase → **Authentication → URL Configuration** (ADR-012, [05 §
 
 O web usa `<origem>/login-callback` (http em dev, https em produção) como `redirectTo` de auth ([05 §2.1](05-app-flutter.md)); o `/**` cobre também `/entrar` (convite). Sem a URL na whitelist, o Supabase recusa o `redirectTo` ("redirect_uri not allowed") e o link de confirmação cai na Site URL errada.
 
+### 2.8. Notificações push (RF-30, F38)
+
+- **Secrets:** `supabase secrets set PUSH_WEBHOOK_SECRET=... FCM_SERVICE_ACCOUNT='{...json...}'`.
+- **Vault (usado pelos triggers):** `select vault.create_secret('<url da function>', 'push_function_url');`
+  e `select vault.create_secret('<segredo>', 'push_webhook_secret');`.
+- **Deploy:** `supabase functions deploy enviar-push`.
+- **Operação externa:** habilitar a API FCM/Cloud Messaging e gerar a service account no console do
+  Firebase (projeto `lista-compras-34f93`).
+- **Smoke:** 2 aparelhos; convidar por e-mail → notificação no convidado; aceitar → notificação no dono;
+  tocar → abre a tela. Sem `FCM_SERVICE_ACCOUNT`, a função é no-op (dev/teste).
+- **Rotação de token:** tokens inválidos são removidos no envio; tokens do usuário no logout.
+
 ---
 
 ## 3. Incidentes comuns
