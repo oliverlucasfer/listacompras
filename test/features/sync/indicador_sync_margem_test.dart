@@ -17,10 +17,15 @@ Widget _app(SyncStatus status) => ProviderScope(
 
 EdgeInsets _paddingDe(WidgetTester tester) {
   final padding = tester
-      .widgetList<Padding>(find.byType(Padding))
+      .widgetList<Padding>(
+        find.descendant(
+          of: find.byType(IndicadorSync),
+          matching: find.byType(Padding),
+        ),
+      )
       .map((p) => p.padding)
       .whereType<EdgeInsets>()
-      .firstWhere((e) => e.top == AppSpacing.sm || e.top == AppSpacing.xs);
+      .first;
   return padding;
 }
 

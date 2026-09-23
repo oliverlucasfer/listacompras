@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/theme/tokens/app_spacing.dart';
+import 'package:lista_compras/core/widgets/app_banner.dart';
 import 'package:lista_compras/core/widgets/app_card.dart';
 import 'package:lista_compras/core/widgets/app_logo.dart';
 import 'package:lista_compras/drift/database.dart';
@@ -14,6 +15,8 @@ import 'package:lista_compras/features/convites/providers/papel_providers.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
+import 'package:lista_compras/features/sync/domain/sync_status.dart';
+import 'package:lista_compras/features/sync/providers/sync_providers.dart';
 import 'package:lista_compras/features/sync/ui/indicador_sync.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -35,7 +38,7 @@ void main() {
     await db.close();
   });
 
-  Future<void> abrirTela(WidgetTester tester) async {
+  Future<void> abrirTela(WidgetTester tester, {SyncStatus? syncStatus}) async {
     final router = GoRouter(
       initialLocation: '/listas',
       routes: [
@@ -59,6 +62,8 @@ void main() {
           appDatabaseProvider.overrideWithValue(db),
           authRepositoryProvider.overrideWithValue(authRepo),
           donoAtualIdProvider.overrideWithValue('user-a'),
+          if (syncStatus != null)
+            syncStatusProvider.overrideWith((ref) => Stream.value(syncStatus)),
         ],
         child: MaterialApp.router(routerConfig: router),
       ),
@@ -296,6 +301,18 @@ void main() {
     await abrirTela(tester);
 
     expect(find.byType(IndicadorSync), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_ficar_em_16dp_quando_indicador_no_painel', (tester) async {
+    // F40-T05 (RNF-06): o wrapper do painel é `only(top: sm)`; o banner
+    // offline traz o próprio horizontal `lg`, então o inset final é 16dp e
+    // não 32dp (padding duplo). Trava o uso do `painel_listas.dart`.
+    await abrirTela(tester, syncStatus: const Offline());
+
+    expect(find.byType(AppBanner), findsOneWidget);
+    expect(tester.getTopLeft(find.byType(AppBanner)).dx, AppSpacing.lg);
 
     await fechar(tester);
   });
