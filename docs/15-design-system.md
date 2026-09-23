@@ -20,6 +20,8 @@ Fonte única em `lib/core/theme/tokens/` — proibido valor hardcoded na UI.
 
 Título de tela (AppBar): **24sp bold** aplicado via `appBarTheme.titleTextStyle` (F13-T03). Precisa ser explícito — o `appBarTheme` não passa pela localização de tipografia do `Theme`, então um estilo só de cor deixaria o título sem tamanho (cairia no default).
 
+**Margens:** todo conteúdo fica a **16dp** (`AppSpacing.lg`) das bordas; o `ListTile` já traz esse valor por padrão. O `IndicadorSync` traz a própria margem horizontal (16dp) — não envolvê-lo em outro `Padding` horizontal (F40-T02).
+
 ## 2. Tema
 
 - `AppTheme.claro` / `AppTheme.escuro` (`lib/core/theme/app_theme.dart`).
@@ -43,7 +45,7 @@ Título de tela (AppBar): **24sp bold** aplicado via `appBarTheme.titleTextStyle
 | `AppEstadoVazio` | Vazio com ícone + texto + CTA; rótulo único (título + descrição) para o leitor de tela, com a ação em nó próprio (Fase 14) |
 | `AppEstadoErro` | Erro de carga com retry rotulado |
 | `AppCampoTexto` | Campo de formulário com erro inline; aceita `hint`, `maxLength`, `minLines`/`maxLines`, `textInputAction` e `readOnly` (Fase 14) |
-| `AppDropdown<T>` | Dropdown de formulário padronizado (`label`/`valor`/`itens`/`onChanged`/`compacto`), mesma decoração dos campos (Fase 14) |
+| `AppDropdown<T>` | Dropdown de formulário padronizado (`label`/`valor`/`itens`/`onChanged`/`compacto`/`expandido`), mesma decoração dos campos; `expandido` ocupa a largura disponível (evita estouro em colunas estreitas) (Fase 14) |
 | `AppSheet.mostrar` | Bottom sheet padrão |
 | `mostrarSnackBar` | Snackbar (inclusive undo) com **duração curta**: 2s sem ação e 3s com ação (`duracao` sobrescreve — F12-T07); já anunciado por ser uma live region do próprio `SnackBar` |
 

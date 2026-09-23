@@ -709,6 +709,45 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_manter_campos_alcancaveis_quando_teclado_abre', (
+    tester,
+  ) async {
+    // Tela de 800×600 com o teclado aberto (300dp): o sheet `isScrollControlled`
+    // reserva o `viewInsets` e o rodapé sobe para fora da área do teclado
+    // (RNF-06, F40-T04).
+    const teclado = 300.0;
+    tester.view.physicalSize = const Size(800, 600);
+    tester.view.devicePixelRatio = 1.0;
+    tester.view.viewInsets = const FakeViewPadding(bottom: teclado);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetViewInsets);
+
+    await listaComItens(tester);
+    await tester.tap(find.text('Arroz'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.editarItem), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    // Salvar continua alcançável e **acima da área do teclado** (sem o inset ele
+    // ficaria atrás do teclado).
+    final salvar = find.widgetWithText(FilledButton, AppStrings.salvar);
+    expect(salvar, findsOneWidget);
+    await tester.ensureVisible(salvar);
+    await tester.pumpAndSettle();
+
+    expect(tester.getBottomLeft(salvar).dy, lessThanOrEqualTo(600 - teclado));
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(salvar);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text(AppStrings.editarItem), findsNothing);
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_desmarcar_todos_quando_menu', (tester) async {
     await listaComItens(tester);
     final repo = ListasRepository(db);

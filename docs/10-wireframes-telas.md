@@ -245,24 +245,22 @@ A seção aparece no topo do filtro **Minhas** só quando há convites por e-mai
 
 **Adicionar por voz (RF-26/F30):** em Android/iOS, o campo "Adicionar item" (dono/editor) ganha um ícone de **microfone** à direita que **preenche o campo** com o texto reconhecido on-device (pt-BR); o usuário confirma (Enter). Ouvindo, o ícone muda (`mic`/`mic_none`); indisponível/permissão negada → SnackBar; ao sair da tela o ditado é cancelado. Web/Desktop não mostram o microfone.
 
-**Diálogo do item (F12-T06 + preço RF-21/F25 + última compra RF-29/F37):**
+**Sheet do item (F12-T06 + preço RF-21/F25 + última compra RF-29/F37):** aberto por `AppSheet.mostrar` (bottom sheet, [15 §3](15-design-system.md)), com os campos em blocos e rolagem própria; o teclado sobe o rodapé (`viewInsets`).
 ```
 ┌─────────────────────────────────┐
-│  Editar item                 ✕  │
+│  ▁▁▁▁ (arraste para baixo)      │ ← bottom sheet padrão
 ├─────────────────────────────────┤
+│  Editar item                    │
 │  Nome do item                   │
 │  [Arroz_____________________ ]  │ ← erro inline se vazio
-│  Quantidade                     │
-│  [−] [ 1 ] [+]      Unidade ▾   │
-│  Categoria                    ▾ │
-│  Preço (R$)                     │
-│  [5,49______________________ ]  │ ← opcional; vazio = sem preço;
-│                                 │    inválido → erro inline
+│  [ − ] [ 1 ]   |  Unidade ▾     │ ← bloco quantidade
+│  [ Categoria ▾ |  Preço (R$)  ] │ ← bloco categoria + preço;
+│                                 │    opcional; inválido → erro
 │  Última compra: R$ 4,99 (12/09) │ ← histórico local por dispositivo
 │  ↑ R$ 0,50                      │    (RF-29/F37); ↑/↓ só com a
 │                                 │    mesma unidade; não sincroniza
-│  (Remover)         (Salvar)     │
-└─────────────────────────────────┘
+│  (Remover) (Cancelar) (Salvar)  │ ← empilha com fonte ampliada
+└─────────────────────────────────┘    (RNF-06)
 ```
 
 **Última compra (RF-29/F37):** abaixo do campo de preço, quando há histórico local para o nome, aparece "Última compra: R$ X (dd/mm)" e — se o preço atual existir **e** a unidade atual for a mesma do registro — a variação (`↑`/`↓ R$diferença` ou "Mesmo preço"); com unidade diferente ou sem preço atual, só a linha do último preço. O histórico é **local por dispositivo e não sincroniza** ([03 §3](03-sincronizacao-offline.md)).

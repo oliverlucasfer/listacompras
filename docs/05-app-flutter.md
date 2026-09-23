@@ -203,7 +203,7 @@ O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado
 | Exibição | Ordenação determinística entre dispositivos: `(categoria na ordem salva, ordem, id)` |
 | Item | Nome, quantidade + unidade, checkbox |
 | Checkbox marcada | Item move para seção dobrável "Itens Concluídos (n)" — **sem divisão por categoria** (Fase 6) |
-| Tocar no item | Abre o editor (mesmo diálogo do swipe): nome, quantidade, unidade, categoria, **Preço (R$)** e ação **Remover** com undo (F12-T06/F25); a quantidade aceita decimal pt-BR (`1,5`), fração (`1/2`) e glifos (`½`, `1½`) via `parseQuantidade` — RF-25/F29 (o misto separado `1 1/2` é combinado pelo parser, não pelo editor); nome vazio/quantidade inválida/preço inválido geram erro inline no campo (F14-T07) |
+| Tocar no item | Abre o editor em **bottom sheet** (mesmo do swipe): nome, quantidade, unidade, categoria, **Preço (R$)** e ação **Remover** com undo (F12-T06/F25); a quantidade aceita decimal pt-BR (`1,5`), fração (`1/2`) e glifos (`½`, `1½`) via `parseQuantidade` — RF-25/F29 (o misto separado `1 1/2` é combinado pelo parser, não pelo editor); nome vazio/quantidade inválida/preço inválido geram erro inline no campo (F14-T07) |
 | Swipe direita/esquerda | Editar / Remover (com undo via SnackBar); edição inclui **dropdown de categoria** ao lado das unidades (Fase 6); o dropdown mantém a **ordem do enum**, não a ordem custom (RF-24) |
 | Botão de importação | Abre modal (6.4) |
 | Menu (⋮) | Ordem renderizada: "Desmarcar todos", "Limpar concluídos", "Renomear lista", "Adicionar de outra lista" (dono/editor), "Membros", "Convidar" (dono), "Excluir lista" (dono) |
