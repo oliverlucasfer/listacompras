@@ -1393,11 +1393,15 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
           if (hist != null) _linhaHistoricoPreco(hist),
           const SizedBox(height: AppSpacing.lg),
           // Rodapé sempre sem estouro (RNF-06): o `OverflowBar` externo põe
-          // Remover à esquerda e o grupo à direita quando cabem; se não, quebra
-          // o grupo para a linha de baixo. O `OverflowBar` interno mantém
-          // Cancelar/Salvar juntos e os separa só quando o grupo não cabe.
+          // Remover à esquerda e o grupo à direita quando cabem, e só empilha
+          // quando não cabe. O interno agrupa Cancelar/Salvar e, **sem
+          // `alignment`**, mede apenas o próprio conteúdo — com `alignment`
+          // ele reivindicaria toda a largura e o externo sempre acharia que
+          // não cabe (empilhando o rodapé em qualquer tela).
           OverflowBar(
-            alignment: MainAxisAlignment.spaceBetween,
+            alignment: widget.onRemover == null
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.spaceBetween,
             overflowAlignment: OverflowBarAlignment.end,
             spacing: AppSpacing.sm,
             overflowSpacing: AppSpacing.sm,
@@ -1414,11 +1418,8 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
                       color: Theme.of(context).colorScheme.error,
                     ),
                   ),
-                )
-              else
-                const SizedBox.shrink(),
+                ),
               OverflowBar(
-                alignment: MainAxisAlignment.end,
                 overflowAlignment: OverflowBarAlignment.end,
                 spacing: AppSpacing.sm,
                 overflowSpacing: AppSpacing.sm,

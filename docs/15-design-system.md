@@ -46,7 +46,7 @@ Título de tela (AppBar): **24sp bold** aplicado via `appBarTheme.titleTextStyle
 | `AppEstadoErro` | Erro de carga com retry rotulado |
 | `AppCampoTexto` | Campo de formulário com erro inline; aceita `hint`, `maxLength`, `minLines`/`maxLines`, `textInputAction` e `readOnly` (Fase 14) |
 | `AppDropdown<T>` | Dropdown de formulário padronizado (`label`/`valor`/`itens`/`onChanged`/`compacto`/`expandido`), mesma decoração dos campos; `expandido` ocupa a largura disponível (evita estouro em colunas estreitas) (Fase 14) |
-| `AppSheet.mostrar` | Bottom sheet padrão |
+| `AppSheet.mostrar` | Bottom sheet padrão: `showModalBottomSheet` com `isScrollControlled`, drag handle, `SafeArea` e padding inferior que cresce com `viewInsets.bottom` (o teclado empurra o conteúdo para cima); usado pelo editor de item (F40) |
 | `mostrarSnackBar` | Snackbar (inclusive undo) com **duração curta**: 2s sem ação e 3s com ação (`duracao` sobrescreve — F12-T07); já anunciado por ser uma live region do próprio `SnackBar` |
 
 **Uso de componentes existentes na F22:** os chips de itens frequentes usam o **`ActionChip`** do Material (faixa horizontal rolável, alvo ≥48dp, `Semantics` de ação "Adicionar <nome>" — RF-19); a faixa "Marcados" do modo mercado usa `Material` + `ListTile` com `Semantics(button/expanded)`, sem componente novo (RF-18). Nenhum `App*` novo foi necessário.

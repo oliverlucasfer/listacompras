@@ -259,8 +259,8 @@ A seção aparece no topo do filtro **Minhas** só quando há convites por e-mai
 │  Última compra: R$ 4,99 (12/09) │ ← histórico local por dispositivo
 │  ↑ R$ 0,50                      │    (RF-29/F37); ↑/↓ só com a
 │                                 │    mesma unidade; não sincroniza
-│  (Remover) (Cancelar) (Salvar)  │ ← empilha com fonte ampliada
-└─────────────────────────────────┘    (RNF-06)
+│  (Remover) (Cancelar) (Salvar)  │ ← empilha quando não cabe
+└─────────────────────────────────┘    (fonte ampliada ou tela estreita; RNF-06)
 ```
 
 **Última compra (RF-29/F37):** abaixo do campo de preço, quando há histórico local para o nome, aparece "Última compra: R$ X (dd/mm)" e — se o preço atual existir **e** a unidade atual for a mesma do registro — a variação (`↑`/`↓ R$diferença` ou "Mesmo preço"); com unidade diferente ou sem preço atual, só a linha do último preço. O histórico é **local por dispositivo e não sincroniza** ([03 §3](03-sincronizacao-offline.md)).

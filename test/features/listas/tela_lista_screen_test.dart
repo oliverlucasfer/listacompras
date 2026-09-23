@@ -735,6 +735,34 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_manter_acoes_em_linha_quando_couber', (tester) async {
+    // Em tela larga (800dp) o rodapé é uma única linha: Remover à esquerda;
+    // Cancelar + Salvar à direita (RNF-06, F40-T03).
+    await listaComItens(tester);
+    await tester.tap(find.text('Arroz'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.editarItem), findsOneWidget);
+
+    final remover = find.widgetWithText(TextButton, AppStrings.removerItem);
+    final cancelar = find.widgetWithText(TextButton, AppStrings.cancelar);
+    final salvar = find.widgetWithText(FilledButton, AppStrings.salvar);
+    expect(remover, findsOneWidget);
+    expect(cancelar, findsOneWidget);
+    expect(salvar, findsOneWidget);
+
+    final dyRemover = tester.getCenter(remover).dy;
+    expect(tester.getCenter(cancelar).dy, dyRemover);
+    expect(tester.getCenter(salvar).dy, dyRemover);
+    expect(
+      tester.getCenter(remover).dx,
+      lessThan(tester.getCenter(cancelar).dx),
+    );
+    expect(tester.takeException(), isNull);
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_manter_campos_alcancaveis_quando_teclado_abre', (
     tester,
   ) async {
