@@ -1,109 +1,63 @@
-# Fase 40 — Margens das telas e editor de item (design)
+# Fase 40 — Editor de item em sheet e correções de margem (design)
 
-> **Status:** aprovado em 23/09/2026 (decisões na Seção 9)
-> **Fase:** 40 · **Requisito:** RNF-06 (área de respiro / usabilidade) · **Doc dono:** [15](../15-design-system.md), [10](../10-wireframes-telas.md), [05](../05-app-flutter.md)
+> **Status:** aprovado em 23/09/2026 (decisões na Seção 8)
+> **Fase:** 40 · **Requisito:** RNF-06 (área de respiro / usabilidade) · **Doc dono:** [15](../15-design-system.md), [10](../10-wireframes-telas.md)
 > **Origem:** pedido direto do dono (23/09/2026): "os elementos do app sempre com margem das bordas" e "melhorar a disposição do modal de edição do item, que fica estranho com o teclado".
 
 ---
 
 ## 1. Motivação
 
-Duas queixas concretas de uso:
-
-1. **Sem margem padronizada.** Não existe wrap nenhum de página: umas telas usam `AppSpacing.tela`
-   (auth/onboarding), outras dependem do `contentPadding` padrão do `ListTile` (16), outras aplicam
-   `EdgeInsets` caso a caso, e há um literal (`painel_listas.dart:264` → `EdgeInsets.only(top: 4)`).
-   O resultado é alinhamento irregular entre telas e conteúdo encostando na borda em alguns casos.
-   (`AppSpacing.horizontalCompacto` existe e **nunca é usado**.)
-2. **O editor de item é um `AlertDialog`** (`_DialogoEditarItem`, `tela_lista_screen.dart:1146-1401`),
-   aberto por `showDialog` (`:994-1003`), enquanto os outros modais do app usam `AppSheet.mostrar`.
-   Com o teclado aberto, o `Dialog` centraliza e soma `viewInsets` (SDK), então o conteúdo — 5 campos
-   empilhados — é espremido num viewport pequeno, só ele rola (título e ações ficam fixos) e o
-   diálogo "pula"/encolhe. Não há `viewInsets` tratado no app nem campo focado trazido à visão.
+1. **Editor de item com o teclado.** `_DialogoEditarItem` (`tela_lista_screen.dart:1146-1401`) é um
+   `AlertDialog` aberto por `showDialog` (`:994-1003`), enquanto os outros modais do app usam
+   `AppSheet.mostrar`. Com o teclado aberto o `Dialog` centraliza, soma `viewInsets` (SDK) e é
+   espremido: só o conteúdo rola, título/ações ficam fixos, e os 5 campos empilhados cabem mal.
+   Não há tratamento de `viewInsets` no app nem campo focado trazido à visão. **Este é o problema real.**
+2. **Margens.** Auditoria de 23/09/2026: o app **já respeita ≥16dp das bordas em praticamente todos
+   os pontos** — `ListTile` traz `contentPadding` 16 por padrão (`app_theme.dart:106` não o altera) e
+   as telas que usam `Padding` usam `AppSpacing.lg`/`AppSpacing.tela`. Uma varredura de wrapper em
+   massa seria churn sem efeito visual (decisão §8.1). Restam apenas lacunas pontuais e reais,
+   listadas em §3.
 
 ## 2. Escopo
 
 **Dentro:**
-- Novo `AppPagina` (margem padrão de página) em `lib/core/widgets/`, aplicado nas telas/seções.
-- Editor de item convertido em **bottom sheet** (`AppSheet.mostrar`) com os campos em **blocos**.
-- Ajustes pontuais: literal `4` → `AppSpacing.xs`; remoção do token sem uso `horizontalCompacto`.
-- Docs donos ([15 §1](../15-design-system.md), [10](../10-wireframes-telas.md), [05](../05-app-flutter.md)) e Fase 40 no [14](../14-tarefas.md).
+- Editor de item convertido em **bottom sheet** (`AppSheet.mostrar`), com os campos em **blocos**.
+- **Margens — só o que muda de fato:**
+  - `IndicadorSync` (banner offline/erro) usa `EdgeInsets.all(AppSpacing.sm)` = **8dp**
+    (`indicador_sync.dart:44,51`); nos usos **sem wrap** ele fica colado à borda em 8dp — nas 2
+    ocorrências (`tela_lista_screen.dart:421`, `mercado_screen.dart:133`) passa a ter 16dp.
+  - Literais **verticais** tokenizados: `painel_listas.dart:264` (`4` → `AppSpacing.xs`) e
+    `painel_listas.dart:185` (`88` → derivado dos tokens, documentado).
+  - Remover o token **sem uso** `AppSpacing.horizontalCompacto` (`app_spacing.dart:15-17`).
+- Docs donos ([15 §1](../15-design-system.md), [10](../10-wireframes-telas.md)) e Fase 40 no [14](../14-tarefas.md).
 
 **Fora:**
+- Criar um wrapper de página (`AppPagina`) ou migrar as telas: o app já está conforme (§1.2).
 - Redesenho de cores, tipografia, ícones ou tokens existentes.
-- Mudança de AppBar, FAB, bottom nav (`AppShell`), ou de qualquer overlay existente (`AppSheet`, `AppDialog`).
-- Novas funcionalidades ou campos no editor (os campos, strings e a lógica de salvar **não** mudam).
+- Mudança de AppBar, FAB, bottom nav, ou de qualquer overlay existente.
+- Novas funcionalidades ou campos no editor (campos, strings e lógica de salvar **não** mudam).
 - Alterar comportamento observável além da apresentação do editor.
 
-## 3. Arquitetura
+## 3. Margens — correções pontuais
 
-Dois componentes, ambos reutilizando o que já existe:
+| Ponto | Hoje | Depois | Evidência |
+| :--- | :--- | :--- | :--- |
+| `IndicadorSync.Offline()` — banner | `EdgeInsets.all(8)` | `fromLTRB(lg, sm, lg, 0)` | `indicador_sync.dart:43-49` |
+| `IndicadorSync.ErroSync()` — banner | `EdgeInsets.all(8)` | `fromLTRB(lg, sm, lg, 0)` | `indicador_sync.dart:50-62` |
+| Uso do `IndicadorSync` no painel (wrapper externo) | `fromLTRB(lg, sm, lg, 0)` | `only(top: AppSpacing.sm)` (o horizontal passa a vir do próprio widget) | `painel_listas.dart:137-145` |
+| Gap vertical do subtítulo (painel) | literal `4` | `AppSpacing.xs` | `painel_listas.dart:264` |
+| Base da lista (painel) | literal `88` | `AppSpacing.xxxl + AppSpacing.xxl + AppSpacing.sm` (= 88) | `painel_listas.dart:185` |
+| Token sem uso | `horizontalCompacto` (12dp) | removido | `app_spacing.dart:15-17` |
 
-```
-lib/core/
-├── widgets/
-│   ├── app_pagina.dart     ← NOVO: margem padrão das páginas (16dp lateral + SafeArea opcional)
-│   └── app_sheet.dart      ← já existe: showModalBottomSheet + viewInsets.bottom
-└── theme/tokens/app_spacing.dart   → perde `horizontalCompacto` (sem uso)
+**Por que assim:** o `_LinhaStatus` interno (Sincronizado/Sincronizando/Pendente) já usa
+`fromLTRB(lg, xs, lg, 0)` = 16dp (`indicador_sync.dart:75-81`); só os dois banners ficaram em 8dp. Igualar
+os banners a `lg` deixa os três estados com a mesma margem. Nos usos **sem wrap**
+(`tela_lista_screen.dart:421`, `mercado_screen.dart:133`) isso resolve direto; no uso do painel, o
+wrapper externo passa a somar 16+16 = 32 se ficar como está — por isso ele perde o horizontal (vira
+`only(top: sm)`) e os três usos terminam em **16dp**.
 
-lib/features/listas/ui/tela_lista_screen.dart
-└── _DialogoEditarItem (AlertDialog)  →  _SheetEditarItem (AppSheet + blocos)
-```
-
-A margem é aplicada **no nível do conteúdo**, não no `Scaffold` — AppBar, FAB e bottom nav continuam
-intocados (o FAB e a nav bar são posicionados pelo `Scaffold`, e um wrap ali os quebraria).
-
-## 4. `AppPagina` — margem padrão
-
-```dart
-/// Margem padrão de uma página (doc 15 §1): `AppSpacing.horizontal` (16dp) nas
-/// laterais; `AppSpacing.tela` quando a tela quer respiro também em cima/baixo.
-/// Quem rola é o filho (`ListView`/`Column`); o `AppPagina` só garante a margem.
-class AppPagina extends StatelessWidget {
-  const AppPagina({
-    super.key,
-    required this.child,
-    this.padding = AppSpacing.horizontal,
-    this.safeArea = false,
-  });
-
-  final Widget child;
-  final EdgeInsetsGeometry padding;
-  final bool safeArea;
-
-  @override
-  Widget build(BuildContext context) {
-    final conteudo = Padding(padding: padding, child: child);
-    return safeArea ? SafeArea(child: conteudo) : conteudo;
-  }
-}
-```
-
-**Regra de uso:** a margem lateral padrão é **16dp**. Telas com rolagem passam o `ListView`/`CustomScrollView`
-como filho e usam `padding: EdgeInsets.zero` no scroll (a margem vem do `AppPagina`); telas de
-formulário passam `padding: AppSpacing.tela, safeArea: true` (preserva o que já existia).
-
-**Como aplicar — dois casos, para nunca duplicar padding:**
-
-| Caso | Telas | O que fazer |
-| :--- | :--- | :--- |
-| **Conteúdo não se auto-padding** | `painel_listas`, `configuracoes`, `tela_membros`, `tela_ordenar_categorias`, auth/onboarding (`AppSpacing.tela` → `AppPagina` com o mesmo valor) | Envolver o corpo em `AppPagina`; o scroll interno usa `padding: EdgeInsets.zero`. |
-| **Linhas/tiles já se paddingam** | `tela_lista` (`AppCabecalhoSecao`, `ExpansionTile.tilePadding`, `ListTile`), `mercado` (`_LinhaMercado`) | **Não** envolver (daria padding duplo, 32). Em vez disso, **normalizar** cada `EdgeInsets` ao token (16dp) e adicionar margem onde a linha não tem. O resultado (16dp em tudo) é o mesmo; o mecanismo é diferente. |
-
-O critério do que entra no wrap é: **o conteúdo encosta na borda e não tem padding próprio?** Se sim,
-`AppPagina`; se ele já se paddinga, normaliza.
-
-**Não envolver (exceção documentada, mantém full-bleed):**
-- Faixa de "marcados" (`mercado_screen.dart:375`) e fundo do swipe (`tela_lista_screen.dart:1019`).
-- Divisores intencionais (`configuracoes_screen.dart:142`, `app_shell.dart:46`) e `NavigationBar`.
-- Carrossel horizontal de chips (`tela_lista_screen.dart:667`) — scroll lateral intencional.
-- Componentes que já se auto-padding: `AppCard`, `AppBanner`, `AppEstadoVazio`, `AppEstadoErro`,
-  `AppEsqueleto` (envolver duplicaria o padding).
-- `ListTile` de lista dentro de `AppPagina` fica alinhado: a margem de 16 coincide com o
-  `contentPadding` padrão, então **não** há duplo padding quando a margem é aplicada no nível da página
-  (e não por tile).
-
-## 5. Editor de item → bottom sheet
+## 4. Editor de item → bottom sheet
 
 `_abrirDialogoEditar` (`tela_lista_screen.dart:994-1003`) passa a usar `AppSheet.mostrar` com um
 `_SheetEditarItem`. `AppSheet` já faz `isScrollControlled`, `showDragHandle`, `SafeArea` e
@@ -130,51 +84,50 @@ Layout (blocos; rótulos curtos; validações atuais preservadas):
 
 - **Sem mudança de comportamento:** mesmos campos, mesmos `AppStrings`, mesmas validações
   (`_erroNome`, `_erroQuantidade`, `_erroPreco`), mesma chamada `editarItem(...)`, mesma ação de
-  remover com Desfazer.
-- O stepper `−/+` continua em volta do campo de quantidade (como hoje, `:1296-1335`).
-- O rodapé substitui o `AlertDialog.actions`: `Remover` (quando `onRemover != null`, em cor de erro) à
+  remover com Desfazer (`onRemover`).
+- O stepper `−/+` continua em volta do campo de quantidade (`:1296-1335`).
+- O rodapé substitui `AlertDialog.actions`: `Remover` (quando `onRemover != null`, em cor de erro) à
   esquerda; `Cancelar` + `Salvar` à direita.
-- Em telas muito estreitas, as duas colunas são separadas por `AppSpacing.md` e usam `Expanded` com
-  `flex` 1:1; o `TextScaler` 2.0 continua sem estouro (verificado por teste).
+- Em telas estreitas as duas colunas usam `Expanded` com `flex` 1:1 e `AppSpacing.md` entre elas; sem
+  estouro com `TextScaler` 2.0.
 
-## 6. Ajustes pontuais
+## 5. Testes
 
-- `painel_listas.dart:264` — `EdgeInsets.only(top: 4)` → `EdgeInsets.only(top: AppSpacing.xs)`.
-- Remover `AppSpacing.horizontalCompacto` (`app_spacing.dart:15-17`): sem uso no repositório (YAGNI) —
-  e retirar a menção correspondente do [15 §1](../15-design-system.md).
+- **Editor (sheet):** abre por `AppSheet.mostrar` (não mais `AlertDialog`); campos e rodapé presentes;
+  salvar grava os mesmos valores; `Remover` mantém o Desfazer; erros de nome/quantidade/preço iguais.
+  Ajustar os testes que hoje buscam `AlertDialog`/`showDialog` para o editor
+  (`tela_lista_screen_test.dart:2080,2219`; `editar_item_historico_test.dart`).
+- **Teclado:** teste que injeta `viewInsets` (`tester.view.viewInsets`) e verifica que o sheet
+  permanece sem overflow e com os campos alcançáveis.
+- **Margem do `IndicadorSync`:** teste que verifica 16dp nos dois usos sem wrap e ausência de padding
+  duplo no uso do painel (16 no total).
 
-## 7. Testes
+## 6. Docs donos
 
-- **Widget do `AppPagina`:** aplica 16dp laterais por padrão; `padding`/`safeArea` configuráveis.
-- **Sheet do editor:** abre por `AppSheet.mostrar` (não mais `AlertDialog`); os campos e o rodapé
-  existem; salvar grava os mesmos valores (reescrever os testes que hoje buscam `AlertDialog`/`showDialog`);
-  remover mantém o Desfazer; erro de nome/quantidade/preço inalterados.
-- **Teclado:** teste que injeta `viewInsets` (via `tester.view.viewInsets`) e verifica que o sheet
-  permanece com os campos alcançáveis e sem overflow (sem `Exception` de layout).
-- **Regressão visual das telas com margem:** testes existentes de tela continuam verdes (o
-  alinhamento não muda onde já era 16).
-
-## 8. Docs donos
-
-- **[15 §1](../15-design-system.md):** documentar `AppPagina` como a margem padrão de página e a regra
-  (16dp lateral; `AppSpacing.tela` para formulários) e as exceções full-bleed; remover
-  `horizontalCompacto` da lista de tokens.
-- **[10](../10-wireframes-telas.md):** registrar a margem padrão e o editor de item como bottom sheet
-  (hoje descrito como diálogo, se for o caso).
-- **[05](../05-app-flutter.md):** acrescentar `AppPagina` à lista de componentes compartilhados (`App*`), com o papel de margem padrão de página.
+- **[15 §1](../15-design-system.md):** remover `horizontalCompacto` da lista de tokens; registrar a
+  regra "conteúdo a 16dp da borda" e que o `IndicadorSync` já traz a própria margem.
+- **[10](../10-wireframes-telas.md):** o editor de item passa a ser descrito como **bottom sheet**
+  (se hoje estiver como diálogo).
 - **[14](../14-tarefas.md):** Fase 40 com as tarefas e a linha de progresso.
 
-## 9. Decisões registradas (23/09/2026)
+## 7. Riscos
 
-1. **Margem de 16dp** (`AppSpacing.lg`, valor já de-facto do app) via wrapper compartilhado — não 24dp.
-2. **Wrapper de página** (`AppPagina`), aplicado no conteúdo; **não** um `Scaffold` (não mexe em
-   AppBar/FAB/nav).
-3. **Editor vira bottom sheet** via `AppSheet.mostrar` (uniformiza com os outros modais e resolve o teclado).
-4. **Campos em blocos** (linha dupla onde faz sentido), com rótulos curtos.
-5. **Sem mudança de comportamento** no editor além da apresentação; sem novos campos.
-6. `horizontalCompacto` **removido** (sem uso).
+- **Contagem de testes:** os testes de tela que localizam o editor por `AlertDialog` mudam de seletor
+  (comportamento igual, apresentação nova). Ajuste mecânico, coberto pela suíte.
+- **Padding duplo no `IndicadorSync`:** mitigado pelo §3 (os três usos terminam em 16dp); travado por teste.
+- **Sheet em telas muito baixas:** `AppSheet` é `isScrollControlled` + `SingleChildScrollView`; o
+  conteúdo rola dentro do espaço restante (mesmo padrão dos outros sheets já em produção).
 
-## 10. Documentos relacionados
+## 8. Decisões registradas (23/09/2026)
+
+1. **Margens: só o que muda de fato.** Varredura de wrapper (`AppPagina`) **descartada** — o app já
+   está ≥16dp em quase tudo; o refactor seria churn sem efeito visual.
+2. **Editor vira bottom sheet** via `AppSheet.mostrar` (uniformiza com os outros modais e resolve o teclado).
+3. **Campos em blocos** (linha dupla onde faz sentido), com rótulos curtos.
+4. **Sem mudança de comportamento** no editor além da apresentação; sem novos campos.
+5. `horizontalCompacto` **removido** (sem uso); literais verticais do painel tokenizados.
+
+## 9. Documentos relacionados
 - [15 Design System](../15-design-system.md) §1/§4 · [10 Wireframes](../10-wireframes-telas.md)
 - [05 App Flutter](../05-app-flutter.md) · [14 Tarefas](../14-tarefas.md) (Fase 40)
 - Specs de referência visual: [F8](2026-09-11-revisao-visual-ux-design.md) · [F9](2026-09-11-revisao-visual-ux-etapa2-design.md) · [F10](2026-09-11-revisao-visual-ux-etapa3-design.md)
