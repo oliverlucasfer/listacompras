@@ -364,6 +364,9 @@ abstract final class AppStrings {
 
   // Configurações (doc 06 §3, wireframe 10 §5)
   static const configuracoes = 'Configurações';
+  static const notificacoes = 'Notificações';
+  static const notificacoesAjuda =
+      'Avisar quando você receber um convite ou alguém entrar numa lista sua.';
   static const aparencia = 'Aparência';
   static const temaClaro = 'Claro';
   static const temaEscuro = 'Escuro';

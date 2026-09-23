@@ -1,0 +1,81 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../domain/notificacoes_push.dart';
+import 'push_tokens_repository.dart';
+
+class NotificacoesService {
+  NotificacoesService({
+    required this._push,
+    required this._repositorio,
+    required this._plataforma,
+  });
+
+  static const _chaveAtivas = 'push_ativas';
+  static const _chavePedido = 'push_pedido';
+
+  final NotificacoesPush _push;
+  final PushTokensRepository _repositorio;
+  final String _plataforma;
+
+  Future<bool> ativas() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_chaveAtivas) ?? false;
+  }
+
+  /// Pede a permissão uma única vez, no primeiro momento relevante.
+  Future<bool> talvezPedirPermissao() async {
+    if (!_push.suportado) return false;
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_chavePedido) ?? false) return false;
+    await prefs.setBool(_chavePedido, true);
+    final permissao = await _push.pedirPermissao();
+    if (permissao != PermissaoPush.concedida) return false;
+    await prefs.setBool(_chaveAtivas, true);
+    await _registrarToken();
+    return true;
+  }
+
+  Future<void> definirAtivas(bool ativas) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_chaveAtivas, ativas);
+    if (ativas) {
+      final permissao = await _push.pedirPermissao();
+      if (permissao == PermissaoPush.concedida) await _registrarToken();
+    } else {
+      final token = await _push.obterToken();
+      if (token != null) await _removerToken(token);
+      await _push.apagarToken();
+    }
+  }
+
+  /// No start do app logado: reafirma o token do dispositivo (idempotente).
+  Future<void> registrarSeAtivo() async {
+    if (!_push.suportado) return;
+    if (!await ativas()) return;
+    await _registrarToken();
+  }
+
+  Future<void> aoSair() async {
+    final token = await _push.obterToken();
+    if (token != null) await _removerToken(token);
+    await _push.apagarToken();
+  }
+
+  Future<void> _registrarToken() async {
+    final token = await _push.obterToken();
+    if (token == null) return;
+    try {
+      await _repositorio.registrar(token: token, plataforma: _plataforma);
+    } on Exception {
+      // Best-effort (offline): o próximo start/refresh reafirma.
+    }
+  }
+
+  Future<void> _removerToken(String token) async {
+    try {
+      await _repositorio.remover(token);
+    } on Exception {
+      // Best-effort (offline).
+    }
+  }
+}
