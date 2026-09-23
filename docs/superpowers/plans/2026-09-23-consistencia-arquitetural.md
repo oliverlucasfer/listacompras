@@ -70,7 +70,7 @@
 Spec: [superpowers/specs/2026-09-23-consistencia-arquitetural-design.md](superpowers/specs/2026-09-23-consistencia-arquitetural-design.md) · Plano: [superpowers/plans/2026-09-23-consistencia-arquitetural.md](superpowers/plans/2026-09-23-consistencia-arquitetural.md) · Requisito: RNF-08 (qualidade — consistência de camadas e paridade de barreiras). · Docs donos: 05, 03, 02, 09, 04.
 
 - [ ] **F39-T01** — Planejamento: Fase 39 e rastreabilidade no RNF-08
-  Dep: — · Docs: [14](14-tarefas.md), [12 §4](12-prd.md)
+  Dep: — · Docs: [14](14-tarefas.md), [12 §3](12-prd.md)
   CP: Fase 39 no 14 com as 7 tarefas e a linha de progresso (203/194); RNF-08 do 12 aponta a consistência arquitetural como evidência.
 - [ ] **F39-T02** — Shared kernel: `lib/core/dominio/`
   Dep: F39-T01 · Docs: [05 §2](05-app-flutter.md), [13 §3](13-premodelo-tecnico.md)

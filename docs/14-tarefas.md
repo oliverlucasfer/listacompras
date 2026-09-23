@@ -669,7 +669,7 @@ Spec: [superpowers/specs/2026-09-21-quantidades-fracao-design.md](superpowers/sp
 
 - [x] **F29-T01** — Domínio: `parseQuantidade` e glifos na formatação
   Dep: — · Docs: [05 §6.3](05-app-flutter.md)
-  CP: `parseQuantidade`/`formatarQuantidade`/`glifosFracao` em `lib/features/listas/domain/quantidade.dart`; decimal pt-BR, fração (`1/2`), glifo (`½`) e misto colado (`1½`); negativo/inválido (`1/0`) → `null`; exibição com glifos comuns (incl. misto `1½`/`1¼`) e corte ≤ 3 casas; unit tests verdes.
+  CP: `parseQuantidade`/`formatarQuantidade`/`glifosFracao` em `lib/core/dominio/quantidade.dart`; decimal pt-BR, fração (`1/2`), glifo (`½`) e misto colado (`1½`); negativo/inválido (`1/0`) → `null`; exibição com glifos comuns (incl. misto `1½`/`1¼`) e corte ≤ 3 casas; unit tests verdes.
 - [x] **F29-T02** — Parser e editor aceitam frações
   Dep: F29-T01 · Docs: [04 §3](04-importacao-lista.md), [05 §6.3](05-app-flutter.md)
   CP: parser reconhece fração numérica, glifo e misto separado (`1 1/2 kg`) na entrada rápida e na importação; fração inválida (`1/0`) não quebra (quantidade 1 + token no nome); editor do item e previsão de importação leem a quantidade com `parseQuantidade`; parser/widget tests verdes.
@@ -832,7 +832,7 @@ Spec: [superpowers/specs/2026-09-23-notificacoes-push-design.md](superpowers/spe
 Spec: [superpowers/specs/2026-09-23-consistencia-arquitetural-design.md](superpowers/specs/2026-09-23-consistencia-arquitetural-design.md) · Plano: [superpowers/plans/2026-09-23-consistencia-arquitetural.md](superpowers/plans/2026-09-23-consistencia-arquitetural.md) · Requisito: RNF-08 (qualidade — consistência de camadas e paridade de barreiras). · Docs donos: 05, 03, 02, 09, 04.
 
 - [ ] **F39-T01** — Planejamento: Fase 39 e rastreabilidade no RNF-08
-  Dep: — · Docs: [14](14-tarefas.md), [12 §4](12-prd.md)
+  Dep: — · Docs: [14](14-tarefas.md), [12 §3](12-prd.md)
   CP: Fase 39 no 14 com as 7 tarefas e a linha de progresso (203/194); RNF-08 do 12 aponta a consistência arquitetural como evidência.
 - [ ] **F39-T02** — Shared kernel: `lib/core/dominio/`
   Dep: F39-T01 · Docs: [05 §2](05-app-flutter.md), [13 §3](13-premodelo-tecnico.md)

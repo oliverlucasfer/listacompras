@@ -28,31 +28,54 @@ lib/
 ├── router.dart                      # go_router (rotas, guards de auth)
 ├── core/
 │   ├── config/                      # links por plataforma (ADR-012)
+│   ├── dominio/                     # shared kernel: Unidade, CategoriaItem, quantidade (F39)
+│   ├── categorias/                  # dicionário + sugestão local de categoria
+│   ├── importacao/                  # parser local de lista (F11)
+│   ├── l10n/                        # strings (pt-BR) e política de privacidade
+│   ├── navigation/                  # shell de navegação e voltar-ao-início
+│   ├── observabilidade/             # privacidade do Sentry
 │   ├── rede/                        # tratamento de erro de rede (nativo/web)
-│   ├── web/                         # URL strategy (web/nativa)
+│   ├── texto/                       # normalização, busca e validação (F39)
 │   ├── theme/                       # tema, tokens (Seção 7)
-│   ├── widgets/                     # componentes compartilhados
-│   └── utils/                       # formatação, extensões
+│   ├── utils/                       # deeplink, utilitários de tempo
+│   ├── web/                         # URL strategy (web/nativa)
+│   └── widgets/                     # componentes compartilhados (App*)
 ├── features/
-│   ├── auth/
-│   │   ├── data/                    # SupabaseAuthRepository
-│   │   ├── providers/               # authStateProvider
-│   │   └── ui/                      # Login, Registro, RecuperarSenha
-│   ├── listas/
-│   │   ├── data/                    # ListasRepository (Drift + Supabase)
-│   │   ├── domain/                  # modelos Lista, Item; enums Unidade, CategoriaItem
-│   │   ├── providers/               # listasProvider, itensProvider(consulta)
-│   │   └── ui/                      # MinhasListas, TelaLista, modais
-│   └── sync/
-│       ├── data/                    # SyncEngine, fila (Drift)
-│       └── providers/               # syncStatusProvider
+│   ├── auth/                        # data/ providers/ ui/
+│   ├── configuracoes/               # ui/
+│   ├── convites/                    # domain/ data/ providers/ ui/
+│   ├── design_system/               # ui/ (catálogo, só em debug)
+│   ├── importacao/                  # ui/ (a lógica vive em core/importacao)
+│   ├── listas/                      # domain/ data/ providers/ ui/
+│   ├── notificacoes/                # domain/ data/ providers/ (F38)
+│   ├── onboarding/                  # providers/ ui/
+│   ├── sync/                        # domain/ data/ providers/ ui/
+│   └── voz/                         # domain/ data/ providers/ (F30)
 └── drift/
-    ├── database.dart                # AppDatabase (tabelas locais)
+    ├── database.dart                # AppDatabase (tabelas locais, schemaVersion 8)
     ├── conexao/                     # abrirBancoLocal (nativa/web, ADR-012)
-    └── tables/                      # ListaLocal, ItemLocal, MutacaoPendente
+    └── tables/                      # ListaLocal, ItemLocal, MutacaoPendente, HistoricoPrecoLocal
 ```
 
 **Regra:** `ui` só fala com `providers`; `providers` só falam com `data` (repositórios). Repositórios de leitura expõem **Streams do Drift** (UI reativa offline-first).
+
+### 2.2. Forma dos módulos e paridade de barreiras
+
+* **Shared kernel (`core/dominio/`):** o vocabulário fechado (`Unidade`, `CategoriaItem` e os
+  helpers de `quantidade`) é compartilhado por Postgres, Dart e o parser local (ADR-005/ADR-011,
+  [13 §3](13-premodelo-tecnico.md)). Ele **não** pertence a uma feature: fica em `core/dominio/`, e
+  `core/` nunca importa `features/` (F39).
+* **Forma dos módulos:** o padrão é `domain/ data/ providers/ ui/`, mas nem todo módulo tem as
+  quatro camadas — módulos sem entidade local (`configuracoes`, `importacao`, `design_system`) são
+  só `ui/`, e `onboarding` não tem `domain/`/`data/`. O que é obrigatório é a direção da dependência:
+  `ui → providers → data` (§2).
+* **Barreiras locais espelhando o Postgres:** o Drift replica os `CHECK`s e o índice único parcial
+  `uq_item_ativo` do Postgres (`itens_lista`: `quantidade > 0`, `unidade`/`categoria` no enum,
+  `preco_centavos` em faixa; `listas`: `orcamento_centavos` em faixa). Migração `schemaVersion 7 → 8`
+  (F39) — a dedup de itens ativos é feita antes de criar o índice.
+* **`quantidade` é `real` no Drift e `numeric` no Postgres:** divergência aceita — o SQLite não tem
+  `DECIMAL`. A precisão efetiva da app é ≤ 3 casas decimais (tolerância 0,001, [05 §6.3]). Nenhuma
+  migração de valores.
 
 ### 2.1. Banco e links por plataforma (ADR-012)
 
@@ -191,7 +214,7 @@ O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado
 | Faixa do total | Componente `TotalCarrinho` no **rodapé** da tela da lista e no **modo mercado** (§6.5): "No carrinho: R$ …" somando **itens marcados com preço**; se houver marcados sem preço, acrescenta "· N sem preço". Com **orçamento** (RF-28, F36): "No carrinho: R$ X de R$ Y" + barra de progresso; ao ultrapassar, alerta. Oculta quando não há nenhum item marcado (RF-21, F25) |
 
 * **Reordenar (Fase 6):** drag-and-drop restrito **ao grupo da categoria** — reordena só os itens do grupo (grava `ordem` local + fila); mudar de categoria é pelo dropdown do editar. Exibição continua `(categoria na ordem salva, ordem, id)` — sem coluna nova.
-* **Quantidades e frações (RF-25, F29):** stepper + input direto; a **entrada rápida** e a **importação** aceitam decimal pt-BR (`1,5`), fração (`1/2`), glifos (`½`, `1½`) e **misto separado** (`1 1/2`, combinado pelo parser); o **editor** aceita os mesmos formatos **menos o misto separado** — lê a quantidade com `parseQuantidade`, que trata **um token único** (digitar `1 1/2` no editor gera erro inline). Unidades restritas ao enum ([01 §3.1](01-banco-de-dados.md)). A exibição usa `formatarQuantidade` (`lib/features/listas/domain/quantidade.dart`): glifos comuns (`½ ¼ ¾ ⅓ ⅔`, mistos como `1½`, `1¼`) e, fora deles, arredonda para ≤ 3 casas (`1.2`, `0.143`).
+* **Quantidades e frações (RF-25, F29):** stepper + input direto; a **entrada rápida** e a **importação** aceitam decimal pt-BR (`1,5`), fração (`1/2`), glifos (`½`, `1½`) e **misto separado** (`1 1/2`, combinado pelo parser); o **editor** aceita os mesmos formatos **menos o misto separado** — lê a quantidade com `parseQuantidade`, que trata **um token único** (digitar `1 1/2` no editor gera erro inline). Unidades restritas ao enum ([01 §3.1](01-banco-de-dados.md)). A exibição usa `formatarQuantidade` (`lib/core/dominio/quantidade.dart`): glifos comuns (`½ ¼ ¾ ⅓ ⅔`, mistos como `1½`, `1¼`) e, fora deles, arredonda para ≤ 3 casas (`1.2`, `0.143`).
 * **Adicionar por voz (RF-26, F30):** o campo "Adicionar item" ganha um **microfone** (dono/editor, Android/iOS) que **preenche o campo** com o texto reconhecido **on-device** (pt-BR) via `ReconhecimentoVoz`/`reconhecimentoVozProvider`; o usuário confirma (Enter) e o parser local cuida do resto — a voz **não** adiciona item sozinha. O app **pede** on-device (`onDevice: true`) e nunca inicia chamada de rede própria, mas o `speech_to_text` **não expõe** forma de verificar/forçar, então no Android o **SO** pode usar o reconhecedor de rede quando não há modelo on-device (limitação do plugin/SO). Toque de novo para; ao sair da tela o ditado é cancelado; indisponível/permissão negada → SnackBar "Reconhecimento de voz indisponível neste aparelho."; Web/Desktop ocultam o botão.
 * **Preço do item (RF-21, F25):** campo **"Preço (R$)"** opcional no editor; aceita `5,49`, `5.49`, `5`; vazio → sem preço (`null`); inválido/negativo → erro inline. Gravado em centavos (`preco_centavos`, [01 §4.3](01-banco-de-dados.md)) via `editarItem(..., precoCentavos, limparPreco)`; o payload de sync inclui a coluna ([03 §3](03-sincronizacao-offline.md)) e `duplicarLista` copia o preço (RF-20).
 * **Última compra (RF-29, F37):** quando há histórico local para o nome do item, o editor mostra uma linha **"Última compra: R$ X (dd/mm)"** abaixo do campo de preço; se o preço atual existir **e** a unidade atual for a mesma do registro, mostra também a **variação** — `↑ R$<diferença>`, `↓ R$<diferença>` ou "Mesmo preço"; com **unidade diferente** ou **sem preço atual**, exibe só a linha do último preço. O histórico (`HistoricoPrecoLocal`, Drift) é **local por dispositivo e não sincroniza** (`03` §3) — é gravado ao **marcar o item como comprado com preço** e nunca apagado ao desmarcar.
