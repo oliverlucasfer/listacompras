@@ -40,17 +40,31 @@ class NotificacoesService {
     return true;
   }
 
-  Future<void> definirAtivas(bool ativas) async {
+  Future<bool> definirAtivas(bool ativas) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_chaveAtivas, ativas);
-    if (ativas) {
-      if (await _pedirPermissao() == PermissaoPush.concedida) {
-        await _registrarToken();
-      }
-    } else {
+    if (!ativas) {
+      await prefs.setBool(_chaveAtivas, false);
       final token = await _obterToken();
       if (token != null) await _removerToken(token);
       await _apagarToken();
+      return false;
+    }
+    if (await _pedirPermissao() != PermissaoPush.concedida) {
+      await prefs.setBool(_chaveAtivas, false);
+      return false;
+    }
+    await prefs.setBool(_chaveAtivas, true);
+    await _registrarToken();
+    return true;
+  }
+
+  /// No refresh do token do FCM: reafirma o token atual no servidor.
+  Future<void> registrarToken(String token) async {
+    if (!_push.suportado) return;
+    try {
+      await _repositorio.registrar(token: token, plataforma: _plataforma);
+    } on Exception {
+      // Best-effort.
     }
   }
 

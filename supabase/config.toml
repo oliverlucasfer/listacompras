@@ -411,3 +411,10 @@ enabled = true
 # declarative_schema_path = "./schemas"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+[functions.enviar-push]
+# A Edge Function é chamada pelo trigger `pg_net` (não pelo cliente), sem
+# header `Authorization`; a autenticação é feita pelo `x-webhook-secret`
+# validado no handler. Deploy: `supabase functions deploy enviar-push
+# --no-verify-jwt` (doc 09 §2.8).
+verify_jwt = false

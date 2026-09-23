@@ -36,6 +36,8 @@ jobs:
           flutter build web --release
           --dart-define=SUPABASE_URL=https://exemplo.supabase.co
           --dart-define=SUPABASE_ANON_KEY=teste
+      - if: steps.check.outputs.flutter == 'enabled'
+        run: flutter build apk --debug
 
   supabase:
     runs-on: ubuntu-latest

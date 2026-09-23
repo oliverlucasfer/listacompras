@@ -457,7 +457,7 @@ create policy push_tokens_delete on public.push_tokens
   for delete using (user_id = auth.uid());
 ```
 
-> **Device-only:** `push_tokens` **não** entra no Realtime nem no sync; o app faz upsert pelo `token` (unique) e apaga o próprio token no logout. A Edge Function `enviar-push` (F38) lê a tabela com `service_role` para resolver os destinatários — nunca a partir do cliente. Migration `0021`; schema em [01 §4.5](01-banco-de-dados.md).
+> **Device-only:** `push_tokens` **não** entra no Realtime nem no sync; o app registra o token chamando o RPC `registrar_push_token` (§4.8 — o upsert direto pelo `token` não passa na policy owner-only) e apaga o próprio token no logout. A Edge Function `enviar-push` (F38) lê a tabela com `service_role` para resolver os destinatários — nunca a partir do cliente. Migration `0021`; schema em [01 §4.5](01-banco-de-dados.md).
 
 A reatribuição de um token a outro dono (*device handoff*) **não** é possível pelo cliente sob a policy owner-only (o `on conflict (token) do update` esbarraria no `using` do UPDATE, que exige `user_id = auth.uid()`). Por isso o caminho é o RPC `security definer` abaixo — grant restrito a `authenticated`:
 
@@ -486,7 +486,7 @@ revoke execute on function public.registrar_push_token(text, text) from public, 
 grant execute on function public.registrar_push_token(text, text) to authenticated;
 ```
 
-> **Reatribuição (RF-30, F38):** o RPC roda como dono (`postgres`), então atravessa o `force row level security` de `push_tokens` como `aceitar_convite`/`transferir_dono`; a autorização é interna — o token passa a pertencer a `auth.uid()` (nunca a um `user_id` arbitrário) e a linha antiga de outro dono é removida antes. `anon` não executa (sem grant).
+> **Reatribuição (RF-30, F38):** o RPC roda como dono (`postgres`), então atravessa o `force row level security` de `push_tokens` como `aceitar_convite`/`transferir_dono`; a autorização é interna — o token passa a pertencer a `auth.uid()` (nunca a um `user_id` arbitrário) e a linha antiga de outro dono é removida antes. `anon` não executa (sem grant). **Ameaça aceita:** qualquer chamador autenticado que conheça um token pode reatribuí-lo a si; tokens são segredos do dispositivo — trade-off aceito para viabilizar a reatribuição no *device handoff*.
 
 ---
 

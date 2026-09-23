@@ -61,6 +61,19 @@ void main() {
     expect(repo.registrados, isEmpty);
   });
 
+  test('deve_manter_desativado_quando_permissao_negada', () async {
+    final push = NotificacoesPushFake(permissao: PermissaoPush.negada);
+    final repo = RepositorioTokensFake();
+    final servico = NotificacoesService(
+      push: push,
+      repositorio: repo,
+      plataforma: 'android',
+    );
+    expect(await servico.definirAtivas(true), isFalse);
+    expect(await servico.ativas(), isFalse);
+    expect(repo.registrados, isEmpty);
+  });
+
   test('deve_nao_consumir_pedido_quando_plugin_falha', () async {
     final push = NotificacoesPushFake()..falharPedido = true;
     final repo = RepositorioTokensFake();

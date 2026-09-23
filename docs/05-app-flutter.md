@@ -249,6 +249,16 @@ Primeiro acesso ao app **autenticado** — apresenta o valor em **uma** página 
 * **Conteúdo:** marca (`AppLogo`) + título (`boasVindasTitulo`) e subtítulo; **4 destaques** com ícone (offline, compartilhar, importar por texto, ditar um item) e o botão **"Começar"** (`AppBotao`) → `marcarVisto()` + `context.go('/listas')`. Sem "Pular" (página única). O destaque **"Dite um item"** só aparece quando `plataformaComVoz()` é verdadeiro (Android/iOS); em Web/Desktop, onde o microfone é oculto (§6.3), ficam os outros **3 destaques**. Wireframe em [10 §1.4](10-wireframes-telas.md).
 * **Saída da tela:** a tela é dispensada/confirmada **apenas pelo "Começar"** (único caminho que grava `onboarding_visto` e vai para `/listas`). O **voltar do sistema Android** (`Navigator.pop`) retorna ao painel de listas **sem** marcar como visto — a flag continua falsa, então a tela **reabre no próximo cold start** (comportamento esperado; a tela aparece uma vez até que "Começar" seja tocado).
 
+### 6.9. Notificações push (RF-30, F38)
+
+Push só no **Android** (iOS na Onda E; Web/Desktop nunca tocam o plugin — `plataformaComPush()`, `features/notificacoes/domain/plataforma_push.dart`). Arquitetura server-side e eventos em [08 §11](08-compartilhamento-colaborativo.md); layout em [10 §5](10-wireframes-telas.md).
+
+* **Toggle "Notificações" (Configurações):** `SwitchListTile` (abaixo de Aparência) ligado ao `notificacoesAtivasProvider`; só aparece onde `plataformaComPush()` é verdadeiro. Ligar pede a permissão do sistema e **só fica ligado se concedida** (`definirAtivas` devolve o resultado real); desligar remove o token do dispositivo (RPC e `deleteToken`) e desativa a flag local.
+* **Permissão contextual (uma vez):** `talvezPedirPermissao()` é chamado no **primeiro momento relevante** — primeira lista criada (painel de listas) ou primeiro convite aceito (`/entrar` e seção de convites pendentes). O pedido é marcado como consumido apenas quando o plugin responde; falha de plugin não consome (tenta de novo depois). Se concedido, ativa a flag e registra o token.
+* **Registro/limpeza do token:** `PushTokensRepository` chama o RPC `registrar_push_token` (device handoff; [02 §4.8](02-seguranca-rls.md)) — reafirmado no start logado (`registrarSeAtivo`) e no `onTokenRefresh` do FCM (ponte no `syncBootstrapProvider`). No **logout** (`aoSair`) o token é removido e apagado do dispositivo.
+* **Toque na notificação (deep link):** `pushNavegacaoProvider` liga o push ao `go_router`: convite → `/entrar?token=…`; novo membro → `/lista/:id`. Cobre app aberto e *cold start* (`toqueInicial`). Só no Android.
+* **Primeiro plano:** `notificacoesForegroundProvider` alimenta um `SnackBar` quando a notificação chega com o app aberto (payload → toque abre a tela certa).
+
 ---
 
 ## 7. Design System

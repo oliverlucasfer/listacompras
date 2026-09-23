@@ -61,6 +61,19 @@ final syncBootstrapProvider = Provider<SupabaseBootstrap>((ref) {
       unawaited(ref.read(notificacoesServiceProvider).registrarSeAtivo());
     }
   }, fireImmediately: true);
+  // Reafirma o token quando o FCM o rotaciona (spec §6.3). Só Android:
+  // Web/Desktop não tocam o plugin.
+  if (plataformaComPush()) {
+    final sub = ref
+        .watch(notificacoesPushProvider)
+        .onTokenRefresh
+        .listen(
+          (token) => unawaited(
+            ref.read(notificacoesServiceProvider).registrarToken(token),
+          ),
+        );
+    ref.onDispose(sub.cancel);
+  }
   return bootstrap;
 });
 

@@ -1,12 +1,13 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 import '../domain/notificacoes_push.dart';
+import '../domain/plataforma_push.dart';
 
 class NotificacoesPushFirebase implements NotificacoesPush {
   FirebaseMessaging get _mensageria => FirebaseMessaging.instance;
 
   @override
-  bool get suportado => true;
+  bool get suportado => plataformaComPush();
 
   @override
   Future<PermissaoPush> pedirPermissao() async {

@@ -53,7 +53,8 @@ supabase/
     ├── 0018_arquivar_listas.sql # coluna arquivada_em + trigger (RF-22)
     ├── 0019_convites_email.sql  # RPCs de convite por e-mail (RF-13, ver 02 §4.7)
     ├── 0020_orcamento_lista.sql # coluna orcamento_centavos (RF-28, F36)
-    └── 0021_push_tokens.sql     # tabela push_tokens + RLS + RPC (RF-30, F38)
+    ├── 0021_push_tokens.sql     # tabela push_tokens + RLS + RPC (RF-30, F38)
+    └── 0022_notificar_push.sql  # triggers pg_net → Edge Function enviar-push (RF-30, F38)
 ```
 
 ---

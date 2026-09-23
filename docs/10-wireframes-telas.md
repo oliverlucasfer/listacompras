@@ -493,6 +493,11 @@ Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstad
 
 * Cada reordenação persiste na hora (preferência local, global); sem rede/schema.
 
+### 5.2. Notificações (RF-30, F38 — [05 §6.9](05-app-flutter.md))
+
+* **Toggle "Notificações"** na tela de Configurações (abaixo de Aparência), visível só no Android: ao ligar, o sistema pede a permissão e o toggle **só permanece ligado se concedida**; ao desligar, o token do dispositivo é removido.
+* **Permissão contextual (uma vez):** é o diálogo do sistema disparado no primeiro momento relevante — ao **criar a primeira lista** ou **aceitar o primeiro convite**; não é uma tela própria.
+
 ---
 
 ## 6. Mapa de estados por tela (transversal)

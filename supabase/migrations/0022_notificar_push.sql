@@ -19,9 +19,11 @@ declare
   v_corpo jsonb;
 begin
   select decrypted_secret into v_url
-  from vault.decrypted_secrets where name = 'push_function_url';
+  from vault.decrypted_secrets where name = 'push_function_url'
+  order by created_at desc limit 1;
   select decrypted_secret into v_segredo
-  from vault.decrypted_secrets where name = 'push_webhook_secret';
+  from vault.decrypted_secrets where name = 'push_webhook_secret'
+  order by created_at desc limit 1;
   if v_url is null or v_segredo is null then
     return new;
   end if;

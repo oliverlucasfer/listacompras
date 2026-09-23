@@ -117,7 +117,9 @@ O web usa `<origem>/login-callback` (http em dev, https em produção) como `red
 - **Secrets:** `supabase secrets set PUSH_WEBHOOK_SECRET=... FCM_SERVICE_ACCOUNT='{...json...}'`.
 - **Vault (usado pelos triggers):** `select vault.create_secret('<url da function>', 'push_function_url');`
   e `select vault.create_secret('<segredo>', 'push_webhook_secret');`.
-- **Deploy:** `supabase functions deploy enviar-push`.
+- **Deploy:** `supabase functions deploy enviar-push --no-verify-jwt` (a função é chamada
+  pelo `pg_net` sem `Authorization`; `verify_jwt = false` em `supabase/config.toml`, alinhado ao
+  flag do deploy). A autenticação é o `x-webhook-secret` validado no handler.
 - **Operação externa:** habilitar a API FCM/Cloud Messaging e gerar a service account no console do
   Firebase (projeto `lista-compras-34f93`).
 - **Smoke:** 2 aparelhos; convidar por e-mail → notificação no convidado; aceitar → notificação no dono;

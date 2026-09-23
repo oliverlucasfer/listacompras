@@ -261,6 +261,8 @@ limpeza. A perda de acesso deve ser decidida por outros caminhos:
 - [ ] Push de convite e de entrada chegam ao aparelho (2 dispositivos); toque abre a tela certa.
 - [ ] Token some ao desativar o toggle e ao sair da conta.
 
+---
+
 ## 11. Notificações push (RF-30, F38)
 
 Dois eventos disparam push (Android): **convite por e-mail recebido** e **novo membro numa lista sua**.

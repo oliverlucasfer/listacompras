@@ -21,7 +21,7 @@ final pushNavegacaoProvider =
 
       push.toqueInicial().then((data) {
         if (data != null) ir(data);
-      });
+      }, onError: (_) {});
       final sub = push.onToque.listen(ir, onError: (_) {});
       ref.onDispose(sub.cancel);
       return sub;

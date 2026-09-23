@@ -14,8 +14,10 @@ function json(status: number, corpo: unknown): Response {
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json(405, { code: "method_not_allowed" });
 
+  // Segredo obrigatório: sem `PUSH_WEBHOOK_SECRET` configurado, o endpoint
+  // fica fechado (fail-closed) em vez de aceitar qualquer chamada.
   const segredo = Deno.env.get("PUSH_WEBHOOK_SECRET");
-  if (segredo && req.headers.get("x-webhook-secret") !== segredo) {
+  if (!segredo || req.headers.get("x-webhook-secret") !== segredo) {
     return json(401, { code: "unauthorized" });
   }
 
@@ -58,7 +60,12 @@ Deno.serve(async (req) => {
     return json(200, { ok: true, ignorado: "sem_token" });
   }
 
-  const conta = JSON.parse(contaBruta) as ServiceAccount;
+  let conta: ServiceAccount;
+  try {
+    conta = JSON.parse(contaBruta) as ServiceAccount;
+  } catch (_) {
+    return json(500, { code: "fcm_erro" });
+  }
   let accessToken: string;
   try {
     accessToken = await obterAccessToken(conta);

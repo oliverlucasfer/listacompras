@@ -73,6 +73,13 @@ begin
   select count(*) into v_antes from net.http_request_queue;
   insert into public.listas (id, titulo, dono_id)
   values ('d9100000-0000-0000-0000-000000000000', 'Lista NP dono', 'd0000000-0000-0000-0000-000000000000');
+  if not exists (
+    select 1 from public.lista_membros
+    where lista_id = 'd9100000-0000-0000-0000-000000000000'
+      and user_id = 'd0000000-0000-0000-0000-000000000000'
+  ) then
+    raise exception 'FALHOU NP-04: linha do dono nao foi criada';
+  end if;
   select count(*) into v_depois from net.http_request_queue;
   if v_depois <> v_antes then
     raise exception 'FALHOU NP-04: dono enfileirou % requests', v_depois - v_antes;

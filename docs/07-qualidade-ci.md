@@ -47,6 +47,7 @@ Pipeline único `.github/workflows/ci.yml`, disparado em PR e push em `main`:
 │  2. flutter analyze                            │
 │  3. flutter test (unit + widget)               │
 │  4. flutter build web --release                │
+│  5. flutter build apk --debug (push RF-30)     │
 ├────────────────────────────────────────────────┤
 │ job: supabase (paralelo)                       │
 │  1. supabase db reset (aplica migrations)      │
@@ -59,7 +60,7 @@ Pipeline único `.github/workflows/ci.yml`, disparado em PR e push em `main`:
 ```
 
 * PR só mergea com CI verde (branch protection).
-* **Builds de plataforma (F18-T05, ADR-012):** o job `flutter` compila o Web (`flutter build web --release`) e o job `desktop` valida `flutter build linux` (ubuntu-latest, instala `clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libcurl4-openssl-dev libssl-dev` — as duas últimas são exigidas pelo `sentry-native` via `FindCURL`) e `flutter build windows` (windows-latest) numa matriz com `fail-fast: false`. Os builds usam **valores fictícios** de `--dart-define` (`SUPABASE_URL=https://exemplo.supabase.co`, `SUPABASE_ANON_KEY=teste`) — nenhum segredo real entra no CI.
+* **Builds de plataforma (F18-T05, ADR-012; apk F38):** o job `flutter` compila o Web (`flutter build web --release`) e o **apk Android em debug** (`flutter build apk --debug` — único alvo do push, RF-30/F38), e o job `desktop` valida `flutter build linux` (ubuntu-latest, instala `clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libcurl4-openssl-dev libssl-dev` — as duas últimas são exigidas pelo `sentry-native` via `FindCURL`) e `flutter build windows` (windows-latest) numa matriz com `fail-fast: false`. Os builds usam **valores fictícios** de `--dart-define` (`SUPABASE_URL=https://exemplo.supabase.co`, `SUPABASE_ANON_KEY=teste`) — nenhum segredo real entra no CI.
 * **Assets WASM do Drift versionados (F18-T01):** `web/drift_worker.js` e `web/sqlite3.wasm` são cópias fiéis da release oficial `drift-2.34.4` (mesma versão pinada em `pubspec.lock`), necessárias ao banco no navegador (`WasmDatabase`/OPFS-IndexedDB, [05 §2](05-app-flutter.md), ADR-012). Para regenerar (ex.: subir o Drift), baixar da release correspondente e substituir os dois arquivos:
   ```bash
   curl -L -o web/drift_worker.js https://github.com/simolus3/drift/releases/download/drift-2.34.4/drift_worker.js
@@ -93,6 +94,7 @@ jobs:
           flutter build web --release
           --dart-define=SUPABASE_URL=https://exemplo.supabase.co
           --dart-define=SUPABASE_ANON_KEY=teste
+      - run: flutter build apk --debug   # único alvo do push (RF-30, F38)
 
   desktop:
     strategy:
