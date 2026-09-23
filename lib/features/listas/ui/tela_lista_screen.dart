@@ -18,6 +18,7 @@ import '../../../core/widgets/app_dropdown.dart';
 import '../../../core/widgets/app_esqueleto.dart';
 import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
+import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../convites/data/papel_repository.dart';
@@ -912,7 +913,7 @@ class _LinhaItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final linha = ListTile(
       // Tocar no item abre o editor (F12-T06) — o swipe continua disponível.
-      onTap: podeEscrever ? () => _abrirDialogoEditar(context, ref) : null,
+      onTap: podeEscrever ? () => _abrirSheetEditar(context, ref) : null,
       leading: podeEscrever
           // O checkbox recebe o nome do item como rótulo (doc 15 §4): sem isso
           // o leitor de tela anuncia uma caixa de seleção sem contexto.
@@ -968,7 +969,7 @@ class _LinhaItem extends ConsumerWidget {
       ),
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
-          _abrirDialogoEditar(context, ref);
+          _abrirSheetEditar(context, ref);
           return false;
         }
         await _removerComUndo(context, ref);
@@ -991,10 +992,10 @@ class _LinhaItem extends ConsumerWidget {
     );
   }
 
-  void _abrirDialogoEditar(BuildContext context, WidgetRef ref) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => _DialogoEditarItem(
+  Future<void> _abrirSheetEditar(BuildContext context, WidgetRef ref) async {
+    await AppSheet.mostrar<void>(
+      context,
+      child: _SheetEditarItem(
         item: item,
         listaId: listaId,
         onRemover: () => _removerComUndo(context, ref),
@@ -1143,8 +1144,8 @@ class _DialogoOrcamentoState extends State<_DialogoOrcamento> {
   }
 }
 
-class _DialogoEditarItem extends ConsumerStatefulWidget {
-  const _DialogoEditarItem({
+class _SheetEditarItem extends ConsumerStatefulWidget {
+  const _SheetEditarItem({
     required this.item,
     required this.listaId,
     this.onRemover,
@@ -1158,10 +1159,10 @@ class _DialogoEditarItem extends ConsumerStatefulWidget {
   final Future<void> Function()? onRemover;
 
   @override
-  ConsumerState<_DialogoEditarItem> createState() => _DialogoEditarItemState();
+  ConsumerState<_SheetEditarItem> createState() => _SheetEditarItemState();
 }
 
-class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
+class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
   late final _nome = TextEditingController(text: widget.item.nome);
   late final _quantidade = TextEditingController(
     text: formatarQuantidade(widget.item.quantidade),
@@ -1277,125 +1278,148 @@ class _DialogoEditarItemState extends ConsumerState<_DialogoEditarItem> {
   @override
   Widget build(BuildContext context) {
     final hist = ref.watch(historicoPrecoProvider(widget.item.nome)).value;
-    return AlertDialog(
-      title: const Text(AppStrings.editarItem),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AppCampoTexto(
-              controller: _nome,
-              label: AppStrings.nomeDoItem,
-              erro: _erroNome,
-              onChanged: (_) {
-                if (_erroNome != null) setState(() => _erroNome = null);
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                IconButton(
-                  tooltip: AppStrings.diminuir,
-                  icon: const Icon(Icons.remove_circle_outline),
-                  onPressed: () {
-                    final atual = _quantidadeLida() ?? 1;
-                    if (atual > 1) {
-                      _quantidade.text = formatarQuantidade(atual - 1);
-                      if (_erroQuantidade != null) {
-                        setState(() => _erroQuantidade = null);
-                      }
-                    }
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            AppStrings.editarItem,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppCampoTexto(
+            controller: _nome,
+            label: AppStrings.nomeDoItem,
+            erro: _erroNome,
+            onChanged: (_) {
+              if (_erroNome != null) setState(() => _erroNome = null);
+            },
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    IconButton(
+                      tooltip: AppStrings.diminuir,
+                      icon: const Icon(Icons.remove_circle_outline),
+                      onPressed: () {
+                        final atual = _quantidadeLida() ?? 1;
+                        if (atual > 1) {
+                          _quantidade.text = formatarQuantidade(atual - 1);
+                          if (_erroQuantidade != null) {
+                            setState(() => _erroQuantidade = null);
+                          }
+                        }
+                      },
+                    ),
+                    Expanded(
+                      child: AppCampoTexto(
+                        controller: _quantidade,
+                        label: AppStrings.quantidade,
+                        erro: _erroQuantidade,
+                        teclado: TextInputType.text,
+                        onChanged: (_) {
+                          if (_erroQuantidade != null) {
+                            setState(() => _erroQuantidade = null);
+                          }
+                        },
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: AppStrings.aumentar,
+                      icon: const Icon(Icons.add_circle_outline),
+                      onPressed: () {
+                        final atual = _quantidadeLida() ?? 1;
+                        _quantidade.text = formatarQuantidade(atual + 1);
+                        if (_erroQuantidade != null) {
+                          setState(() => _erroQuantidade = null);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: AppDropdown<Unidade>(
+                  label: AppStrings.unidade,
+                  valor: _unidade,
+                  itens: [
+                    for (final u in Unidade.values)
+                      DropdownMenuItem(value: u, child: Text(u.valor)),
+                  ],
+                  onChanged: (u) {
+                    if (u != null) setState(() => _unidade = u);
                   },
                 ),
-                Expanded(
-                  child: AppCampoTexto(
-                    controller: _quantidade,
-                    label: AppStrings.quantidade,
-                    erro: _erroQuantidade,
-                    teclado: TextInputType.text,
-                    onChanged: (_) {
-                      if (_erroQuantidade != null) {
-                        setState(() => _erroQuantidade = null);
-                      }
-                    },
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: AppDropdown<CategoriaItem>(
+                  label: AppStrings.categoria,
+                  valor: _categoria,
+                  itens: [
+                    for (final c in CategoriaItem.values)
+                      DropdownMenuItem(value: c, child: Text(c.rotulo)),
+                  ],
+                  onChanged: (c) {
+                    if (c != null) setState(() => _categoria = c);
+                  },
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: AppCampoTexto(
+                  controller: _preco,
+                  label: AppStrings.preco,
+                  erro: _erroPreco,
+                  teclado: const TextInputType.numberWithOptions(decimal: true),
+                  onChanged: (_) => setState(() => _erroPreco = null),
+                ),
+              ),
+            ],
+          ),
+          if (hist != null) _linhaHistoricoPreco(hist),
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              if (widget.onRemover != null)
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    unawaited(widget.onRemover!());
+                  },
+                  child: Text(
+                    AppStrings.removerItem,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 ),
-                IconButton(
-                  tooltip: AppStrings.aumentar,
-                  icon: const Icon(Icons.add_circle_outline),
-                  onPressed: () {
-                    final atual = _quantidadeLida() ?? 1;
-                    _quantidade.text = formatarQuantidade(atual + 1);
-                    if (_erroQuantidade != null) {
-                      setState(() => _erroQuantidade = null);
-                    }
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            AppDropdown<Unidade>(
-              label: AppStrings.unidade,
-              valor: _unidade,
-              itens: [
-                for (final u in Unidade.values)
-                  DropdownMenuItem(value: u, child: Text(u.valor)),
-              ],
-              onChanged: (u) {
-                if (u != null) setState(() => _unidade = u);
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            // Categoria (F6-T04, spec §6): mudar de grupo via edição.
-            AppDropdown<CategoriaItem>(
-              label: AppStrings.categoria,
-              valor: _categoria,
-              itens: [
-                for (final c in CategoriaItem.values)
-                  DropdownMenuItem(value: c, child: Text(c.rotulo)),
-              ],
-              onChanged: (c) {
-                if (c != null) setState(() => _categoria = c);
-              },
-            ),
-            const SizedBox(height: AppSpacing.md),
-            // Preço unitário opcional (RF-21, F25): vazio = sem preço.
-            AppCampoTexto(
-              controller: _preco,
-              label: AppStrings.preco,
-              erro: _erroPreco,
-              teclado: const TextInputType.numberWithOptions(decimal: true),
-              // Rebuild a cada digitação: a variação (RF-29) acompanha o texto.
-              onChanged: (_) => setState(() => _erroPreco = null),
-            ),
-            // Última compra + variação (RF-29, F37), quando houver histórico.
-            if (hist != null) _linhaHistoricoPreco(hist),
-          ],
-        ),
-      ),
-      actions: [
-        if (widget.onRemover != null)
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              unawaited(widget.onRemover!());
-            },
-            child: Text(
-              AppStrings.removerItem,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
+              const Spacer(),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(AppStrings.cancelar),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              AppBotao(
+                rotulo: AppStrings.salvar,
+                expandido: false,
+                onPressed: _salvar,
+              ),
+            ],
           ),
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text(AppStrings.cancelar),
-        ),
-        AppBotao(
-          rotulo: AppStrings.salvar,
-          expandido: false,
-          onPressed: _salvar,
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
