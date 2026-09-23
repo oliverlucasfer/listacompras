@@ -1392,62 +1392,49 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
           ),
           if (hist != null) _linhaHistoricoPreco(hist),
           const SizedBox(height: AppSpacing.lg),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              // Rodapé: em escala normal cabe numa linha (Remover à esquerda;
-              // Cancelar/Salvar à direita). Com fonte ampliada ou tela muito
-              // estreita empilha, para nunca estourar (RNF-06).
-              final escala = MediaQuery.textScalerOf(context).scale(1);
-              final empilhar = escala >= 1.3 || constraints.maxWidth < 300;
-              final remover = widget.onRemover == null
-                  ? null
-                  : TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        unawaited(widget.onRemover!());
-                      },
-                      child: Text(
-                        AppStrings.removerItem,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ),
-                    );
-              final cancelar = TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text(AppStrings.cancelar),
-              );
-              final salvar = AppBotao(
-                rotulo: AppStrings.salvar,
-                expandido: false,
-                onPressed: _salvar,
-              );
-              if (empilhar) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (remover != null)
-                      Align(alignment: Alignment.centerLeft, child: remover),
-                    OverflowBar(
-                      alignment: MainAxisAlignment.end,
-                      overflowAlignment: OverflowBarAlignment.end,
-                      spacing: AppSpacing.sm,
-                      overflowSpacing: AppSpacing.sm,
-                      children: [cancelar, salvar],
+          // Rodapé sempre sem estouro (RNF-06): o `OverflowBar` externo põe
+          // Remover à esquerda e o grupo à direita quando cabem; se não, quebra
+          // o grupo para a linha de baixo. O `OverflowBar` interno mantém
+          // Cancelar/Salvar juntos e os separa só quando o grupo não cabe.
+          OverflowBar(
+            alignment: MainAxisAlignment.spaceBetween,
+            overflowAlignment: OverflowBarAlignment.end,
+            spacing: AppSpacing.sm,
+            overflowSpacing: AppSpacing.sm,
+            children: [
+              if (widget.onRemover != null)
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    unawaited(widget.onRemover!());
+                  },
+                  child: Text(
+                    AppStrings.removerItem,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
                     ),
-                  ],
-                );
-              }
-              return Row(
+                  ),
+                )
+              else
+                const SizedBox.shrink(),
+              OverflowBar(
+                alignment: MainAxisAlignment.end,
+                overflowAlignment: OverflowBarAlignment.end,
+                spacing: AppSpacing.sm,
+                overflowSpacing: AppSpacing.sm,
                 children: [
-                  ?remover,
-                  const Spacer(),
-                  cancelar,
-                  const SizedBox(width: AppSpacing.sm),
-                  salvar,
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(AppStrings.cancelar),
+                  ),
+                  AppBotao(
+                    rotulo: AppStrings.salvar,
+                    expandido: false,
+                    onPressed: _salvar,
+                  ),
                 ],
-              );
-            },
+              ),
+            ],
           ),
         ],
       ),

@@ -709,6 +709,32 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_nao_estourar_quando_largura_estreita', (tester) async {
+    // 360dp (largura comum de celular) com fonte normal: o rodapé com as três
+    // ações (Remover/Cancelar/Salvar) não pode estourar (RNF-06, F40-T03).
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await listaComItens(tester);
+    await tester.tap(find.text('Arroz'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.editarItem), findsOneWidget);
+    // As três ações estão presentes (caso que estourava).
+    expect(find.text(AppStrings.removerItem), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    final salvar = find.widgetWithText(FilledButton, AppStrings.salvar);
+    expect(salvar, findsOneWidget);
+    await tester.ensureVisible(salvar);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_manter_campos_alcancaveis_quando_teclado_abre', (
     tester,
   ) async {
