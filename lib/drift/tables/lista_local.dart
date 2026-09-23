@@ -14,4 +14,10 @@ class ListaLocal extends Table {
 
   @override
   Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => [
+    'CHECK (orcamento_centavos IS NULL OR '
+        '(orcamento_centavos >= 0 AND orcamento_centavos <= 99999999))',
+  ];
 }

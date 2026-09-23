@@ -3,9 +3,8 @@ import 'package:drift/drift.dart';
 import 'lista_local.dart';
 
 /// Espelha `itens_lista` do Postgres (doc 01 §4.3).
-/// `unidade` restrita ao enum fechado (doc 01 §3.1): un, kg, g, l, ml,
-/// caixa, pacote, pct, dz — validação Dart em lib/features/listas/domain.
-/// `categoria` restrita ao enum fechado (doc 01 §3.2, ADR-011) — F6-T02.
+/// `unidade` e `categoria` restritas aos enums fechados e `quantidade > 0` —
+/// barreiras espelhadas do Postgres (`0001_init.sql`, `0006`, `0017`), F39.
 class ItemLocal extends Table {
   TextColumn get id => text()();
   DateTimeColumn get createdAt => dateTime()();
@@ -23,4 +22,14 @@ class ItemLocal extends Table {
 
   @override
   Set<Column> get primaryKey => {id};
+
+  @override
+  List<String> get customConstraints => [
+    'CHECK (quantidade > 0)',
+    "CHECK (unidade IN ('un','kg','g','l','ml','caixa','pacote','pct','dz'))",
+    "CHECK (categoria IN ('hortifruti','mercearia','frios','laticinios',"
+        "'congelados','padaria','bebidas','pet','limpeza','higiene','outros'))",
+    'CHECK (preco_centavos IS NULL OR '
+        '(preco_centavos >= 0 AND preco_centavos <= 99999999))',
+  ];
 }

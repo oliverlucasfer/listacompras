@@ -650,4 +650,175 @@ void main() {
     expect(hist.unidade, 'pacote');
     expect(hist.registradoEm.toUtc(), quando);
   });
+
+  test('deve_rejeitar_quantidade_zero_quando_check_local_v8', () async {
+    await db
+        .into(db.listaLocal)
+        .insert(
+          ListaLocalCompanion.insert(
+            id: 'aaaaaaaa-0000-0000-0000-000000000001',
+            createdAt: agora,
+            updatedAt: agora,
+            titulo: 'Lista',
+            donoId: 'user-a',
+          ),
+        );
+    expect(
+      () => db
+          .into(db.itemLocal)
+          .insert(
+            ItemLocalCompanion.insert(
+              id: 'aaaaaaaa-0000-0000-0000-000000000002',
+              createdAt: agora,
+              updatedAt: agora,
+              listaId: 'aaaaaaaa-0000-0000-0000-000000000001',
+              nome: 'Zero',
+              quantidade: const Value(0),
+            ),
+          ),
+      throwsA(isA<Exception>()),
+    );
+  });
+
+  test('deve_rejeitar_unidade_fora_do_enum_quando_check_local_v8', () async {
+    await db
+        .into(db.listaLocal)
+        .insert(
+          ListaLocalCompanion.insert(
+            id: 'bbbbbbbb-0000-0000-0000-000000000001',
+            createdAt: agora,
+            updatedAt: agora,
+            titulo: 'Lista',
+            donoId: 'user-a',
+          ),
+        );
+    expect(
+      () => db
+          .into(db.itemLocal)
+          .insert(
+            ItemLocalCompanion.insert(
+              id: 'bbbbbbbb-0000-0000-0000-000000000002',
+              createdAt: agora,
+              updatedAt: agora,
+              listaId: 'bbbbbbbb-0000-0000-0000-000000000001',
+              nome: 'Estranho',
+              unidade: const Value('litros'),
+            ),
+          ),
+      throwsA(isA<Exception>()),
+    );
+  });
+
+  test('deve_criar_indice_uq_item_ativo_quando_instalacao_nova', () async {
+    final indice = await db
+        .customSelect(
+          "SELECT name FROM sqlite_master "
+          "WHERE type = 'index' AND name = 'uq_item_ativo'",
+        )
+        .get();
+    expect(indice, isNotEmpty);
+  });
+
+  test('deve_deduplicar_e_criar_indice_quando_migrar_v7_para_v8', () async {
+    final arquivo = File(
+      '${Directory.systemTemp.path}/v7_para_v8_${DateTime.now().microsecondsSinceEpoch}.sqlite',
+    );
+    addTearDown(() {
+      if (arquivo.existsSync()) arquivo.deleteSync();
+    });
+
+    final antigo = sq3.sqlite3.open(arquivo.path);
+    antigo.execute('''
+        CREATE TABLE lista_local (
+          id TEXT NOT NULL PRIMARY KEY,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          titulo TEXT NOT NULL,
+          dono_id TEXT NOT NULL,
+          deletado_em TEXT NULL,
+          arquivada_em TEXT NULL,
+          orcamento_centavos INTEGER NULL,
+          FOREIGN KEY (dono_id) REFERENCES lista_local (id) ON DELETE CASCADE
+        );
+        CREATE TABLE item_local (
+          id TEXT NOT NULL PRIMARY KEY,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          lista_id TEXT NOT NULL REFERENCES lista_local (id) ON DELETE CASCADE,
+          nome TEXT NOT NULL,
+          quantidade REAL NOT NULL DEFAULT 1.0,
+          unidade TEXT NOT NULL DEFAULT 'un',
+          categoria TEXT NOT NULL DEFAULT 'outros',
+          concluido INTEGER NOT NULL DEFAULT 0,
+          ordem INTEGER NOT NULL DEFAULT 0,
+          deletado_em TEXT NULL,
+          preco_centavos INTEGER NULL
+        );
+        CREATE TABLE mutacao_pendente (
+          id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+          tabela TEXT NOT NULL,
+          operacao TEXT NOT NULL,
+          registro_id TEXT NOT NULL,
+          payload TEXT NOT NULL,
+          ts_local TEXT NOT NULL,
+          tentativas INTEGER NOT NULL DEFAULT 0,
+          lista_id TEXT NOT NULL
+        );
+        CREATE TABLE historico_preco_local (
+          nome_normalizado TEXT NOT NULL PRIMARY KEY,
+          preco_centavos INTEGER NOT NULL,
+          unidade TEXT NOT NULL,
+          registrado_em TEXT NOT NULL
+        );
+        PRAGMA user_version = 7;
+      ''');
+    antigo.execute(
+      "INSERT INTO lista_local (id, created_at, updated_at, titulo, dono_id) "
+      "VALUES ('cccccccc-0000-0000-0000-000000000001', "
+      "'2026-01-01T00:00:00.000000Z', '2026-01-01T00:00:00.000000Z', "
+      "'Antiga', 'user-a')",
+    );
+    // Duplicatas ativas: 'Arroz' duas vezes (mesma lista, mesmo nome).
+    antigo.execute(
+      "INSERT INTO item_local (id, created_at, updated_at, lista_id, nome, "
+      "quantidade, unidade, categoria, concluido, ordem) VALUES "
+      "('dddddddd-0000-0000-0000-000000000001', "
+      "'2026-01-01T00:00:00.000000Z', '2026-01-02T00:00:00.000000Z', "
+      "'cccccccc-0000-0000-0000-000000000001', 'Arroz', 1.0, 'kg', 'mercearia', 0, 0)",
+    );
+    antigo.execute(
+      "INSERT INTO item_local (id, created_at, updated_at, lista_id, nome, "
+      "quantidade, unidade, categoria, concluido, ordem) VALUES "
+      "('dddddddd-0000-0000-0000-000000000002', "
+      "'2026-01-01T00:00:00.000000Z', '2026-01-01T00:00:00.000000Z', "
+      "'cccccccc-0000-0000-0000-000000000001', 'arroz', 2.0, 'kg', 'mercearia', 0, 1)",
+    );
+    // A pendente pertence à duplicata mais ANTIGA — deve sobreviver por ter fila.
+    antigo.execute(
+      "INSERT INTO mutacao_pendente (tabela, operacao, registro_id, payload, "
+      "ts_local, lista_id) VALUES ('itens_lista', 'INSERT', "
+      "'dddddddd-0000-0000-0000-000000000002', '{}', "
+      "'2026-01-01T00:00:00.000000Z', 'cccccccc-0000-0000-0000-000000000001')",
+    );
+    antigo.close();
+
+    final migrado = AppDatabase(NativeDatabase(arquivo));
+    addTearDown(migrado.close);
+
+    final itens = await migrado.select(migrado.itemLocal).get();
+    expect(itens.length, 1);
+    expect(itens.single.id, 'dddddddd-0000-0000-0000-000000000002');
+
+    final fila = await migrado.select(migrado.mutacaoPendente).get();
+    expect(fila.length, 1);
+    expect(fila.single.registroId, 'dddddddd-0000-0000-0000-000000000002');
+
+    final indice = await migrado
+        .customSelect(
+          "SELECT name FROM sqlite_master "
+          "WHERE type = 'index' AND name = 'uq_item_ativo'",
+        )
+        .get();
+    expect(indice, isNotEmpty);
+  });
 }

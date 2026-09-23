@@ -17,7 +17,57 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
+
+  /// Paridade com o índice único parcial `uq_item_ativo` do Postgres
+  /// (`0001_init.sql:57-59`): parcial não é expressável no `@TableIndex`.
+  static const _criarIndiceItemAtivo =
+      'CREATE UNIQUE INDEX IF NOT EXISTS uq_item_ativo '
+      'ON item_local (lista_id, lower(nome)) WHERE deletado_em IS NULL';
+
+  /// Dedup defensivo antes de criar `uq_item_ativo` (F39): mantém 1 item ativo
+  /// por `(lista_id, lower(nome))`; prefere a linha com mutação pendente,
+  /// depois a de `updated_at` mais recente, depois o maior `rowid`. Remove as
+  /// perdedoras **e** suas mutações (o remoto reenvia a verdade ativa).
+  Future<void> _dedupItensAtivos() async {
+    await customStatement('''
+      CREATE TEMP TABLE _dups_grupos AS
+      SELECT i.lista_id AS lista_id, lower(i.nome) AS nome_lower
+      FROM item_local i
+      WHERE i.deletado_em IS NULL
+      GROUP BY i.lista_id, lower(i.nome)
+      HAVING COUNT(*) > 1
+    ''');
+    await customStatement('''
+      CREATE TEMP TABLE _dups_remover AS
+      SELECT i.id AS id
+      FROM item_local i
+      JOIN _dups_grupos g
+        ON g.lista_id = i.lista_id AND g.nome_lower = lower(i.nome)
+      WHERE i.deletado_em IS NULL
+        AND i.id <> (
+          SELECT j.id FROM item_local j
+          WHERE j.lista_id = i.lista_id
+            AND lower(j.nome) = g.nome_lower
+            AND j.deletado_em IS NULL
+          ORDER BY
+            (SELECT COUNT(*) FROM mutacao_pendente mp
+              WHERE mp.registro_id = j.id) DESC,
+            j.updated_at DESC,
+            j.rowid DESC
+          LIMIT 1
+        )
+    ''');
+    await customStatement(
+      'DELETE FROM mutacao_pendente WHERE registro_id IN '
+      '(SELECT id FROM _dups_remover)',
+    );
+    await customStatement(
+      'DELETE FROM item_local WHERE id IN (SELECT id FROM _dups_remover)',
+    );
+    await customStatement('DROP TABLE _dups_remover');
+    await customStatement('DROP TABLE _dups_grupos');
+  }
 
   /// Datas como texto ISO-8601 com microssegundos: o armazenamento padrão
   /// (unix segundos) truncava `updated_at` e criava empates artificiais no
@@ -28,7 +78,10 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (m) => m.createAll(),
+    onCreate: (m) async {
+      await m.createAll();
+      await customStatement(_criarIndiceItemAtivo);
+    },
     onUpgrade: (m, de, para) async {
       if (de < 2) {
         // v1 → v2: converte unix segundos (inteiro) para texto ISO-8601.
@@ -67,6 +120,14 @@ class AppDatabase extends _$AppDatabase {
         // v6 → v7: tabela local de histórico de preços (doc 05 §6.3,
         // RF-29, F37). Local-only: não sincroniza.
         await m.createTable(historicoPrecoLocal);
+      }
+      if (de < 8) {
+        // v7 → v8: barreiras locais espelhadas do Postgres (F39) —
+        // dedup antes de recriar as tabelas com CHECK e de criar o índice.
+        await _dedupItensAtivos();
+        await m.alterTable(TableMigration(itemLocal));
+        await m.alterTable(TableMigration(listaLocal));
+        await customStatement(_criarIndiceItemAtivo);
       }
     },
     beforeOpen: (details) async {

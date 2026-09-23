@@ -129,15 +129,16 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1));
   }
 
-  /// Cria um item frequente fora da lista aberta (peso = 1 por ocorrência).
+  /// Cria um item frequente fora da lista aberta (peso = 1 por lista; o
+  /// `uq_item_ativo` só admite 1 item ativo por `(lista, nome)` — RF-10).
   Future<void> criarFrequentesEmOutraLista(
     String nome,
     int vezes, {
     CategoriaItem categoria = CategoriaItem.outros,
   }) async {
     final repo = ListasRepository(db);
-    final outra = await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
     for (var i = 0; i < vezes; i++) {
+      final outra = await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
       await repo.adicionarItem(
         listaId: outra.id,
         nome: nome,

@@ -4,6 +4,8 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lista_compras/core/dominio/categoria.dart';
+import 'package:lista_compras/core/dominio/unidade.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/sync/data/mutacao_sync.dart';
@@ -185,10 +187,15 @@ void main() {
 
       final lista = await a.repo.criarLista(titulo: 'Compras', donoId: 'U1');
       await a.repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
-      await a.repo.adicionarItem(
+      // Mesmo nome ativo normalizado → a dedup local do app soma a quantidade.
+      // O `uq_item_ativo` do Drift (F39) espelha o Postgres e impede uma
+      // segunda linha ativa na mesma lista.
+      await a.repo.adicionarItemDedup(
         listaId: lista.id,
-        nome: 'arroz', // mesmo nome do item ativo → deduplicado ao sincronizar
+        nome: 'arroz',
         quantidade: 2,
+        unidade: Unidade.un,
+        categoria: CategoriaItem.outros,
       );
 
       a.online = true;
