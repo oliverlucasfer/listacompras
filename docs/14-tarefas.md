@@ -857,19 +857,19 @@ Spec: [superpowers/specs/2026-09-23-consistencia-arquitetural-design.md](superpo
 
 Spec: [superpowers/specs/2026-09-23-margens-e-editor-item-design.md](superpowers/specs/2026-09-23-margens-e-editor-item-design.md) · Plano: [superpowers/plans/2026-09-23-margens-e-editor-item.md](superpowers/plans/2026-09-23-margens-e-editor-item.md) · Requisito: RNF-06 (área de respiro / usabilidade). · Docs donos: 15, 10, 05.
 
-- [ ] **F40-T01** — Planejamento: Fase 40 e RNF-06
+- [x] **F40-T01** — Planejamento: Fase 40 e RNF-06
   Dep: — · Docs: [14](14-tarefas.md), [12](12-prd.md)
   CP: Fase 40 no 14 com as 5 tarefas e a linha de progresso (208/203); RNF-06 do 12 aponta a área de respiro do indicador de sync.
-- [ ] **F40-T02** — Margens: `IndicadorSync` a 16dp, literais verticais e token sem uso
+- [x] **F40-T02** — Margens: `IndicadorSync` a 16dp, literais verticais e token sem uso
   Dep: F40-T01 · Docs: [15 §1](15-design-system.md)
   CP: banners `Offline`/`ErroSync` em `fromLTRB(lg, sm, lg, 0)`; wrapper do painel em `only(top: sm)`; `painel_listas.dart:264`/`:185` nos tokens; `horizontalCompacto` removido do `app_spacing.dart` e do 15 §1; teste de margem verde (3 usos em 16dp).
-- [ ] **F40-T03** — Editor de item vira bottom sheet com campos em blocos
+- [x] **F40-T03** — Editor de item vira bottom sheet com campos em blocos
   Dep: F40-T02 · Docs: [05 §6.3](05-app-flutter.md), [10 §3](10-wireframes-telas.md)
   CP: `_abrirDialogoEditar` → `AppSheet.mostrar`; `_SheetEditarItem` em `SingleChildScrollView > Column(min, stretch)` com Nome (full), `[Quantidade −/+ | Unidade]`, `[Categoria | Preço]`, histórico e rodapé `Remover/Cancelar/Salvar`; validações e `editarItem(...)` inalterados; testes de tela do editor ajustados e verdes.
-- [ ] **F40-T04** — Teste de teclado e docs donos
+- [x] **F40-T04** — Teste de teclado e docs donos
   Dep: F40-T03 · Docs: [15 §1](15-design-system.md), [10](10-wireframes-telas.md), [05 §6.3](05-app-flutter.md)
   CP: teste com `viewInsets` simulado (sheet sem overflow e com os campos alcançáveis); 10 §3 e 05 §6.3 descrevem o editor como bottom sheet; 15 §1 com a regra de margem do `IndicadorSync`.
-- [ ] **F40-T05** — Fechamento: verificação e progresso
+- [x] **F40-T05** — Fechamento: verificação e progresso
   Dep: F40-T04 · Docs: [14](14-tarefas.md)
   CP: F40-T01…T05 marcadas e tabela (208/208); `dart format`/`flutter analyze`/`flutter test` verdes; nada em `supabase/`.
 
@@ -914,8 +914,8 @@ Spec: [superpowers/specs/2026-09-23-margens-e-editor-item-design.md](superpowers
 | F37 Comparação entre idas | 3 | 3 |
 | F38 Notificações push | 9 | 9 |
 | F39 Consistência arquitetural | 7 | 7 |
-| F40 Sheet do item e margens | 5 | 0 |
-| **Total** | **208** | **203** |
+| F40 Sheet do item e margens | 5 | 5 |
+| **Total** | **208** | **208** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
