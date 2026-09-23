@@ -793,12 +793,27 @@ void main() {
       "'2026-01-01T00:00:00.000000Z', '2026-01-01T00:00:00.000000Z', "
       "'cccccccc-0000-0000-0000-000000000001', 'arroz', 2.0, 'kg', 'mercearia', 0, 1)",
     );
-    // A pendente pertence à duplicata mais ANTIGA — deve sobreviver por ter fila.
+    // A duplicata mais ANTIGA (...002) tem DUAS mutações pendentes e a mais
+    // NOVA (...001) tem uma: a prioridade por fila (COUNT) mantém ...002,
+    // sobrepondo o `updated_at` mais recente de ...001.
     antigo.execute(
       "INSERT INTO mutacao_pendente (tabela, operacao, registro_id, payload, "
       "ts_local, lista_id) VALUES ('itens_lista', 'INSERT', "
       "'dddddddd-0000-0000-0000-000000000002', '{}', "
       "'2026-01-01T00:00:00.000000Z', 'cccccccc-0000-0000-0000-000000000001')",
+    );
+    antigo.execute(
+      "INSERT INTO mutacao_pendente (tabela, operacao, registro_id, payload, "
+      "ts_local, lista_id) VALUES ('itens_lista', 'UPDATE', "
+      "'dddddddd-0000-0000-0000-000000000002', '{}', "
+      "'2026-01-01T01:00:00.000000Z', 'cccccccc-0000-0000-0000-000000000001')",
+    );
+    // A perdedora também tem fila: ela precisa ser apagada junto do item.
+    antigo.execute(
+      "INSERT INTO mutacao_pendente (tabela, operacao, registro_id, payload, "
+      "ts_local, lista_id) VALUES ('itens_lista', 'INSERT', "
+      "'dddddddd-0000-0000-0000-000000000001', '{}', "
+      "'2026-01-02T00:00:00.000000Z', 'cccccccc-0000-0000-0000-000000000001')",
     );
     antigo.close();
 
@@ -810,8 +825,10 @@ void main() {
     expect(itens.single.id, 'dddddddd-0000-0000-0000-000000000002');
 
     final fila = await migrado.select(migrado.mutacaoPendente).get();
-    expect(fila.length, 1);
-    expect(fila.single.registroId, 'dddddddd-0000-0000-0000-000000000002');
+    expect(fila.length, 2);
+    expect(fila.map((m) => m.registroId).toSet(), {
+      'dddddddd-0000-0000-0000-000000000002',
+    });
 
     final indice = await migrado
         .customSelect(
@@ -820,5 +837,38 @@ void main() {
         )
         .get();
     expect(indice, isNotEmpty);
+
+    // Caminho MIGRADO: `alterTable` precisa reaplicar os `customConstraints`
+    // (senão instalações antigas perderiam as CHECKs silenciosamente).
+    expect(
+      () => migrado
+          .into(migrado.itemLocal)
+          .insert(
+            ItemLocalCompanion.insert(
+              id: 'dddddddd-0000-0000-0000-000000000003',
+              createdAt: agora,
+              updatedAt: agora,
+              listaId: 'cccccccc-0000-0000-0000-000000000001',
+              nome: 'Zero',
+              quantidade: const Value(0),
+            ),
+          ),
+      throwsA(isA<Exception>()),
+    );
+    expect(
+      () => migrado
+          .into(migrado.itemLocal)
+          .insert(
+            ItemLocalCompanion.insert(
+              id: 'dddddddd-0000-0000-0000-000000000004',
+              createdAt: agora,
+              updatedAt: agora,
+              listaId: 'cccccccc-0000-0000-0000-000000000001',
+              nome: 'Estranho',
+              unidade: const Value('litros'),
+            ),
+          ),
+      throwsA(isA<Exception>()),
+    );
   });
 }
