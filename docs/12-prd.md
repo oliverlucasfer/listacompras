@@ -62,7 +62,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RNF-05 | Privacidade (LGPD) | Exclusão de conta funcional; logs sem dados de conteúdo | [06 §3](06-mvp-entregas.md) |
 | RNF-06 | Acessibilidade | Alvos ≥ 48dp, contraste AA, escala de fonte respeitada | Testes de a11y ([15 §4](15-design-system.md)) |
 | RNF-07 | Custo | R$ 0 no MVP (free tiers) | Riscos R-01 com gatilho definido ([00 §4](00-visao-geral.md)) |
-| RNF-08 | Qualidade | CI verde obrigatório; sync e RLS com prioridade máxima de testes | [07 §1](07-qualidade-ci.md) |
+| RNF-08 | Qualidade | CI verde obrigatório; sync e RLS com prioridade máxima de testes | [07 §1](07-qualidade-ci.md); consistência de camadas e paridade de barreiras local/remoto (F39) |
 
 ## 4. User Stories
 

@@ -827,6 +827,32 @@ Spec: [superpowers/specs/2026-09-23-notificacoes-push-design.md](superpowers/spe
   Dep: F38-T08 · Docs: [08 §11/§10](08-compartilhamento-colaborativo.md), [09 §2](09-runbook-operacoes.md), [14](14-tarefas.md), [16](16-roadmap-pos-mvp.md)
   CP: 08 §11 (arquitetura do push) + §10 (checklist de 2 aparelhos); 09 §2 (secrets/Vault/deploy/smoke/rotação); F38-T01…T09 marcadas e tabela de progresso (196/194); B3 do 16 concluído; versão `1.5.0+9`; `flutter analyze`/`flutter test` e testes SQL verdes.
 
+## Fase 39 — Consistência arquitetural (RNF-08)
+
+Spec: [superpowers/specs/2026-09-23-consistencia-arquitetural-design.md](superpowers/specs/2026-09-23-consistencia-arquitetural-design.md) · Plano: [superpowers/plans/2026-09-23-consistencia-arquitetural.md](superpowers/plans/2026-09-23-consistencia-arquitetural.md) · Requisito: RNF-08 (qualidade — consistência de camadas e paridade de barreiras). · Docs donos: 05, 03, 02, 09, 04.
+
+- [ ] **F39-T01** — Planejamento: Fase 39 e rastreabilidade no RNF-08
+  Dep: — · Docs: [14](14-tarefas.md), [12 §4](12-prd.md)
+  CP: Fase 39 no 14 com as 7 tarefas e a linha de progresso (203/194); RNF-08 do 12 aponta a consistência arquitetural como evidência.
+- [ ] **F39-T02** — Shared kernel: `lib/core/dominio/`
+  Dep: F39-T01 · Docs: [05 §2](05-app-flutter.md), [13 §3](13-premodelo-tecnico.md)
+  CP: `categoria.dart`/`unidade.dart`/`quantidade.dart` em `lib/core/dominio/`; `core/` não importa mais `features/`; 45 imports atualizados; testes movidos para `test/core/dominio/`; `flutter analyze`/`flutter test` verdes.
+- [ ] **F39-T03** — Providers de rede para `providers/`
+  Dep: F39-T02 · Docs: [05 §2](05-app-flutter.md)
+  CP: `membrosDaListaProvider` e `meusConvitesPendentesProvider` em `convites/providers/convites_providers.dart`; nenhum provider definido em `ui/`; testes de membros/convites pendentes verdes.
+- [ ] **F39-T04** — Deduplicação: `emailValido` e `Papel.rotulo`
+  Dep: F39-T02 · Docs: [05 §2](05-app-flutter.md)
+  CP: `lib/core/texto/validacao.dart` com `emailValido`; getter `Papel.rotulo`; 4 usos de regex e 3 `_rotuloPapel` eliminados; testes novos verdes.
+- [ ] **F39-T05** — Drift: barreiras locais espelhando o Postgres (v7→v8)
+  Dep: F39-T02 · Docs: [05 §2](05-app-flutter.md), [03 §3](03-sincronizacao-offline.md)
+  CP: `customConstraints` em `ItemLocal`/`ListaLocal`; `schemaVersion = 8`; migração com dedup defensivo + `alterTable` + índice único parcial `uq_item_ativo`; `onCreate` cria o índice; testes de migração v7→v8 e de negativos dos CHECK verdes.
+- [ ] **F39-T06** — Docs donos e higiene
+  Dep: F39-T05 · Docs: [05 §2](05-app-flutter.md), [02 §5](02-seguranca-rls.md), [09 §2](09-runbook-operacoes.md), [03 §3](03-sincronizacao-offline.md)
+  CP: 05 §2 com a árvore real e a paridade de barreiras Drift × Postgres (incluindo a nota `real` × `numeric`); 02 §5 corrige a lista de migrations de RLS; 09 §2 registra a decisão do `google-services.json`; 03 §3 aponta para a seção de barreiras locais; `.gitignore` corrigido.
+- [ ] **F39-T07** — Fechamento: verificação e distribuição
+  Dep: F39-T06 · Docs: [14](14-tarefas.md)
+  CP: F39-T01…T07 marcadas e tabela de progresso (203/203); `dart format .`, `flutter analyze`, `flutter test` e SQL/Deno inalterados verdes; CI verde; (opcional, sob pedido) build `1.5.0+9` redistribuído — o comportamento não mudou, então o app distribuído continua válido.
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -867,7 +893,8 @@ Spec: [superpowers/specs/2026-09-23-notificacoes-push-design.md](superpowers/spe
 | F36 Orçamento | 5 | 5 |
 | F37 Comparação entre idas | 3 | 3 |
 | F38 Notificações push | 9 | 9 |
-| **Total** | **196** | **194** |
+| F39 Consistência arquitetural | 7 | 0 |
+| **Total** | **203** | **194** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
