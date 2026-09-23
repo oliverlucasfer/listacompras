@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links
   connectivity_plus
+  firebase_core
   sentry_flutter
   share_plus
   speech_to_text_windows
