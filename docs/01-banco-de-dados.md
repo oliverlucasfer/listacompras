@@ -235,6 +235,21 @@ Tabela de convites por link/e-mail: `id`, `lista_id` (CASCADE), `criado_por` (FK
 
 ---
 
+### 4.5. `push_tokens` (RF-30, F38)
+
+| Coluna | Tipo | Regra |
+| :--- | :--- | :--- |
+| `id` | `uuid` | PK, `gen_random_uuid()` |
+| `user_id` | `uuid` | FK `auth.users(id)` `on delete cascade` (RF-11) |
+| `token` | `text` | **unique** — upsert por token; o mesmo aparelho reatribui o token ao novo usuário |
+| `plataforma` | `text` | `check (plataforma in ('android','ios'))`, default `android` |
+| `atualizado_em` | `timestamptz` | atualizado pelo app no upsert |
+| `created_at` | `timestamptz` | `now()` |
+
+Índice `idx_push_tokens_user (user_id)`. Device-only: **não** entra no Realtime nem no sync.
+
+---
+
 ## 5. Trigger de `updated_at`
 
 Todo UPDATE deve atualizar `updated_at` automaticamente (base do LWW):

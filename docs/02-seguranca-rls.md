@@ -90,13 +90,16 @@ alter table public.listas        enable row level security;
 alter table public.lista_membros enable row level security;
 alter table public.itens_lista   enable row level security;
 alter table public.convites      enable row level security;
+alter table public.push_tokens   enable row level security;
 alter table public.listas        force row level security;
 alter table public.lista_membros force row level security;
 alter table public.itens_lista   force row level security;
 alter table public.convites      force row level security;
+alter table public.push_tokens   force row level security;
 ```
 
 > `convites` (Fase 6, migration `0007`) segue as mesmas regras das demais: RLS habilitada e forçada, policies em [§4.4](#44-convites-fase-6--08-2).
+> `push_tokens` (F38, migration `0021`) idem: RLS habilitada e forçada, policies em [§4.8](#48-push_tokens-rf-30-f38).
 
 ---
 
@@ -121,6 +124,10 @@ alter table public.convites      force row level security;
 | `convites` | INSERT | Dono da lista | `criado_por = auth.uid()` e é dono |
 | `convites` | UPDATE | Dono da lista | idem (revogar) |
 | `convites` | DELETE | Dono da lista | idem (limpeza de convites antigos) |
+| `push_tokens` | SELECT | Dono da linha | `user_id = auth.uid()` |
+| `push_tokens` | INSERT | Dono da linha | `user_id = auth.uid()` |
+| `push_tokens` | UPDATE | Dono da linha | `user_id = auth.uid()` |
+| `push_tokens` | DELETE | Dono da linha | `user_id = auth.uid()` |
 
 **Regras complementares:**
 * `leitor` tem acesso apenas de leitura — políticas de INSERT/UPDATE/DELETE checam explicitamente o papel.
@@ -432,6 +439,26 @@ grant execute on function public.recusar_convite(uuid) to authenticated;
 > **Nenhuma policy nova:** os dois RPCs são `security definer` (dono `postgres`, migration `0019`) e atravessam o RLS de `convites`, como `aceitar_convite`/`transferir_dono`. A autorização é interna: o filtro `lower(email) = lower(public.email_autenticado())` garante que cada usuário só vê/recusa o convite dirigido ao **próprio** e-mail. O aceite **não** tem RPC novo — reusa `aceitar_convite` (idempotente, [08 §3.1](08-compartilhamento-colaborativo.md)).
 > **Guarda de expiração:** as duas funções exigem `expira_em >= now()` — `meus_convites_pendentes` não lista convites vencidos e `recusar_convite` rejeita com `CONVITE_INVALIDO` a recusa de um convite expirado do próprio e-mail (o estado `expirado` nunca é gravado, [08 §2](08-compartilhamento-colaborativo.md)); `recusar_convite` também exige `estado = 'pendente'`, então não "recusa" um convite já aceito.
 
+### 4.8. `push_tokens` (RF-30, F38)
+
+Cada linha é o token FCM de um dispositivo pertencente a um usuário; a policy é por dono da linha — o `user_id` só pode ser o próprio `auth.uid()`:
+
+```sql
+create policy push_tokens_select on public.push_tokens
+  for select using (user_id = auth.uid());
+
+create policy push_tokens_insert on public.push_tokens
+  for insert with check (user_id = auth.uid());
+
+create policy push_tokens_update on public.push_tokens
+  for update using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+create policy push_tokens_delete on public.push_tokens
+  for delete using (user_id = auth.uid());
+```
+
+> **Device-only:** `push_tokens` **não** entra no Realtime nem no sync; o app faz upsert pelo `token` (unique) e apaga o próprio token no logout. A Edge Function `enviar-push` (F38) lê a tabela com `service_role` para resolver os destinatários — nunca a partir do cliente. Migration `0021`; schema em [01 §4.5](01-banco-de-dados.md).
+
 ---
 
 ## 5. Testes de Negação (obrigatórios na Fase 1)
@@ -457,6 +484,9 @@ Casos que **DEVEM falhar** (executados como usuário autenticado sem acesso, via
 | N-16 | `editor` tenta remover linha de outro membro (DELETE em `lista_membros`) | 0 linhas (F7-T07) |
 | N-17 | Dono tenta promover membro a `dono` via UPDATE | violação de policy (`with check`, F7-T07) |
 | N-18 | Dono insere terceiro **sem membresia** como `papel='dono'` | negado — a linha não existe (`0015`, R-18) |
+| N-19 | Usuário A faz SELECT do token de push de B | 0 linhas (F38) |
+| N-20 | Usuário A insere token de push para B | violação de policy (`with check`, F38) |
+| N-21 | Usuário A apaga o token de push de B | 0 linhas (F38) |
 | R-19 | UPDATE em `convites` como dono | `atualizado_em` carimbado pelo trigger (`0015`) |
 
 > N-12 é **positivo** apesar do prefixo N (cobria a leitura legítima dos convites pelo dono) — movido para a tabela "DEVEM passar" abaixo.
@@ -477,6 +507,7 @@ Casos que **DEVEM passar**:
 | P-09 | Dono renomeia lista com >1 lista no banco | 1 linha (F12-T04) |
 | P-10 | Dono tenta mudar `listas.dono_id` via UPDATE | violação de policy (F12-T04) |
 | P-11 | Dono se insere como `dono` em lista nova | sucesso (`0015`, R-18) |
+| P-12 | Usuário A lê/insere/apaga o próprio token de push; upsert reatribui o token | sucesso (F38) |
 
 Ferramentas: testes de integração com dois usuários reais (ver [07 Qualidade](07-qualidade-ci.md)) ou script SQL com `set local role authenticated; set local request.jwt.claims = ...` em ambiente dev.
 
@@ -484,12 +515,14 @@ Ferramentas: testes de integração com dois usuários reais (ver [07 Qualidade]
 
 > **Convite por e-mail (RF-13, F32):** coberto por `supabase/tests/convites_email_tests.sql` (CE-01…CE-04 + CE-02b) rodado no CI — `meus_convites_pendentes()` devolve o convite do próprio e-mail (com título e token) e esconde o alheio (CE-01) e o expirado (CE-03); `recusar_convite` revoga só o próprio e rejeita o alheio com `CONVITE_INVALIDO` (CE-02); a **guarda de expiração** rejeita a recusa de um convite vencido do próprio e-mail (CE-02b); `anon` não executa os RPCs — grant restrito a `authenticated` (CE-04).
 
+> **Tokens de push (RF-30, F38):** coberto por `supabase/tests/push_tokens_tests.sql` (N-19…N-21 + P-12) rodado no CI — A não lê (N-19), não insere para (N-20, `with check`) e não apaga (N-21) o token de B; A lê/insere/apaga o próprio token e o upsert reatribui o token (P-12).
+
 ---
 
 ## 6. Checklist de validação (Fase 1)
 
 - [ ] `force row level security` aplicado em todas as tabelas.
-- [ ] Todos os casos de negação (N-01…N-17; N-12 é positivo — ver §5) falham como esperado.
+- [ ] Todos os casos de negação (N-01…N-21; N-12 é positivo — ver §5) falham como esperado.
 - [ ] Todos os casos positivos (P-01…P-07, exceto P-05 Realtime) passam.
 - [ ] Policies versionadas na migration `0002_rls_policies.sql`.
 - [ ] Realtime recebe apenas eventos autorizados (teste com 2 contas).
