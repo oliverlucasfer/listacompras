@@ -15,11 +15,6 @@ import '../domain/convite_pendente.dart';
 import '../domain/papel.dart';
 import '../providers/convites_providers.dart';
 
-/// Meus convites por e-mail pendentes (RF-13, fluxo B, F32).
-final meusConvitesPendentesProvider = FutureProvider<List<ConvitePendente>>(
-  (ref) => ref.watch(convitesRepositoryProvider).meusConvitesPendentes(),
-);
-
 String _rotuloPapel(Papel papel) => switch (papel) {
   Papel.dono => AppStrings.papelDono,
   Papel.editor => AppStrings.convidarPapelEditor,

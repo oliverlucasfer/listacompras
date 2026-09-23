@@ -19,28 +19,6 @@ import '../providers/convites_providers.dart';
 import '../providers/papel_providers.dart';
 import 'acao_sair_da_lista.dart';
 
-/// Membros da lista (doc 08 §5/§8, F7-T03, RF-13): FutureProvider.family por
-/// listaId via `membrosDaLista`; dono troca papel (editor↔leitor), remove
-/// membro e transfere o dono (RF-14, F24); não-dono sai da lista e, após
-/// transferir, o ex-dono vira `editor` e passa a poder sair (doc 08 §6).
-/// **Correção:** o dono é mesclado a partir da lista local (`donoId`) quando o
-/// servidor não devolve a linha — a tela nunca fica
-/// vazia para listas próprias (offline ou associação pendente).
-final membrosDaListaProvider = FutureProvider.family<List<MembroLista>, String>(
-  (ref, listaId) async {
-    final membros = await ref
-        .watch(convitesRepositoryProvider)
-        .membrosDaLista(listaId);
-    final donoId = ref.watch(listaPorIdProvider(listaId)).value?.donoId;
-    if (donoId != null &&
-        donoId.isNotEmpty &&
-        !membros.any((m) => m.papel == Papel.dono)) {
-      return [MembroLista(userId: donoId, papel: Papel.dono), ...membros];
-    }
-    return membros;
-  },
-);
-
 class TelaMembrosScreen extends ConsumerStatefulWidget {
   const TelaMembrosScreen({super.key, required this.listaId});
 
