@@ -3,7 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import '../domain/notificacoes_push.dart';
 
 class NotificacoesPushFirebase implements NotificacoesPush {
-  final _mensageria = FirebaseMessaging.instance;
+  FirebaseMessaging get _mensageria => FirebaseMessaging.instance;
 
   @override
   bool get suportado => true;

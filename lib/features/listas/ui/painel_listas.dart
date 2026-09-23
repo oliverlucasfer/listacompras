@@ -24,6 +24,7 @@ import '../../convites/providers/convites_providers.dart';
 import '../../convites/providers/papel_providers.dart';
 import '../../convites/ui/acao_sair_da_lista.dart';
 import '../../convites/ui/convites_pendentes_secao.dart';
+import '../../notificacoes/providers/notificacoes_providers.dart';
 import '../domain/lista_com_contagem.dart';
 import '../providers/listas_providers.dart';
 import 'sheet_titulo_lista.dart';
@@ -507,6 +508,7 @@ Future<void> abrirSheetNovaLista(BuildContext context, WidgetRef ref) {
       // Papel local imediato (funciona offline): o criador é dono. O servidor
       // confirma a associação em `lista_membros` na migration 0010.
       ref.read(papelRepositoryProvider).atualizar(lista.id, Papel.dono);
+      await ref.read(notificacoesServiceProvider).talvezPedirPermissao();
     },
   );
 }

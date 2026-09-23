@@ -6,8 +6,10 @@ import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/features/convites/data/convites_repository.dart';
 import 'package:lista_compras/features/convites/providers/convites_providers.dart';
 import 'package:lista_compras/features/convites/ui/convites_pendentes_secao.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../auth/fakes.dart';
 import 'servidor_fake.dart';
 
 const _listaId = 'lista-1';
@@ -65,6 +67,10 @@ Future<GoRouter> _abrir(WidgetTester tester, ServidorFake servidor) async {
 }
 
 void main() {
+  setUpAll(inicializarSupabaseTeste);
+
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   testWidgets('deve_mostrar_convite_pendente_quando_ha', (tester) async {
     final servidor = ServidorFake((req) {
       if (req.method == 'POST' &&

@@ -6,6 +6,7 @@ import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../notificacoes/providers/notificacoes_providers.dart';
 import '../domain/convite.dart';
 import '../providers/convites_providers.dart';
 
@@ -66,6 +67,7 @@ class _EntrarScreenState extends ConsumerState<EntrarScreen> {
     });
     try {
       final listaId = await ref.read(convitesRepositoryProvider).aceitar(token);
+      await ref.read(notificacoesServiceProvider).talvezPedirPermissao();
       if (mounted) context.go('/lista/$listaId');
     } on ErroConvite catch (e) {
       if (mounted) setState(() => _erro = e);

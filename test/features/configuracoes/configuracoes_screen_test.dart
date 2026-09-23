@@ -101,6 +101,11 @@ void main() {
     expect(find.text(AppStrings.sobre), findsOneWidget);
     expect(find.text(AppStrings.politicaPrivacidade), findsOneWidget);
     expect(find.text(AppStrings.versao), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text(AppStrings.excluirMinhaContaAviso),
+      300,
+    );
     expect(find.text(AppStrings.excluirMinhaConta), findsOneWidget);
     expect(find.text(AppStrings.excluirMinhaContaAviso), findsOneWidget);
 
@@ -122,6 +127,10 @@ void main() {
   testWidgets('deve_ter_excluir_em_vermelho_quando_abrir', (tester) async {
     await abrir(tester);
 
+    await tester.scrollUntilVisible(
+      find.text(AppStrings.excluirMinhaContaAviso),
+      300,
+    );
     final botao = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, AppStrings.excluirMinhaConta),
     );

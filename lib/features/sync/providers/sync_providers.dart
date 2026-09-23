@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../auth/providers/auth_providers.dart';
 import '../../convites/providers/papel_providers.dart';
 import '../../listas/providers/listas_providers.dart';
+import '../../notificacoes/providers/notificacoes_providers.dart';
 import '../data/supabase_bootstrap.dart';
 import '../data/supabase_sync_remoto.dart';
 import '../data/sync_engine.dart';
@@ -53,6 +55,12 @@ final syncBootstrapProvider = Provider<SupabaseBootstrap>((ref) {
   );
   ref.onDispose(bootstrap.dispose);
   unawaited(bootstrap.iniciar());
+  // Reafirma o token no start logado (best-effort, uma vez por transição).
+  ref.listen(autenticadoProvider, (_, autenticado) {
+    if (autenticado) {
+      unawaited(ref.read(notificacoesServiceProvider).registrarSeAtivo());
+    }
+  });
   return bootstrap;
 });
 

@@ -34,6 +34,10 @@ void main() {
 
   Future<void> abrirDialogoExclusao(WidgetTester tester) async {
     await abrir(tester);
+    await tester.scrollUntilVisible(
+      find.text(AppStrings.excluirMinhaConta),
+      300,
+    );
     await tester.tap(find.text(AppStrings.excluirMinhaConta));
     await tester.pumpAndSettle();
   }

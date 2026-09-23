@@ -9,6 +9,7 @@ import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_chip.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../../listas/providers/listas_providers.dart';
+import '../../notificacoes/providers/notificacoes_providers.dart';
 import '../domain/convite.dart';
 import '../domain/convite_pendente.dart';
 import '../domain/papel.dart';
@@ -110,6 +111,7 @@ class ConvitesPendentesSecao extends ConsumerWidget {
       final listaId = await ref
           .read(convitesRepositoryProvider)
           .aceitar(convite.token);
+      await ref.read(notificacoesServiceProvider).talvezPedirPermissao();
       ref.invalidate(listasComContagemProvider);
       // O card aceito sairia do painel: sem isto, o cache (não autoDispose)
       // ainda exibiria "Aceitar" ao voltar para Minhas Listas.

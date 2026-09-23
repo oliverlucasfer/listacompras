@@ -28,8 +28,7 @@ class NotificacoesService {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getBool(_chavePedido) ?? false) return false;
     await prefs.setBool(_chavePedido, true);
-    final permissao = await _push.pedirPermissao();
-    if (permissao != PermissaoPush.concedida) return false;
+    if (await _pedirPermissao() != PermissaoPush.concedida) return false;
     await prefs.setBool(_chaveAtivas, true);
     await _registrarToken();
     return true;
@@ -39,12 +38,13 @@ class NotificacoesService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_chaveAtivas, ativas);
     if (ativas) {
-      final permissao = await _push.pedirPermissao();
-      if (permissao == PermissaoPush.concedida) await _registrarToken();
+      if (await _pedirPermissao() == PermissaoPush.concedida) {
+        await _registrarToken();
+      }
     } else {
-      final token = await _push.obterToken();
+      final token = await _obterToken();
       if (token != null) await _removerToken(token);
-      await _push.apagarToken();
+      await _apagarToken();
     }
   }
 
@@ -56,13 +56,37 @@ class NotificacoesService {
   }
 
   Future<void> aoSair() async {
-    final token = await _push.obterToken();
+    final token = await _obterToken();
     if (token != null) await _removerToken(token);
-    await _push.apagarToken();
+    await _apagarToken();
+  }
+
+  Future<PermissaoPush> _pedirPermissao() async {
+    try {
+      return await _push.pedirPermissao();
+    } on Exception {
+      return PermissaoPush.negada;
+    }
+  }
+
+  Future<String?> _obterToken() async {
+    try {
+      return await _push.obterToken();
+    } on Exception {
+      return null;
+    }
+  }
+
+  Future<void> _apagarToken() async {
+    try {
+      await _push.apagarToken();
+    } on Exception {
+      // Best-effort (offline/sem plugin): a UI nunca bloqueia por push.
+    }
   }
 
   Future<void> _registrarToken() async {
-    final token = await _push.obterToken();
+    final token = await _obterToken();
     if (token == null) return;
     try {
       await _repositorio.registrar(token: token, plataforma: _plataforma);

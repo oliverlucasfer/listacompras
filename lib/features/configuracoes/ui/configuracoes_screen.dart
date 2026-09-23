@@ -13,6 +13,7 @@ import '../../../core/widgets/app_campo_texto.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_politica_privacidade.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../notificacoes/providers/notificacoes_providers.dart';
 
 /// Tela Configurações (doc 06 §3, wireframe 10 §5, RF-11): e-mail da conta,
 /// política de privacidade, versão e exclusão de conta (confirmação dupla —
@@ -28,6 +29,7 @@ class ConfiguracoesScreen extends ConsumerWidget {
       confirmar: AppStrings.sair,
     );
     if (!confirmou || !context.mounted) return;
+    await ref.read(notificacoesServiceProvider).aoSair();
     await ref.read(authRepositoryProvider).sair();
     if (context.mounted) context.go('/login');
   }
@@ -100,6 +102,17 @@ class ConfiguracoesScreen extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/categorias'),
           ),
+          if (plataformaComPush()) ...[
+            const AppCabecalhoSecao(AppStrings.notificacoes),
+            SwitchListTile(
+              secondary: const Icon(Icons.notifications_outlined),
+              title: const Text(AppStrings.notificacoes),
+              subtitle: const Text(AppStrings.notificacoesAjuda),
+              value: ref.watch(notificacoesAtivasProvider).value ?? false,
+              onChanged: (valor) =>
+                  ref.read(notificacoesAtivasProvider.notifier).definir(valor),
+            ),
+          ],
           const AppCabecalhoSecao(AppStrings.conta),
           ListTile(
             leading: const Icon(Icons.email_outlined),
