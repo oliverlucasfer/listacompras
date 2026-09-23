@@ -16,6 +16,7 @@
 | **Widgets** | `flutter_test` + `golden_toolkit` (opcional) | Telas críticas: lista, importação local, auth | Média (RF-01…RF-05, RF-16) |
 | **Fluxos críticos** (E2E no widget) | `flutter_test` + router real + Drift in-memory | Caminhos criar/adicionar/marcar/limpar, importar, entrar por código e offline — roda no CI | Alta (RNF-08) |
 | **E2E** (integração app) | `integration_test` (opcional, pós-MVP) | Fluxo completo offline→online | Baixa (RNF-02) |
+| **Edge Function `enviar-push`** (unit, Deno) | `deno test` | `mensagem.ts`/`fcm.ts` com `fetch` fake; sem FCM real | Alta (RF-30) |
 
 **Convenções:**
 * Nomes: `deve_<resultado>_quando_<condição>` (ex.: `deve_manter_item_removido_offline_ao_receber_edicao_remota_antiga`).
@@ -30,6 +31,8 @@
 | Testado | Aceito sem teste (MVP) |
 | :--- | :--- |
 | Sync Engine, RLS, repositórios, widgets críticos | UI de detalhe (animações), theming visual, i18n (pt-BR único), performance fino |
+
+**Notificação push (RF-30):** o mapeamento de evento→mensagem e o envio ao FCM da Edge Function `enviar-push` são testados com `fetch` fake (sem rede). O **envio real ao FCM** (credencial da service account, entrega no device) é **smoke manual em device**, não roda no CI — como o deep link físico e o `integration_test`.
 
 ---
 
@@ -122,6 +125,12 @@ jobs:
       - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/preco_item_tests.sql
       - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/arquivar_listas_tests.sql
       - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/convites_email_tests.sql
+      - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/notificar_push_tests.sql
+      - uses: denoland/setup-deno@v2
+        with: { deno-version: v2.x }
+      - name: Testes da Edge Function enviar-push (07 §1)
+        working-directory: supabase/functions/enviar-push
+        run: deno test --allow-env
       - name: Teste de Realtime (01 §7, 02 §5 P-05)
         working-directory: supabase/tests
         run: |

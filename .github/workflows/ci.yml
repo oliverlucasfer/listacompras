@@ -68,6 +68,12 @@ jobs:
         run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/push_tokens_tests.sql
       - name: Testes de notificação push (01 §7)
         run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/notificar_push_tests.sql
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Testes da Edge Function enviar-push (07 §1)
+        working-directory: supabase/functions/enviar-push
+        run: deno test --allow-env
       - name: Teste de Realtime (01 §7, 02 §5 P-05)
         working-directory: supabase/tests
         run: |
