@@ -780,6 +780,8 @@ Deno.serve(async (req) => {
   const data: Record<string, string> = {
     tipo,
     lista_id: String(corpo.lista_id),
+    titulo: mensagem.titulo,
+    corpo: mensagem.corpo,
   };
   if (corpo.token) data.token = String(corpo.token);
 
