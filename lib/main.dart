@@ -15,12 +15,15 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode_provider.dart';
 import 'core/utils/deeplink_convite.dart';
 import 'core/web/url_strategy.dart';
+import 'features/notificacoes/providers/push_navegacao.dart';
 import 'features/sync/providers/sync_providers.dart';
 import 'router.dart';
 
 /// DSN do Sentry build-time (doc 07 §4, RF-12). Vazio → Sentry desligado
 /// (dev/testes). Nenhuma chave secreta: DSN é identificável publicamente.
 const sentryDsn = String.fromEnvironment('SENTRY_DSN', defaultValue: '');
+
+final _messengerKey = GlobalKey<ScaffoldMessengerState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +48,8 @@ Future<void> main() async {
     container.read(syncBootstrapProvider);
     // Ponte deep link de convite → go_router (doc 08 §1.1, RF-13).
     container.read(deeplinkConviteProvider);
+    // Ponte push → go_router (RF-30, F38): toque abre a tela certa.
+    container.read(pushNavegacaoProvider);
   }
 
   if (sentryDsn.isEmpty) {
@@ -68,12 +73,22 @@ class ListaComprasApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final modoTema = ref.watch(temaModoProvider).value ?? ThemeMode.system;
+    ref.listen(notificacoesForegroundProvider, (_, proximo) {
+      final data = proximo.value;
+      final corpo = data?['corpo'];
+      if (corpo is String && corpo.isNotEmpty) {
+        _messengerKey.currentState
+          ?..hideCurrentSnackBar()
+          ..showSnackBar(SnackBar(content: Text(corpo)));
+      }
+    });
     return MaterialApp.router(
       title: AppStrings.appNome,
       theme: AppTheme.claro,
       darkTheme: AppTheme.escuro,
       themeMode: modoTema,
       routerConfig: router,
+      scaffoldMessengerKey: _messengerKey,
       debugShowCheckedModeBanner: false,
     );
   }
