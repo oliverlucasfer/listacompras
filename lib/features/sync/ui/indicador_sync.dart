@@ -41,14 +41,24 @@ class IndicadorSync extends ConsumerWidget {
         texto: AppStrings.syncPendentes(total),
       ),
       Offline() => const Padding(
-        padding: EdgeInsets.all(AppSpacing.sm),
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.sm,
+          AppSpacing.lg,
+          0,
+        ),
         child: AppBanner(
           tipo: AppBannerTipo.offline,
           mensagem: AppStrings.syncSemConexao,
         ),
       ),
       ErroSync() => Padding(
-        padding: const EdgeInsets.all(AppSpacing.sm),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.sm,
+          AppSpacing.lg,
+          0,
+        ),
         child: AppBanner(
           tipo: AppBannerTipo.erro,
           mensagem: AppStrings.syncErro,

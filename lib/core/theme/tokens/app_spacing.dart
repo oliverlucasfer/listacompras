@@ -12,7 +12,4 @@ abstract final class AppSpacing {
 
   static const EdgeInsets tela = EdgeInsets.all(lg);
   static const EdgeInsets horizontal = EdgeInsets.symmetric(horizontal: lg);
-  static const EdgeInsets horizontalCompacto = EdgeInsets.symmetric(
-    horizontal: md,
-  );
 }

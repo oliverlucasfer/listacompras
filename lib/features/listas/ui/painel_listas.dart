@@ -135,12 +135,7 @@ class _PainelListasState extends ConsumerState<PainelListas> {
       body: Column(
         children: [
           const Padding(
-            padding: EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.sm,
-              AppSpacing.lg,
-              0,
-            ),
+            padding: EdgeInsets.only(top: AppSpacing.sm),
             child: IndicadorSync(),
           ),
           if (_buscando)
@@ -182,7 +177,7 @@ class _PainelListasState extends ConsumerState<PainelListas> {
                     AppSpacing.lg,
                     AppSpacing.sm,
                     AppSpacing.lg,
-                    88,
+                    AppSpacing.xxxl + AppSpacing.xxl + AppSpacing.sm,
                   ),
                   itemCount: listas.length,
                   separatorBuilder: (_, _) =>
@@ -261,7 +256,7 @@ class _CardListaState extends ConsumerState<_CardLista> {
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
+          padding: const EdgeInsets.only(top: AppSpacing.xs),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
