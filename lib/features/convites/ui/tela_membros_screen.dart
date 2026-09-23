@@ -142,12 +142,6 @@ class _TelaMembrosScreenState extends ConsumerState<TelaMembrosScreen> {
     }
   }
 
-  String _rotuloPapel(Papel papel) => switch (papel) {
-    Papel.dono => AppStrings.papelDono,
-    Papel.editor => AppStrings.convidarPapelEditor,
-    Papel.leitor => AppStrings.convidarPapelLeitor,
-  };
-
   @override
   Widget build(BuildContext context) {
     final usuarioId = ref.watch(donoAtualIdProvider);
@@ -212,7 +206,7 @@ class _TelaMembrosScreenState extends ConsumerState<TelaMembrosScreen> {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      AppChip(rotulo: _rotuloPapel(membro.papel)),
+                      AppChip(rotulo: membro.papel.rotulo),
                       if (_eDono(membrosAsync, usuarioId) && !souEu)
                         PopupMenuButton<String>(
                           tooltip: AppStrings.menu,

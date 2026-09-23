@@ -12,14 +12,7 @@ import '../../listas/providers/listas_providers.dart';
 import '../../notificacoes/providers/notificacoes_providers.dart';
 import '../domain/convite.dart';
 import '../domain/convite_pendente.dart';
-import '../domain/papel.dart';
 import '../providers/convites_providers.dart';
-
-String _rotuloPapel(Papel papel) => switch (papel) {
-  Papel.dono => AppStrings.papelDono,
-  Papel.editor => AppStrings.convidarPapelEditor,
-  Papel.leitor => AppStrings.convidarPapelLeitor,
-};
 
 int _diasRestantes(DateTime expiraEm) =>
     expiraEm.difference(DateTime.now()).inDays;
@@ -62,7 +55,7 @@ class ConvitesPendentesSecao extends ConsumerWidget {
                 children: [
                   Text(AppStrings.convitePara(convite.listaTitulo)),
                   const SizedBox(height: AppSpacing.sm),
-                  AppChip(rotulo: _rotuloPapel(convite.papelOferecido)),
+                  AppChip(rotulo: convite.papelOferecido.rotulo),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     AppStrings.expiraEmDias(_diasRestantes(convite.expiraEm)),

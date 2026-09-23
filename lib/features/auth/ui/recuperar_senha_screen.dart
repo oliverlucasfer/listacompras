@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/texto/validacao.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
@@ -31,7 +32,7 @@ class _RecuperarSenhaScreenState extends ConsumerState<RecuperarSenhaScreen> {
 
   Future<void> _enviar() async {
     final email = _email.text.trim();
-    final valido = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email);
+    final valido = emailValido(email);
     if (!valido) {
       setState(() => _erroEmail = AppStrings.erroEmailInvalido);
       return;

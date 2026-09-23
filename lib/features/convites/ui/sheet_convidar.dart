@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/texto/validacao.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/app_botao.dart';
@@ -86,12 +87,6 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
     if (mounted) setState(() => _revogando = false);
   }
 
-  String _rotuloPapel(Papel papel) => switch (papel) {
-    Papel.dono => AppStrings.papelDono,
-    Papel.editor => AppStrings.convidarPapelEditor,
-    Papel.leitor => AppStrings.convidarPapelLeitor,
-  };
-
   Future<void> _gerar() async {
     setState(() {
       _erro = null;
@@ -128,7 +123,7 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
 
   Future<void> _enviarConviteEmail() async {
     final email = _email.text.trim();
-    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+    if (!emailValido(email)) {
       setState(() => _erroEmail = AppStrings.erroEmailInvalido);
       return;
     }
@@ -252,7 +247,7 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.link),
-                title: Text(_rotuloPapel(pendente.papelOferecido)),
+                title: Text(pendente.papelOferecido.rotulo),
                 subtitle: const Text(AppStrings.convitePendenteAjuda),
                 trailing: TextButton(
                   onPressed: _revogando

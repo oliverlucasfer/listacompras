@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/texto/validacao.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/app_botao.dart';
@@ -39,9 +40,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  bool _emailValido(String v) =>
-      RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v.trim());
-
   Future<void> _entrar() async {
     setState(() {
       _erroEmail = null;
@@ -52,7 +50,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final email = _email.text.trim();
     final senha = _senha.text;
     var valido = true;
-    if (!_emailValido(email)) {
+    if (!emailValido(email)) {
       setState(() => _erroEmail = AppStrings.erroEmailInvalido);
       valido = false;
     }
