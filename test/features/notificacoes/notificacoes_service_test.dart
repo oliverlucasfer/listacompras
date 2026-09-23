@@ -74,6 +74,22 @@ void main() {
     expect(repo.registrados, isEmpty);
   });
 
+  test('deve_ignorar_rotacao_quando_desativado', () async {
+    final push = NotificacoesPushFake();
+    final repo = RepositorioTokensFake();
+    final servico = NotificacoesService(
+      push: push,
+      repositorio: repo,
+      plataforma: 'android',
+    );
+    await servico.registrarToken('token-novo');
+    expect(repo.registrados, isEmpty);
+
+    await servico.definirAtivas(true);
+    await servico.registrarToken('token-novo');
+    expect(repo.registrados, contains('token-novo'));
+  });
+
   test('deve_nao_consumir_pedido_quando_plugin_falha', () async {
     final push = NotificacoesPushFake()..falharPedido = true;
     final repo = RepositorioTokensFake();

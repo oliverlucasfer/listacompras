@@ -108,8 +108,9 @@ primeira function desde então).
      próprio autor. E-mail sem conta → não envia (o painel de pendentes cobre depois).
    - `membro_entrou`: o **dono** da lista.
 3. **Tokens:** lê `push_tokens` dos destinatários (`service_role`).
-4. **Envio:** FCM HTTP v1 com a **service account JSON** em secret. Secret ausente → **no-op**
-   (mantém local/dev/testes funcionando sem credencial).
+4. **Envio:** FCM HTTP v1 com a **service account JSON** em secret. Secret **da service account**
+   ausente → **no-op** (mantém local/dev/testes funcionando sem credencial) — diferente do segredo
+   do webhook (item 1), que é fail-closed (`401` quando ausente/errado).
 5. **Limpeza:** resposta `UNREGISTERED`/`INVALID_ARGUMENT` do FCM → **remove** a linha de
    `push_tokens`.
 6. **Conteúdo (decidido 23/09/2026):** inclui o **título da lista**.

@@ -61,6 +61,7 @@ class NotificacoesService {
   /// No refresh do token do FCM: reafirma o token atual no servidor.
   Future<void> registrarToken(String token) async {
     if (!_push.suportado) return;
+    if (!await ativas()) return;
     try {
       await _repositorio.registrar(token: token, plataforma: _plataforma);
     } on Exception {
