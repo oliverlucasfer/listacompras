@@ -60,7 +60,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RNF-02 | Offline completo | Leitura/escrita/marcação sem rede; zero perda ao reconectar | Checklist [03 §8](03-sincronizacao-offline.md) |
 | RNF-03 | Segurança | Usuário não acessa lista alheia (RLS) | Negações N-01…N-10 de [02 §5](02-seguranca-rls.md) |
 | RNF-05 | Privacidade (LGPD) | Exclusão de conta funcional; logs sem dados de conteúdo | [06 §3](06-mvp-entregas.md) |
-| RNF-06 | Acessibilidade | Alvos ≥ 48dp, contraste AA, escala de fonte respeitada | Testes de a11y ([15 §4](15-design-system.md)) |
+| RNF-06 | Acessibilidade | Alvos ≥ 48dp, contraste AA, escala de fonte respeitada | Testes de a11y ([15 §4](15-design-system.md)); área de respiro do indicador de sync (F40) |
 | RNF-07 | Custo | R$ 0 no MVP (free tiers) | Riscos R-01 com gatilho definido ([00 §4](00-visao-geral.md)) |
 | RNF-08 | Qualidade | CI verde obrigatório; sync e RLS com prioridade máxima de testes | [07 §1](07-qualidade-ci.md); consistência de camadas e paridade de barreiras local/remoto (F39) |
 
