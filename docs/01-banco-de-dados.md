@@ -403,6 +403,10 @@ alter publication supabase_realtime add table public.convites;
 * **Limite medido (R-11, [08 §9](08-compartilhamento-colaborativo.md)):** `replica identity full` (migration `0008`) **não basta** — o serviço Realtime v2.34 só emite o `old_record` quando o tenant está em `private_only`, coluna que o `config.toml` do CLI não expõe. Na prática, o DELETE de `lista_membros` chega com `old_record` vazio; a limpeza do cache do removido acontece por reconexão/bootstrap/`sairDaLista`, não pelo evento.
 * O Realtime respeita as policies RLS — usuários só recebem eventos de listas de que participam (ver [02](02-seguranca-rls.md)).
 
+### Notificações push (RF-30, F38)
+
+`convites` (INSERT `tipo='email'`, `estado='pendente'`) e `lista_membros` (INSERT `papel <> 'dono'`) disparam `public.notificar_push()`, que faz `net.http_post` para a Edge Function `enviar-push` com `{evento, destinatario_id, lista_id, token?, titulo_lista}`. URL e segredo vêm do Vault (`push_function_url`, `push_webhook_secret`); ausentes → no-op. O destinatário é resolvido no trigger (convite: `auth.users` pelo e-mail; entrada: `listas.dono_id`).
+
 ---
 
 ## 8. Checklist de validação (Fase 1)

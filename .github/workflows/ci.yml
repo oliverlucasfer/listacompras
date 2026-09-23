@@ -66,6 +66,8 @@ jobs:
         run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/convites_email_tests.sql
       - name: Testes de tokens de push (02 §5)
         run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/push_tokens_tests.sql
+      - name: Testes de notificação push (01 §7)
+        run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/notificar_push_tests.sql
       - name: Teste de Realtime (01 §7, 02 §5 P-05)
         working-directory: supabase/tests
         run: |
