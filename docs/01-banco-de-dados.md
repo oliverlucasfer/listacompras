@@ -243,9 +243,9 @@ Tabela de convites por link/e-mail: `id`, `lista_id` (CASCADE), `criado_por` (FK
 | :--- | :--- | :--- |
 | `id` | `uuid` | PK, `gen_random_uuid()` |
 | `user_id` | `uuid` | FK `auth.users(id)` `on delete cascade` (RF-11) |
-| `token` | `text` | **unique** — upsert por token; o mesmo aparelho reatribui o token ao novo usuário |
+| `token` | `text` | **unique** — o RPC `registrar_push_token` faz upsert por token; o mesmo aparelho reatribui o token ao novo usuário |
 | `plataforma` | `text` | `check (plataforma in ('android','ios'))`, default `android` |
-| `atualizado_em` | `timestamptz` | atualizado pelo app no upsert |
+| `atualizado_em` | `timestamptz` | atualizado pelo RPC `registrar_push_token` no upsert |
 | `created_at` | `timestamptz` | `now()` |
 
 Índice `idx_push_tokens_user (user_id)`. Device-only: **não** entra no Realtime nem no sync.

@@ -552,8 +552,8 @@ Ferramentas: testes de integração com dois usuários reais (ver [07 Qualidade]
 ## 6. Checklist de validação (Fase 1)
 
 - [ ] `force row level security` aplicado em todas as tabelas.
-- [ ] Todos os casos de negação (N-01…N-21; N-12 é positivo — ver §5) falham como esperado.
-- [ ] Todos os casos positivos (P-01…P-07, exceto P-05 Realtime) passam.
+- [ ] Todos os casos de negação (N-01…N-22; N-12 é positivo — ver §5) falham como esperado.
+- [ ] Todos os casos positivos (P-01…P-12, exceto P-05 Realtime) passam.
 - [ ] Policies versionadas na migration `0002_rls_policies.sql`.
 - [ ] Realtime recebe apenas eventos autorizados (teste com 2 contas).
 

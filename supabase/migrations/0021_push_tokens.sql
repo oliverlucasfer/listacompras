@@ -1,6 +1,7 @@
 -- 0021_push_tokens.sql — tokens de push por dispositivo (doc 01 §4.5, RF-30,
--- F38). Device-only: sem fila/Drift; o app faz upsert pelo `token` (unique) e
--- a Edge Function `enviar-push` lê com service_role.
+-- F38). Device-only: sem fila/Drift; o app chama `registrar_push_token`
+-- (reatribui pelo `token` unique) e a Edge Function `enviar-push` lê com
+-- service_role.
 
 create table public.push_tokens (
   id            uuid primary key default gen_random_uuid(),

@@ -79,8 +79,8 @@ create index idx_push_tokens_user on public.push_tokens (user_id);
 - O usuário **nunca** lê token de terceiros.
 - A Edge Function usa `service_role` (bypassa RLS) **somente** para resolver os tokens dos
   destinatários do evento.
-- Testes de negação adicionados ao [02 §5](../02-seguranca-rls.md) (N-19…N-21) e um positivo de
-  reatribuição (P-12, via RPC).
+- Testes de negação adicionados ao [02 §5](../02-seguranca-rls.md) (N-19…N-22, incluindo a
+  negação de execução do RPC a `anon`) e um positivo de reatribuição (P-12, via RPC).
 
 ### 4.3. Triggers (migration `0022`, doc dono 01)
 
