@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/features/listas/domain/categoria.dart';
+import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/features/listas/domain/ordem_categorias.dart';
 
 void main() {

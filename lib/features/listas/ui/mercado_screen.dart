@@ -16,7 +16,7 @@ import '../../convites/domain/papel.dart';
 import '../../convites/providers/papel_providers.dart';
 import '../../sync/ui/indicador_sync.dart';
 import '../domain/item.dart';
-import '../domain/quantidade.dart';
+import '../../../core/dominio/quantidade.dart';
 import '../providers/listas_providers.dart';
 import 'total_carrinho.dart';
 

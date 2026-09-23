@@ -2,7 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/sync/data/aplicador_remoto.dart';
-import 'package:lista_compras/features/listas/domain/unidade.dart';
+import 'package:lista_compras/core/dominio/unidade.dart';
 
 void main() {
   late AppDatabase db;

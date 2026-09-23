@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/features/listas/domain/categoria.dart';
+import 'package:lista_compras/core/dominio/categoria.dart';
 
 /// F6-T03/F6-T02 (doc 14): enum fechado de categorias (doc 01 §3.2, ADR-011)
 /// — mesma lista do Postgres (`categoria_item`).

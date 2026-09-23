@@ -1,6 +1,6 @@
 import '../../core/l10n/app_strings.dart';
-import '../../features/listas/domain/quantidade.dart';
-import '../../features/listas/domain/unidade.dart';
+import '../dominio/quantidade.dart';
+import '../dominio/unidade.dart';
 import '../texto/normalizar.dart';
 import 'resposta_import.dart';
 

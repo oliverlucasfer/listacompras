@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
-import 'package:lista_compras/features/listas/domain/categoria.dart';
+import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/features/listas/domain/ordem_categorias.dart';
 import 'package:lista_compras/features/listas/ui/tela_ordenar_categorias.dart';
 import 'package:shared_preferences/shared_preferences.dart';

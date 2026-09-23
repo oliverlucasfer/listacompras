@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/features/listas/domain/quantidade.dart';
+import 'package:lista_compras/core/dominio/quantidade.dart';
 
 void main() {
   test('deve_parsear_quantidade_quando_numerico', () {

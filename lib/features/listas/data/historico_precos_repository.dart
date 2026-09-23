@@ -1,7 +1,7 @@
 import '../../../core/texto/normalizar.dart';
 import '../../../drift/database.dart';
 import '../domain/historico_preco.dart';
-import '../domain/unidade.dart';
+import '../../../core/dominio/unidade.dart';
 
 /// Histórico local de preços (RF-29). Local-only: não enfileira mutação.
 class HistoricoPrecosRepository {

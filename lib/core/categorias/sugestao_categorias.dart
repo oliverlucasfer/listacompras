@@ -1,5 +1,5 @@
 import '../../drift/database.dart';
-import '../../features/listas/domain/categoria.dart';
+import '../dominio/categoria.dart';
 import '../texto/normalizar.dart';
 import 'dicionario_categorias.dart';
 

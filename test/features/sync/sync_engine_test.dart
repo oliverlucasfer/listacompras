@@ -9,7 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
-import 'package:lista_compras/features/listas/domain/categoria.dart';
+import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/features/sync/data/mutacao_sync.dart';
 import 'package:lista_compras/features/sync/data/sync_engine.dart';
 import 'package:lista_compras/features/sync/data/sync_remoto.dart';

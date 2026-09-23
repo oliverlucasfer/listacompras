@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../../drift/database.dart';
-import '../../listas/domain/unidade.dart';
+import '../../../core/dominio/unidade.dart';
 
 /// Aplica no Drift o registro remoto vencedor do LWW (doc 03 §5):
 /// sobrescreve a linha inteira, incluindo tombstones — remoção remota

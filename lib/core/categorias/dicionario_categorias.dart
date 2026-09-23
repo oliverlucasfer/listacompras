@@ -1,4 +1,4 @@
-import '../../features/listas/domain/categoria.dart';
+import '../dominio/categoria.dart';
 
 /// Dicionário estático local de categorias (spec F6 §4, ADR-011): termo em
 /// pt-BR (minúsculo, sem acento) → categoria. O match casa quando TODAS as

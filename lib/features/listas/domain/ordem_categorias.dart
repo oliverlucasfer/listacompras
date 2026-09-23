@@ -1,4 +1,4 @@
-import 'categoria.dart';
+import '../../../core/dominio/categoria.dart';
 
 /// Ordem completa: começa pela ordem salva (ignorando duplicatas) e anexa as
 /// categorias ausentes na ordem do enum — uma categoria nova nunca some da UI.

@@ -1,6 +1,6 @@
 import '../../../drift/database.dart';
-import 'categoria.dart';
-import 'unidade.dart';
+import '../../../core/dominio/categoria.dart';
+import '../../../core/dominio/unidade.dart';
 
 /// Modelo de domínio de item (doc 05 §2); `unidade` restrita ao enum
 /// fechado (doc 01 §3.1) e `categoria` ao enum fechado (doc 01 §3.2,

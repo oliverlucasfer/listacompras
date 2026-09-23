@@ -1,5 +1,5 @@
-import '../../features/listas/domain/categoria.dart';
-import '../../features/listas/domain/unidade.dart';
+import '../dominio/categoria.dart';
+import '../dominio/unidade.dart';
 
 /// Limite do modo local (sem IA) — spec RF-16.
 const int maxCaracteresImportLocal = 10000;

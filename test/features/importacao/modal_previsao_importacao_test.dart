@@ -7,8 +7,8 @@ import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/core/importacao/resposta_import.dart';
 import 'package:lista_compras/features/importacao/ui/modal_previsao_importacao.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
-import 'package:lista_compras/features/listas/domain/categoria.dart';
-import 'package:lista_compras/features/listas/domain/unidade.dart';
+import 'package:lista_compras/core/dominio/categoria.dart';
+import 'package:lista_compras/core/dominio/unidade.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 
 void main() {

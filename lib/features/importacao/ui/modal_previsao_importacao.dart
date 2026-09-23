@@ -10,9 +10,9 @@ import '../../../core/widgets/app_dropdown.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_snack_bar.dart';
-import '../../listas/domain/categoria.dart';
-import '../../listas/domain/quantidade.dart';
-import '../../listas/domain/unidade.dart';
+import '../../../core/dominio/categoria.dart';
+import '../../../core/dominio/quantidade.dart';
+import '../../../core/dominio/unidade.dart';
 import '../../listas/providers/listas_providers.dart';
 
 /// Abre o modal de pré-visualização (doc 05 §6.4, wireframe 10 §4.2, RF-16)

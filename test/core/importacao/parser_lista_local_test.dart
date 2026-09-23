@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/importacao/parser_lista_local.dart';
-import 'package:lista_compras/features/listas/domain/unidade.dart';
+import 'package:lista_compras/core/dominio/unidade.dart';
 
 void main() {
   test('deve_extrair_quantidade_unidade_e_nome_quando_1kg_de_arroz', () {

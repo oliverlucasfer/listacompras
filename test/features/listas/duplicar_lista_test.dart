@@ -3,8 +3,8 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
-import 'package:lista_compras/features/listas/domain/categoria.dart';
-import 'package:lista_compras/features/listas/domain/unidade.dart';
+import 'package:lista_compras/core/dominio/categoria.dart';
+import 'package:lista_compras/core/dominio/unidade.dart';
 
 void main() {
   late AppDatabase db;

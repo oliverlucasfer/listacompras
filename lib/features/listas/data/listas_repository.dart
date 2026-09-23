@@ -5,13 +5,13 @@ import 'package:uuid/uuid.dart';
 
 import '../../../core/texto/normalizar.dart';
 import '../../../drift/database.dart';
-import '../domain/categoria.dart';
+import '../../../core/dominio/categoria.dart';
 import '../domain/item.dart';
 import '../domain/lista.dart';
 import '../domain/lista_com_contagem.dart';
 import '../domain/resultado_dedup.dart';
 import '../domain/sugestao_item.dart';
-import '../domain/unidade.dart';
+import '../../../core/dominio/unidade.dart';
 import 'historico_precos_repository.dart';
 
 /// Repositório de listas/itens (doc 03 §2, RF-02/RF-03/RF-04): toda

@@ -6,7 +6,7 @@ import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_dropdown.dart';
 import '../domain/item.dart';
-import '../domain/quantidade.dart';
+import '../../../core/dominio/quantidade.dart';
 import '../providers/listas_providers.dart';
 
 /// Modal "Adicionar de outra lista" (RF-23): escolhe a origem, marca os

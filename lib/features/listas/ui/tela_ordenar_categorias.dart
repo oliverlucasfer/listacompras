@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_dialog.dart';
-import '../domain/categoria.dart';
+import '../../../core/dominio/categoria.dart';
 import '../domain/ordem_categorias.dart';
 import '../providers/ordem_categorias_provider.dart';
 
