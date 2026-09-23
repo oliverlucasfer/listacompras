@@ -1347,6 +1347,7 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
               Expanded(
                 child: AppDropdown<Unidade>(
                   label: AppStrings.unidade,
+                  expandido: true,
                   valor: _unidade,
                   itens: [
                     for (final u in Unidade.values)
@@ -1366,6 +1367,7 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
               Expanded(
                 child: AppDropdown<CategoriaItem>(
                   label: AppStrings.categoria,
+                  expandido: true,
                   valor: _categoria,
                   itens: [
                     for (final c in CategoriaItem.values)
@@ -1390,33 +1392,62 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
           ),
           if (hist != null) _linhaHistoricoPreco(hist),
           const SizedBox(height: AppSpacing.lg),
-          Row(
-            children: [
-              if (widget.onRemover != null)
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    unawaited(widget.onRemover!());
-                  },
-                  child: Text(
-                    AppStrings.removerItem,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
-              const Spacer(),
-              TextButton(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // Rodapé: em escala normal cabe numa linha (Remover à esquerda;
+              // Cancelar/Salvar à direita). Com fonte ampliada ou tela muito
+              // estreita empilha, para nunca estourar (RNF-06).
+              final escala = MediaQuery.textScalerOf(context).scale(1);
+              final empilhar = escala >= 1.3 || constraints.maxWidth < 300;
+              final remover = widget.onRemover == null
+                  ? null
+                  : TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        unawaited(widget.onRemover!());
+                      },
+                      child: Text(
+                        AppStrings.removerItem,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    );
+              final cancelar = TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text(AppStrings.cancelar),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              AppBotao(
+              );
+              final salvar = AppBotao(
                 rotulo: AppStrings.salvar,
                 expandido: false,
                 onPressed: _salvar,
-              ),
-            ],
+              );
+              if (empilhar) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (remover != null)
+                      Align(alignment: Alignment.centerLeft, child: remover),
+                    OverflowBar(
+                      alignment: MainAxisAlignment.end,
+                      overflowAlignment: OverflowBarAlignment.end,
+                      spacing: AppSpacing.sm,
+                      overflowSpacing: AppSpacing.sm,
+                      children: [cancelar, salvar],
+                    ),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  ?remover,
+                  const Spacer(),
+                  cancelar,
+                  const SizedBox(width: AppSpacing.sm),
+                  salvar,
+                ],
+              );
+            },
           ),
         ],
       ),

@@ -10,6 +10,7 @@ class AppDropdown<T> extends StatelessWidget {
     required this.itens,
     required this.onChanged,
     this.compacto = false,
+    this.expandido = false,
   });
 
   final String? label;
@@ -18,10 +19,15 @@ class AppDropdown<T> extends StatelessWidget {
   final ValueChanged<T?> onChanged;
   final bool compacto;
 
+  /// Quando verdadeiro, o botão ocupa toda a largura disponível em vez de
+  /// crescer para o item mais largo — evita estouro em colunas estreitas.
+  final bool expandido;
+
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<T>(
       initialValue: valor,
+      isExpanded: expandido,
       decoration: InputDecoration(labelText: label, isDense: compacto),
       items: itens,
       onChanged: onChanged,
