@@ -338,6 +338,54 @@ void main() {
     expect(find.text(AppStrings.itensExtraidos(3)), findsOneWidget);
   });
 
+  testWidgets(
+    'deve_mesclar_duplicados_e_gravar_demais_quando_confirmar_f39t07',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      final repo = ListasRepository(db);
+      final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+
+      final respostaDuplicada = RespostaParse(
+        itens: const [
+          ItemExtraido(nome: 'Arroz', quantidade: 1, unidade: Unidade.kg),
+          ItemExtraido(nome: 'arroz', quantidade: 2, unidade: Unidade.kg),
+          ItemExtraido(nome: 'Leite', quantidade: 2, unidade: Unidade.un),
+        ],
+        aviso: null,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [appDatabaseProvider.overrideWithValue(db)],
+          child: MaterialApp(
+            home: _TelaConfirmar(
+              listaId: lista.id,
+              resposta: respostaDuplicada,
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('abrir'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.widgetWithText(FilledButton, AppStrings.importAdicionarN(3)),
+      );
+      await tester.pumpAndSettle();
+
+      final itens = await (db.select(
+        db.itemLocal,
+      )..where((i) => i.listaId.equals(lista.id))).get();
+      expect(itens, hasLength(2));
+      final arroz = itens
+          .firstWhere((i) => i.nome.toLowerCase() == 'arroz')
+          .quantidade;
+      expect(arroz, 3.0);
+      expect(itens.any((i) => i.nome == 'Leite'), isTrue);
+    },
+  );
+
   testWidgets('deve_nao_gravar_nada_quando_cancelar', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
