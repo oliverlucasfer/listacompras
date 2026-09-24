@@ -76,7 +76,7 @@ Hoje o tipo `Session` do Supabase vaza para o router (`router.dart:41`). Extrair
 - **`SupabaseAuthRepository`** passa a **implementá-la**, traduzindo `Session`/`AuthState`/`AuthChangeEvent` para os tipos acima — comportamento inalterado no `prod`.
 - **`AuthLocalRepository`** (novo, `features/auth/data/`): `sessaoAtual` sempre `UsuarioAtual(id: 'local')`; `onAuthStateChange` nunca emite (nem `recuperacaoDeSenha`); entrar/sair/registrar/excluir no-op.
 
-`authRepositoryProvider` é o **único** provider sobrescrito pelo container Lite (Abordagem A, decisão §8.3).
+`authRepositoryProvider` é **sobrescrito** pelo container Lite (é o único que precisa ser: a sessão é lida sempre). Os **demais** providers que tocam o Supabase não são sobrescritos — a UI do Lite esconde as features, então eles não chegam a ser lidos — **exceto** por dois caminhos que são lidos antes da UI esconder (§4.4): `papelEfetivoProvider`/`papelNaListaStreamProvider` (lidos por `tela_lista_screen.dart:69,774` **antes de a lista carregar**, caindo em `papelRepositoryProvider`) e as chamadas diretas em `tela_lista_screen.dart:94` (`initState`) e `painel_listas.dart:358,505,506`. Esses recebem **guarda de capacidade** (Abordagem A, decisão §8.3).
 
 ### 4.2 Dono e outbox
 - **Dono local:** `donoId` de toda lista no Lite = `'local'` (`lista_local.dart:10`). `donoAtualIdProvider` **não** é sobrescrito — deriva de `sessaoAtual.id` (`auth_providers.dart:22-24`), que o `AuthLocalRepository` fixa em `'local'`.
@@ -102,6 +102,19 @@ Hoje o tipo `Session` do Supabase vaza para o router (`router.dart:41`). Extrair
 | Configurações: conta/sair/excluir | visível | escondido |
 | Configurações: **Exportar/Importar backup** | visível | visível |
 | `voltar_para_inicio` (`voltar_para_inicio.dart:7`) | dono→`/listas`, membro→`/compartilhadas` | sempre `/listas` |
+
+**Guardas de capacidade (evitam tocar o Supabase no Lite)** — sem elas o Lite **quebra**, não apenas mostra a mais:
+
+| Ponto | Por que | Guarda |
+| :--- | :--- | :--- |
+| `papelEfetivoProvider` (`papel_providers.dart:30-37`) | `:34-35` cai em `papelRepositoryProvider` quando a lista ainda não carregou | `if (!colaboracao) return Papel.dono;` |
+| `papelNaListaStreamProvider` (`papel_providers.dart:16-24`) | idem | `if (!colaboracao) return Stream.value(null);` |
+| `tela_lista_screen.dart:94` (`initState`) | `ref.read(papelRepositoryProvider)` constrói o repo do Supabase | só ler quando `colaboracao` |
+| `tela_lista_screen.dart:258` (`membrosDaListaProvider`) | busca membros no Supabase | só quando `colaboracao` |
+| `tela_lista_screen.dart:147-150,397-403` (menu convidar/membros) | navegação colaborativa | esconder itens |
+| `painel_listas.dart:358,505` (`papelRepository.atualizar`) | constrói o repo do Supabase | só quando `colaboracao` |
+| `painel_listas.dart:506` (`notificacoesService.talvezPedirPermissao`) | constrói o service/Firebase | só quando `notificacoes` |
+| `painel_listas.dart:450`, `:126-131` (código de convite) | `convitesRepositoryProvider` | já escondido (`_compartilhadas`) |
 
 ## 5. Nativo, identidade e builds
 
@@ -133,7 +146,7 @@ Novo `lib/features/backup/` — **sem** tocar o backend.
 
 1. **Conviver:** flavor `lite` separado — dois apps instaláveis juntos (dono).
 2. **Não remover nada:** o app colaborativo e o backend ficam intactos (dono).
-3. **Abordagem A — costura mínima por capacidades** (dono): `AppCapacidades` em tempo de compilação + não inicializar Supabase/Firebase no Lite + sobrescrever **só** a sessão + guardas na UI/rotas.
+3. **Abordagem A — costura mínima por capacidades** (dono): `AppCapacidades` em tempo de compilação + não inicializar Supabase/Firebase no Lite + sobrescrever **só** a sessão + guardas de capacidade na UI/rotas. **Refinamento (24/09, no planejamento):** além do override de sessão, são necessárias **guardas de capacidade** em `papelEfetivoProvider`/`papelNaListaStreamProvider` e em 6 pontos de UI (§4.4) — sem elas o Lite quebra ao tocar `Supabase.instance` (não inicializado), pois `tela_lista` lê papel **antes** de a lista carregar.
 4. **UI do Lite esconde tudo de conta/rede** (dono): sem login, convites, notificações nem indicador de sync.
 5. **Backup completo JSON exportar/importar** (dono), nos dois flavors, obrigatório no Lite.
 6. **Sem outbox no Lite** (§4.2) — evita fila que cresce sem drenar.
