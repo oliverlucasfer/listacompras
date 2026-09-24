@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/config/app_modo.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/texto/busca.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
@@ -66,6 +67,7 @@ class _PainelListasState extends ConsumerState<PainelListas> {
 
   @override
   Widget build(BuildContext context) {
+    final cap = ref.watch(capacidadesProvider);
     final usuario = ref.watch(donoAtualIdProvider);
     final consulta = _busca.text.trim();
     final listasAsync = ref
@@ -123,7 +125,7 @@ class _PainelListasState extends ConsumerState<PainelListas> {
               icon: const Icon(Icons.search),
               onPressed: _abrirBusca,
             ),
-            if (_compartilhadas)
+            if (_compartilhadas && cap.colaboracao)
               IconButton(
                 tooltip: AppStrings.conviteComCodigo,
                 icon: const Icon(Icons.person_add),
@@ -134,10 +136,11 @@ class _PainelListasState extends ConsumerState<PainelListas> {
       ),
       body: Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.only(top: AppSpacing.sm),
-            child: IndicadorSync(),
-          ),
+          if (cap.nuvem)
+            const Padding(
+              padding: EdgeInsets.only(top: AppSpacing.sm),
+              child: IndicadorSync(),
+            ),
           if (_buscando)
             Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -154,7 +157,8 @@ class _PainelListasState extends ConsumerState<PainelListas> {
                 onChanged: (_) => setState(() {}),
               ),
             ),
-          if (!_compartilhadas) const ConvitesPendentesSecao(),
+          if (!_compartilhadas && cap.colaboracao)
+            const ConvitesPendentesSecao(),
           Expanded(
             child: listasAsync.when(
               loading: () => const AppEsqueleto(linhas: 4),
@@ -355,7 +359,9 @@ class _CardListaState extends ConsumerState<_CardLista> {
               titulo: nome,
               donoId: ref.read(donoAtualIdProvider),
             );
-        ref.read(papelRepositoryProvider).atualizar(nova.id, Papel.dono);
+        if (ref.read(capacidadesProvider).colaboracao) {
+          ref.read(papelRepositoryProvider).atualizar(nova.id, Papel.dono);
+        }
         criadoId = nova.id;
       },
     );
@@ -502,8 +508,12 @@ Future<void> abrirSheetNovaLista(BuildContext context, WidgetRef ref) {
           .criarLista(titulo: nome, donoId: ref.read(donoAtualIdProvider));
       // Papel local imediato (funciona offline): o criador é dono. O servidor
       // confirma a associação em `lista_membros` na migration 0010.
-      ref.read(papelRepositoryProvider).atualizar(lista.id, Papel.dono);
-      await ref.read(notificacoesServiceProvider).talvezPedirPermissao();
+      if (ref.read(capacidadesProvider).colaboracao) {
+        ref.read(papelRepositoryProvider).atualizar(lista.id, Papel.dono);
+      }
+      if (ref.read(capacidadesProvider).notificacoes) {
+        await ref.read(notificacoesServiceProvider).talvezPedirPermissao();
+      }
     },
   );
 }

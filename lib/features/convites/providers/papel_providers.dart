@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/config/app_modo.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../listas/providers/listas_providers.dart';
 import '../data/papel_repository.dart';
@@ -17,6 +18,7 @@ final papelNaListaStreamProvider = StreamProvider.family<Papel?, String>((
   ref,
   listaId,
 ) {
+  if (!ref.watch(capacidadesProvider).colaboracao) return Stream.value(null);
   return ref
       .watch(papelRepositoryProvider)
       .watch()
@@ -28,6 +30,7 @@ final papelNaListaStreamProvider = StreamProvider.family<Papel?, String>((
 /// Assim listas próprias continuam editáveis offline e após reiniciar o app,
 /// mesmo sem a linha de `lista_membros` carregada.
 final papelEfetivoProvider = Provider.family<Papel, String>((ref, listaId) {
+  if (!ref.watch(capacidadesProvider).colaboracao) return Papel.dono;
   final usuario = ref.watch(donoAtualIdProvider);
   final lista = ref.watch(listaPorIdProvider(listaId)).value;
   if (lista != null && lista.donoId == usuario) return Papel.dono;

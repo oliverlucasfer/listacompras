@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/config/app_modo.dart';
 import '../../../core/importacao/parser_lista_local.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/navigation/voltar_para_inicio.dart';
@@ -91,7 +92,9 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
   @override
   void initState() {
     super.initState();
-    _papelRepo = ref.read(papelRepositoryProvider);
+    _papelRepo = ref.read(capacidadesProvider).colaboracao
+        ? ref.read(papelRepositoryProvider)
+        : null;
     _membroEntrou = _papelRepo?.membroEntrou;
     _membroEntrou?.addListener(_aoMembroEntrar);
     _donoTransferido = _papelRepo?.donoTransferido;
@@ -145,9 +148,13 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
       case 'excluir':
         _confirmarExcluirLista(context, ref, idLista);
       case 'convidar':
-        abrirSheetConvidar(context, ref, idLista);
+        if (ref.read(capacidadesProvider).colaboracao) {
+          abrirSheetConvidar(context, ref, idLista);
+        }
       case 'membros':
-        context.push('/membros/$idLista');
+        if (ref.read(capacidadesProvider).colaboracao) {
+          context.push('/membros/$idLista');
+        }
       case 'outraLista':
         _adicionarDeOutraLista(context, ref, idLista);
     }
@@ -255,7 +262,9 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
   ) async {
     final titulo = ref.read(listaPorIdProvider(idLista)).value?.titulo ?? '';
     final nItens = ref.read(itensDaListaProvider(idLista)).value?.length ?? 0;
-    final membros = ref.read(membrosDaListaProvider(idLista)).value;
+    final membros = ref.read(capacidadesProvider).colaboracao
+        ? ref.read(membrosDaListaProvider(idLista)).value
+        : null;
     final confirmou = await AppDialog.confirmarDestrutivo(
       context,
       titulo: AppStrings.excluirListaTitulo(titulo),
@@ -326,6 +335,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
             ),
           );
         }
+        final cap = ref.watch(capacidadesProvider);
         final ehDono = lista.donoId == ref.watch(donoAtualIdProvider);
         final inicio = inicioDaLista(ehDono: ehDono);
         return PopScopeVoltarInicio(
@@ -393,11 +403,12 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                         ),
                       // Membros (doc 08 §8) todos veem; navegação inclui
                       // "Sair da lista" para não-donos.
-                      const PopupMenuItem(
-                        value: 'membros',
-                        child: Text(AppStrings.membros),
-                      ),
-                      if (ehDono)
+                      if (cap.colaboracao)
+                        const PopupMenuItem(
+                          value: 'membros',
+                          child: Text(AppStrings.membros),
+                        ),
+                      if (ehDono && cap.colaboracao)
                         const PopupMenuItem(
                           value: 'convidar',
                           child: Text(AppStrings.convidar),
@@ -419,7 +430,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
             ),
             body: Column(
               children: [
-                const IndicadorSync(),
+                if (cap.nuvem) const IndicadorSync(),
                 if (_buscando)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/config/app_modo.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/seletor_tema.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
@@ -86,6 +87,7 @@ class ConfiguracoesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cores = Theme.of(context).colorScheme;
+    final cap = ref.watch(capacidadesProvider);
     final email = ref.watch(emailUsuarioProvider);
     return Scaffold(
       appBar: AppBar(title: const Text(AppStrings.configuracoes)),
@@ -102,7 +104,7 @@ class ConfiguracoesScreen extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/categorias'),
           ),
-          if (plataformaComPush()) ...[
+          if (plataformaComPush() && cap.notificacoes) ...[
             const AppCabecalhoSecao(AppStrings.notificacoes),
             SwitchListTile(
               secondary: const Icon(Icons.notifications_outlined),
@@ -113,16 +115,18 @@ class ConfiguracoesScreen extends ConsumerWidget {
                   ref.read(notificacoesAtivasProvider.notifier).definir(valor),
             ),
           ],
-          const AppCabecalhoSecao(AppStrings.conta),
-          ListTile(
-            leading: const Icon(Icons.email_outlined),
-            title: Text(email ?? ''),
-          ),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text(AppStrings.sair),
-            onTap: () => _confirmarSair(context, ref),
-          ),
+          if (cap.colaboracao) ...[
+            const AppCabecalhoSecao(AppStrings.conta),
+            ListTile(
+              leading: const Icon(Icons.email_outlined),
+              title: Text(email ?? ''),
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text(AppStrings.sair),
+              onTap: () => _confirmarSair(context, ref),
+            ),
+          ],
           const AppCabecalhoSecao(AppStrings.sobre),
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined),
@@ -139,30 +143,32 @@ class ConfiguracoesScreen extends ConsumerWidget {
                   Text(snapshot.data?.version ?? AppStrings.semValor),
             ),
           ),
-          const Divider(height: AppSpacing.xxl),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AppBotao(
-                  rotulo: AppStrings.excluirMinhaConta,
-                  variante: AppBotaoVariante.destrutivo,
-                  icone: Icons.delete_forever_outlined,
-                  onPressed: () => _confirmarExclusao(context, ref),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  AppStrings.excluirMinhaContaAviso,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: cores.error),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-              ],
+          if (cap.colaboracao) ...[
+            const Divider(height: AppSpacing.xxl),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppBotao(
+                    rotulo: AppStrings.excluirMinhaConta,
+                    variante: AppBotaoVariante.destrutivo,
+                    icone: Icons.delete_forever_outlined,
+                    onPressed: () => _confirmarExclusao(context, ref),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    AppStrings.excluirMinhaContaAviso,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: cores.error),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

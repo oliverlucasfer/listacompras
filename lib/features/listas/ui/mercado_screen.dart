@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/config/app_modo.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/navigation/voltar_para_inicio.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
@@ -130,7 +131,7 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
             ),
             body: Column(
               children: [
-                const IndicadorSync(),
+                if (ref.watch(capacidadesProvider).nuvem) const IndicadorSync(),
                 Expanded(
                   child: itensAsync.when(
                     loading: () => const AppEsqueleto(linhas: 5),
