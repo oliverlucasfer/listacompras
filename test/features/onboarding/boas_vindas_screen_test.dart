@@ -63,6 +63,7 @@ void main() {
         .map((t) => t.data ?? '')
         .toList();
     expect(textos.any((t) => t.toLowerCase().contains('compartilh')), isFalse);
+    expect(textos.any((t) => t.toLowerCase().contains('sincroniz')), isFalse);
 
     expect(find.text(AppStrings.boasVindasBackup), findsOneWidget);
     expect(find.text(AppStrings.boasVindasBackupDica), findsOneWidget);

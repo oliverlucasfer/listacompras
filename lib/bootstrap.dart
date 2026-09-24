@@ -37,8 +37,11 @@ Future<void> bootstrap(AppModo modo) async {
   // é o entrypoint (`-t lib/main_lite.dart`). Sem esta conferência, buildar
   // `--flavor lite` sem `-t` empacota o app **colaborativo** com o pacote
   // `.lite` (já aconteceu: a distribuição da F41 saiu errada). Em debug falha
-  // na hora, em vez de passar batido num teste manual.
-  if (kDebugMode) await _conferirModoDoPacote(modo);
+  // na hora, em vez de passar batido num teste manual. Só vale onde existem
+  // flavors — no desktop o pacote é único, então não há o que conferir.
+  if (kDebugMode && _plataformaTemFlavor()) {
+    await _conferirModoDoPacote(modo);
+  }
 
   if (cap.nuvem) {
     await Supabase.initialize(
@@ -93,6 +96,13 @@ Future<void> bootstrap(AppModo modo) async {
     }, appRunner: app);
   }
 }
+
+/// true nas plataformas que têm flavors (`prod`/`lite`) e, portanto, onde o
+/// pacote precisa casar com o modo. Web e desktop não têm flavor.
+bool _plataformaTemFlavor() =>
+    !kIsWeb &&
+    (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS);
 
 /// Falha cedo quando o **pacote** e o **modo** divergem (F42): o flavor
 /// `lite` empacota o app colaborativo (ou o inverso). Sem o plugin (testes/
