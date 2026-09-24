@@ -399,6 +399,19 @@ abstract final class AppStrings {
   static const callbackLoginFalhou = 'Não foi possível concluir a verificação.';
   static const voltarAoLogin = 'Voltar ao login';
 
+  // Backup local (RF-31, F41)
+  static const backup = 'Backup';
+  static const backupExportar = 'Exportar backup';
+  static const backupImportar = 'Importar backup';
+  static const backupExportarAjuda =
+      'Compartilha um arquivo com suas listas para guardar ou levar a outro aparelho.';
+  static const backupImportarAjuda =
+      'Restaura as listas de um arquivo, mesclando com as atuais.';
+  static const backupExportado = 'Backup exportado.';
+  static const backupImportado = 'Backup importado.';
+  static const backupInvalido = 'Arquivo de backup inválido.';
+  static const backupLeituraErro = 'Não foi possível ler o arquivo.';
+
   // Boas-vindas (RF-27, F31-T02)
   static const boasVindasTitulo = 'Bem-vindo ao Lista de Compras';
   static const boasVindasSubtitulo =

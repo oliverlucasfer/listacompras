@@ -38,6 +38,7 @@ void main() {
       find.text(AppStrings.excluirMinhaConta),
       300,
     );
+    await tester.pumpAndSettle();
     await tester.tap(find.text(AppStrings.excluirMinhaConta));
     await tester.pumpAndSettle();
   }

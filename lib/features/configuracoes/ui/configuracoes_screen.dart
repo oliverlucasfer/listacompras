@@ -14,6 +14,7 @@ import '../../../core/widgets/app_campo_texto.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_politica_privacidade.dart';
 import '../../auth/providers/auth_providers.dart';
+import '../../backup/ui/secao_backup.dart';
 import '../../notificacoes/providers/notificacoes_providers.dart';
 
 /// Tela Configurações (doc 06 §3, wireframe 10 §5, RF-11): e-mail da conta,
@@ -143,6 +144,7 @@ class ConfiguracoesScreen extends ConsumerWidget {
                   Text(snapshot.data?.version ?? AppStrings.semValor),
             ),
           ),
+          if (cap.backup) const SecaoBackup(),
           if (cap.colaboracao) ...[
             const Divider(height: AppSpacing.xxl),
             Padding(
