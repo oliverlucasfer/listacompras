@@ -4,7 +4,7 @@
     <!-- Reconhecimento de voz on-device (RF-26) -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <application
-        android:label="Lista de Compras"
+        android:label="@string/app_name"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -27,22 +27,6 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-            <!-- Deep link de verificação/recuperação de senha (doc 05 §6.1) -->
-            <intent-filter android:autoVerify="false">
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="br.com.oliverlucas.listacompras"
-                      android:host="login-callback"/>
-            </intent-filter>
-            <!-- Deep link de convite (doc 08 §1.1): br...://entrar?token=... -->
-            <intent-filter android:autoVerify="false">
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="br.com.oliverlucas.listacompras"
-                      android:host="entrar"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

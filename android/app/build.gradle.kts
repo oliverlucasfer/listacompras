@@ -27,14 +27,32 @@ android {
     }
 
     defaultConfig {
-        // Sem underline: Firebase App Distribution rejeita seções com "_" no package.
-        applicationId = "br.com.oliverlucas.listacompras"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+    }
+
+    flavorDimensions += "modo"
+    productFlavors {
+        create("prod") {
+            dimension = "modo"
+            // Sem underline: Firebase App Distribution rejeita seções com "_" no package.
+            applicationId = "br.com.oliverlucas.listacompras"
+            resValue("string", "app_name", "Lista de Compras")
+        }
+        create("lite") {
+            dimension = "modo"
+            applicationId = "br.com.oliverlucas.listacompras.lite"
+            resValue("string", "app_name", "Lista de Compras Lite")
+        }
+    }
+
+    buildFeatures {
+        // resValue(...) dos flavors exige o build feature habilitado (AGP 8+).
+        resValues = true
     }
 
     signingConfigs {

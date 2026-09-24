@@ -1,0 +1,22 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity android:name=".MainActivity">
+            <!-- Deep link de verificação/recuperação de senha (doc 05 §6.1) -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="br.com.oliverlucas.listacompras"
+                      android:host="login-callback"/>
+            </intent-filter>
+            <!-- Deep link de convite (doc 08 §1.1): br...://entrar?token=... -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="br.com.oliverlucas.listacompras"
+                      android:host="entrar"/>
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
