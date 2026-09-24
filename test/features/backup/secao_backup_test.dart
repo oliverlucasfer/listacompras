@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:drift/native.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,6 +14,9 @@ import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 
 class _BackupRepositoryFake implements BackupRepository {
   bool exportou = false;
+  bool importou = false;
+  String? conteudoImportado;
+  Object? erroImportacao;
 
   @override
   final bool donoLocal = true;
@@ -22,8 +28,18 @@ class _BackupRepositoryFake implements BackupRepository {
   }
 
   @override
-  Future<void> importarJson(String conteudo) async {}
+  Future<void> importarJson(String conteudo) async {
+    if (erroImportacao != null) throw erroImportacao!;
+    importou = true;
+    conteudoImportado = conteudo;
+  }
 }
+
+XFile _arquivoJson(String conteudo) => XFile.fromData(
+  utf8.encode(conteudo),
+  name: 'backup.json',
+  mimeType: 'application/json',
+);
 
 void main() {
   testWidgets('deve_mostrar_exportar_e_importar_quando_secao_backup', (
@@ -63,5 +79,56 @@ void main() {
     expect(fake.exportou, isTrue);
 
     await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  test('deve_cancelar_quando_arquivo_nulo', () async {
+    final fake = _BackupRepositoryFake();
+
+    final resultado = await importarArquivoBackup(null, fake);
+
+    expect(resultado, ResultadoImportacaoBackup.cancelado);
+    expect(fake.importou, isFalse);
+  });
+
+  test('deve_importar_quando_arquivo_valido', () async {
+    final fake = _BackupRepositoryFake();
+
+    final resultado = await importarArquivoBackup(
+      _arquivoJson('{"versao":1}'),
+      fake,
+    );
+
+    expect(resultado, ResultadoImportacaoBackup.importado);
+    expect(fake.importou, isTrue);
+    expect(fake.conteudoImportado, '{"versao":1}');
+  });
+
+  test('deve_retornar_invalido_quando_backup_invalido', () async {
+    final fake = _BackupRepositoryFake()
+      ..erroImportacao = const BackupInvalidoException('versao');
+
+    final resultado = await importarArquivoBackup(_arquivoJson('{}'), fake);
+
+    expect(resultado, ResultadoImportacaoBackup.invalido);
+  });
+
+  test('deve_retornar_leitura_erro_quando_erro_inesperado', () async {
+    final fake = _BackupRepositoryFake()..erroImportacao = StateError('boom');
+
+    final resultado = await importarArquivoBackup(_arquivoJson('{}'), fake);
+
+    expect(resultado, ResultadoImportacaoBackup.leituraErro);
+  });
+
+  test('deve_retornar_leitura_erro_quando_falha_leitura', () async {
+    final fake = _BackupRepositoryFake();
+
+    final resultado = await importarArquivoBackup(
+      XFile(r'Z:\caminho\inexistente\backup.json'),
+      fake,
+    );
+
+    expect(resultado, ResultadoImportacaoBackup.leituraErro);
+    expect(fake.importou, isFalse);
   });
 }

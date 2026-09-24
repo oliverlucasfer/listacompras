@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:file_picker/file_picker.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -80,26 +80,65 @@ class SecaoBackup extends ConsumerWidget {
 
   /// Lê um arquivo escolhido pelo usuário e mescla o backup no banco local.
   Future<void> _importar(BuildContext context, WidgetRef ref) async {
+    final ResultadoImportacaoBackup resultado;
     try {
-      final resultado = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: const ['json'],
+      final arquivo = await openFile(
+        acceptedTypeGroups: const [_grupoBackupJson],
       );
-      if (resultado == null || resultado.files.isEmpty) return;
-      final conteudo = await resultado.xFiles.first.readAsString();
-      await ref.read(backupRepositoryProvider).importarJson(conteudo);
-      if (context.mounted) {
-        mostrarSnackBar(context, AppStrings.backupImportado);
-      }
-    } on BackupInvalidoException {
-      if (context.mounted) {
-        mostrarSnackBar(context, AppStrings.backupInvalido);
-      }
+      resultado = await importarArquivoBackup(
+        arquivo,
+        ref.read(backupRepositoryProvider),
+      );
     } catch (_) {
+      // O próprio seletor falhou (plugin indisponível/permissão).
       if (context.mounted) {
         mostrarSnackBar(context, AppStrings.backupLeituraErro);
       }
+      return;
     }
+    if (!context.mounted) return;
+    switch (resultado) {
+      case ResultadoImportacaoBackup.cancelado:
+        return;
+      case ResultadoImportacaoBackup.importado:
+        mostrarSnackBar(context, AppStrings.backupImportado);
+      case ResultadoImportacaoBackup.invalido:
+        mostrarSnackBar(context, AppStrings.backupInvalido);
+      case ResultadoImportacaoBackup.leituraErro:
+        mostrarSnackBar(context, AppStrings.backupLeituraErro);
+    }
+  }
+}
+
+/// Desfecho da leitura/importação de um backup escolhido pelo usuário.
+enum ResultadoImportacaoBackup { cancelado, importado, invalido, leituraErro }
+
+/// Grupo de arquivos aceito no seletor do backup JSON (RF-31).
+///
+/// Mantém `extensions` + `mimeTypes` para cobrir os provedores de Android que
+/// classificam `.json` como `application/json` (o filtro usa o mime).
+const _grupoBackupJson = XTypeGroup(
+  label: 'Backup',
+  extensions: ['json'],
+  mimeTypes: ['application/json'],
+);
+
+/// Lê o arquivo escolhido (ou `null` = cancelado) e mescla o backup.
+///
+/// Isola a regra de desfecho testável do diálogo nativo (não injetável).
+Future<ResultadoImportacaoBackup> importarArquivoBackup(
+  XFile? arquivo,
+  BackupRepository repositorio,
+) async {
+  if (arquivo == null) return ResultadoImportacaoBackup.cancelado;
+  try {
+    final conteudo = await arquivo.readAsString();
+    await repositorio.importarJson(conteudo);
+    return ResultadoImportacaoBackup.importado;
+  } on BackupInvalidoException {
+    return ResultadoImportacaoBackup.invalido;
+  } catch (_) {
+    return ResultadoImportacaoBackup.leituraErro;
   }
 }
 

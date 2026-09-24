@@ -71,7 +71,9 @@ Foco: confiabilidade e preparação para publicação séria.
 
 ## Dívidas técnicas registradas
 
-- **`file_picker` pinado em `10.3.10` (F41):** a linha **11.x** do plugin é **incompatível com AGP 9 / Built-in Kotlin** — o plugin não aplica o Kotlin Gradle Plugin quando `AGP >= 9`, então `FilePickerPlugin` nunca compila e o **build Android quebra**. Enquanto isso, o `pubspec.yaml` mantém `file_picker: 10.3.10` (pin exato). Fica o alerta: **Flutter futuro vai falhar** com plugins que aplicam KGP — rever quando o plugin suportar AGP 9/Built-in Kotlin ou quando houver alternativa. Usado pelo backup JSON (RF-31, [05 §6.10](05-app-flutter.md)).
+_Nenhuma dívida aberta no momento._
+
+- **`file_picker` pinado em `10.3.10` (F41) — resolvida (F42/RF-31, 24/09/2026):** o pin exato existia porque a linha **11.x** é incompatível com AGP 9 / Built-in Kotlin — o plugin não aplica o Kotlin Gradle Plugin quando `AGP >= 9`, então `FilePickerPlugin` nunca compila e o **build Android quebra**. Substituído por **`file_selector`** (plugin do time Flutter, sem a guarda condicional de KGP e sem pin), usado pelo backup JSON (RF-31, [05 §6.10](05-app-flutter.md)).
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — requisitos com IDs (fonte do "o quê")
