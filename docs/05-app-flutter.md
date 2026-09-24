@@ -303,6 +303,10 @@ Push só no **Android** (iOS na Onda E; Web/Desktop nunca tocam o plugin — `pl
 Em Configurações → "Backup": **Exportar backup** gera um `.json` (versão + listas + itens + histórico de preços)
 e **Importar backup** restaura com merge por `id` e LWW por `updated_at`. Disponível nos dois modos.
 
+> **Caveat (modo colaborativo):** a importação grava direto no Drift local e **não enfileira** mutações
+> (o `BackupRepository` não passa pelo `ListasRepository`, que é quem enfileira). Os registros importados
+> só propagam para o Supabase na próxima edição normal do usuário ([03](03-sincronizacao-offline.md)).
+
 ---
 
 ## 7. Design System
