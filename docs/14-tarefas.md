@@ -877,20 +877,22 @@ Spec: [superpowers/specs/2026-09-23-margens-e-editor-item-design.md](superpowers
 
 Spec: [superpowers/specs/2026-09-24-flavor-lite-sem-conta-design.md](superpowers/specs/2026-09-24-flavor-lite-sem-conta-design.md) · Plano: [superpowers/plans/2026-09-24-flavor-lite-sem-conta.md](superpowers/plans/2026-09-24-flavor-lite-sem-conta.md) · Requisito: RF-31 (versão Lite sem conta, 100% local, com backup JSON). · Docs donos: 05, 12, 07, 09.
 
-- [ ] **F41-T01** — Planejamento: RF-31, Fase 41 e docs de roadmap
-- [ ] **F41-T02** — `AppModo`/`AppCapacidades` e `capacidadesProvider`
-- [ ] **F41-T03** — Interface `AuthRepository` e tipos de sessão (prod inalterado)
-- [ ] **F41-T04** — `AuthLocalRepository` (sessão local fixa)
-- [ ] **F41-T05** — `bootstrap(AppModo)` e os dois entrypoints
-- [ ] **F41-T06** — Outbox desligada no Lite
-- [ ] **F41-T07** — Rotas do Lite (sem conta/convite/membros)
-- [ ] **F41-T08** — UI do Lite (abas, convites, sync, configurações)
-- [ ] **F41-T09** — Backup: exportar JSON
-- [ ] **F41-T10** — Backup: importar JSON (merge/LWW)
-- [ ] **F41-T11** — UI de backup em Configurações
-- [ ] **F41-T12** — Nativo: flavors `prod`/`lite` (nome e ícone)
-- [ ] **F41-T13** — CI: build dos dois flavors
-- [ ] **F41-T14** — Fechamento: docs donos e distribuição
+- [x] **F41-T01** — Planejamento: RF-31, Fase 41 e docs de roadmap
+- [x] **F41-T02** — `AppModo`/`AppCapacidades` e `capacidadesProvider`
+- [x] **F41-T03** — Interface `AuthRepository` e tipos de sessão (prod inalterado)
+- [x] **F41-T04** — `AuthLocalRepository` (sessão local fixa)
+- [x] **F41-T05** — `bootstrap(AppModo)` e os dois entrypoints
+- [x] **F41-T06** — Outbox desligada no Lite
+- [x] **F41-T07** — Rotas do Lite (sem conta/convite/membros)
+- [x] **F41-T08** — UI do Lite (abas, convites, sync, configurações)
+- [x] **F41-T09** — Backup: exportar JSON
+- [x] **F41-T10** — Backup: importar JSON (merge/LWW)
+- [x] **F41-T11** — UI de backup em Configurações
+- [x] **F41-T12** — Nativo: flavors `prod`/`lite` (nome e ícone)
+- [x] **F41-T13** — CI: build dos dois flavors
+- [x] **F41-T14** — Fechamento: docs donos e distribuição
+
+Nota: *(fase fechada com o app `1.5.0+12`; builds release dos dois flavors com `--dart-define-from-file=dart_defines_prod.json` (`app-prod-release.apk` / `app-lite-release.apk`) e Lite distribuído ao grupo `testadores` via Firebase App Distribution — histórico em [09 §2.6/§2.9](09-runbook-operacoes.md))*
 
 ## Progresso por fase (atualize ao concluir)
 
@@ -934,8 +936,8 @@ Spec: [superpowers/specs/2026-09-24-flavor-lite-sem-conta-design.md](superpowers
 | F38 Notificações push | 9 | 9 |
 | F39 Consistência arquitetural | 7 | 7 |
 | F40 Sheet do item e margens | 5 | 5 |
-| F41 Flavor Lite | 14 | 0 |
-| **Total** | **222** | **208** |
+| F41 Flavor Lite | 14 | 14 |
+| **Total** | **222** | **222** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

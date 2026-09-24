@@ -108,6 +108,8 @@ supabase db push
 - **Fase 39 — Consistência arquitetural (23/09/2026):** fase **interna** (RNF-08), **sem mudança de comportamento** e **sem tocar em `supabase/`**. Vocabulário compartilhado movido para `lib/core/dominio/` (elimina `core → features`), providers de rede para `convites/providers/`, dedup de `emailValido`/`Papel.rotulo`, docs donos atualizados e `.gitignore` corrigido. O Drift subiu para **`schemaVersion 8`** espelhando as barreiras do Postgres (`CHECK`s de `itens_lista`/`listas` + índice único parcial `uq_item_ativo`, com dedup defensivo antes do índice). App **`1.5.0+10`** (release assinado, `dart_defines_prod.json`) distribuído ao grupo `testadores` (Firebase App Distribution, release `1.5.0 (10)`) para exercitar a migração local v7→v8. CI: jobs `flutter`/`desktop` verdes; o job `supabase` falhou por **rate-limit do `ghcr.io`** ao subir o stack local (falha de infraestrutura externa, alheia a esta fase) — rerunar depois. **Nota:** o rerun em 23/09 passou (todos os jobs verdes), fechando o residual.
 - **Fase 40 — Editor de item em sheet e margens (23/09/2026):** fase de **UI** (RNF-06), sem tocar em `supabase/`. O editor de item deixou de ser `AlertDialog` e virou **bottom sheet** via `AppSheet.mostrar` (campos em blocos; teclado resolvido por `viewInsets` + scroll), com rodapé `Remover/Cancelar/Salvar` que **não estoura** em 360dp/1× nem em fonte 2× (nested `OverflowBar`). Margens: `IndicadorSync` de 8dp → **16dp** nos três usos (sem padding duplo), literais verticais tokenizados e o token sem uso `horizontalCompacto` removido; `AppDropdown` ganhou o parâmetro aditivo `expandido` (`isExpanded`) e o `web/version.json` foi ressincronizado com o `pubspec`. App **`1.5.0+11`** (release assinado, `dart_defines_prod.json`) distribuído ao grupo `testadores` (Firebase App Distribution, release `1.5.0 (11)`). **Pendente conhecido (fora do escopo):** o botão "Importar lista" estoura a 360dp com fonte 2×.
 
+- **Fase 41 — Flavor Lite (24/09/2026):** fase **sem tocar em `supabase/`** (nenhuma migration, RLS, RPC ou Edge Function nova). O segundo flavor **`lite`** (`br.com.oliverlucas.listacompras.lite`, app Firebase `1:407606670898:android:1dfbf8ce7930a968bbae2b`) roda **100% no aparelho**: sem conta/Supabase, sem convites/membros, sem sync/Realtime e sem push; sessão local fixa com dono **`'local'`**, outbox de mutações **desligada** (a fila não é alimentada), rotas de conta/convite ausentes, abas só "Minhas listas"/"Configurações" e **backup JSON** (exportar/importar com merge por `id` e LWW por `updated_at`) em Configurações. O flavor **`prod`** (`br.com.oliverlucas.listacompras`) permanece **colaborativo e inalterado**. App **`1.5.0+12`** (release assinado, `--dart-define-from-file=dart_defines_prod.json`); APK prod `app-prod-release.apk` e Lite `app-lite-release.apk` distribuídos ao grupo `testadores` (Firebase App Distribution). **Dívida registrada** no [16](16-roadmap-pos-mvp.md): `file_picker` pinado em `10.3.10` (linha 11.x incompatível com AGP 9/Built-in Kotlin). iOS do Lite fica como follow-up (Onda E, [16](16-roadmap-pos-mvp.md)).
+
 ### 2.7. Auth → URL Configuration (web + nativo)
 
 Dashboard Supabase → **Authentication → URL Configuration** (ADR-012, [05 §2.1](05-app-flutter.md)). Necessário para o cadastro (verificação de e-mail), a recuperação de senha e o link de convite funcionarem no web:
@@ -133,6 +135,33 @@ O web usa `<origem>/login-callback` (http em dev, https em produção) como `red
 - **Smoke:** 2 aparelhos; convidar por e-mail → notificação no convidado; aceitar → notificação no dono;
   tocar → abre a tela. Sem `FCM_SERVICE_ACCOUNT`, a função é no-op (dev/teste).
 - **Rotação de token:** tokens inválidos são removidos no envio; tokens do usuário no logout.
+
+### 2.9. Build e distribuição (flavors `prod`/`lite` — F41)
+
+Com flavors, **todo build exige `--flavor`**; o flavor `prod` é o único que liga nuvem, colaboração e push. Para gerar os APKs release de teste (assinados via `android/key.properties` com fallback para debug quando ausente, e com os dart-defines de produção em `dart_defines_prod.json`, que fica **fora do git**):
+
+```bash
+flutter build apk --release --flavor prod --dart-define-from-file=dart_defines_prod.json
+# → build/app/outputs/flutter-apk/app-prod-release.apk
+
+flutter build apk --release --flavor lite --dart-define-from-file=dart_defines_prod.json
+# → build/app/outputs/flutter-apk/app-lite-release.apk
+```
+
+Distribuição ao grupo `testadores` (Firebase App Distribution; projeto `lista-compras-34f93` — o `--app` de cada flavor é o app Android correspondente no console):
+
+```bash
+# prod (colaborativo) — app Android `br.com.oliverlucas.listacompras`
+firebase appdistribution:distribute build/app/outputs/flutter-apk/app-prod-release.apk \
+  --app "<app-id do prod (console do Firebase)>" --groups testadores
+
+# lite (sem conta, 100% local) — app Android `br.com.oliverlucas.listacompras.lite`
+firebase appdistribution:distribute build/app/outputs/flutter-apk/app-lite-release.apk \
+  --app "1:407606670898:android:1dfbf8ce7930a968bbae2b" --groups testadores \
+  --release-notes "Versao Lite (RF-31): uso sem conta, 100% no aparelho, com backup exportar/importar."
+```
+
+Os dois flavors instalam **lado a lado** (applicationIds distintos).
 
 ---
 
