@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/auth/data/supabase_auth_repository.dart';
+import 'package:lista_compras/features/auth/domain/sessao.dart';
 import 'package:lista_compras/features/auth/providers/auth_providers.dart';
 import 'package:lista_compras/features/convites/domain/convite_pendente.dart';
 import 'package:lista_compras/features/convites/providers/convites_providers.dart';
@@ -22,22 +23,11 @@ class _AuthAutenticado extends SupabaseAuthRepository {
   _AuthAutenticado() : super(Supabase.instance.client);
 
   @override
-  Stream<AuthState> get onAuthStateChange => const Stream<AuthState>.empty();
+  Stream<EventoSessao> get onAuthStateChange =>
+      const Stream<EventoSessao>.empty();
 
   @override
-  Session? get sessaoAtual => Session(
-    accessToken: 'token',
-    tokenType: 'bearer',
-    refreshToken: 'refresh',
-    expiresIn: 3600,
-    user: User(
-      id: 'user-a',
-      appMetadata: const {},
-      userMetadata: const {},
-      aud: 'authenticated',
-      createdAt: DateTime.now().toIso8601String(),
-    ),
-  );
+  UsuarioAtual? get sessaoAtual => const UsuarioAtual(id: 'user-a');
 }
 
 void main() {

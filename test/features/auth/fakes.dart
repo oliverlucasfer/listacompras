@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:lista_compras/features/auth/data/supabase_auth_repository.dart';
+import 'package:lista_compras/features/auth/domain/sessao.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -17,6 +20,15 @@ Future<void> inicializarSupabaseTeste() async {
 
 class FakeAuthRepository extends SupabaseAuthRepository {
   FakeAuthRepository() : super(Supabase.instance.client);
+
+  UsuarioAtual? sessaoFake;
+  final _eventos = StreamController<EventoSessao>.broadcast();
+
+  @override
+  UsuarioAtual? get sessaoAtual => sessaoFake;
+
+  @override
+  Stream<EventoSessao> get onAuthStateChange => _eventos.stream;
 
   bool sairChamado = false;
   bool entrarChamado = false;

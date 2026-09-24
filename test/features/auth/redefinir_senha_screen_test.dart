@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/auth/data/supabase_auth_repository.dart';
+import 'package:lista_compras/features/auth/domain/sessao.dart';
 import 'package:lista_compras/features/auth/providers/auth_providers.dart';
 import 'package:lista_compras/features/auth/ui/redefinir_senha_screen.dart';
 import 'package:lista_compras/features/convites/domain/convite_pendente.dart';
@@ -25,32 +26,21 @@ class _SessaoFake extends SupabaseAuthRepository {
   _SessaoFake() : super(Supabase.instance.client);
 
   @override
-  Stream<AuthState> get onAuthStateChange => const Stream<AuthState>.empty();
+  Stream<EventoSessao> get onAuthStateChange =>
+      const Stream<EventoSessao>.empty();
 
   @override
-  Session? get sessaoAtual => Session(
-    accessToken: 'token',
-    tokenType: 'bearer',
-    refreshToken: 'refresh',
-    expiresIn: 3600,
-    user: User(
-      id: 'user-a',
-      appMetadata: const {},
-      userMetadata: const {},
-      aud: 'authenticated',
-      createdAt: DateTime.now().toIso8601String(),
-    ),
-  );
+  UsuarioAtual? get sessaoAtual => const UsuarioAtual(id: 'user-a');
 }
 
 class _RepoRecuperacao extends FakeAuthRepository {
-  final eventos = StreamController<AuthState>.broadcast();
+  final eventos = StreamController<EventoSessao>.broadcast();
 
   @override
-  Stream<AuthState> get onAuthStateChange => eventos.stream;
+  Stream<EventoSessao> get onAuthStateChange => eventos.stream;
 
   @override
-  Session? get sessaoAtual => _SessaoFake().sessaoAtual;
+  UsuarioAtual? get sessaoAtual => _SessaoFake().sessaoAtual;
 }
 
 void main() {
@@ -194,7 +184,7 @@ void main() {
 
     // O link de recuperação abre o app: o redirect leva à tela de nova senha
     // mesmo autenticado (doc 05 §4, F14-T03).
-    repo.eventos.add(const AuthState(AuthChangeEvent.passwordRecovery, null));
+    repo.eventos.add(const EventoSessao(recuperacaoDeSenha: true));
     await tester.pumpAndSettle();
 
     expect(find.text(AppStrings.definirNovaSenha), findsOneWidget);

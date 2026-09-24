@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/features/auth/data/supabase_auth_repository.dart';
+import 'package:lista_compras/features/auth/domain/sessao.dart';
 import 'package:lista_compras/features/auth/providers/auth_providers.dart';
 import 'package:lista_compras/features/auth/ui/login_screen.dart';
 import 'package:lista_compras/features/auth/ui/registro_screen.dart';
@@ -25,19 +26,8 @@ class _SessaoFakeRepository extends SupabaseAuthRepository {
   Future<AuthResponse> Function(String email, String senha)? onEntrar;
 
   @override
-  Session? get sessaoAtual => logado
-      ? Session(
-          accessToken: 'a.b.c',
-          tokenType: 'bearer',
-          user: const User(
-            id: 'U1',
-            appMetadata: {},
-            userMetadata: null,
-            aud: 'authenticated',
-            createdAt: '2026-01-01T00:00:00.000Z',
-          ),
-        )
-      : super.sessaoAtual;
+  UsuarioAtual? get sessaoAtual =>
+      logado ? const UsuarioAtual(id: 'U1') : super.sessaoAtual;
 
   @override
   Future<AuthResponse> entrar({
