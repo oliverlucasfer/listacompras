@@ -82,9 +82,14 @@ class SecaoBackup extends ConsumerWidget {
   Future<void> _importar(BuildContext context, WidgetRef ref) async {
     final ResultadoImportacaoBackup resultado;
     try {
-      final arquivo = await openFile(
-        acceptedTypeGroups: const [_grupoBackupJson],
-      );
+      // Sem filtro de tipo de propósito: no Android o plugin colapsa um
+      // XTypeGroup com um único mime (`application/json`) em
+      // `intent.setType("application/json")`, e provedores que classificam
+      // `.json` como `text/plain`/`application/octet-stream` desabilitam o
+      // arquivo — deixando um backup válido não selecionável. A validação fica em
+      // `importarJson` (conteúdo inválido → `backupInvalido`). Não re-adicione
+      // `acceptedTypeGroups`.
+      final arquivo = await openFile();
       resultado = await importarArquivoBackup(
         arquivo,
         ref.read(backupRepositoryProvider),
@@ -112,16 +117,6 @@ class SecaoBackup extends ConsumerWidget {
 
 /// Desfecho da leitura/importação de um backup escolhido pelo usuário.
 enum ResultadoImportacaoBackup { cancelado, importado, invalido, leituraErro }
-
-/// Grupo de arquivos aceito no seletor do backup JSON (RF-31).
-///
-/// Mantém `extensions` + `mimeTypes` para cobrir os provedores de Android que
-/// classificam `.json` como `application/json` (o filtro usa o mime).
-const _grupoBackupJson = XTypeGroup(
-  label: 'Backup',
-  extensions: ['json'],
-  mimeTypes: ['application/json'],
-);
 
 /// Lê o arquivo escolhido (ou `null` = cancelado) e mescla o backup.
 ///
