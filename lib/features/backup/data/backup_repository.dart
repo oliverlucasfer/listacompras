@@ -1,6 +1,9 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart';
+
 import '../../../drift/database.dart';
+import '../../auth/data/auth_local_repository.dart';
 import '../domain/backup_arquivo.dart';
 
 /// Backup inválido (JSON malformado ou versão desconhecida). O banco **não** é
@@ -13,10 +16,15 @@ class BackupInvalidoException implements Exception {
 }
 
 class BackupRepository {
-  BackupRepository(this._db);
+  BackupRepository(this._db, {this.donoLocal = false});
 
   final AppDatabase _db;
 
+  /// No modo Lite (RF-31) o app é single-user: ao importar, toda lista passa a
+  /// pertencer ao usuário local, descartando qualquer `dono_id` estrangeiro de
+  /// um backup colaborativo (que tornaria alcançáveis caminhos "de membro"
+  /// dependentes de `Supabase.instance`, não inicializado no Lite).
+  final bool donoLocal;
   String _iso(DateTime d) => d.toUtc().toIso8601String();
 
   Future<String> exportarJson() async {
@@ -78,6 +86,103 @@ class BackupRepository {
     return jsonEncode(arquivo.toJson());
   }
 
-  Future<void> importarJson(String conteudo) =>
-      throw UnimplementedError('importação implementada na Task 10');
+  DateTime? _parseOpt(Object? v) =>
+      v == null ? null : DateTime.parse(v as String);
+
+  Future<void> importarJson(String conteudo) async {
+    final Map<String, dynamic> mapa;
+    try {
+      mapa = jsonDecode(conteudo) as Map<String, dynamic>;
+    } on FormatException {
+      throw const BackupInvalidoException('JSON inválido');
+    } on TypeError {
+      throw const BackupInvalidoException('JSON inválido');
+    }
+    if (mapa['versao'] != BackupArquivo.versao) {
+      throw BackupInvalidoException(
+        'Versão de backup não suportada: ${mapa['versao']}',
+      );
+    }
+    final arquivo = BackupArquivo.fromJson(mapa);
+
+    await _db.transaction(() async {
+      for (final l in arquivo.listas) {
+        final id = l['id'] as String;
+        final atualizadoEm = DateTime.parse(l['updated_at'] as String);
+        final existente = await (_db.select(
+          _db.listaLocal,
+        )..where((t) => t.id.equals(id))).getSingleOrNull();
+        if (existente != null && !atualizadoEm.isAfter(existente.updatedAt)) {
+          continue;
+        }
+        await _db
+            .into(_db.listaLocal)
+            .insertOnConflictUpdate(
+              ListaLocalCompanion.insert(
+                id: id,
+                createdAt: DateTime.parse(l['created_at'] as String),
+                updatedAt: atualizadoEm,
+                titulo: l['titulo'] as String,
+                donoId: donoLocal
+                    ? AuthLocalRepository.idLocal
+                    : l['dono_id'] as String,
+                deletadoEm: Value(_parseOpt(l['deletado_em'])),
+                arquivadaEm: Value(_parseOpt(l['arquivada_em'])),
+                orcamentoCentavos: Value(l['orcamento_centavos'] as int?),
+              ),
+            );
+      }
+
+      for (final i in arquivo.itens) {
+        final id = i['id'] as String;
+        final atualizadoEm = DateTime.parse(i['updated_at'] as String);
+        final existente = await (_db.select(
+          _db.itemLocal,
+        )..where((t) => t.id.equals(id))).getSingleOrNull();
+        if (existente != null && !atualizadoEm.isAfter(existente.updatedAt)) {
+          continue;
+        }
+        await _db
+            .into(_db.itemLocal)
+            .insertOnConflictUpdate(
+              ItemLocalCompanion.insert(
+                id: id,
+                listaId: i['lista_id'] as String,
+                nome: i['nome'] as String,
+                quantidade: Value((i['quantidade'] as num).toDouble()),
+                unidade: Value(i['unidade'] as String),
+                categoria: Value(i['categoria'] as String),
+                precoCentavos: Value(i['preco_centavos'] as int?),
+                concluido: Value(i['concluido'] as bool),
+                ordem: Value(i['ordem'] as int),
+                createdAt: DateTime.parse(i['created_at'] as String),
+                updatedAt: atualizadoEm,
+                deletadoEm: Value(_parseOpt(i['deletado_em'])),
+              ),
+            );
+      }
+
+      for (final h in arquivo.historicoPrecos) {
+        final nome = h['nome_normalizado'] as String;
+        final registradoEm = DateTime.parse(h['registrado_em'] as String);
+        final existente = await (_db.select(
+          _db.historicoPrecoLocal,
+        )..where((t) => t.nomeNormalizado.equals(nome))).getSingleOrNull();
+        if (existente != null &&
+            !registradoEm.isAfter(existente.registradoEm)) {
+          continue;
+        }
+        await _db
+            .into(_db.historicoPrecoLocal)
+            .insertOnConflictUpdate(
+              HistoricoPrecoLocalCompanion.insert(
+                nomeNormalizado: nome,
+                precoCentavos: h['preco_centavos'] as int,
+                unidade: h['unidade'] as String,
+                registradoEm: registradoEm,
+              ),
+            );
+      }
+    });
+  }
 }
