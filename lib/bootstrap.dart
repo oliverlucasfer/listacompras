@@ -4,7 +4,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform, kDebugMode, kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show MissingPluginException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -96,25 +95,27 @@ Future<void> bootstrap(AppModo modo) async {
 }
 
 /// Falha cedo quando o **pacote** e o **modo** divergem (F42): o flavor
-/// `lite` empacota o app colaborativo (ou o inverso). Sem plugin (testes) a
-/// conferência não se aplica e é ignorada.
+/// `lite` empacota o app colaborativo (ou o inverso). Sem o plugin (testes/
+/// plataformas sem registro) a conferência não se aplica; só a leitura do
+/// pacote é protegida — o erro da própria trava continua propagando.
 Future<void> _conferirModoDoPacote(AppModo modo) async {
+  final String pacote;
   try {
-    final pacote = (await PackageInfo.fromPlatform()).packageName;
-    final ehPacoteLite = pacote.endsWith('.lite');
-    if (modo == AppModo.lite && !ehPacoteLite) {
-      throw StateError(
-        'Entrypoint Lite em pacote colaborativo ($pacote): '
-        'use `flutter build ... --flavor lite`.',
-      );
-    }
-    if (modo == AppModo.colaborativo && ehPacoteLite) {
-      throw StateError(
-        'Flavor `lite` construído com o entrypoint colaborativo: '
-        'use `-t lib/main_lite.dart`.',
-      );
-    }
-  } on MissingPluginException {
-    // Sem o package_info (testes/plataformas sem registro): sem trava.
+    pacote = (await PackageInfo.fromPlatform()).packageName;
+  } on Exception {
+    return;
+  }
+  final ehPacoteLite = pacote.endsWith('.lite');
+  if (modo == AppModo.lite && !ehPacoteLite) {
+    throw StateError(
+      'Entrypoint Lite em pacote colaborativo ($pacote): '
+      'use `flutter build ... --flavor lite`.',
+    );
+  }
+  if (modo == AppModo.colaborativo && ehPacoteLite) {
+    throw StateError(
+      'Flavor `lite` construído com o entrypoint colaborativo: '
+      'use `-t lib/main_lite.dart`.',
+    );
   }
 }
