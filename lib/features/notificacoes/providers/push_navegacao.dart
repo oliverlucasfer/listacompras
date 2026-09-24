@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/config/app_modo.dart';
 import '../../../router.dart';
 import '../domain/rota_notificacao.dart';
 import 'notificacoes_providers.dart';
@@ -28,8 +29,15 @@ final pushNavegacaoProvider =
     });
 
 /// Notificação recebida em primeiro plano (payload) — o app mostra um SnackBar.
-final notificacoesForegroundProvider = StreamProvider<Map<String, Object?>>(
-  (ref) => plataformaComPush()
+/// No modo Lite a capacidade `notificacoes` está desligada: a ponte fica inerte
+/// e o provider nem chega a ler [notificacoesPushProvider] (nada de Firebase).
+final notificacoesForegroundProvider = StreamProvider<Map<String, Object?>>((
+  ref,
+) {
+  if (!ref.watch(capacidadesProvider).notificacoes) {
+    return const Stream<Map<String, Object?>>.empty();
+  }
+  return plataformaComPush()
       ? ref.watch(notificacoesPushProvider).onRecebida
-      : const Stream<Map<String, Object?>>.empty(),
-);
+      : const Stream<Map<String, Object?>>.empty();
+});
