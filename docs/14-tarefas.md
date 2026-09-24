@@ -894,6 +894,15 @@ Spec: [superpowers/specs/2026-09-24-flavor-lite-sem-conta-design.md](superpowers
 
 Nota: *(fase fechada com o app `1.5.0+12`; builds release dos dois flavors com `--dart-define-from-file=dart_defines_prod.json` (`app-prod-release.apk` / `app-lite-release.apk`) e Lite distribuído ao grupo `testadores` via Firebase App Distribution — histórico em [09 §2.6/§2.9](09-runbook-operacoes.md))*
 
+## Fase 42 — Dívidas da Fase 41 (RF-31)
+
+Requisito: RF-31 (versão Lite). · Docs donos: 03, 05, 16.
+
+- [x] **F42-T01** — Trocar `file_picker` (pinado em 10.3.10 por incompatibilidade da linha 11.x com AGP 9/Built-in Kotlin) por `file_selector`
+  CP: `pubspec.yaml` sem `file_picker` e com `file_selector`; seletor migrado em `secao_backup.dart` (cancelar silencioso, `BackupInvalidoException` → `backupInvalido`, demais erros → `backupLeituraErro`) e **sem filtro de tipo** (o Android colapsa `mimeTypes`+extensões num único MIME e esconderia `.json`); `flutter build apk --debug --flavor prod` **e** `--flavor lite` **e** `flutter build web --release` verdes; doc 16 com a dívida resolvida.
+- [x] **F42-T02** — Import de backup alimenta a fila no modo colaborativo
+  CP: builders de payload e insert da outbox extraídos de `ListasRepository` para `lib/features/sync/data/outbox_mutacoes.dart` (formato do JSON idêntico, guarda `ativa` num ponto só); `BackupRepository(db, {enfileirar})` enfileira `listas`/`itens_lista` (`operacao: 'INSERT'`, `ts_local` = agora, payload com o `updated_at` importado) **dentro da transação** e só para o que o import gravou; nunca `historicoPrecos`, nunca no Lite; docs [03 §3](03-sincronizacao-offline.md) e [05 §6.10](05-app-flutter.md) atualizados; suíte verde (693).
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -937,7 +946,8 @@ Nota: *(fase fechada com o app `1.5.0+12`; builds release dos dois flavors com `
 | F39 Consistência arquitetural | 7 | 7 |
 | F40 Sheet do item e margens | 5 | 5 |
 | F41 Flavor Lite | 14 | 14 |
-| **Total** | **222** | **222** |
+| F42 Dívidas da Fase 41 | 2 | 2 |
+| **Total** | **224** | **224** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
