@@ -67,6 +67,7 @@ Foco: confiabilidade e preparação para publicação séria.
 | E1 | iOS | Fase 6 | 06, 09 | Alto | G | Depende de conta Apple Developer |
 | E2 | i18n (en/es) | novo | 05, 15 | Médio | G | Infra de localização; hoje pt-BR único |
 | E3 | Widget Android / quick-add no lançador | novo | 05 | Médio | G | Atalho para adicionar item sem abrir o app |
+| E4 | Lite no iOS | RF-31 | 05, 09 | Baixo | P | configurar flavor/bundle id `.lite` e ícone — requer macOS para verificar (F41 deixou fora) |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — requisitos com IDs (fonte do "o quê")

@@ -51,6 +51,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-28 | Orçamento (limite de gasto) por lista, sincronizado, comparado ao total do carrinho (RF-21), editável por dono/editor | 05 §6.3/§6.5 + 10 §3.1/§3.5 + 01 §4.1 + 03 | F36 | [05 §8](05-app-flutter.md) |
 | RF-29 | Comparação de preços entre idas: "Última compra: R$ X (dd/mm)" + variação no editor, a partir do histórico **local por dispositivo (não sincronizado)** | 05 §6.3 + 10 §3.1 + 03 | F37 | [05 §8](05-app-flutter.md) |
 | RF-30 | Notificação push (Android) de convite por e-mail recebido e de novo membro numa lista sua | 08 §7 + 01 §4.5 + 09 §2 | F38 | [08 §7](08-compartilhamento-colaborativo.md) |
+| RF-31 | Versão Lite: uso sem conta, 100% no aparelho (sem login, sem convites, sem notificações), com backup local exportar/importar | 05 §2.3 + 05 §6.10 | F41 | [05 §2.3](05-app-flutter.md) |
 
 ## 3. Requisitos Não-Funcionais
 
@@ -154,6 +155,7 @@ Cada requisito liga story → design → tarefas ([14](14-tarefas.md)) → verif
 | RF-28 | US-01 | F36 | F36-T02…T04 | Unit repo/aplicador + widgets |
 | RF-29 | US-01 | F37 | F37-T01, F37-T02 | Unit repo/histórico + widgets |
 | RF-30 | US-01, US-03 | F38 | F38-T05, F38-T08 | Unit fake/roteamento + Deno/SQL + widgets |
+| RF-31 | US-01 | F41 | F41-T02…F41-T11 | Widget/unit (modo Lite + backup) + smoke em device |
 | RNF-06 | — | F8 · F14 | F14-T01…T02 | Guidelines de a11y + escala de fonte |
 
 ## 7. Fora de escopo (MVP)

@@ -96,6 +96,22 @@ A partir da Fase 18 o app roda em **Android, iOS, Web e Desktop (Windows/Linux/m
 * **Erros de rede:** `core/rede/erro_rede.dart` exporta por plataforma `erro_rede_nativa.dart` (`SocketException`/`TimeoutException`) e `erro_rede_web.dart` (`ClientException`), mantendo o mapeamento para "sem conexão" único para a UI.
 * **Voz (RF-26, F30):** permissões de plataforma do microfone — Android `RECORD_AUDIO` (`android/app/src/main/AndroidManifest.xml`; `INTERNET` já existe) e iOS `NSMicrophoneUsageDescription`/`NSSpeechRecognitionUsageDescription` (`ios/Runner/Info.plist`). O botão de ditar só aparece em **Android/iOS**; Web/Desktop ocultam (§6.3).
 
+### 2.3. Modos do app: colaborativo e Lite (RF-31, F41)
+
+O app tem dois flavors, com identidade própria e instaláveis ao mesmo tempo:
+
+| | `prod` (colaborativo) | `lite` |
+| :--- | :--- | :--- |
+| Conta (Supabase Auth) | sim | **não** |
+| Sync/Realtime | sim | **não** |
+| Convites/compartilhamento | sim | **não** |
+| Push (FCM) | sim | **não** |
+| Backup JSON (exportar/importar) | sim | **sim** |
+
+O Lite usa o dono local `'local'` e nunca toca a rede. Decisões e costura completas em
+[superpowers/specs/2026-09-24-flavor-lite-sem-conta-design.md](superpowers/specs/2026-09-24-flavor-lite-sem-conta-design.md).
+Builds: `flutter build apk --flavor prod` / `--flavor lite` (com flavors, `--flavor` é obrigatório).
+
 ---
 
 ## 3. Providers Riverpod (por feature)
@@ -281,6 +297,11 @@ Push só no **Android** (iOS na Onda E; Web/Desktop nunca tocam o plugin — `pl
 * **Registro/limpeza do token:** `PushTokensRepository` chama o RPC `registrar_push_token` (device handoff; [02 §4.8](02-seguranca-rls.md)) — reafirmado no start logado (`registrarSeAtivo`) e no `onTokenRefresh` do FCM (ponte no `syncBootstrapProvider`). No **logout** (`aoSair`) o token é removido e apagado do dispositivo.
 * **Toque na notificação (deep link):** `pushNavegacaoProvider` liga o push ao `go_router`: convite → `/entrar?token=…`; novo membro → `/lista/:id`. Cobre app aberto e *cold start* (`toqueInicial`). Só no Android.
 * **Primeiro plano:** `notificacoesForegroundProvider` alimenta um `SnackBar` quando a notificação chega com o app aberto (payload → toque abre a tela certa).
+
+### 6.10. Backup local (RF-31, F41)
+
+Em Configurações → "Backup": **Exportar backup** gera um `.json` (versão + listas + itens + histórico de preços)
+e **Importar backup** restaura com merge por `id` e LWW por `updated_at`. Disponível nos dois modos.
 
 ---
 
