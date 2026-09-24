@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'core/config/app_modo.dart';
 import 'core/l10n/app_strings.dart';
 import 'core/navigation/app_shell.dart';
 import 'core/theme/tokens/app_spacing.dart';
@@ -29,15 +30,21 @@ import 'features/onboarding/ui/boas_vindas_screen.dart';
 final routerProvider = Provider<GoRouter>((ref) {
   final repo = ref.watch(authRepositoryProvider);
 
+  // No modo Lite (RF-31) a navegação é 100% local: tabela condicional sem
+  // conta nem compartilhamento e redirect no-op. O colaborativo mantém a
+  // tabela e o redirect originais.
+  final cap = ref.watch(capacidadesProvider);
+
   // Constrói/assina a flag do fluxo de recuperação ANTES do refresh do
   // router: no evento passwordRecovery o estado precisa estar true quando o
-  // redirect roda (F14-T03, RF-01).
+  // redirect roda (F14-T03, RF-01). No Lite o stream é vazio, sem eventos.
   ref.listen(redefinindoSenhaProvider, (_, _) {});
 
   return GoRouter(
     initialLocation: '/',
     refreshListenable: RouterRefreshStream(repo.onAuthStateChange),
     redirect: (context, state) {
+      if (!cap.colaboracao) return null;
       final autenticado = repo.sessaoAtual != null;
       final rota = state.matchedLocation;
       final publica =
@@ -69,36 +76,39 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/',
-        redirect: (context, state) =>
-            repo.sessaoAtual != null ? '/listas' : '/login',
+        redirect: (context, state) => !cap.colaboracao
+            ? '/listas'
+            : (repo.sessaoAtual != null ? '/listas' : '/login'),
       ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) =>
-            LoginScreen(next: state.uri.queryParameters['next']),
-      ),
-      GoRoute(
-        path: '/registro',
-        builder: (context, state) =>
-            RegistroScreen(next: state.uri.queryParameters['next']),
-      ),
-      GoRoute(
-        path: '/recuperar-senha',
-        builder: (context, state) => const RecuperarSenhaScreen(),
-      ),
-      GoRoute(
-        path: '/redefinir-senha',
-        builder: (context, state) => const RedefinirSenhaScreen(),
-      ),
-      GoRoute(
-        path: '/entrar',
-        builder: (context, state) =>
-            EntrarScreen(token: state.uri.queryParameters['token']),
-      ),
-      GoRoute(
-        path: '/login-callback',
-        builder: (context, state) => const _CallbackLoginScreen(),
-      ),
+      if (cap.colaboracao) ...[
+        GoRoute(
+          path: '/login',
+          builder: (context, state) =>
+              LoginScreen(next: state.uri.queryParameters['next']),
+        ),
+        GoRoute(
+          path: '/registro',
+          builder: (context, state) =>
+              RegistroScreen(next: state.uri.queryParameters['next']),
+        ),
+        GoRoute(
+          path: '/recuperar-senha',
+          builder: (context, state) => const RecuperarSenhaScreen(),
+        ),
+        GoRoute(
+          path: '/redefinir-senha',
+          builder: (context, state) => const RedefinirSenhaScreen(),
+        ),
+        GoRoute(
+          path: '/entrar',
+          builder: (context, state) =>
+              EntrarScreen(token: state.uri.queryParameters['token']),
+        ),
+        GoRoute(
+          path: '/login-callback',
+          builder: (context, state) => const _CallbackLoginScreen(),
+        ),
+      ],
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             AppShell(navigationShell: navigationShell),
@@ -111,14 +121,16 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/compartilhadas',
-                builder: (context, state) => const CompartilhadasScreen(),
-              ),
-            ],
-          ),
+          // Compartilhamento é colaborativo: no Lite sobram Minhas e Config.
+          if (cap.colaboracao)
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/compartilhadas',
+                  builder: (context, state) => const CompartilhadasScreen(),
+                ),
+              ],
+            ),
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -134,11 +146,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             TelaListaScreen(listaId: state.pathParameters['listaId']!),
       ),
-      GoRoute(
-        path: '/membros/:listaId',
-        builder: (context, state) =>
-            TelaMembrosScreen(listaId: state.pathParameters['listaId']!),
-      ),
+      if (cap.colaboracao)
+        GoRoute(
+          path: '/membros/:listaId',
+          builder: (context, state) =>
+              TelaMembrosScreen(listaId: state.pathParameters['listaId']!),
+        ),
       GoRoute(
         path: '/mercado/:listaId',
         builder: (context, state) =>
