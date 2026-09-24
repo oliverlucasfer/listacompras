@@ -81,7 +81,7 @@ class SecaoBackup extends ConsumerWidget {
   /// Lê um arquivo escolhido pelo usuário e mescla o backup no banco local.
   Future<void> _importar(BuildContext context, WidgetRef ref) async {
     try {
-      final resultado = await FilePicker.pickFiles(
+      final resultado = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: const ['json'],
       );
