@@ -37,7 +37,9 @@ jobs:
           --dart-define=SUPABASE_URL=https://exemplo.supabase.co
           --dart-define=SUPABASE_ANON_KEY=teste
       - if: steps.check.outputs.flutter == 'enabled'
-        run: flutter build apk --debug
+        run: flutter build apk --debug --flavor prod
+      - if: steps.check.outputs.flutter == 'enabled'
+        run: flutter build apk --debug --flavor lite
 
   supabase:
     runs-on: ubuntu-latest
