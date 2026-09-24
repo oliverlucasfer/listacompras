@@ -24,9 +24,14 @@ class BackupArquivo {
 
   factory BackupArquivo.fromJson(Map<String, dynamic> json) => BackupArquivo(
     exportadoEm: DateTime.parse(json['exportadoEm'] as String),
-    listas: (json['listas'] as List).cast<Map<String, Object?>>(),
-    itens: (json['itens'] as List).cast<Map<String, Object?>>(),
-    historicoPrecos: (json['historicoPrecos'] as List)
-        .cast<Map<String, Object?>>(),
+    listas: _mapas(json['listas']),
+    itens: _mapas(json['itens']),
+    historicoPrecos: _mapas(json['historicoPrecos']),
   );
+
+  /// Converte a coleção de forma **eager** (não preguiçosa): um elemento que
+  /// não seja um objeto falha já aqui, dentro do parse validado, em vez de
+  /// estourar depois ao ler os campos de cada registro.
+  static List<Map<String, Object?>> _mapas(Object? valor) =>
+      (valor as List).map((e) => Map<String, Object?>.from(e as Map)).toList();
 }
