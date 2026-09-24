@@ -416,12 +416,18 @@ abstract final class AppStrings {
   static const boasVindasTitulo = 'Bem-vindo ao Lista de Compras';
   static const boasVindasSubtitulo =
       'Organize suas compras e compartilhe com quem quiser.';
+  static const boasVindasSubtituloLite =
+      'Organize suas compras no seu aparelho.';
   static const boasVindasOffline = 'Funciona offline';
   static const boasVindasOfflineDica =
       'Suas listas ficam no aparelho e sincronizam quando a internet volta.';
+  static const boasVindasOfflineDicaLite = 'Suas listas ficam no aparelho.';
   static const boasVindasCompartilhar = 'Compartilhe a lista';
   static const boasVindasCompartilharDica =
       'Convide alguém por link e comprem juntos.';
+  static const boasVindasBackup = 'Backup quando quiser';
+  static const boasVindasBackupDica =
+      'Exporte e restaure suas listas num arquivo.';
   static const boasVindasImportar = 'Importe por texto';
   static const boasVindasImportarDica =
       'Cole uma anotação e o app organiza os itens.';

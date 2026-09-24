@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/config/app_modo.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
@@ -15,6 +16,8 @@ class BoasVindasScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final capacidades = ref.watch(capacidadesProvider);
+    final colaborativo = capacidades.colaboracao;
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -35,21 +38,32 @@ class BoasVindasScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    AppStrings.boasVindasSubtitulo,
+                    colaborativo
+                        ? AppStrings.boasVindasSubtitulo
+                        : AppStrings.boasVindasSubtituloLite,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  const _Destaque(
+                  _Destaque(
                     icone: Icons.cloud_off_outlined,
                     titulo: AppStrings.boasVindasOffline,
-                    dica: AppStrings.boasVindasOfflineDica,
+                    dica: colaborativo
+                        ? AppStrings.boasVindasOfflineDica
+                        : AppStrings.boasVindasOfflineDicaLite,
                   ),
-                  const _Destaque(
-                    icone: Icons.group_outlined,
-                    titulo: AppStrings.boasVindasCompartilhar,
-                    dica: AppStrings.boasVindasCompartilharDica,
-                  ),
+                  if (colaborativo)
+                    const _Destaque(
+                      icone: Icons.group_outlined,
+                      titulo: AppStrings.boasVindasCompartilhar,
+                      dica: AppStrings.boasVindasCompartilharDica,
+                    ),
+                  if (!colaborativo && capacidades.backup)
+                    const _Destaque(
+                      icone: Icons.save_alt_outlined,
+                      titulo: AppStrings.boasVindasBackup,
+                      dica: AppStrings.boasVindasBackupDica,
+                    ),
                   const _Destaque(
                     icone: Icons.playlist_add,
                     titulo: AppStrings.boasVindasImportar,
