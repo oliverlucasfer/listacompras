@@ -10,9 +10,15 @@ import '../data/backup_repository.dart';
 /// ao importar toda lista passa a pertencer ao usuário local — um backup vindo
 /// do app colaborativo não pode trazer `dono_id` estrangeiro para o Lite, onde
 /// os caminhos "de membro" tocariam `Supabase.instance` (não inicializado).
-final backupRepositoryProvider = Provider<BackupRepository>(
-  (ref) => BackupRepository(
+///
+/// `enfileirar` também acompanha o modo: no colaborativo a importação alimenta
+/// a fila de mutações (doc 03 §3); no Lite não há sync e a fila não é
+/// alimentada.
+final backupRepositoryProvider = Provider<BackupRepository>((ref) {
+  final nuvem = ref.watch(capacidadesProvider).nuvem;
+  return BackupRepository(
     ref.watch(appDatabaseProvider),
-    donoLocal: !ref.watch(capacidadesProvider).nuvem,
-  ),
-);
+    donoLocal: !nuvem,
+    enfileirar: nuvem,
+  );
+});

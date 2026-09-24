@@ -303,9 +303,10 @@ Push só no **Android** (iOS na Onda E; Web/Desktop nunca tocam o plugin — `pl
 Em Configurações → "Backup": **Exportar backup** gera um `.json` (versão + listas + itens + histórico de preços)
 e **Importar backup** restaura com merge por `id` e LWW por `updated_at`. Disponível nos dois modos.
 
-> **Caveat (modo colaborativo):** a importação grava direto no Drift local e **não enfileira** mutações
-> (o `BackupRepository` não passa pelo `ListasRepository`, que é quem enfileira). Os registros importados
-> só propagam para o Supabase na próxima edição normal do usuário ([03](03-sincronizacao-offline.md)).
+> **Modo colaborativo (RF-31/F41):** a importação também alimenta a fila de mutações
+> ([03 §3](03-sincronizacao-offline.md)): cada registro efetivamente gravado (os descartados
+> pelo LWW não contam) propaga ao Supabase sem exigir uma edição posterior. No modo Lite não
+> há sync — a importação permanece local-only — e o histórico de preços nunca propaga.
 
 ---
 

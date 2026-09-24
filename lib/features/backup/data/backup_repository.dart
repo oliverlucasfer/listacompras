@@ -4,6 +4,7 @@ import 'package:drift/drift.dart';
 
 import '../../../drift/database.dart';
 import '../../auth/data/auth_local_repository.dart';
+import '../../sync/data/outbox_mutacoes.dart';
 import '../domain/backup_arquivo.dart';
 
 /// Backup inválido (JSON malformado ou versão desconhecida). O banco **não** é
@@ -16,7 +17,11 @@ class BackupInvalidoException implements Exception {
 }
 
 class BackupRepository {
-  BackupRepository(this._db, {this.donoLocal = false});
+  BackupRepository(
+    this._db, {
+    this.donoLocal = false,
+    this._enfileirar = false,
+  });
 
   final AppDatabase _db;
 
@@ -25,6 +30,13 @@ class BackupRepository {
   /// um backup colaborativo (que tornaria alcançáveis caminhos "de membro"
   /// dependentes de `Supabase.instance`, não inicializado no Lite).
   final bool donoLocal;
+
+  /// Modo colaborativo: cada registro restaurado alimenta a fila de mutações
+  /// (doc 03 §3), para propagar ao Supabase sem esperar a próxima edição. No
+  /// Lite permanece desligado (`enfileirar: false`), como o `ListasRepository`.
+  final bool _enfileirar;
+  late final OutboxMutacoes _outbox = OutboxMutacoes(_db, ativa: _enfileirar);
+
   String _iso(DateTime d) => d.toUtc().toIso8601String();
 
   Future<String> exportarJson() async {
@@ -125,6 +137,14 @@ class BackupRepository {
                   orcamentoCentavos: Value(l['orcamento_centavos'] as int?),
                 ),
               );
+          await _outbox.enfileirar(
+            tabela: 'listas',
+            operacao: 'INSERT',
+            registroId: id,
+            listaId: id,
+            tsLocal: DateTime.now().toUtc(),
+            payload: await _outbox.payloadLista(id, incluirArquivo: true),
+          );
         }
 
         for (final i in arquivo.itens) {
@@ -154,6 +174,14 @@ class BackupRepository {
                   deletadoEm: Value(_parseOpt(i['deletado_em'])),
                 ),
               );
+          await _outbox.enfileirar(
+            tabela: 'itens_lista',
+            operacao: 'INSERT',
+            registroId: id,
+            listaId: i['lista_id'] as String,
+            tsLocal: DateTime.now().toUtc(),
+            payload: await _outbox.payloadItem(id),
+          );
         }
 
         for (final h in arquivo.historicoPrecos) {

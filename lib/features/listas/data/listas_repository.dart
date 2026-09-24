@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
@@ -12,6 +10,7 @@ import '../domain/lista_com_contagem.dart';
 import '../domain/resultado_dedup.dart';
 import '../domain/sugestao_item.dart';
 import '../../../core/dominio/unidade.dart';
+import '../../sync/data/outbox_mutacoes.dart';
 import 'historico_precos_repository.dart';
 
 /// Repositório de listas/itens (doc 03 §2, RF-02/RF-03/RF-04): toda
@@ -28,6 +27,11 @@ class ListasRepository {
   /// No modo Lite (RF-31) não há sync: a fila de mutações não é alimentada
   /// (senão cresceria para sempre sem drenar).
   final bool _enfileirarMutacoes;
+
+  late final OutboxMutacoes _outbox = OutboxMutacoes(
+    _db,
+    ativa: _enfileirarMutacoes,
+  );
 
   // ---- Leitura (Streams do Drift) ----
 
@@ -165,13 +169,13 @@ class ListasRepository {
             donoId: donoId,
           ),
         );
-    await _enfileirar(
+    await _outbox.enfileirar(
       tabela: 'listas',
       operacao: 'INSERT',
       registroId: id,
       listaId: id,
       tsLocal: agora,
-      payload: await _payloadLista(id),
+      payload: await _outbox.payloadLista(id),
     );
     return Lista(
       id: id,
@@ -190,13 +194,13 @@ class ListasRepository {
     await (_db.update(_db.listaLocal)..where((l) => l.id.equals(id))).write(
       ListaLocalCompanion(titulo: Value(titulo), updatedAt: Value(agora)),
     );
-    await _enfileirar(
+    await _outbox.enfileirar(
       tabela: 'listas',
       operacao: 'UPDATE',
       registroId: id,
       listaId: id,
       tsLocal: agora,
-      payload: await _payloadLista(id),
+      payload: await _outbox.payloadLista(id),
     );
   }
 
@@ -205,13 +209,13 @@ class ListasRepository {
     await (_db.update(_db.listaLocal)..where((l) => l.id.equals(id))).write(
       ListaLocalCompanion(deletadoEm: Value(agora), updatedAt: Value(agora)),
     );
-    await _enfileirar(
+    await _outbox.enfileirar(
       tabela: 'listas',
       operacao: 'DELETE_SOFT',
       registroId: id,
       listaId: id,
       tsLocal: agora,
-      payload: await _payloadLista(id),
+      payload: await _outbox.payloadLista(id),
     );
   }
 
@@ -225,13 +229,13 @@ class ListasRepository {
         updatedAt: Value(agora),
       ),
     );
-    await _enfileirar(
+    await _outbox.enfileirar(
       tabela: 'listas',
       operacao: 'UPDATE',
       registroId: id,
       listaId: id,
       tsLocal: agora,
-      payload: await _payloadLista(id, incluirArquivo: true),
+      payload: await _outbox.payloadLista(id, incluirArquivo: true),
     );
   }
 
@@ -245,13 +249,13 @@ class ListasRepository {
         updatedAt: Value(agora),
       ),
     );
-    await _enfileirar(
+    await _outbox.enfileirar(
       tabela: 'listas',
       operacao: 'UPDATE',
       registroId: id,
       listaId: id,
       tsLocal: agora,
-      payload: await _payloadLista(id),
+      payload: await _outbox.payloadLista(id),
     );
   }
 
@@ -285,13 +289,13 @@ class ListasRepository {
             ordem: Value(ordem),
           ),
         );
-    await _enfileirar(
+    await _outbox.enfileirar(
       tabela: 'itens_lista',
       operacao: 'INSERT',
       registroId: id,
       listaId: listaId,
       tsLocal: agora,
-      payload: await _payloadItem(id),
+      payload: await _outbox.payloadItem(id),
     );
     return Item(
       id: id,
@@ -418,13 +422,13 @@ class ListasRepository {
         quando: agora,
       );
     }
-    await _enfileirar(
+    await _outbox.enfileirar(
       tabela: 'itens_lista',
       operacao: 'UPDATE',
       registroId: id,
       listaId: item.listaId,
       tsLocal: agora,
-      payload: await _payloadItem(id),
+      payload: await _outbox.payloadItem(id),
     );
   }
 
@@ -434,13 +438,13 @@ class ListasRepository {
       ItemLocalCompanion(deletadoEm: Value(agora), updatedAt: Value(agora)),
     );
     final item = await _lerItem(id);
-    await _enfileirar(
+    await _outbox.enfileirar(
       tabela: 'itens_lista',
       operacao: 'DELETE_SOFT',
       registroId: id,
       listaId: item.listaId,
       tsLocal: agora,
-      payload: await _payloadItem(id),
+      payload: await _outbox.payloadItem(id),
     );
   }
 
@@ -453,13 +457,13 @@ class ListasRepository {
       ),
     );
     final item = await _lerItem(id);
-    await _enfileirar(
+    await _outbox.enfileirar(
       tabela: 'itens_lista',
       operacao: 'UPDATE',
       registroId: id,
       listaId: item.listaId,
       tsLocal: agora,
-      payload: await _payloadItem(id),
+      payload: await _outbox.payloadItem(id),
     );
   }
 
@@ -477,13 +481,13 @@ class ListasRepository {
       await (_db.update(_db.itemLocal)..where((i) => i.id.equals(id))).write(
         ItemLocalCompanion(ordem: Value(posicao), updatedAt: Value(agora)),
       );
-      await _enfileirar(
+      await _outbox.enfileirar(
         tabela: 'itens_lista',
         operacao: 'UPDATE',
         registroId: id,
         listaId: listaId,
         tsLocal: agora,
-        payload: await _payloadItem(id),
+        payload: await _outbox.payloadItem(id),
       );
     }
   }
@@ -507,13 +511,13 @@ class ListasRepository {
           updatedAt: Value(agora),
         ),
       );
-      await _enfileirar(
+      await _outbox.enfileirar(
         tabela: 'itens_lista',
         operacao: 'UPDATE',
         registroId: item.id,
         listaId: listaId,
         tsLocal: agora,
-        payload: await _payloadItem(item.id),
+        payload: await _outbox.payloadItem(item.id),
       );
     }
   }
@@ -536,13 +540,13 @@ class ListasRepository {
       )..where((i) => i.id.equals(item.id))).write(
         ItemLocalCompanion(deletadoEm: Value(agora), updatedAt: Value(agora)),
       );
-      await _enfileirar(
+      await _outbox.enfileirar(
         tabela: 'itens_lista',
         operacao: 'DELETE_SOFT',
         registroId: item.id,
         listaId: listaId,
         tsLocal: agora,
-        payload: await _payloadItem(item.id),
+        payload: await _outbox.payloadItem(item.id),
       );
     }
     return concluidos.map(Item.fromLocal).toList();
@@ -590,46 +594,6 @@ class ListasRepository {
 
   // ---- Internos ----
 
-  Future<Map<String, Object?>> _payloadLista(
-    String id, {
-    bool incluirArquivo = false,
-  }) async {
-    final l = await (_db.select(
-      _db.listaLocal,
-    )..where((l) => l.id.equals(id))).getSingle();
-    return {
-      'id': l.id,
-      'titulo': l.titulo,
-      'dono_id': l.donoId,
-      'created_at': _iso(l.createdAt),
-      'updated_at': _iso(l.updatedAt),
-      'deletado_em': l.deletadoEm == null ? null : _iso(l.deletadoEm!),
-      'orcamento_centavos': l.orcamentoCentavos,
-      if (incluirArquivo)
-        'arquivada_em': l.arquivadaEm == null ? null : _iso(l.arquivadaEm!),
-    };
-  }
-
-  Future<Map<String, Object?>> _payloadItem(String id) async {
-    final i = await _lerItem(id);
-    return {
-      'id': i.id,
-      'lista_id': i.listaId,
-      'nome': i.nome,
-      'quantidade': i.quantidade,
-      'unidade': i.unidade,
-      'categoria': i.categoria,
-      'concluido': i.concluido,
-      'ordem': i.ordem,
-      'preco_centavos': i.precoCentavos,
-      'created_at': _iso(i.createdAt),
-      'updated_at': _iso(i.updatedAt),
-      'deletado_em': i.deletadoEm == null ? null : _iso(i.deletadoEm!),
-    };
-  }
-
-  String _iso(DateTime d) => d.toUtc().toIso8601String();
-
   Future<int> _proximaOrdem(String listaId) async {
     final query = _db.selectOnly(_db.itemLocal)
       ..addColumns([_db.itemLocal.ordem.max()])
@@ -643,27 +607,4 @@ class ListasRepository {
 
   Future<ItemLocalData> _lerItem(String id) =>
       (_db.select(_db.itemLocal)..where((i) => i.id.equals(id))).getSingle();
-
-  Future<void> _enfileirar({
-    required String tabela,
-    required String operacao,
-    required String registroId,
-    required String listaId,
-    required DateTime tsLocal,
-    required Map<String, Object?> payload,
-  }) {
-    if (!_enfileirarMutacoes) return Future<void>.value();
-    return _db
-        .into(_db.mutacaoPendente)
-        .insert(
-          MutacaoPendenteCompanion.insert(
-            tabela: tabela,
-            operacao: operacao,
-            registroId: registroId,
-            payload: jsonEncode(payload),
-            tsLocal: tsLocal,
-            listaId: listaId,
-          ),
-        );
-  }
 }
