@@ -90,20 +90,22 @@ class BackupRepository {
       v == null ? null : DateTime.parse(v as String);
 
   Future<void> importarJson(String conteudo) async {
-    final Map<String, dynamic> mapa;
+    final BackupArquivo arquivo;
     try {
-      mapa = jsonDecode(conteudo) as Map<String, dynamic>;
+      final mapa = jsonDecode(conteudo) as Map<String, dynamic>;
+      if (mapa['versao'] != BackupArquivo.versao) {
+        throw BackupInvalidoException(
+          'Versão de backup não suportada: ${mapa['versao']}',
+        );
+      }
+      arquivo = BackupArquivo.fromJson(mapa);
     } on FormatException {
       throw const BackupInvalidoException('JSON inválido');
     } on TypeError {
+      // Em Dart atual `CastError` é um alias de `TypeError`, então este `on`
+      // cobre também falhas de `as`/`List.cast` em `BackupArquivo.fromJson`.
       throw const BackupInvalidoException('JSON inválido');
     }
-    if (mapa['versao'] != BackupArquivo.versao) {
-      throw BackupInvalidoException(
-        'Versão de backup não suportada: ${mapa['versao']}',
-      );
-    }
-    final arquivo = BackupArquivo.fromJson(mapa);
 
     await _db.transaction(() async {
       for (final l in arquivo.listas) {

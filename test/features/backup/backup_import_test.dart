@@ -42,6 +42,19 @@ void main() {
     },
   );
 
+  test('deve_lancar_erro_sem_alterar_banco_quando_campos_invalidos', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    await expectLater(
+      BackupRepository(db).importarJson(
+        '{"versao":1,"exportadoEm":"2026-01-01T00:00:00Z",'
+        '"listas":"nao-e-lista","itens":[],"historicoPrecos":[]}',
+      ),
+      throwsA(isA<BackupInvalidoException>()),
+    );
+    expect(await db.select(db.listaLocal).get(), isEmpty);
+  });
+
   test('deve_forcar_dono_local_quando_donoLocal', () async {
     final origem = AppDatabase(NativeDatabase.memory());
     addTearDown(origem.close);
