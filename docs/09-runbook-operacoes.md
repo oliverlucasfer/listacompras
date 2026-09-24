@@ -110,6 +110,8 @@ supabase db push
 
 - **Fase 41 — Flavor Lite (24/09/2026):** fase **sem tocar em `supabase/`** (nenhuma migration, RLS, RPC ou Edge Function nova). O segundo flavor **`lite`** (`br.com.oliverlucas.listacompras.lite`, app Firebase `1:407606670898:android:1dfbf8ce7930a968bbae2b`) roda **100% no aparelho**: sem conta/Supabase, sem convites/membros, sem sync/Realtime e sem push; sessão local fixa com dono **`'local'`**, outbox de mutações **desligada** (a fila não é alimentada), rotas de conta/convite ausentes, abas só "Minhas listas"/"Configurações" e **backup JSON** (exportar/importar com merge por `id` e LWW por `updated_at`) em Configurações. O flavor **`prod`** (`br.com.oliverlucas.listacompras`) permanece **colaborativo e inalterado**. App **`1.5.0+12`** (release assinado, `--dart-define-from-file=dart_defines_prod.json`); APK prod `app-prod-release.apk` **gerado** (não distribuído nesta fase) e Lite `app-lite-release.apk` **distribuído** ao grupo `testadores` (Firebase App Distribution). **Dívidas da fase:** o `file_picker` estava pinado em `10.3.10` (a linha 11.x é incompatível com AGP 9/Built-in Kotlin) — **resolvido na F42** ao trocar por `file_selector`; e o import de backup passou a **alimentar a fila** no modo colaborativo ([03 §3](03-sincronizacao-offline.md), [16](16-roadmap-pos-mvp.md)). iOS do Lite segue como follow-up **adiado por decisão** (Onda E, [16](16-roadmap-pos-mvp.md)).
 
+- **Correção da F42 (24/09/2026):** o `1.5.0 (12)` distribuído como "Lite" era, na verdade, **o app colaborativo** com o pacote `.lite` — o flavor sozinho não seleciona o modo Dart. Corrigido com `-t lib/main_lite.dart` nos comandos de build/CI ([§2.9](#29-build-e-distribuicao-flavors-prodlite--f41)), uma trava de debug em `bootstrap.dart` e o passo 1 do smoke; o Lite correto foi redistribuído como `1.5.0 (13)`. O import de backup foi validado em emulador de ponta a ponta (seletor abre, `.json` selecionável, lista restaurada com dono local).
+
 ### 2.7. Auth → URL Configuration (web + nativo)
 
 Dashboard Supabase → **Authentication → URL Configuration** (ADR-012, [05 §2.1](05-app-flutter.md)). Necessário para o cadastro (verificação de e-mail), a recuperação de senha e o link de convite funcionarem no web:
@@ -140,11 +142,13 @@ O web usa `<origem>/login-callback` (http em dev, https em produção) como `red
 
 Com flavors, **todo build exige `--flavor`**; o flavor `prod` é o único que liga nuvem, colaboração e push. Para gerar os APKs release de teste (assinados via `android/key.properties` com fallback para debug quando ausente, e com os dart-defines de produção em `dart_defines_prod.json`, que fica **fora do git**):
 
+> **⚠️ O flavor `lite` não seleciona o modo — o entrypoint é que seleciona.** Sem `-t lib/main_lite.dart`, `--flavor lite` empacota o **app colaborativo** com o pacote `.lite` (tela de login, mesmo backend). Isso aconteceu de verdade na F41: o `1.5.0 (12)` distribuído como "Lite" era o app colaborativo. Desde a F42 há uma trava em debug (`bootstrap.dart` compara o pacote com o modo) e o passo 1 do smoke abaixo pega o caso.
+
 ```bash
 flutter build apk --release --flavor prod --dart-define-from-file=dart_defines_prod.json
 # → build/app/outputs/flutter-apk/app-prod-release.apk
 
-flutter build apk --release --flavor lite --dart-define-from-file=dart_defines_prod.json
+flutter build apk --release --flavor lite -t lib/main_lite.dart --dart-define-from-file=dart_defines_prod.json
 # → build/app/outputs/flutter-apk/app-lite-release.apk
 ```
 
@@ -156,6 +160,7 @@ firebase appdistribution:distribute build/app/outputs/flutter-apk/app-prod-relea
   --app "<app-id do prod (console do Firebase)>" --groups testadores
 
 # lite (sem conta, 100% local) — app Android `br.com.oliverlucas.listacompras.lite`
+# ATENÇÃO: o build acima leva `-t lib/main_lite.dart`; sem isso o APK é o colaborativo.
 firebase appdistribution:distribute build/app/outputs/flutter-apk/app-lite-release.apk \
   --app "1:407606670898:android:1dfbf8ce7930a968bbae2b" --groups testadores \
   --release-notes "Versao Lite (RF-31): uso sem conta, 100% no aparelho, com backup exportar/importar."
@@ -165,7 +170,7 @@ Os dois flavors instalam **lado a lado** (applicationIds distintos).
 
 **Smoke do Lite em device (obrigatório a cada release do flavor):**
 
-1. Abrir o app pelo ícone azul ("Lista de Compras Lite") — deve abrir direto em **Minhas listas**, sem login e sem aba "Compartilhadas".
+1. Abrir o app pelo ícone azul ("Lista de Compras Lite") — deve abrir direto em **Minhas listas**, sem login e sem aba "Compartilhadas". **Se aparecer tela de login, o build está errado** (flavor sem `-t lib/main_lite.dart`): não distribuir e refazer com o entrypoint.
 2. Criar uma lista e alguns itens; fechar e reabrir — os dados persistem (100% local).
 3. **Configurações → Exportar backup** — o arquivo `backup_<data>.json` deve ser compartilhado/baixado.
 4. **Configurações → Importar backup** — escolher um `.json` **real** no seletor do sistema. Este é o ponto que o CI não cobre: confirmar que o seletor **abre** e que o arquivo aparece **selecionável** (o filtro de tipo foi removido justamente para não esconder backup válido; a validação do conteúdo fica no import, que rejeita arquivo inválido com mensagem clara).

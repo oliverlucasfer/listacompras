@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform, kIsWeb;
+    show TargetPlatform, defaultTargetPlatform, kDebugMode, kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show MissingPluginException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -31,6 +33,13 @@ Future<void> bootstrap(AppModo modo) async {
 
   WidgetsFlutterBinding.ensureInitialized();
   usarPathUrlStrategy();
+
+  // Trava de modo (F42): o flavor sozinho **não** seleciona o modo — quem o faz
+  // é o entrypoint (`-t lib/main_lite.dart`). Sem esta conferência, buildar
+  // `--flavor lite` sem `-t` empacota o app **colaborativo** com o pacote
+  // `.lite` (já aconteceu: a distribuição da F41 saiu errada). Em debug falha
+  // na hora, em vez de passar batido num teste manual.
+  if (kDebugMode) await _conferirModoDoPacote(modo);
 
   if (cap.nuvem) {
     await Supabase.initialize(
@@ -83,5 +92,29 @@ Future<void> bootstrap(AppModo modo) async {
       // `limparDadosDoSentry` (testada) e nada de item chega ao Sentry.
       options.beforeSend = limparDadosDoSentry;
     }, appRunner: app);
+  }
+}
+
+/// Falha cedo quando o **pacote** e o **modo** divergem (F42): o flavor
+/// `lite` empacota o app colaborativo (ou o inverso). Sem plugin (testes) a
+/// conferência não se aplica e é ignorada.
+Future<void> _conferirModoDoPacote(AppModo modo) async {
+  try {
+    final pacote = (await PackageInfo.fromPlatform()).packageName;
+    final ehPacoteLite = pacote.endsWith('.lite');
+    if (modo == AppModo.lite && !ehPacoteLite) {
+      throw StateError(
+        'Entrypoint Lite em pacote colaborativo ($pacote): '
+        'use `flutter build ... --flavor lite`.',
+      );
+    }
+    if (modo == AppModo.colaborativo && ehPacoteLite) {
+      throw StateError(
+        'Flavor `lite` construído com o entrypoint colaborativo: '
+        'use `-t lib/main_lite.dart`.',
+      );
+    }
+  } on MissingPluginException {
+    // Sem o package_info (testes/plataformas sem registro): sem trava.
   }
 }

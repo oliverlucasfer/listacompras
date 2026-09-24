@@ -38,8 +38,10 @@ jobs:
           --dart-define=SUPABASE_ANON_KEY=teste
       - if: steps.check.outputs.flutter == 'enabled'
         run: flutter build apk --debug --flavor prod
+      # O flavor `lite` NÃO seleciona o modo: sem `-t lib/main_lite.dart` ele
+      # empacota o app colaborativo com o pacote `.lite` (defeito real da F41/F42).
       - if: steps.check.outputs.flutter == 'enabled'
-        run: flutter build apk --debug --flavor lite
+        run: flutter build apk --debug --flavor lite -t lib/main_lite.dart
 
   supabase:
     runs-on: ubuntu-latest
