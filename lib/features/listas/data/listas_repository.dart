@@ -19,10 +19,15 @@ import 'historico_precos_repository.dart';
 /// com `ts_local` para o Sync Engine (F4-T03). Leitura expõe Streams do
 /// Drift — UI reativa, nunca bloqueia em rede.
 class ListasRepository {
-  ListasRepository(this._db, {Uuid? uuid}) : _uuid = uuid ?? const Uuid();
+  ListasRepository(this._db, {Uuid? uuid, this._enfileirarMutacoes = true})
+    : _uuid = uuid ?? const Uuid();
 
   final AppDatabase _db;
   final Uuid _uuid;
+
+  /// No modo Lite (RF-31) não há sync: a fila de mutações não é alimentada
+  /// (senão cresceria para sempre sem drenar).
+  final bool _enfileirarMutacoes;
 
   // ---- Leitura (Streams do Drift) ----
 
@@ -647,6 +652,7 @@ class ListasRepository {
     required DateTime tsLocal,
     required Map<String, Object?> payload,
   }) {
+    if (!_enfileirarMutacoes) return Future<void>.value();
     return _db
         .into(_db.mutacaoPendente)
         .insert(
