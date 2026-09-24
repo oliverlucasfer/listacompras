@@ -137,6 +137,12 @@ class BackupRepository {
                   orcamentoCentavos: Value(l['orcamento_centavos'] as int?),
                 ),
               );
+          // Alimenta a fila (só no modo colaborativo — ver `enfileirar`): o
+          // registro importado passa a subir para o Supabase. `INSERT` porque
+          // o envio remoto decide insert × update sozinho e esse caminho mantém
+          // o dedup de item por nome (03 §3). Fica **dentro** da transação: um
+          // import que falha não enfileira nada. O `ts_local` é agora; quem
+          // decide o LWW no servidor é o `updated_at` do payload (o importado).
           await _outbox.enfileirar(
             tabela: 'listas',
             operacao: 'INSERT',
@@ -174,6 +180,7 @@ class BackupRepository {
                   deletadoEm: Value(_parseOpt(i['deletado_em'])),
                 ),
               );
+          // Mesma regra da lista (03 §3); o `lista_id` agrupa o dreno por lista.
           await _outbox.enfileirar(
             tabela: 'itens_lista',
             operacao: 'INSERT',
@@ -184,6 +191,8 @@ class BackupRepository {
           );
         }
 
+        // Histórico de preços é local-only (05 §6.3): importa, mas **nunca**
+        // entra na fila.
         for (final h in arquivo.historicoPrecos) {
           final nome = h['nome_normalizado'] as String;
           final registradoEm = DateTime.parse(h['registrado_em'] as String);
