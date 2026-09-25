@@ -59,6 +59,7 @@ Regras vinculantes (detalhe e evidência na [spec da Fase 14](superpowers/specs/
 - **Alvos de toque ≥ 48dp**.
 - **Semântica:** `tooltip` em todo `IconButton`/`PopupMenuButton`; ícones decorativos (logo, ícones de estado de 48–72dp) fora da árvore com `excludeSemantics`; controles com rótulo do contexto (ex.: `Checkbox` do item usa o nome do item).
 - **Live regions:** `AppBanner` (erro/offline/aviso), `mostrarSnackBar` e `IndicadorSync` são anunciados (`Semantics(liveRegion: true)`).
+- **Localização:** o Material é localizado em pt-BR via `flutter_localizations` (`app.dart` com `Locale('pt','BR')` e os delegados `Global*`, F43-T09) — rótulos e tooltips nativos (ex.: "Voltar") saem em português; strings do produto ficam em `AppStrings` ([05 §7](05-app-flutter.md)).
 - **Escala de texto:** as telas-chave não estouram com `textScaler` 1.3 e 2.0 (verificado com `textScaleFactor` 2.0 nos testes de tela).
 - **Verificação automatizada:** testes com `meetsGuideline(androidTapTargetGuideline)`, `labeledTapTargetGuideline` e `textContrastGuideline` (`test/core/widgets/acessibilidade_test.dart`) + os testes de semântica/estado nas telas — a acessibilidade é verificada por teste, não por inspeção.
 

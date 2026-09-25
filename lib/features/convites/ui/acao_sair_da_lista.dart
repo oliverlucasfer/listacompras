@@ -21,7 +21,7 @@ Future<void> confirmarSairDaLista(
 ) async {
   final confirmou = await AppDialog.confirmarDestrutivo(
     context,
-    titulo: AppStrings.sairListaTitulo,
+    titulo: AppStrings.sairDaLista,
     mensagem: AppStrings.sairListaMensagem,
     confirmar: AppStrings.sairDaLista,
   );

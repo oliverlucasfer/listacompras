@@ -333,7 +333,7 @@ Plus Jakarta Sans bundlada. Aqui ficam apenas os estados transversais:
 | Offline | `AppBanner.offline` ([03 §6](03-sincronizacao-offline.md)) |
 
 * **Acessibilidade (RNF-06):** semântica/live region, alvos ≥48dp e escala de texto — regras e verificação por teste em [15 §4](15-design-system.md) (F14-T01/T02).
-* i18n: pt-BR hardcoded no MVP (strings centralizadas em `core/l10n/app_strings.dart` para facilitar futura tradução). String de UI fora do `AppStrings` é considerada bug (F14-T08).
+* i18n: pt-BR no MVP — strings centralizadas em `core/l10n/app_strings.dart` e **Material localizado** via `flutter_localizations` (`app.dart` com `Locale('pt','BR')`, `supportedLocales` e delegados `GlobalMaterial/Widgets/Cupertino`, F43-T09). String de UI fora do `AppStrings` é considerada bug (F14-T08).
 
 ---
 

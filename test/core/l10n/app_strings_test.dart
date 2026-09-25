@@ -1,7 +1,26 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 
+String _fonte() => File('lib/core/l10n/app_strings.dart').readAsStringSync();
+
+bool _declara(String identificador) =>
+    _fonte().contains(RegExp('static const $identificador\\b'));
+
 void main() {
+  test('deve_remover_strings_orfas_quando_nao_ha_uso', () {
+    expect(_declara('offline'), isFalse);
+    expect(_declara('importLocalTextoLongo'), isFalse);
+    expect(_declara('mudarPapel'), isFalse);
+    expect(_declara('tituloLista'), isFalse);
+  });
+
+  test('deve_manter_apenas_uma_string_quando_duplicada', () {
+    expect(_declara('sairListaTitulo'), isFalse);
+    expect(_declara('removerMembro'), isFalse);
+  });
+
   test('deve_montar_titulo_de_exclusao_quando_informado_o_nome', () {
     expect(AppStrings.excluirListaTitulo('Compras'), 'Excluir "Compras"?');
   });

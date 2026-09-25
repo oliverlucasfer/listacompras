@@ -61,7 +61,6 @@ abstract final class AppStrings {
   static const nenhumaCompartilhadaDica =
       'Quando alguém compartilhar uma lista com você, ela aparece aqui.';
   static const novaLista = 'Nova lista';
-  static const tituloLista = 'Título da lista';
   static const salvar = 'Salvar';
   static const cancelar = 'Cancelar';
   static const renomear = 'Renomear';
@@ -231,8 +230,6 @@ abstract final class AppStrings {
   static const importarLista = 'Importar lista';
   static const importLocalAvisoPadrao =
       'Itens sem quantidade entraram com 1 un.';
-  static const importLocalTextoLongo =
-      'Texto muito longo. Envie até 10.000 caracteres.';
 
   // Adicionar de outra lista (RF-23)
   static const adicionarDeOutraLista = 'Adicionar de outra lista';
@@ -314,11 +311,8 @@ abstract final class AppStrings {
   static const membros = 'Membros';
   static const voce = 'Você';
   static const papelDono = 'Dono';
-  static const mudarPapel = 'Mudar papel';
-  static const removerMembro = 'Remover';
   static const removerMembroMensagem = 'Remover este membro da lista?';
   static const sairDaLista = 'Sair da lista';
-  static const sairListaTitulo = 'Sair da lista';
   static const sairListaMensagem = 'Você deixará de ter acesso a esta lista.';
   static const membroEntrou = 'Um novo membro entrou na lista';
   static const transferirDono = 'Transferir dono';
@@ -349,7 +343,6 @@ abstract final class AppStrings {
   // Estados transversais
   static const carregando = 'Carregando...';
   static const tentarNovamente = 'Tentar novamente';
-  static const offline = 'Offline — alterações serão sincronizadas';
   static const semValor = '—';
 
   // Indicador de sync (doc 03 §6, wireframe 10 §3.2)

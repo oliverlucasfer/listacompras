@@ -230,13 +230,11 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert).first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.removerMembro));
+    await tester.tap(find.text(AppStrings.removerItem));
     await tester.pumpAndSettle();
 
     expect(find.text(AppStrings.removerMembroMensagem), findsOneWidget);
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.removerMembro),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.removerItem));
     await tester.pumpAndSettle();
 
     final filtro = servidor.pedidos

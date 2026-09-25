@@ -88,9 +88,9 @@ class _TelaMembrosScreenState extends ConsumerState<TelaMembrosScreen> {
   ) async {
     final confirmou = await AppDialog.confirmarDestrutivo(
       context,
-      titulo: AppStrings.removerMembro,
+      titulo: AppStrings.removerItem,
       mensagem: AppStrings.removerMembroMensagem,
-      confirmar: AppStrings.removerMembro,
+      confirmar: AppStrings.removerItem,
     );
     if (!confirmou) return;
     final repo = ref.read(convitesRepositoryProvider);
@@ -231,7 +231,7 @@ class _TelaMembrosScreenState extends ConsumerState<TelaMembrosScreen> {
                             PopupMenuItem(
                               value: 'remover',
                               child: Text(
-                                AppStrings.removerMembro,
+                                AppStrings.removerItem,
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.error,
                                 ),

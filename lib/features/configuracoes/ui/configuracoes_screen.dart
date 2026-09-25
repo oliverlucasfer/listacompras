@@ -120,7 +120,7 @@ class ConfiguracoesScreen extends ConsumerWidget {
             const AppCabecalhoSecao(AppStrings.conta),
             ListTile(
               leading: const Icon(Icons.email_outlined),
-              title: Text(email ?? ''),
+              title: Text(email ?? AppStrings.semValor),
             ),
             ListTile(
               leading: const Icon(Icons.logout),
