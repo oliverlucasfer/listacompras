@@ -118,6 +118,7 @@ set search_path = public
 as $$
 declare
   c public.convites%rowtype;
+  email_uid text;
 begin
   -- guarda de anonimato: sem sessão autenticada não há aceite (ver bullets)
   if auth.uid() is null then
@@ -132,9 +133,13 @@ begin
     raise exception 'CONVITE_INVALIDO';
   end if;
 
-  if c.tipo = 'email' and lower(c.email) <> lower(
-      (select email from auth.users where id = auth.uid())) then
-    raise exception 'CONVITE_NAO_DIRIGIDO_A_VOCE';
+  -- convite 'email' exige e-mail não nulo e igual ao do autenticado;
+  -- convite 'link' (email is null) vale para qualquer autenticado (G-24)
+  if c.tipo = 'email' then
+    select u.email into email_uid from auth.users u where u.id = auth.uid();
+    if c.email is null or lower(c.email) <> lower(email_uid) then
+      raise exception 'CONVITE_NAO_DIRIGIDO_A_VOCE';
+    end if;
   end if;
 
   -- idempotente: já sendo membro, apenas marca o convite
@@ -148,10 +153,14 @@ begin
   return c.lista_id;
 end;
 $$;
+
+revoke execute on function public.aceitar_convite(uuid) from public, anon;
+grant execute on function public.aceitar_convite(uuid) to authenticated;
 ```
 
 * **Idempotente:** acessar o link duas vezes (mesma pessoa ou outra) não duplica membro nem quebra — 2º uso apenas navega (§9). Na checagem `not in ('pendente', 'aceito')`, o estado `aceito` continua aceitável: só `revogado` e a expiração (`expira_em < now()`) bloqueiam. Estado `expirado` nunca é gravado.
-* **Guarda de anonimato:** o RPC é executável por `anon` por padrão; sem `auth.uid()` rejeita com `CONVITE_INVALIDO` logo no início — o aceite exige sessão autenticada (§3: não autenticado vai ao login e retoma depois).
+* **Guarda de anonimato:** o RPC é executável **apenas por `authenticated`** (`revoke execute ... from public, anon` + grant a `authenticated`, migration `0024`, G-22) — sem sessão, o anônimo é barrado por **privilégio insuficiente** antes de chegar ao corpo. A guarda `auth.uid() is null` segue no início como **defesa em profundidade** (rejeita com `CONVITE_INVALIDO`): o aceite exige sessão autenticada (§3: não autenticado vai ao login e retoma depois).
+* **Comparação de e-mail (G-24):** convite `email` exige `c.email is not null` e igual ao e-mail do autenticado (`CONVITE_NAO_DIRIGIDO_A_VOCE` caso contrário); convite `link` (`email is null`) segue valendo para qualquer autenticado. A coerência `tipo ↔ email` também é garantida pelo CHECK `convites_tipo_email_check` ([01 §4.4](01-banco-de-dados.md)).
 * Concorre com o trigger `sync_dono` sem risco: `papel_oferecido` nunca é `dono`.
 
 ## 4. Fluxo B — Convite por e-mail (entregue na Fase 32, RF-13)
