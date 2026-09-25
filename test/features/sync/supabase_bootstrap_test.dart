@@ -359,6 +359,85 @@ void main() {
     expect(await (db.select(db.mutacaoPendente)).get(), isEmpty);
   });
 
+  test('deve_limpar_historico_de_precos_quando_troca_de_usuario', () async {
+    final usuario = StreamController<String?>();
+    final bootstrap = criar(usuario: usuario.stream);
+    addTearDown(() async {
+      await bootstrap.dispose();
+      await usuario.close();
+    });
+    await bootstrap.iniciar();
+
+    usuario.add('U1');
+    await pumpEventQueue();
+    await db
+        .into(db.historicoPrecoLocal)
+        .insert(
+          HistoricoPrecoLocalCompanion.insert(
+            nomeNormalizado: 'arroz',
+            precoCentavos: 1000,
+            unidade: 'kg',
+            registradoEm: DateTime.utc(2026, 9, 4, 12),
+          ),
+        );
+    expect(await db.select(db.historicoPrecoLocal).get(), isNotEmpty);
+
+    usuario.add('U2');
+    await pumpEventQueue();
+
+    expect(await db.select(db.historicoPrecoLocal).get(), isEmpty);
+  });
+
+  test('deve_paginar_download_quando_mais_de_uma_pagina', () async {
+    final primeiraPagina = [for (var i = 0; i < 500; i++) listaRemota('l$i')];
+    final segundaPagina = [listaRemota('l500'), listaRemota('l501')];
+    final servidor = ServidorFake((requisicao) {
+      if (requisicao.url.path.contains('itens_lista')) {
+        return (200, <Map<String, Object?>>[]);
+      }
+      if (requisicao.url.queryParameters['offset'] == '500') {
+        return (200, segundaPagina);
+      }
+      return (200, primeiraPagina);
+    });
+    final usuario = StreamController<String?>();
+    final bootstrap = SupabaseBootstrap(
+      db: db,
+      engine: SyncEngine(
+        db: db,
+        remoto: remoto,
+        checarConexao: () async => true,
+      ),
+      client: SupabaseClient(
+        'http://127.0.0.1:54321',
+        'test-key',
+        httpClient: servidor,
+      ),
+      mudancasDeUsuario: usuario.stream,
+      checarConexao: () async => true,
+      lerUsuarioSalvo: () async => null,
+      salvarUsuario: (id) async {},
+    );
+    addTearDown(() async {
+      await bootstrap.dispose();
+      await usuario.close();
+    });
+    await bootstrap.iniciar();
+
+    usuario.add('U1');
+    for (var i = 0; i < 60; i++) {
+      await pumpEventQueue();
+      if ((await db.select(db.listaLocal).get()).length >= 502) break;
+    }
+
+    final locais = await db.select(db.listaLocal).get();
+    expect(locais.length, 502);
+    expect(
+      locais.map((l) => l.id),
+      containsAll(['l0', 'l499', 'l500', 'l501']),
+    );
+  });
+
   test('deve_preservar_cache_e_fila_quando_mesmo_usuario_no_restart', () async {
     // Checklist 03 §8: fila pendente sobrevive ao restart do app.
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'U1');

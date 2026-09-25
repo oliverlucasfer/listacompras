@@ -182,11 +182,12 @@ Máquina de estados exposta por provider Riverpod (`syncStatusProvider`):
 
 ## 7. Bootstrap e manutenção do cache local
 
-* **Primeiro login:** baixa todas as listas/membros/itens ativos do usuário (query única por tabela) e popula o Drift.
+* **Primeiro login:** baixa todas as listas/membros/itens ativos do usuário (query paginada por tabela, em blocos de 500 com `range`, até esgotar) e popula o Drift.
 * **Incremental:** Realtime mantém o cache atualizado; em reconexão longa (gap > X) ou aviso de erro do canal (`CHANNEL_ERROR`/`TIMED_OUT`), re-sync completo das listas do usuário (barato no volume de dados de listas de compras).
 * **Item remoto com pai ausente:** um item cujo `lista_id` ainda não está no cache local (violação da FK) é ignorado no re-sync/Realtime — o próximo sync reconcilia — sem abortar a cadeia de trabalhos nem o flush da fila.
-* **Multi-conta:** cache por `user_id` (mesmo dispositivo com contas distintas não mistura dados).
+* **Multi-conta:** cache por `user_id` (mesmo dispositivo com contas distintas não mistura dados) — inclui o histórico local de preços (`historico_preco_local`), que é por dispositivo e é apagado na troca de usuário para não vazar entre contas.
 * **Logout:** limpa o cache local e a fila de mutações (após tentar flush final).
+* **Remoções remotas:** não são reconciliadas no re-sync — a app só faz soft delete (`deletado_em`, que chega como UPDATE/tombstone), então uma remoção física no servidor não apaga a linha do Drift.
 
 ---
 

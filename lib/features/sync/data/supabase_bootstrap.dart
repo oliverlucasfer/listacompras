@@ -193,6 +193,7 @@ class SupabaseBootstrap {
     await _db.delete(_db.itemLocal).go();
     await _db.delete(_db.listaLocal).go();
     await _db.delete(_db.mutacaoPendente).go();
+    await _db.delete(_db.historicoPrecoLocal).go();
     _papelRepository?.limpar();
   }
 
@@ -267,12 +268,24 @@ class SupabaseBootstrap {
     };
   }
 
+  static const _tamanhoPagina = 500;
+
   Future<List<Map<String, Object?>>> _baixarDoSupabase(String tabela) async {
-    final linhas = await _client.from(tabela).select();
-    return [
-      for (final linha in linhas as List)
-        Map<String, Object?>.from(linha as Map),
-    ];
+    final linhas = <Map<String, Object?>>[];
+    var inicio = 0;
+    while (true) {
+      final pagina = await _client
+          .from(tabela)
+          .select()
+          .range(inicio, inicio + _tamanhoPagina - 1);
+      linhas.addAll([
+        for (final linha in pagina as List)
+          Map<String, Object?>.from(linha as Map),
+      ]);
+      if (pagina.length < _tamanhoPagina) break;
+      inicio += _tamanhoPagina;
+    }
+    return linhas;
   }
 
   static DateTime? _parseTs(Object? iso) =>
