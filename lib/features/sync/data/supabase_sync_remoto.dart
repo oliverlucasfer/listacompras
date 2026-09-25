@@ -74,29 +74,45 @@ class SupabaseSyncRemoto implements SyncRemoto, FonteTempoServidor {
         remotoVenceNoLww(_parse(registro['updated_at']), atualizadoLocal)) {
       return RemotoVenceu(registro);
     }
-    if (mutacao.operacao == 'INSERT') {
-      // Deduplicação (doc 03 §5): unique (lista_id, lower(nome)) ativa.
+    final tentarDedup =
+        registro == null &&
+        mutacao.tabela == 'itens_lista' &&
+        mutacao.payload['deletado_em'] == null;
+    if (tentarDedup) {
       final duplicado = await _buscarDuplicado(mutacao);
       if (duplicado != null) {
-        final mesclado = mesclarDuplicado(duplicado, mutacao.payload);
-        if (mesclado != null) {
-          await tabela.update(mesclado).eq('id', mesclado['id']!);
-          return Duplicado(mesclado);
-        }
-        return Duplicado(duplicado);
+        return _mesclarEDevolver(tabela, duplicado, mutacao);
       }
     }
-    if (registro == null) {
-      // F12-T04: sem linha remota o envio é INSERT puro. Não usar `upsert`:
-      // o PostgREST avalia a policy de UPDATE no upsert e listas novas eram
-      // negadas (42501) — nada sincronizava (migration 0012 corrige a policy,
-      // mas o INSERT continua sendo o caminho correto para criar).
-      await tabela.insert(mutacao.payload);
-    } else {
-      // Linha remota existe: UPDATE direto (LWW já decidiu que o local vence).
-      await tabela.update(mutacao.payload).eq('id', mutacao.registroId);
+    try {
+      if (registro == null) {
+        // F12-T04: sem linha remota o envio é INSERT puro. Não usar `upsert`:
+        // o PostgREST avalia a policy de UPDATE no upsert e listas novas eram
+        // negadas (42501) — nada sincronizava (migration 0012 corrige a policy,
+        // mas o INSERT continua sendo o caminho correto para criar).
+        await tabela.insert(mutacao.payload);
+      } else {
+        // Linha remota existe: UPDATE direto (LWW já decidiu que o local vence).
+        await tabela.update(mutacao.payload).eq('id', mutacao.registroId);
+      }
+    } on PostgrestException catch (e) {
+      if (e.code != '23505' || mutacao.tabela != 'itens_lista') rethrow;
+      final duplicado = await _buscarDuplicado(mutacao);
+      if (duplicado == null) rethrow;
+      return _mesclarEDevolver(tabela, duplicado, mutacao);
     }
     return const Enviado();
+  }
+
+  Future<ResultadoEnvio> _mesclarEDevolver(
+    PostgrestQueryBuilder<dynamic> tabela,
+    Map<String, Object?> duplicado,
+    MutacaoSync mutacao,
+  ) async {
+    final mesclado = mesclarDuplicado(duplicado, mutacao.payload);
+    if (mesclado == null) return Duplicado(duplicado);
+    await tabela.update(mesclado).eq('id', mesclado['id']!);
+    return Duplicado(mesclado);
   }
 
   /// Item ativo da mesma lista com o mesmo nome (case-insensitive) e id
