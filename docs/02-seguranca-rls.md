@@ -13,7 +13,7 @@ create or replace function public.is_member(lista uuid)
 returns boolean
 language sql
 security definer
-set search_path = public
+set search_path = ''
 stable
 as $$
   select exists (
@@ -35,7 +35,7 @@ create or replace function public.papel_na_lista(lista uuid)
 returns text
 language sql
 security definer
-set search_path = public
+set search_path = ''
 stable
 as $$
   select lm.papel
@@ -52,7 +52,7 @@ create or replace function public.is_dono_de(lista uuid)
 returns boolean
 language sql
 security definer
-set search_path = public
+set search_path = ''
 stable
 as $$
   select exists (
@@ -72,7 +72,7 @@ create or replace function public.email_autenticado()
 returns text
 language sql
 security definer
-set search_path = public
+set search_path = ''
 stable
 as $$
   select u.email from auth.users u where u.id = auth.uid()
@@ -80,6 +80,8 @@ $$;
 ```
 
 Mesma justificativa das demais: `auth.users` não é legível pelo role `authenticated` dentro de uma policy — a função `SECURITY DEFINER` resolve. Usada pela policy de SELECT de convites dirigidos ao próprio e-mail ([08 §2](08-compartilhamento-colaborativo.md)).
+
+> **`search_path = ''` (G-23, migration `0025`):** todas as funções `SECURITY DEFINER` do app usam `set search_path = ''` e qualificam os identificadores internos (`public.`, `auth.`, `vault.`, `net.`). Sem o `public` implícito, a referência não qualificada não resolve e o vetor clássico de sequestro de `search_path` fica fechado. Auditoria: `select proname, proconfig from pg_proc where prosecdef` — os definers do app têm `search_path=""`; restam apenas funções das extensões (`pg_net`, `supabase_functions`, `vault`), fora do escopo.
 
 ---
 
@@ -117,11 +119,11 @@ alter table public.push_tokens   force row level security;
 | `itens_lista` | DELETE | Só dono da lista | join com `listas.dono_id` |
 | `lista_membros` | SELECT | Qualquer membro | `is_member(lista_id)` |
 | `lista_membros` | INSERT | Dono (adicionar membro) | `is_dono_de(lista_id)` **e** (`papel in ('editor','leitor')` **ou** `user_id = auth.uid()`) — terceiros nunca entram como `dono` (migration `0015`, R-18); a associação do próprio dono é criada pelo servidor ao inserir a lista (migration `0010`) |
-| `lista_membros` | UPDATE | Dono (papel de outro membro) | `is_dono_de(lista_id)` e alvo `user_id <> auth.uid()`; papel destino `in ('editor','leitor')` (F7-T07, migration 0009) |
+| `lista_membros` | UPDATE | Dono (papel de outro membro) | `is_dono_de(lista_id)` e alvo `user_id <> auth.uid()`; papel destino `in ('editor','leitor')`; `user_id`/`lista_id` **imutáveis** — só `papel` muda (F7-T07 `0009`; G-26 `0025`) |
 | `lista_membros` | DELETE | Dono remove outros **ou** o próprio membro sai | dono: `is_dono_de(lista_id)` e `user_id <> auth.uid()`; saída: `user_id = auth.uid()` e `not is_dono_de(lista_id)` (F7-T07, migration 0009) |
 | `convites` | SELECT | Dono da lista | papel `dono` em `lista_membros` |
 | `convites` | SELECT | Qualquer autenticado | só convite `email` dirigido a si, `pendente` |
-| `convites` | INSERT | Dono da lista | `criado_por = auth.uid()` e é dono |
+| `convites` | INSERT | Dono da lista | `criado_por = auth.uid()`, é dono, `estado = 'pendente'` e `expira_em > now()` (G-27 `0025`) |
 | `convites` | UPDATE | Dono da lista | idem (revogar) |
 | `convites` | DELETE | Dono da lista | idem (limpeza de convites antigos) |
 | `push_tokens` | SELECT | Dono da linha | `user_id = auth.uid()` |
@@ -243,6 +245,8 @@ create policy "membros_delete_dono"
 -- F7-T07 (migration 0009): troca de papel (`mudarPapel`) e saída
 -- voluntária (`sairDaLista`) — na 0002 o UPDATE era "não permitido no
 -- MVP" e sem estas policies ambas as operações eram no-ops silenciosos.
+-- G-26 (migration 0025): o WITH CHECK compara `user_id`/`lista_id` com a
+-- snapshot antiga da própria linha — só `papel` (editor/leitor) muda.
 create policy "membros_update_papel_dono"
   on public.lista_membros for update
   using (
@@ -254,6 +258,12 @@ create policy "membros_update_papel_dono"
     and user_id <> auth.uid()
     -- nunca promove a dono: transferência é processo explícito (08 §6)
     and papel in ('editor', 'leitor')
+    and user_id = (
+      select m.user_id from public.lista_membros m where m.id = lista_membros.id
+    )
+    and lista_id = (
+      select m.lista_id from public.lista_membros m where m.id = lista_membros.id
+    )
   );
 
 create policy "membros_delete_proprio"
@@ -294,6 +304,9 @@ create policy "convites_insert_dono"
   on public.convites for insert
   with check (
     criado_por = auth.uid()
+    -- G-27 (migration 0025): só convite pendente e não expirado
+    and estado = 'pendente'
+    and expira_em > now()
     and exists (
       select 1 from public.lista_membros m
       where m.lista_id = convites.lista_id
@@ -358,7 +371,7 @@ create or replace function public.transferir_dono(p_lista uuid, p_novo_dono uuid
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = ''
 as $$
 declare
   papel_novo text;
@@ -414,7 +427,7 @@ returns table (
   id uuid, token uuid, lista_titulo text,
   papel_oferecido text, expira_em timestamptz
 )
-language sql security definer set search_path = public stable
+language sql security definer set search_path = '' stable
 as $$
   select c.id, c.token, l.titulo, c.papel_oferecido, c.expira_em
   from public.convites c
@@ -428,7 +441,7 @@ $$;
 
 create or replace function public.recusar_convite(p_id uuid)
 returns void
-language plpgsql security definer set search_path = public
+language plpgsql security definer set search_path = ''
 as $$
 begin
   update public.convites
@@ -481,7 +494,7 @@ create or replace function public.registrar_push_token(p_token text, p_plataform
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = ''
 as $$
 begin
   if auth.uid() is null then
@@ -533,6 +546,13 @@ Casos que **DEVEM falhar** (executados como usuário autenticado sem acesso, via
 | N-21 | Usuário A apaga o token de push de B | 0 linhas (F38) |
 | N-22 | `anon` executa `registrar_push_token` | permissão negada (grant restrito, F38) |
 | N-23 | `editor` tenta alterar `listas.deletado_em` (soft delete) | violação de policy / trigger `protege_deletado_em` (migration `0023`, F43-T06) |
+| N-24..N-26 | `anon` lê/insere/apaga `push_tokens` | 0 linhas / violação de policy (F43-T08) |
+| G-26a/b | Dono tenta trocar `user_id`/`lista_id` de um membro (UPDATE) | violação de policy (`with check`, `0025`, F43-T08) |
+| G-27a/b | Dono insere convite já `aceito` ou com `expira_em` no passado | violação de policy (`with check`, `0025`, F43-T08) |
+| G-29 | `itens_lista.quantidade` acima de 1000000 / `push_tokens.token` acima de 4096 | violação de CHECK (`0025`, F43-T08) |
+| G-30 | `anon` em `lista_membros`/`convites` (SELECT/INSERT/UPDATE/DELETE) | 0 linhas / violação de policy (F43-T08) |
+| G-30 | `anon` executa `agora_servidor` | permissão negada (grant restrito, F43-T08) |
+| G-30 | Enums/CHECKs inválidos (`unidade`, `papel`, `tipo`/`papel_oferecido`) | violação de CHECK/enum (F43-T08) |
 | R-19 | UPDATE em `convites` como dono | `atualizado_em` carimbado pelo trigger (`0015`) |
 
 > N-12 é **positivo** apesar do prefixo N (cobria a leitura legítima dos convites pelo dono) — movido para a tabela "DEVEM passar" abaixo.
@@ -563,7 +583,9 @@ Ferramentas: testes de integração com dois usuários reais (ver [07 Qualidade]
 
 > **Convite por e-mail (RF-13, F32):** coberto por `supabase/tests/convites_email_tests.sql` (CE-01…CE-04 + CE-02b) rodado no CI — `meus_convites_pendentes()` devolve o convite do próprio e-mail (com título e token) e esconde o alheio (CE-01) e o expirado (CE-03); `recusar_convite` revoga só o próprio e rejeita o alheio com `CONVITE_INVALIDO` (CE-02); a **guarda de expiração** rejeita a recusa de um convite vencido do próprio e-mail (CE-02b); `anon` não executa os RPCs — grant restrito a `authenticated` (CE-04).
 
-> **Tokens de push (RF-30, F38):** coberto por `supabase/tests/push_tokens_tests.sql` (N-19…N-22 + P-12) rodado no CI — A não lê (N-19), não insere para (N-20, `with check`) e não apaga (N-21) o token de B; `anon` não executa `registrar_push_token` (N-22); A lê/insere/apaga o próprio token e o RPC `registrar_push_token` reatribui o token de A para B (P-12).
+> **Tokens de push (RF-30, F38):** coberto por `supabase/tests/push_tokens_tests.sql` (N-19…N-22, N-24…N-26 e G-29-token + P-12) rodado no CI — A não lê (N-19), não insere para (N-20, `with check`) e não apaga (N-21) o token de B; `anon` não executa `registrar_push_token` (N-22) nem lê/insere/apaga a tabela (N-24…N-26); `token` acima de 4096 é rejeitado pelo CHECK (G-29, `0025`); A lê/insere/apaga o próprio token e o RPC `registrar_push_token` reatribui o token de A para B (P-12).
+
+> **Higiene de policies/limites (F43-T08, migration `0025`):** coberta por `supabase/tests/rls_tests.sql` (G-26a/b/c, G-27a/b/c, G-29a/b, G-30a..k) — o dono só muda `papel` de um membro (G-26); o INSERT de convite exige `estado='pendente'` e `expira_em > now()` (G-27); `quantidade` tem teto de 1000000 (G-29); `anon` é negado em `lista_membros`/`convites`, `agora_servidor` é restrito a `authenticated` e enums/CHECKs inválidos falham (G-30). Negativos confirmados antes da migration (G-26/G-27/G-29) e todos os positivos correspondentes (G-26c/G-27c/G-29b) passam depois.
 
 ---
 
@@ -572,7 +594,7 @@ Ferramentas: testes de integração com dois usuários reais (ver [07 Qualidade]
 - [ ] `force row level security` aplicado em todas as tabelas.
 - [ ] Todos os casos de negação (N-01…N-23; N-12 é positivo — ver §5) falham como esperado.
 - [ ] Todos os casos positivos (P-01…P-14, exceto P-05 Realtime) passam.
-- [ ] Policies versionadas em migrations: `0002_rls_policies.sql` (base) e evoluções em `0007`, `0009`, `0012`, `0015`, `0021` e `0023`.
+- [ ] Policies versionadas em migrations: `0002_rls_policies.sql` (base) e evoluções em `0007`, `0009`, `0012`, `0015`, `0021`, `0023` e `0025`.
 - [ ] Realtime recebe apenas eventos autorizados (teste com 2 contas).
 
 ---

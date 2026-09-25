@@ -56,7 +56,8 @@ supabase/
     ├── 0021_push_tokens.sql     # tabela push_tokens + RLS + RPC (RF-30, F38)
     ├── 0022_notificar_push.sql  # triggers pg_net → Edge Function enviar-push (RF-30, F38)
     ├── 0023_protege_deletado_em_lista.sql # deletado_em só pelo dono (G-03, F43-T06)
-    └── 0024_pii_e_rpc_convites.sql # PII na exclusão + grant/CHECK de convites (G-04/22/24, F43-T07)
+    ├── 0024_pii_e_rpc_convites.sql # PII na exclusão + grant/CHECK de convites (G-04/22/24, F43-T07)
+    └── 0025_higiene_policies_limites.sql # policies de membros/convites, limites e search_path='' (G-23/26/27/29/30, F43-T08)
 ```
 
 ---
@@ -184,7 +185,7 @@ create index idx_membros_user on public.lista_membros (user_id);
 | `updated_at` | `timestamptz NOT NULL DEFAULT now()` | Base do last-write-wins |
 | `lista_id` | `uuid NOT NULL FK → listas.id ON DELETE CASCADE` | Lista vinculada |
 | `nome` | `text NOT NULL` | Nome do item (ex: "Leite") |
-| `quantidade` | `numeric NOT NULL DEFAULT 1 CHECK (quantidade > 0)` | Quantidade |
+| `quantidade` | `numeric NOT NULL DEFAULT 1 CHECK (quantidade > 0)` | Quantidade — teto superior `<= 1000000` (migration `0025`, G-29) |
 | `unidade` | `unidade_item NOT NULL DEFAULT 'un'` | Enum (Seção 3.1) |
 | `categoria` | `categoria_item NOT NULL DEFAULT 'outros'` | Enum (Seção 3.2, ADR-011) — agrupa pendentes na UI; migrada aditivamente em `0006` (itens antigos → `outros`) |
 | `concluido` | `boolean NOT NULL DEFAULT false` | Estado da checkbox |
@@ -195,6 +196,7 @@ create index idx_membros_user on public.lista_membros (user_id);
 **Constraints e índices:**
 * `UNIQUE (lista_id, lower(nome)) WHERE deletado_em IS NULL` — deduplicação de itens ativos (o usuário não cria item repetido na mesma lista).
 * `CHECK (preco_centavos IS NULL OR (preco_centavos >= 0 AND preco_centavos <= 99999999))` (migration `0017`) — dinheiro em **centavos inteiros** (sem `float`); teto de R$ 999.999,99; negativo rejeitado.
+* `CHECK (quantidade <= 1000000)` — constraint `itens_lista_quantidade_teto` (migration `0025`, G-29) — teto superior defensivo; o espelho local no Drift acompanha (`schemaVersion 9`, [05 §2.2](05-app-flutter.md)).
 * Índice `(lista_id, ordem)` para leitura ordenada.
 
 ```sql
@@ -204,7 +206,8 @@ create table public.itens_lista (
   updated_at timestamptz not null default now(),
   lista_id   uuid not null references public.listas(id) on delete cascade,
   nome       text not null check (length(btrim(nome)) between 1 and 120),
-  quantidade numeric not null default 1 check (quantidade > 0),
+  quantidade numeric not null default 1
+    check (quantidade > 0 and quantidade <= 1000000),
   unidade    public.unidade_item not null default 'un',
   categoria  public.categoria_item not null default 'outros',
   concluido  boolean not null default false,
@@ -249,7 +252,7 @@ Tabela de convites por link/e-mail: `id`, `lista_id` (CASCADE), `criado_por` (FK
 | :--- | :--- | :--- |
 | `id` | `uuid` | PK, `gen_random_uuid()` |
 | `user_id` | `uuid` | FK `auth.users(id)` `on delete cascade` (RF-11) |
-| `token` | `text` | **unique** — o RPC `registrar_push_token` faz upsert por token; o mesmo aparelho reatribui o token ao novo usuário |
+| `token` | `text` | **unique** — o RPC `registrar_push_token` faz upsert por token; o mesmo aparelho reatribui o token ao novo usuário. CHECK `push_tokens_token_tamanho` (`char_length` 1..4096, migration `0025`, G-29) |
 | `plataforma` | `text` | `check (plataforma in ('android','ios'))`, default `android` |
 | `atualizado_em` | `timestamptz` | atualizado pelo RPC `registrar_push_token` no upsert |
 | `created_at` | `timestamptz` | `now()` |
@@ -311,7 +314,7 @@ create or replace function public.sync_dono()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = ''
 as $$
 declare
   qtd_donos int;
@@ -364,7 +367,7 @@ create or replace function public.criar_membro_dono()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = ''
 as $$
 begin
   insert into public.lista_membros (lista_id, user_id, papel)
@@ -401,7 +404,7 @@ create or replace function public.protege_deletado_em()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = ''
 as $$
 begin
   -- `old.dono_id <> auth.uid()` trata NULL de auth.uid() (service_role ou
@@ -438,6 +441,8 @@ alter publication supabase_realtime add table public.convites;
 
 `convites` (INSERT `tipo='email'`, `estado='pendente'`) e `lista_membros` (INSERT `papel <> 'dono'`) disparam `public.notificar_push()`, que faz `net.http_post` para a Edge Function `enviar-push` com `{evento, destinatario_id, lista_id, token?, titulo_lista}`. URL e segredo vêm do Vault (`push_function_url`, `push_webhook_secret`); ausentes → no-op. O destinatário é resolvido no trigger (convite: `auth.users` pelo e-mail; entrada: `listas.dono_id`).
 
+> **Sem rate-limit de push (G-28, risco aceito):** cada INSERT de convite `email` `pendente` ou de membro dispara uma chamada HTTP externa, sem throttling. O volume é limitado pelo **dono da lista** (é quem convida/adiciona membros) e pela unicidade dos convites; um guard de rate-limit no trigger adicionaria estado novo e uma segunda fonte de verdade. Risco aceito nesta fase ([02 §4.8](02-seguranca-rls.md)).
+
 ---
 
 ## 8. Checklist de validação (Fase 1)
@@ -449,6 +454,8 @@ alter publication supabase_realtime add table public.convites;
 - [ ] `insert` de `unidade = 'quilos'` falha (fora do enum).
 - [ ] `unnest(enum_range(null::categoria_item))` retorna os 11 valores na ordem dos grupos (F6-T01).
 - [ ] `insert` com `categoria = 'alimentos'` falha (fora do enum).
+- [ ] `insert` de item com `quantidade > 1000000` falha (teto, migration `0025`).
+- [ ] `insert` de `push_tokens.token` com mais de 4096 caracteres falha (migration `0025`).
 - [ ] `insert` de item sem `categoria` grava `outros` (F6-T01).
 - [ ] Excluir `auth.users` em cascata remove listas/membros/itens (teste em ambiente dev).
 - [ ] Policies RLS aplicadas e testes de negação passando (ver [02](02-seguranca-rls.md)).

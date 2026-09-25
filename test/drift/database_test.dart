@@ -871,4 +871,157 @@ void main() {
       throwsA(isA<Exception>()),
     );
   });
+
+  test(
+    'deve_rejeitar_quantidade_acima_do_teto_quando_check_local_v9',
+    () async {
+      await db
+          .into(db.listaLocal)
+          .insert(
+            ListaLocalCompanion.insert(
+              id: 'eeeeeeee-0000-0000-0000-000000000001',
+              createdAt: agora,
+              updatedAt: agora,
+              titulo: 'Lista teto',
+              donoId: 'user-a',
+            ),
+          );
+      expect(
+        () => db
+            .into(db.itemLocal)
+            .insert(
+              ItemLocalCompanion.insert(
+                id: 'eeeeeeee-0000-0000-0000-000000000002',
+                createdAt: agora,
+                updatedAt: agora,
+                listaId: 'eeeeeeee-0000-0000-0000-000000000001',
+                nome: 'Acima do teto',
+                quantidade: const Value(1000001),
+              ),
+            ),
+        throwsA(isA<Exception>()),
+      );
+    },
+  );
+
+  test(
+    'deve_migrar_v8_para_v9_repondo_check_de_teto_quando_abrir_banco_antigo',
+    () async {
+      // Banco real na versão v8 (com as barreiras da F39, sem o teto de
+      // quantidade): DDL espelhando o schema v8 gerado + índice manual
+      // `uq_item_ativo`, dados gravados e user_version = 8.
+      final arquivo = File(
+        '${Directory.systemTemp.path}/v8_para_v9_${DateTime.now().microsecondsSinceEpoch}.sqlite',
+      );
+      addTearDown(() {
+        if (arquivo.existsSync()) arquivo.deleteSync();
+      });
+
+      final antigo = sq3.sqlite3.open(arquivo.path);
+      antigo.execute('''
+        CREATE TABLE lista_local (
+          id TEXT NOT NULL PRIMARY KEY,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          titulo TEXT NOT NULL,
+          dono_id TEXT NOT NULL,
+          deletado_em TEXT NULL,
+          arquivada_em TEXT NULL,
+          orcamento_centavos INTEGER NULL,
+          FOREIGN KEY (dono_id) REFERENCES lista_local (id) ON DELETE CASCADE
+        );
+        CREATE TABLE item_local (
+          id TEXT NOT NULL PRIMARY KEY,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          lista_id TEXT NOT NULL REFERENCES lista_local (id) ON DELETE CASCADE,
+          nome TEXT NOT NULL,
+          quantidade REAL NOT NULL DEFAULT 1.0,
+          unidade TEXT NOT NULL DEFAULT 'un',
+          categoria TEXT NOT NULL DEFAULT 'outros',
+          concluido INTEGER NOT NULL DEFAULT 0,
+          ordem INTEGER NOT NULL DEFAULT 0,
+          deletado_em TEXT NULL,
+          preco_centavos INTEGER NULL,
+          CHECK (quantidade > 0),
+          CHECK (unidade IN ('un','kg','g','l','ml','caixa','pacote','pct','dz')),
+          CHECK (categoria IN ('hortifruti','mercearia','frios','laticinios',
+            'congelados','padaria','bebidas','pet','limpeza','higiene','outros')),
+          CHECK (preco_centavos IS NULL OR
+            (preco_centavos >= 0 AND preco_centavos <= 99999999))
+        );
+        CREATE TABLE mutacao_pendente (
+          id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+          tabela TEXT NOT NULL,
+          operacao TEXT NOT NULL,
+          registro_id TEXT NOT NULL,
+          payload TEXT NOT NULL,
+          ts_local TEXT NOT NULL,
+          tentativas INTEGER NOT NULL DEFAULT 0,
+          lista_id TEXT NOT NULL
+        );
+        CREATE TABLE historico_preco_local (
+          nome_normalizado TEXT NOT NULL PRIMARY KEY,
+          preco_centavos INTEGER NOT NULL,
+          unidade TEXT NOT NULL,
+          registrado_em TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX uq_item_ativo
+          ON item_local (lista_id, lower(nome)) WHERE deletado_em IS NULL;
+        PRAGMA user_version = 8;
+      ''');
+      antigo.execute(
+        "INSERT INTO lista_local (id, created_at, updated_at, titulo, dono_id) "
+        "VALUES ('ffffffff-0000-0000-0000-000000000001', "
+        "'2026-01-01T00:00:00.000000Z', '2026-01-01T00:00:00.000000Z', "
+        "'Antiga v8', 'user-a')",
+      );
+      antigo.execute(
+        "INSERT INTO item_local (id, created_at, updated_at, lista_id, nome, "
+        "quantidade, unidade, categoria, concluido, ordem) VALUES "
+        "('ffffffff-0000-0000-0000-000000000002', "
+        "'2026-01-01T00:00:00.000000Z', '2026-01-01T00:00:00.000000Z', "
+        "'ffffffff-0000-0000-0000-000000000001', 'Detergente', 2.0, 'un', "
+        "'outros', 0, 3)",
+      );
+      antigo.close();
+
+      final migrado = AppDatabase(NativeDatabase(arquivo));
+      addTearDown(migrado.close);
+
+      final item =
+          await (migrado.select(migrado.itemLocal)..where(
+                (i) => i.id.equals('ffffffff-0000-0000-0000-000000000002'),
+              ))
+              .getSingle();
+      expect(item.nome, 'Detergente');
+      expect(item.quantidade, 2.0);
+
+      // O índice manual precisa sobreviver à recriação da tabela.
+      final indice = await migrado
+          .customSelect(
+            "SELECT name FROM sqlite_master "
+            "WHERE type = 'index' AND name = 'uq_item_ativo'",
+          )
+          .get();
+      expect(indice, isNotEmpty);
+
+      // O CHECK de teto passa a valer no banco migrado.
+      expect(
+        () => migrado
+            .into(migrado.itemLocal)
+            .insert(
+              ItemLocalCompanion.insert(
+                id: 'ffffffff-0000-0000-0000-000000000003',
+                createdAt: agora,
+                updatedAt: agora,
+                listaId: 'ffffffff-0000-0000-0000-000000000001',
+                nome: 'Acima do teto',
+                quantidade: const Value(1000001),
+              ),
+            ),
+        throwsA(isA<Exception>()),
+      );
+    },
+  );
 }

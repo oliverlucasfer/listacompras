@@ -52,7 +52,7 @@ lib/
 │   ├── sync/                        # domain/ data/ providers/ ui/
 │   └── voz/                         # domain/ data/ providers/ (F30)
 └── drift/
-    ├── database.dart                # AppDatabase (tabelas locais, schemaVersion 8)
+    ├── database.dart                # AppDatabase (tabelas locais, schemaVersion 9)
     ├── conexao/                     # abrirBancoLocal (nativa/web, ADR-012)
     └── tables/                      # ListaLocal, ItemLocal, MutacaoPendente, HistoricoPrecoLocal
 ```
@@ -70,9 +70,11 @@ lib/
   só `ui/`, e `onboarding` não tem `domain/`/`data/`. O que é obrigatório é a direção da dependência:
   `ui → providers → data` (§2).
 * **Barreiras locais espelhando o Postgres:** o Drift replica os `CHECK`s e o índice único parcial
-  `uq_item_ativo` do Postgres (`itens_lista`: `quantidade > 0`, `unidade`/`categoria` no enum,
-  `preco_centavos` em faixa; `listas`: `orcamento_centavos` em faixa). Migração `schemaVersion 7 → 8`
-  (F39) — a dedup de itens ativos é feita antes de criar o índice.
+  `uq_item_ativo` do Postgres (`itens_lista`: `quantidade > 0` e `quantidade <= 1000000`,
+  `unidade`/`categoria` no enum, `preco_centavos` em faixa; `listas`: `orcamento_centavos` em faixa).
+  Migração `schemaVersion 7 → 8` (F39) — a dedup de itens ativos é feita antes de criar o índice.
+  A `schemaVersion 8 → 9` (F43-T08) reaplica o teto de `quantidade` via `alterTable` e recria o
+  índice manual `uq_item_ativo` (que `alterTable` descarta junto da tabela antiga).
 * **`quantidade` é `real` no Drift e `numeric` no Postgres:** divergência aceita — o SQLite não tem
   `DECIMAL`. A precisão efetiva da app é ≤ 3 casas decimais (tolerância 0,001, [05 §6.3]). Nenhuma
   migração de valores.

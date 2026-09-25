@@ -6,6 +6,8 @@
 --   N-21: A não apaga token de B.
 --   N-22: anon não executa registrar_push_token (grant restrito).
 --   P-12: A lê/insere/apaga o próprio; o RPC reatribui o token a outro dono.
+--   N-24..N-26 (G-30, F43-T08): anon não lê/insere/apaga push_tokens.
+--   G-29 (F43-T08): CHECK de tamanho de `token` (1..4096).
 -- Transação com ROLLBACK final.
 -- ============================================================================
 
@@ -99,6 +101,66 @@ exception
   when insufficient_privilege then
     perform set_config('role', 'postgres', true);
     raise notice 'OK N-22: permissao negada a anon em registrar_push_token';
+end $$;
+
+-- ===== N-24: anon não lê push_tokens =====
+do $$
+declare c int;
+begin
+  perform set_config('role', 'anon', true);
+  perform set_config('request.jwt.claims', '{}', true);
+  select count(*) into c from public.push_tokens;
+  perform set_config('role', 'postgres', true);
+  if c <> 0 then raise exception 'FALHOU N-24: anon viu % tokens', c; end if;
+  raise notice 'OK N-24: anon nao le push_tokens';
+end $$;
+
+-- ===== N-25: anon não insere push_token =====
+do $$
+begin
+  perform set_config('role', 'anon', true);
+  perform set_config('request.jwt.claims', '{}', true);
+  begin
+    insert into public.push_tokens (user_id, token)
+    values ('c1000000-0000-0000-0000-000000000000', 'token-anon');
+    perform set_config('role', 'postgres', true);
+    raise exception 'FALHOU N-25: anon inseriu push_token';
+  exception when insufficient_privilege then
+    perform set_config('role', 'postgres', true);
+    raise notice 'OK N-25: with check negou insert de anon';
+  end;
+end $$;
+
+-- ===== N-26: anon não apaga push_token =====
+do $$
+declare c int;
+begin
+  perform set_config('role', 'anon', true);
+  perform set_config('request.jwt.claims', '{}', true);
+  delete from public.push_tokens where token = 'token-do-b';
+  get diagnostics c = row_count;
+  perform set_config('role', 'postgres', true);
+  if c <> 0 then raise exception 'FALHOU N-26: anon apagou % tokens', c; end if;
+  if (select count(*) from public.push_tokens where token = 'token-do-b') <> 1 then
+    raise exception 'FALHOU N-26: token de B sumiu';
+  end if;
+  raise notice 'OK N-26: anon nao apaga push_tokens';
+end $$;
+
+-- ===== G-29: CHECK de tamanho de `token` (1..4096) =====
+do $$
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"c0000000-0000-0000-0000-000000000000","role":"authenticated"}', true);
+  begin
+    insert into public.push_tokens (user_id, token)
+    values ('c0000000-0000-0000-0000-000000000000', repeat('x', 4097));
+    perform set_config('role', 'postgres', true);
+    raise exception 'FALHOU G-29 (token): token acima de 4096 aceito';
+  exception when check_violation then
+    perform set_config('role', 'postgres', true);
+    raise notice 'OK G-29 (token): CHECK de tamanho rejeitou';
+  end;
 end $$;
 
 rollback;

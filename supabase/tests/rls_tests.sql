@@ -7,6 +7,11 @@
 -- (F7-T07, migration 0009 — doc 02 §4.3); N-07 já cobre "dono não sai".
 -- N-23 e P-13..P-14 cobrem `deletado_em` da lista imutável para editor
 -- (F43-T06, migration 0023 — doc 02 §3/§4.1).
+-- G-26/G-27/G-29/G-30 (F43-T08, migration 0025 — doc 02 §3/§4.3/§4.4/§4.8):
+-- G-26a/b/c impedem trocar `user_id`/`lista_id` de `lista_membros` (só `papel`
+-- muda); G-27a/b/c restringem `convites.estado`/`expira_em` no INSERT do dono;
+-- G-29a/b aplicam o teto de `itens_lista.quantidade`; G-30a..i cobrem anon em
+-- `lista_membros`/`convites`, grant de `agora_servidor` e enums inválidos.
 --
 -- Execução (após `supabase db reset`):
 --   Get-Content supabase/tests/rls_tests.sql -Raw | docker exec -i supabase_db_<proj> psql -U postgres -d postgres
@@ -506,6 +511,220 @@ begin
   get diagnostics c = row_count;
   if c = 1 then raise notice 'OK P-14: dono soft-deletou a lista';
   else raise exception 'FALHOU P-14: dono alterou % linhas', c; end if;
+end $$;
+
+-- ============================================================================
+-- F43-T08 (migration 0025) — higiene de policies e limites
+-- ============================================================================
+-- Setup isolado (superuser): lista nova com A dono e B editor. Evita depender
+-- do estado deixado por P-06/P-07/P-14 na lista 2222.
+select set_config('role', 'postgres', true);
+select set_config('request.jwt.claims', '{}', true);
+
+insert into public.listas (id, titulo, dono_id)
+values ('d0d0d0d0-0000-0000-0000-000000000026', 'Lista G-26', '11111111-1111-1111-1111-111111111111');
+
+insert into public.lista_membros (lista_id, user_id, papel)
+values ('d0d0d0d0-0000-0000-0000-000000000026', '44444444-4444-4444-4444-444444444444', 'editor')
+on conflict (lista_id, user_id) do nothing;
+
+-- ===== G-26: dono só muda `papel`; `user_id`/`lista_id` são imutáveis =====
+do $$
+declare c int;
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+  begin
+    update public.lista_membros
+    set user_id = '66666666-6666-6666-6666-666666666666'
+    where lista_id = 'd0d0d0d0-0000-0000-0000-000000000026'
+      and user_id = '44444444-4444-4444-4444-444444444444';
+    raise exception 'FALHOU G-26a: dono trocou user_id do membro';
+  exception when insufficient_privilege then
+    raise notice 'OK G-26a: with check impediu troca de user_id';
+  end;
+
+  begin
+    update public.lista_membros
+    set lista_id = '22222222-2222-2222-2222-222222222222'
+    where lista_id = 'd0d0d0d0-0000-0000-0000-000000000026'
+      and user_id = '44444444-4444-4444-4444-444444444444';
+    raise exception 'FALHOU G-26b: dono trocou lista_id do membro';
+  exception when insufficient_privilege then
+    raise notice 'OK G-26b: with check impediu troca de lista_id';
+  end;
+
+  update public.lista_membros set papel = 'leitor'
+  where lista_id = 'd0d0d0d0-0000-0000-0000-000000000026'
+    and user_id = '44444444-4444-4444-4444-444444444444';
+  get diagnostics c = row_count;
+  if c = 1 then raise notice 'OK G-26c: dono mudou apenas o papel';
+  else raise exception 'FALHOU G-26c: dono alterou % linhas', c; end if;
+end $$;
+
+-- ===== G-27: INSERT de convite exige estado 'pendente' e expira_em futuro =====
+do $$
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+  begin
+    insert into public.convites (lista_id, criado_por, token, tipo, papel_oferecido, estado)
+    values ('d0d0d0d0-0000-0000-0000-000000000026',
+            '11111111-1111-1111-1111-111111111111',
+            'f0f0f0f0-0000-0000-0000-000000000027', 'link', 'editor', 'aceito');
+    raise exception 'FALHOU G-27a: convite ja aceito inserido';
+  exception when insufficient_privilege then
+    raise notice 'OK G-27a: with check exigiu estado pendente';
+  end;
+
+  begin
+    insert into public.convites (lista_id, criado_por, token, tipo, papel_oferecido, expira_em)
+    values ('d0d0d0d0-0000-0000-0000-000000000026',
+            '11111111-1111-1111-1111-111111111111',
+            'f0f0f0f0-0000-0000-0000-000000000028', 'link', 'editor',
+            now() - interval '1 day');
+    raise exception 'FALHOU G-27b: convite expirado inserido';
+  exception when insufficient_privilege then
+    raise notice 'OK G-27b: with check exigiu expira_em futuro';
+  end;
+
+  insert into public.convites (lista_id, criado_por, token, tipo, papel_oferecido)
+  values ('d0d0d0d0-0000-0000-0000-000000000026',
+          '11111111-1111-1111-1111-111111111111',
+          'f0f0f0f0-0000-0000-0000-000000000029', 'link', 'leitor');
+  raise notice 'OK G-27c: convite pendente/futuro aceito';
+end $$;
+
+-- ===== G-29: teto de `itens_lista.quantidade` =====
+do $$
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+  begin
+    insert into public.itens_lista (id, lista_id, nome, quantidade)
+    values ('e0e0e0e0-0000-0000-0000-000000000029',
+            'd0d0d0d0-0000-0000-0000-000000000026', 'Acima do teto', 1000001);
+    raise exception 'FALHOU G-29a: quantidade acima do teto aceita';
+  exception when check_violation then
+    raise notice 'OK G-29a: CHECK de teto de quantidade rejeitou';
+  end;
+
+  insert into public.itens_lista (id, lista_id, nome, quantidade)
+  values ('e0e0e0e0-0000-0000-0000-00000000002a',
+          'd0d0d0d0-0000-0000-0000-000000000026', 'No teto', 1000000);
+  raise notice 'OK G-29b: quantidade no teto aceita';
+end $$;
+
+-- ===== G-30a..f: anon negado em `lista_membros` e `convites` =====
+do $$
+declare c int;
+begin
+  perform set_config('role', 'anon', true);
+  perform set_config('request.jwt.claims', '{}', true);
+
+  select count(*) into c from public.lista_membros;
+  if c <> 0 then raise exception 'FALHOU G-30a: anon viu % membros', c; end if;
+
+  select count(*) into c from public.convites;
+  if c <> 0 then raise exception 'FALHOU G-30b: anon viu % convites', c; end if;
+
+  begin
+    insert into public.lista_membros (lista_id, user_id, papel)
+    values ('d0d0d0d0-0000-0000-0000-000000000026',
+            '66666666-6666-6666-6666-666666666666', 'editor');
+    raise exception 'FALHOU G-30c: anon inseriu membro';
+  exception when insufficient_privilege then null;
+  end;
+
+  begin
+    insert into public.convites (lista_id, criado_por, token, tipo, papel_oferecido)
+    values ('d0d0d0d0-0000-0000-0000-000000000026',
+            '66666666-6666-6666-6666-666666666666',
+            'f0f0f0f0-0000-0000-0000-000000000030', 'link', 'editor');
+    raise exception 'FALHOU G-30d: anon inseriu convite';
+  exception when insufficient_privilege then null;
+  end;
+
+  update public.lista_membros set papel = 'leitor';
+  get diagnostics c = row_count;
+  if c <> 0 then raise exception 'FALHOU G-30e: anon atualizou % membros', c; end if;
+
+  delete from public.convites;
+  get diagnostics c = row_count;
+  if c <> 0 then raise exception 'FALHOU G-30f: anon apagou % convites', c; end if;
+
+  raise notice 'OK G-30a..f: anon negado em lista_membros e convites';
+end $$;
+
+-- ===== G-30g: `agora_servidor` executável só por `authenticated` =====
+do $$
+declare t timestamptz;
+begin
+  perform set_config('role', 'anon', true);
+  perform set_config('request.jwt.claims', '{}', true);
+  begin
+    perform public.agora_servidor();
+    raise exception 'FALHOU G-30g: anon executou agora_servidor';
+  exception when insufficient_privilege then null;
+  end;
+
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+  select public.agora_servidor() into t;
+  if t is not null then
+    raise notice 'OK G-30g: agora_servidor restrito a authenticated';
+  else
+    raise exception 'FALHOU G-30g: agora_servidor retornou null';
+  end if;
+end $$;
+
+-- ===== G-30h..: enums/CHECKs inválidos =====
+do $$
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+  begin
+    insert into public.itens_lista (id, lista_id, nome, unidade)
+    values ('e0e0e0e0-0000-0000-0000-000000000030',
+            'd0d0d0d0-0000-0000-0000-000000000026', 'Unidade invalida', 'litros');
+    raise exception 'FALHOU G-30h: unidade fora do enum aceita';
+  exception when invalid_text_representation then
+    raise notice 'OK G-30h: unidade fora do enum rejeitada';
+  end;
+end $$;
+
+do $$
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+  begin
+    insert into public.lista_membros (lista_id, user_id, papel)
+    values ('d0d0d0d0-0000-0000-0000-000000000026',
+            '11111111-1111-1111-1111-111111111111', 'admin');
+    raise exception 'FALHOU G-30i: papel fora do CHECK aceito';
+  exception when check_violation then
+    raise notice 'OK G-30i: papel fora do CHECK rejeitado';
+  end;
+
+  begin
+    insert into public.convites (lista_id, criado_por, token, tipo, papel_oferecido)
+    values ('d0d0d0d0-0000-0000-0000-000000000026',
+            '11111111-1111-1111-1111-111111111111',
+            'f0f0f0f0-0000-0000-0000-00000000002a', 'link', 'dono');
+    raise exception 'FALHOU G-30j: convite oferecendo dono aceito';
+  exception when check_violation then
+    raise notice 'OK G-30j: papel_oferecido=dono rejeitado';
+  end;
+
+  begin
+    insert into public.convites (lista_id, criado_por, token, tipo, papel_oferecido)
+    values ('d0d0d0d0-0000-0000-0000-000000000026',
+            '11111111-1111-1111-1111-111111111111',
+            'f0f0f0f0-0000-0000-0000-00000000002b', 'foo', 'editor');
+    raise exception 'FALHOU G-30k: tipo de convite fora do CHECK aceito';
+  exception when check_violation then
+    raise notice 'OK G-30k: tipo de convite fora do CHECK rejeitado';
+  end;
 end $$;
 
 rollback;

@@ -114,7 +114,7 @@ create or replace function public.aceitar_convite(p_token uuid)
 returns uuid
 language plpgsql
 security definer
-set search_path = public
+set search_path = ''
 as $$
 declare
   c public.convites%rowtype;

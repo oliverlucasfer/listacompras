@@ -148,6 +148,8 @@ Ao aplicar uma mudança remota sobre um registro local pendente:
 | **Lista removida em A enquanto B adiciona itens offline** | Tombstone da lista vence; itens de B são criados mas a lista `deletado_em IS NOT NULL` some de todas as UIs. Aceitável no domínio |
 | **Duplicação de nome** | `UNIQUE (lista_id, lower(nome)) WHERE deletado_em IS NULL` rejeita; o sync converte em "aumento de quantidade" quando unidades coincidem |
 
+> **`updated_at` sem teto no servidor (G-25, risco aceito):** o Postgres aceita o `updated_at` do payload — a decisão de quem vence é do Sync Engine ([03 §5](#5-resolução-de-conflitos-last-write-wins-lww)). Um cliente com o relógio adiantado pode vencer injustamente até o flush. Rejeitar `ts` futuro no servidor quebraria o LWW offline-first (o cliente é quem carimba a mutação) e adicionaria estado novo; a detecção de divergência grosseira de relógio é **client-side** (`agora_servidor`, [02 §4.5](02-seguranca-rls.md)) e vira evento de observabilidade ([07 §4](07-qualidade-ci.md)). Risco aceito nesta fase.
+
 > **Dedup cobre o coalescing (G-02, RF-10):** a deduplicação roda para **qualquer item vivo sem linha remota** — inclusive um `UPDATE` resultante do coalescing de um item criado e editado offline que nunca chegou ao servidor —, e não apenas para `operacao = 'INSERT'`. Quando a consulta prévia não encontra o duplicado (corrida com outro dispositivo), o `INSERT` que viola `uq_item_ativo` recebe `23505` e a dedup é refeita como rede de segurança antes de desistir.
 
 ---
