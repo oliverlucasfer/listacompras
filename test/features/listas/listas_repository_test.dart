@@ -8,7 +8,38 @@ import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/features/listas/domain/item.dart';
 import 'package:lista_compras/features/listas/domain/resultado_dedup.dart';
 import 'package:lista_compras/core/dominio/unidade.dart';
+import 'package:lista_compras/features/sync/data/outbox_mutacoes.dart';
 import 'package:lista_compras/drift/database.dart';
+
+class _OutboxFalhaNoEnfileiramento extends OutboxMutacoes {
+  _OutboxFalhaNoEnfileiramento(super.db, {this.falhaNaChamada = 1});
+
+  final int falhaNaChamada;
+  int chamadas = 0;
+
+  @override
+  Future<void> enfileirar({
+    required String tabela,
+    required String operacao,
+    required String registroId,
+    required String listaId,
+    required DateTime tsLocal,
+    required Map<String, Object?> payload,
+  }) async {
+    chamadas++;
+    if (chamadas >= falhaNaChamada) {
+      throw StateError('fila indisponível');
+    }
+    await super.enfileirar(
+      tabela: tabela,
+      operacao: operacao,
+      registroId: registroId,
+      listaId: listaId,
+      tsLocal: tsLocal,
+      payload: payload,
+    );
+  }
+}
 
 void main() {
   late AppDatabase db;
@@ -912,4 +943,57 @@ void main() {
       expect(rows.single.precoCentavos, 2000);
     },
   );
+
+  test('deve_reverter_write_local_quando_enfileirar_falha', () async {
+    final repoFalha = ListasRepository(
+      db,
+      outbox: _OutboxFalhaNoEnfileiramento(db),
+    );
+
+    await expectLater(
+      () => repoFalha.criarLista(titulo: 'Compras', donoId: 'user-a'),
+      throwsA(isA<StateError>()),
+    );
+
+    expect(await db.select(db.listaLocal).get(), isEmpty);
+    expect(await db.select(db.mutacaoPendente).get(), isEmpty);
+  });
+
+  test('deve_reverter_item_quando_enfileirar_falha', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    final repoFalha = ListasRepository(
+      db,
+      outbox: _OutboxFalhaNoEnfileiramento(db),
+    );
+
+    await expectLater(
+      () => repoFalha.adicionarItem(listaId: lista.id, nome: 'Arroz'),
+      throwsA(isA<StateError>()),
+    );
+
+    expect(await db.select(db.itemLocal).get(), isEmpty);
+  });
+
+  test('deve_reverter_duplicacao_quando_enfileirar_falha_no_meio', () async {
+    final origem = await repo.criarLista(titulo: 'Origem', donoId: 'user-a');
+    await repo.adicionarItem(listaId: origem.id, nome: 'Arroz');
+    final repoFalha = ListasRepository(
+      db,
+      outbox: _OutboxFalhaNoEnfileiramento(db, falhaNaChamada: 2),
+    );
+
+    await expectLater(
+      () => repoFalha.duplicarLista(
+        origemId: origem.id,
+        titulo: 'Copia',
+        donoId: 'user-a',
+      ),
+      throwsA(isA<StateError>()),
+    );
+
+    final listas = await db.select(db.listaLocal).get();
+    expect(listas, hasLength(1));
+    expect(listas.single.id, origem.id);
+    expect(await db.select(db.itemLocal).get(), hasLength(1));
+  });
 }

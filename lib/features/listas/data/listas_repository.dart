@@ -18,8 +18,14 @@ import 'historico_precos_repository.dart';
 /// com `ts_local` para o Sync Engine (F4-T03). Leitura expõe Streams do
 /// Drift — UI reativa, nunca bloqueia em rede.
 class ListasRepository {
-  ListasRepository(this._db, {Uuid? uuid, this._enfileirarMutacoes = true})
-    : _uuid = uuid ?? const Uuid();
+  ListasRepository(
+    this._db, {
+    Uuid? uuid,
+    this._enfileirarMutacoes = true,
+    OutboxMutacoes? outbox,
+  }) : _uuid = uuid ?? const Uuid() {
+    _outbox = outbox ?? OutboxMutacoes(_db, ativa: _enfileirarMutacoes);
+  }
 
   final AppDatabase _db;
   final Uuid _uuid;
@@ -28,10 +34,7 @@ class ListasRepository {
   /// (senão cresceria para sempre sem drenar).
   final bool _enfileirarMutacoes;
 
-  late final OutboxMutacoes _outbox = OutboxMutacoes(
-    _db,
-    ativa: _enfileirarMutacoes,
-  );
+  late final OutboxMutacoes _outbox;
 
   // ---- Leitura (Streams do Drift) ----
 
@@ -152,111 +155,115 @@ class ListasRepository {
 
   // ---- Escritas: local primeiro + fila (doc 03 §1/§3) ----
 
-  Future<Lista> criarLista({
-    required String titulo,
-    required String donoId,
-  }) async {
-    final agora = DateTime.now().toUtc();
-    final id = _uuid.v4();
-    await _db
-        .into(_db.listaLocal)
-        .insert(
-          ListaLocalCompanion.insert(
-            id: id,
-            createdAt: agora,
-            updatedAt: agora,
-            titulo: titulo,
-            donoId: donoId,
-          ),
-        );
-    await _outbox.enfileirar(
-      tabela: 'listas',
-      operacao: 'INSERT',
-      registroId: id,
-      listaId: id,
-      tsLocal: agora,
-      payload: await _outbox.payloadLista(id),
-    );
-    return Lista(
-      id: id,
-      titulo: titulo,
-      donoId: donoId,
-      criadoEm: agora,
-      atualizadoEm: agora,
-    );
+  Future<Lista> criarLista({required String titulo, required String donoId}) {
+    return _db.transaction(() async {
+      final agora = DateTime.now().toUtc();
+      final id = _uuid.v4();
+      await _db
+          .into(_db.listaLocal)
+          .insert(
+            ListaLocalCompanion.insert(
+              id: id,
+              createdAt: agora,
+              updatedAt: agora,
+              titulo: titulo,
+              donoId: donoId,
+            ),
+          );
+      await _outbox.enfileirar(
+        tabela: 'listas',
+        operacao: 'INSERT',
+        registroId: id,
+        listaId: id,
+        tsLocal: agora,
+        payload: await _outbox.payloadLista(id),
+      );
+      return Lista(
+        id: id,
+        titulo: titulo,
+        donoId: donoId,
+        criadoEm: agora,
+        atualizadoEm: agora,
+      );
+    });
   }
 
-  Future<void> renomearLista({
-    required String id,
-    required String titulo,
-  }) async {
-    final agora = DateTime.now().toUtc();
-    await (_db.update(_db.listaLocal)..where((l) => l.id.equals(id))).write(
-      ListaLocalCompanion(titulo: Value(titulo), updatedAt: Value(agora)),
-    );
-    await _outbox.enfileirar(
-      tabela: 'listas',
-      operacao: 'UPDATE',
-      registroId: id,
-      listaId: id,
-      tsLocal: agora,
-      payload: await _outbox.payloadLista(id),
-    );
+  Future<void> renomearLista({required String id, required String titulo}) {
+    return _db.transaction(() async {
+      final agora = DateTime.now().toUtc();
+      await (_db.update(_db.listaLocal)..where((l) => l.id.equals(id))).write(
+        ListaLocalCompanion(titulo: Value(titulo), updatedAt: Value(agora)),
+      );
+      await _outbox.enfileirar(
+        tabela: 'listas',
+        operacao: 'UPDATE',
+        registroId: id,
+        listaId: id,
+        tsLocal: agora,
+        payload: await _outbox.payloadLista(id),
+      );
+    });
   }
 
-  Future<void> excluirLista(String id) async {
-    final agora = DateTime.now().toUtc();
-    await (_db.update(_db.listaLocal)..where((l) => l.id.equals(id))).write(
-      ListaLocalCompanion(deletadoEm: Value(agora), updatedAt: Value(agora)),
-    );
-    await _outbox.enfileirar(
-      tabela: 'listas',
-      operacao: 'DELETE_SOFT',
-      registroId: id,
-      listaId: id,
-      tsLocal: agora,
-      payload: await _outbox.payloadLista(id),
-    );
+  Future<void> excluirLista(String id) {
+    return _db.transaction(() async {
+      final agora = DateTime.now().toUtc();
+      await (_db.update(_db.listaLocal)..where((l) => l.id.equals(id))).write(
+        ListaLocalCompanion(deletadoEm: Value(agora), updatedAt: Value(agora)),
+      );
+      await _outbox.enfileirar(
+        tabela: 'listas',
+        operacao: 'DELETE_SOFT',
+        registroId: id,
+        listaId: id,
+        tsLocal: agora,
+        payload: await _outbox.payloadLista(id),
+      );
+    });
   }
 
   /// Arquiva/desarquiva a lista (RF-22): estado global, só o dono (o
   /// trigger do servidor garante). Offline-first: Drift + fila.
-  Future<void> definirArquivada(String id, {required bool arquivada}) async {
-    final agora = DateTime.now().toUtc();
-    await (_db.update(_db.listaLocal)..where((l) => l.id.equals(id))).write(
-      ListaLocalCompanion(
-        arquivadaEm: Value(arquivada ? agora : null),
-        updatedAt: Value(agora),
-      ),
-    );
-    await _outbox.enfileirar(
-      tabela: 'listas',
-      operacao: 'UPDATE',
-      registroId: id,
-      listaId: id,
-      tsLocal: agora,
-      payload: await _outbox.payloadLista(id, incluirArquivo: true),
-    );
+  Future<void> definirArquivada(String id, {required bool arquivada}) {
+    return _db.transaction(() async {
+      final agora = DateTime.now().toUtc();
+      await (_db.update(_db.listaLocal)..where((l) => l.id.equals(id))).write(
+        ListaLocalCompanion(
+          arquivadaEm: Value(arquivada ? agora : null),
+          updatedAt: Value(agora),
+        ),
+      );
+      await _outbox.enfileirar(
+        tabela: 'listas',
+        operacao: 'UPDATE',
+        registroId: id,
+        listaId: id,
+        tsLocal: agora,
+        payload: await _outbox.payloadLista(id, incluirArquivo: true),
+      );
+    });
   }
 
   /// Define/limpa o orçamento da lista (RF-28, F36). Offline-first: Drift +
   /// fila. `centavos == null` remove o orçamento; `0` é um orçamento válido.
-  Future<void> definirOrcamento(String id, {required int? centavos}) async {
-    final agora = DateTime.now().toUtc();
-    await (_db.update(_db.listaLocal)..where((l) => l.id.equals(id))).write(
-      ListaLocalCompanion(
-        orcamentoCentavos: Value(centavos),
-        updatedAt: Value(agora),
-      ),
-    );
-    await _outbox.enfileirar(
-      tabela: 'listas',
-      operacao: 'UPDATE',
-      registroId: id,
-      listaId: id,
-      tsLocal: agora,
-      payload: await _outbox.payloadLista(id),
-    );
+  Future<void> definirOrcamento(String id, {required int? centavos}) {
+    return _db.transaction(() async {
+      final agora = DateTime.now().toUtc();
+      await (_db.update(_db.listaLocal)..where((l) => l.id.equals(id))).write(
+        ListaLocalCompanion(
+          orcamentoCentavos: Value(centavos),
+          updatedAt: Value(agora),
+        ),
+      );
+      await _outbox.enfileirar(
+        tabela: 'listas',
+        operacao: 'UPDATE',
+        registroId: id,
+        listaId: id,
+        tsLocal: agora,
+        payload: await _outbox.payloadLista(id),
+      );
+    });
   }
 
   Future<Item> adicionarItem({
@@ -270,46 +277,48 @@ class ListasRepository {
     if (quantidade <= 0) {
       throw ArgumentError('quantidade deve ser maior que zero');
     }
-    final agora = DateTime.now().toUtc();
-    final id = _uuid.v4();
-    final ordem = await _proximaOrdem(listaId);
-    await _db
-        .into(_db.itemLocal)
-        .insert(
-          ItemLocalCompanion.insert(
-            id: id,
-            createdAt: agora,
-            updatedAt: agora,
-            listaId: listaId,
-            nome: nome,
-            quantidade: Value(quantidade),
-            unidade: Value(unidade.valor),
-            categoria: Value(categoria.valor),
-            precoCentavos: Value(precoCentavos),
-            ordem: Value(ordem),
-          ),
-        );
-    await _outbox.enfileirar(
-      tabela: 'itens_lista',
-      operacao: 'INSERT',
-      registroId: id,
-      listaId: listaId,
-      tsLocal: agora,
-      payload: await _outbox.payloadItem(id),
-    );
-    return Item(
-      id: id,
-      listaId: listaId,
-      nome: nome,
-      quantidade: quantidade,
-      unidade: unidade,
-      categoria: categoria,
-      concluido: false,
-      ordem: ordem,
-      criadoEm: agora,
-      atualizadoEm: agora,
-      precoCentavos: precoCentavos,
-    );
+    return _db.transaction(() async {
+      final agora = DateTime.now().toUtc();
+      final id = _uuid.v4();
+      final ordem = await _proximaOrdem(listaId);
+      await _db
+          .into(_db.itemLocal)
+          .insert(
+            ItemLocalCompanion.insert(
+              id: id,
+              createdAt: agora,
+              updatedAt: agora,
+              listaId: listaId,
+              nome: nome,
+              quantidade: Value(quantidade),
+              unidade: Value(unidade.valor),
+              categoria: Value(categoria.valor),
+              precoCentavos: Value(precoCentavos),
+              ordem: Value(ordem),
+            ),
+          );
+      await _outbox.enfileirar(
+        tabela: 'itens_lista',
+        operacao: 'INSERT',
+        registroId: id,
+        listaId: listaId,
+        tsLocal: agora,
+        payload: await _outbox.payloadItem(id),
+      );
+      return Item(
+        id: id,
+        listaId: listaId,
+        nome: nome,
+        quantidade: quantidade,
+        unidade: unidade,
+        categoria: categoria,
+        concluido: false,
+        ordem: ordem,
+        criadoEm: agora,
+        atualizadoEm: agora,
+        precoCentavos: precoCentavos,
+      );
+    });
   }
 
   /// Adiciona um item aplicando a dedup do app (RF-10): compara o nome
@@ -387,169 +396,186 @@ class ListasRepository {
     if (quantidade != null && quantidade <= 0) {
       throw ArgumentError('quantidade deve ser maior que zero');
     }
-    final agora = DateTime.now().toUtc();
-    final anterior = await _lerItem(id);
-    await (_db.update(_db.itemLocal)..where((i) => i.id.equals(id))).write(
-      ItemLocalCompanion(
-        nome: nome == null ? const Value.absent() : Value(nome),
-        quantidade: quantidade == null
-            ? const Value.absent()
-            : Value(quantidade),
-        unidade: unidade == null ? const Value.absent() : Value(unidade.valor),
-        categoria: categoria == null
-            ? const Value.absent()
-            : Value(categoria.valor),
-        concluido: concluido == null ? const Value.absent() : Value(concluido),
-        precoCentavos: precoCentavos != null
-            ? Value(precoCentavos)
-            : (limparPreco ? const Value(null) : const Value.absent()),
-        updatedAt: Value(agora),
-      ),
-    );
-    final item = await _lerItem(id);
-    // Histórico local de preços (RF-29, F37): registra na transição para
-    // concluído com preço, ou quando o preço muda com o item já concluído.
-    // Evita atualizar `registradoEm` em edições não relacionadas (ex.: merge
-    // de dedup, mudança de quantidade). Local-only — não enfileira mutação;
-    // marcar sem preço não registra e desmarcar não apaga.
-    if (item.concluido &&
-        item.precoCentavos != null &&
-        (!anterior.concluido || anterior.precoCentavos != item.precoCentavos)) {
-      await HistoricoPrecosRepository(_db).registrar(
-        nome: item.nome,
-        precoCentavos: item.precoCentavos!,
-        unidade: Unidade.fromValor(item.unidade),
-        quando: agora,
-      );
-    }
-    await _outbox.enfileirar(
-      tabela: 'itens_lista',
-      operacao: 'UPDATE',
-      registroId: id,
-      listaId: item.listaId,
-      tsLocal: agora,
-      payload: await _outbox.payloadItem(id),
-    );
-  }
-
-  Future<void> removerItem(String id) async {
-    final agora = DateTime.now().toUtc();
-    await (_db.update(_db.itemLocal)..where((i) => i.id.equals(id))).write(
-      ItemLocalCompanion(deletadoEm: Value(agora), updatedAt: Value(agora)),
-    );
-    final item = await _lerItem(id);
-    await _outbox.enfileirar(
-      tabela: 'itens_lista',
-      operacao: 'DELETE_SOFT',
-      registroId: id,
-      listaId: item.listaId,
-      tsLocal: agora,
-      payload: await _outbox.payloadItem(id),
-    );
-  }
-
-  Future<void> restaurarItem(String id) async {
-    final agora = DateTime.now().toUtc();
-    await (_db.update(_db.itemLocal)..where((i) => i.id.equals(id))).write(
-      ItemLocalCompanion(
-        deletadoEm: const Value(null),
-        updatedAt: Value(agora),
-      ),
-    );
-    final item = await _lerItem(id);
-    await _outbox.enfileirar(
-      tabela: 'itens_lista',
-      operacao: 'UPDATE',
-      registroId: id,
-      listaId: item.listaId,
-      tsLocal: agora,
-      payload: await _outbox.payloadItem(id),
-    );
-  }
-
-  /// Reordena os itens ativos (doc 05 §6.3, RF-05): grava a nova `ordem`
-  /// e enfileira UPDATE apenas para as linhas que mudaram de posição.
-  Future<void> reordenarItens(String listaId, List<String> idsOrdenados) async {
-    final itens = await (_db.select(
-      _db.itemLocal,
-    )..where((i) => i.listaId.equals(listaId) & i.deletadoEm.isNull())).get();
-    final agora = DateTime.now().toUtc();
-    for (var posicao = 0; posicao < idsOrdenados.length; posicao++) {
-      final id = idsOrdenados[posicao];
-      final item = itens.where((i) => i.id == id).firstOrNull;
-      if (item == null || item.ordem == posicao) continue;
+    return _db.transaction(() async {
+      final agora = DateTime.now().toUtc();
+      final anterior = await _lerItem(id);
       await (_db.update(_db.itemLocal)..where((i) => i.id.equals(id))).write(
-        ItemLocalCompanion(ordem: Value(posicao), updatedAt: Value(agora)),
+        ItemLocalCompanion(
+          nome: nome == null ? const Value.absent() : Value(nome),
+          quantidade: quantidade == null
+              ? const Value.absent()
+              : Value(quantidade),
+          unidade: unidade == null
+              ? const Value.absent()
+              : Value(unidade.valor),
+          categoria: categoria == null
+              ? const Value.absent()
+              : Value(categoria.valor),
+          concluido: concluido == null
+              ? const Value.absent()
+              : Value(concluido),
+          precoCentavos: precoCentavos != null
+              ? Value(precoCentavos)
+              : (limparPreco ? const Value(null) : const Value.absent()),
+          updatedAt: Value(agora),
+        ),
       );
+      final item = await _lerItem(id);
+      // Histórico local de preços (RF-29, F37): registra na transição para
+      // concluído com preço, ou quando o preço muda com o item já concluído.
+      // Evita atualizar `registradoEm` em edições não relacionadas (ex.: merge
+      // de dedup, mudança de quantidade). Local-only — não enfileira mutação;
+      // marcar sem preço não registra e desmarcar não apaga.
+      if (item.concluido &&
+          item.precoCentavos != null &&
+          (!anterior.concluido ||
+              anterior.precoCentavos != item.precoCentavos)) {
+        await HistoricoPrecosRepository(_db).registrar(
+          nome: item.nome,
+          precoCentavos: item.precoCentavos!,
+          unidade: Unidade.fromValor(item.unidade),
+          quando: agora,
+        );
+      }
       await _outbox.enfileirar(
         tabela: 'itens_lista',
         operacao: 'UPDATE',
         registroId: id,
-        listaId: listaId,
+        listaId: item.listaId,
         tsLocal: agora,
         payload: await _outbox.payloadItem(id),
       );
-    }
+    });
   }
 
-  Future<void> desmarcarTodos(String listaId) async {
-    final concluidos =
-        await (_db.select(_db.itemLocal)..where(
-              (i) =>
-                  i.listaId.equals(listaId) &
-                  i.deletadoEm.isNull() &
-                  i.concluido.equals(true),
-            ))
-            .get();
-    final agora = DateTime.now().toUtc();
-    for (final item in concluidos) {
-      await (_db.update(
-        _db.itemLocal,
-      )..where((i) => i.id.equals(item.id))).write(
+  Future<void> removerItem(String id) {
+    return _db.transaction(() async {
+      final agora = DateTime.now().toUtc();
+      await (_db.update(_db.itemLocal)..where((i) => i.id.equals(id))).write(
+        ItemLocalCompanion(deletadoEm: Value(agora), updatedAt: Value(agora)),
+      );
+      final item = await _lerItem(id);
+      await _outbox.enfileirar(
+        tabela: 'itens_lista',
+        operacao: 'DELETE_SOFT',
+        registroId: id,
+        listaId: item.listaId,
+        tsLocal: agora,
+        payload: await _outbox.payloadItem(id),
+      );
+    });
+  }
+
+  Future<void> restaurarItem(String id) {
+    return _db.transaction(() async {
+      final agora = DateTime.now().toUtc();
+      await (_db.update(_db.itemLocal)..where((i) => i.id.equals(id))).write(
         ItemLocalCompanion(
-          concluido: const Value(false),
+          deletadoEm: const Value(null),
           updatedAt: Value(agora),
         ),
       );
+      final item = await _lerItem(id);
       await _outbox.enfileirar(
         tabela: 'itens_lista',
         operacao: 'UPDATE',
-        registroId: item.id,
-        listaId: listaId,
+        registroId: id,
+        listaId: item.listaId,
         tsLocal: agora,
-        payload: await _outbox.payloadItem(item.id),
+        payload: await _outbox.payloadItem(id),
       );
-    }
+    });
+  }
+
+  /// Reordena os itens ativos (doc 05 §6.3, RF-05): grava a nova `ordem`
+  /// e enfileira UPDATE apenas para as linhas que mudaram de posição.
+  Future<void> reordenarItens(String listaId, List<String> idsOrdenados) {
+    return _db.transaction(() async {
+      final itens = await (_db.select(
+        _db.itemLocal,
+      )..where((i) => i.listaId.equals(listaId) & i.deletadoEm.isNull())).get();
+      final agora = DateTime.now().toUtc();
+      for (var posicao = 0; posicao < idsOrdenados.length; posicao++) {
+        final id = idsOrdenados[posicao];
+        final item = itens.where((i) => i.id == id).firstOrNull;
+        if (item == null || item.ordem == posicao) continue;
+        await (_db.update(_db.itemLocal)..where((i) => i.id.equals(id))).write(
+          ItemLocalCompanion(ordem: Value(posicao), updatedAt: Value(agora)),
+        );
+        await _outbox.enfileirar(
+          tabela: 'itens_lista',
+          operacao: 'UPDATE',
+          registroId: id,
+          listaId: listaId,
+          tsLocal: agora,
+          payload: await _outbox.payloadItem(id),
+        );
+      }
+    });
+  }
+
+  Future<void> desmarcarTodos(String listaId) {
+    return _db.transaction(() async {
+      final concluidos =
+          await (_db.select(_db.itemLocal)..where(
+                (i) =>
+                    i.listaId.equals(listaId) &
+                    i.deletadoEm.isNull() &
+                    i.concluido.equals(true),
+              ))
+              .get();
+      final agora = DateTime.now().toUtc();
+      for (final item in concluidos) {
+        await (_db.update(
+          _db.itemLocal,
+        )..where((i) => i.id.equals(item.id))).write(
+          ItemLocalCompanion(
+            concluido: const Value(false),
+            updatedAt: Value(agora),
+          ),
+        );
+        await _outbox.enfileirar(
+          tabela: 'itens_lista',
+          operacao: 'UPDATE',
+          registroId: item.id,
+          listaId: listaId,
+          tsLocal: agora,
+          payload: await _outbox.payloadItem(item.id),
+        );
+      }
+    });
   }
 
   /// Remove (soft delete) os concluídos e devolve os itens removidos para o
   /// undo da UI restaurar sem perder `id`/`ordem` (F14-T05).
-  Future<List<Item>> limparConcluidos(String listaId) async {
-    final concluidos =
-        await (_db.select(_db.itemLocal)..where(
-              (i) =>
-                  i.listaId.equals(listaId) &
-                  i.deletadoEm.isNull() &
-                  i.concluido.equals(true),
-            ))
-            .get();
-    final agora = DateTime.now().toUtc();
-    for (final item in concluidos) {
-      await (_db.update(
-        _db.itemLocal,
-      )..where((i) => i.id.equals(item.id))).write(
-        ItemLocalCompanion(deletadoEm: Value(agora), updatedAt: Value(agora)),
-      );
-      await _outbox.enfileirar(
-        tabela: 'itens_lista',
-        operacao: 'DELETE_SOFT',
-        registroId: item.id,
-        listaId: listaId,
-        tsLocal: agora,
-        payload: await _outbox.payloadItem(item.id),
-      );
-    }
-    return concluidos.map(Item.fromLocal).toList();
+  Future<List<Item>> limparConcluidos(String listaId) {
+    return _db.transaction(() async {
+      final concluidos =
+          await (_db.select(_db.itemLocal)..where(
+                (i) =>
+                    i.listaId.equals(listaId) &
+                    i.deletadoEm.isNull() &
+                    i.concluido.equals(true),
+              ))
+              .get();
+      final agora = DateTime.now().toUtc();
+      for (final item in concluidos) {
+        await (_db.update(
+          _db.itemLocal,
+        )..where((i) => i.id.equals(item.id))).write(
+          ItemLocalCompanion(deletadoEm: Value(agora), updatedAt: Value(agora)),
+        );
+        await _outbox.enfileirar(
+          tabela: 'itens_lista',
+          operacao: 'DELETE_SOFT',
+          registroId: item.id,
+          listaId: listaId,
+          tsLocal: agora,
+          payload: await _outbox.payloadItem(item.id),
+        );
+      }
+      return concluidos.map(Item.fromLocal).toList();
+    });
   }
 
   /// Duplica uma lista a partir dos itens **pendentes** (RF-20, "comprar de
@@ -560,36 +586,38 @@ class ListasRepository {
     required String origemId,
     required String titulo,
     required String donoId,
-  }) async {
-    final pendentes =
-        await (_db.select(_db.itemLocal)
-              ..where(
-                (i) =>
-                    i.listaId.equals(origemId) &
-                    i.deletadoEm.isNull() &
-                    i.concluido.equals(false),
-              )
-              ..orderBy([
-                (i) => OrderingTerm.asc(i.ordem),
-                (i) => OrderingTerm.asc(i.id),
-              ]))
-            .get();
-    if (pendentes.isEmpty) {
-      throw StateError('não há itens pendentes para duplicar');
-    }
+  }) {
+    return _db.transaction(() async {
+      final pendentes =
+          await (_db.select(_db.itemLocal)
+                ..where(
+                  (i) =>
+                      i.listaId.equals(origemId) &
+                      i.deletadoEm.isNull() &
+                      i.concluido.equals(false),
+                )
+                ..orderBy([
+                  (i) => OrderingTerm.asc(i.ordem),
+                  (i) => OrderingTerm.asc(i.id),
+                ]))
+              .get();
+      if (pendentes.isEmpty) {
+        throw StateError('não há itens pendentes para duplicar');
+      }
 
-    final nova = await criarLista(titulo: titulo, donoId: donoId);
-    for (final item in pendentes) {
-      await adicionarItem(
-        listaId: nova.id,
-        nome: item.nome,
-        quantidade: item.quantidade,
-        unidade: Unidade.fromValor(item.unidade),
-        categoria: CategoriaItem.fromValor(item.categoria),
-        precoCentavos: item.precoCentavos,
-      );
-    }
-    return nova;
+      final nova = await criarLista(titulo: titulo, donoId: donoId);
+      for (final item in pendentes) {
+        await adicionarItem(
+          listaId: nova.id,
+          nome: item.nome,
+          quantidade: item.quantidade,
+          unidade: Unidade.fromValor(item.unidade),
+          categoria: CategoriaItem.fromValor(item.categoria),
+          precoCentavos: item.precoCentavos,
+        );
+      }
+      return nova;
+    });
   }
 
   // ---- Internos ----
