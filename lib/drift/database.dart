@@ -83,6 +83,14 @@ class AppDatabase extends _$AppDatabase {
       await customStatement(_criarIndiceItemAtivo);
     },
     onUpgrade: (m, de, para) async {
+      // G-29 (F43-T08): os passos abaixo recriam `item_local` a partir da
+      // definição ATUAL (com `CHECK (quantidade <= 1000000)`); `quantidade` é
+      // entrada do usuário sem teto no app. Sanitiza qualquer valor legado
+      // antes de QUALQUER `alterTable` do upgrade — senão a cópia das linhas
+      // viola o CHECK e o app não abre.
+      await customStatement(
+        'UPDATE item_local SET quantidade = 1000000 WHERE quantidade > 1000000',
+      );
       if (de < 2) {
         // v1 → v2: converte unix segundos (inteiro) para texto ISO-8601.
         for (final tabela in const ['lista_local', 'item_local']) {

@@ -1024,4 +1024,101 @@ void main() {
       );
     },
   );
+
+  test(
+    'deve_sanitizar_quantidade_acima_do_teto_quando_migrar_base_legada_v7',
+    () async {
+      // Banco real na versão v7 (sem CHECKs locais): `quantidade` é entrada do
+      // usuário e uma base antiga pode ter valor acima do teto. O upgrade
+      // precisa abrir e clampar o valor no teto (G-29, F43-T08) — os passos
+      // `de < 8` e `de < 9` recriam `item_local` com a definição atual.
+      final arquivo = File(
+        '${Directory.systemTemp.path}/v7_teto_${DateTime.now().microsecondsSinceEpoch}.sqlite',
+      );
+      addTearDown(() {
+        if (arquivo.existsSync()) arquivo.deleteSync();
+      });
+
+      final antigo = sq3.sqlite3.open(arquivo.path);
+      antigo.execute('''
+        CREATE TABLE lista_local (
+          id TEXT NOT NULL PRIMARY KEY,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          titulo TEXT NOT NULL,
+          dono_id TEXT NOT NULL,
+          deletado_em TEXT NULL,
+          arquivada_em TEXT NULL,
+          orcamento_centavos INTEGER NULL,
+          FOREIGN KEY (dono_id) REFERENCES lista_local (id) ON DELETE CASCADE
+        );
+        CREATE TABLE item_local (
+          id TEXT NOT NULL PRIMARY KEY,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          lista_id TEXT NOT NULL REFERENCES lista_local (id) ON DELETE CASCADE,
+          nome TEXT NOT NULL,
+          quantidade REAL NOT NULL DEFAULT 1.0,
+          unidade TEXT NOT NULL DEFAULT 'un',
+          categoria TEXT NOT NULL DEFAULT 'outros',
+          concluido INTEGER NOT NULL DEFAULT 0,
+          ordem INTEGER NOT NULL DEFAULT 0,
+          deletado_em TEXT NULL,
+          preco_centavos INTEGER NULL
+        );
+        CREATE TABLE mutacao_pendente (
+          id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+          tabela TEXT NOT NULL,
+          operacao TEXT NOT NULL,
+          registro_id TEXT NOT NULL,
+          payload TEXT NOT NULL,
+          ts_local TEXT NOT NULL,
+          tentativas INTEGER NOT NULL DEFAULT 0,
+          lista_id TEXT NOT NULL
+        );
+        CREATE TABLE historico_preco_local (
+          nome_normalizado TEXT NOT NULL PRIMARY KEY,
+          preco_centavos INTEGER NOT NULL,
+          unidade TEXT NOT NULL,
+          registrado_em TEXT NOT NULL
+        );
+        PRAGMA user_version = 7;
+      ''');
+      antigo.execute(
+        "INSERT INTO lista_local (id, created_at, updated_at, titulo, dono_id) "
+        "VALUES ('eeeeeeee-0000-0000-0000-000000000011', "
+        "'2026-01-01T00:00:00.000000Z', '2026-01-01T00:00:00.000000Z', "
+        "'Legada v7', 'user-a')",
+      );
+      // Valor legado acima do teto, sem CHECK no v7.
+      antigo.execute(
+        "INSERT INTO item_local (id, created_at, updated_at, lista_id, nome, "
+        "quantidade, unidade, categoria, concluido, ordem) VALUES "
+        "('eeeeeeee-0000-0000-0000-000000000012', "
+        "'2026-01-01T00:00:00.000000Z', '2026-01-01T00:00:00.000000Z', "
+        "'eeeeeeee-0000-0000-0000-000000000011', 'Legado', 5000000.0, 'un', "
+        "'outros', 0, 0)",
+      );
+      antigo.close();
+
+      final migrado = AppDatabase(NativeDatabase(arquivo));
+      addTearDown(migrado.close);
+
+      final item =
+          await (migrado.select(migrado.itemLocal)..where(
+                (i) => i.id.equals('eeeeeeee-0000-0000-0000-000000000012'),
+              ))
+              .getSingle();
+      expect(item.nome, 'Legado');
+      expect(item.quantidade, 1000000);
+
+      final indice = await migrado
+          .customSelect(
+            "SELECT name FROM sqlite_master "
+            "WHERE type = 'index' AND name = 'uq_item_ativo'",
+          )
+          .get();
+      expect(indice, isNotEmpty);
+    },
+  );
 }
