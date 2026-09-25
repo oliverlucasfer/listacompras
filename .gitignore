@@ -37,6 +37,7 @@ dart_defines_prod.json
 # Diversos
 *.log
 .superpowers/
+.worktrees/
 
 # Firebase CLI (cache local, se o CLI for usado por engano)
 .firebase/
