@@ -903,6 +903,53 @@ Requisito: RF-31 (versão Lite). · Docs donos: 03, 05, 16.
 - [x] **F42-T02** — Import de backup alimenta a fila no modo colaborativo
   CP: builders de payload e insert da outbox extraídos de `ListasRepository` para `lib/features/sync/data/outbox_mutacoes.dart` (formato do JSON idêntico, guarda `ativa` num ponto só); `BackupRepository(db, {enfileirar})` enfileira `listas`/`itens_lista` (`operacao: 'INSERT'`, `ts_local` = agora, payload com o `updated_at` importado) **dentro da transação** e só para o que o import gravou; nunca `historicoPrecos`, nunca no Lite; docs [03 §3](03-sincronizacao-offline.md) e [05 §6.10](05-app-flutter.md) atualizados; suíte verde (693).
 
+## Fase 43 — Correções da revisão geral 2 (RNF-08)
+
+Fonte: [relatorio-revisao-geral-2.md](relatorio-revisao-geral-2.md) · Spec: [superpowers/specs/2026-09-25-correcoes-revisao-geral-2-design.md](superpowers/specs/2026-09-25-correcoes-revisao-geral-2-design.md) · Docs donos: 01, 02, 03, 04, 05, 06, 07, 10, 15.
+
+- [ ] **F43-T00** — Registrar o relatório 2 e a Fase 43
+  Dep: — · Docs: [14](14-tarefas.md), [relatório](relatorio-revisao-geral-2.md)
+  CP: relatório `G-01…G-58` e spec na árvore; Fase 43 no 14 com progresso; sem tocar código.
+- [ ] **F43-T01** — Backup: exportar o banco inteiro e erro de restauração (G-01, G-10)
+  Dep: F43-T00 · Docs: [05](05-app-flutter.md) §6.10
+  CP: exportar→importar com lista soft-deletada não lança FK; item sem lista → erro de restauração distinto.
+- [ ] **F43-T02** — Sync: dedup com coalescing (G-02)
+  Dep: F43-T00 · Docs: [03](03-sincronizacao-offline.md) §5
+  CP: item criado+editado offline com duplicado remoto vira `Duplicado`; `23505` refaz a dedup.
+- [ ] **F43-T03** — Sync: robustez do flush e do canal (G-12…G-15, G-19, G-20)
+  Dep: F43-T00 · Docs: [03](03-sincronizacao-offline.md) §3/§4/§7
+  CP: falha não incrementa mutação fora do lote; coalescing por `ts_local`; relatório na 6ª falha; canal re-sincroniza em erro.
+- [ ] **F43-T04** — Sync: histórico no logout e paginação (G-16, G-18)
+  Dep: F43-T00 · Docs: [03](03-sincronizacao-offline.md) §7
+  CP: histórico de preços limpo na troca de usuário; download pagina até esgotar.
+- [ ] **F43-T05** — Repositórios: escrita local + fila atômicas (G-17)
+  Dep: F43-T00 · Docs: [03](03-sincronizacao-offline.md) §3
+  CP: falha simulada no enfileiramento reverte o write local; suíte verde.
+- [ ] **F43-T06** — RLS: `deletado_em` imutável para editor (G-03)
+  Dep: F43-T00 · Docs: [02](02-seguranca-rls.md) §3/§4.1
+  CP: migration `0023`; editor não altera `deletado_em`; dono exclui; testes SQL verdes.
+- [ ] **F43-T07** — Banco: PII no `excluir_conta`, `revoke` e CHECK de convites (G-04, G-22, G-24)
+  Dep: F43-T00 · Docs: [01](01-banco-de-dados.md), [02](02-seguranca-rls.md), [06](06-mvp-entregas.md)
+  CP: convites do e-mail do titular somem; anon não executa `aceitar_convite`; `tipo`↔`email` coerentes.
+- [ ] **F43-T08** — Banco: higiene de policies/limites e `search_path` (G-23, G-26, G-27, G-29, G-30)
+  Dep: F43-T00 · Docs: [01](01-banco-de-dados.md), [02](02-seguranca-rls.md)
+  CP: policies restritas, CHECKs de tamanho, definers com `search_path=''`; testes SQL verdes.
+- [ ] **F43-T09** — i18n Material e strings (G-05, G-34, G-35, G-42)
+  Dep: F43-T00 · Docs: [05](05-app-flutter.md) §7, [15](15-design-system.md) §4
+  CP: tooltips nativos em pt-BR; strings órfãs removidas; e-mail com fallback.
+- [ ] **F43-T10** — UI e a11y (G-07…G-09, G-31…G-33, G-36…G-41)
+  Dep: F43-T00 · Docs: [10](10-wireframes-telas.md), [15](15-design-system.md)
+  CP: esqueleto na lista, alça 48dp, campo do link rotulado, snackbars no helper, SafeArea no mercado.
+- [ ] **F43-T11** — Erros e validação (G-06, G-47, G-49, G-50, G-52)
+  Dep: F43-T00 · Docs: [05](05-app-flutter.md)
+  CP: exclusão de conta não trava no erro de rede; título/orçamento validados; falhas da UI tratadas.
+- [ ] **F43-T12** — Domínio e app (G-43…G-46, G-48, G-51, G-53)
+  Dep: F43-T00 · Docs: [03](03-sincronizacao-offline.md), [04](04-importacao-lista.md), [05](05-app-flutter.md)
+  CP: orçamento na contagem; opt-out estável; Lite sem `Supabase.instance`; parser lê `"leite 2 kg"`.
+- [ ] **F43-T13** — Docs e CI (G-11, G-54…G-58)
+  Dep: F43-T00 · Docs: [07](07-qualidade-ci.md), [09](09-runbook-operacoes.md), [14](14-tarefas.md)
+  CP: doc 07 espelha o `ci.yml`; progresso do 14 coerente; README/flavors atualizados.
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -947,7 +994,8 @@ Requisito: RF-31 (versão Lite). · Docs donos: 03, 05, 16.
 | F40 Sheet do item e margens | 5 | 5 |
 | F41 Flavor Lite | 14 | 14 |
 | F42 Dívidas da Fase 41 | 2 | 2 |
-| **Total** | **224** | **224** |
+| F43 Correções da revisão 2 | 14 | 0 |
+| **Total** | **238** | **224** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
