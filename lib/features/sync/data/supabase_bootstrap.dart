@@ -180,7 +180,7 @@ class SupabaseBootstrap {
         // Offline: a fila é descartada junto com o cache da conta antiga.
       }
     }
-    await _limparCache();
+    await _limparCache(limparHistorico: true);
     _usuarioAtual = novoId;
     await _salvarUsuario(novoId);
     if (novoId != null) {
@@ -189,11 +189,13 @@ class SupabaseBootstrap {
     }
   }
 
-  Future<void> _limparCache() async {
+  Future<void> _limparCache({bool limparHistorico = false}) async {
     await _db.delete(_db.itemLocal).go();
     await _db.delete(_db.listaLocal).go();
     await _db.delete(_db.mutacaoPendente).go();
-    await _db.delete(_db.historicoPrecoLocal).go();
+    if (limparHistorico) {
+      await _db.delete(_db.historicoPrecoLocal).go();
+    }
     _papelRepository?.limpar();
   }
 

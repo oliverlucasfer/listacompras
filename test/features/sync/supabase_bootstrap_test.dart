@@ -388,6 +388,35 @@ void main() {
     expect(await db.select(db.historicoPrecoLocal).get(), isEmpty);
   });
 
+  test(
+    'deve_preservar_historico_de_precos_quando_perder_acesso_local',
+    () async {
+      final cliente = ClienteFake();
+      remotos['listas'] = [listaRemota('l1')];
+      final bootstrap = criarComRealtime(cliente: cliente, usuarioSalvo: 'U1');
+      addTearDown(bootstrap.dispose);
+      await bootstrap.iniciar();
+      await pumpEventQueue();
+
+      await db
+          .into(db.historicoPrecoLocal)
+          .insert(
+            HistoricoPrecoLocalCompanion.insert(
+              nomeNormalizado: 'arroz',
+              precoCentavos: 1000,
+              unidade: 'kg',
+              registradoEm: DateTime.utc(2026, 9, 4, 12),
+            ),
+          );
+
+      remotos.clear();
+      await bootstrap.perderAcessoLocal();
+
+      expect(await db.select(db.listaLocal).get(), isEmpty);
+      expect(await db.select(db.historicoPrecoLocal).get(), isNotEmpty);
+    },
+  );
+
   test('deve_paginar_download_quando_mais_de_uma_pagina', () async {
     final primeiraPagina = [for (var i = 0; i < 500; i++) listaRemota('l$i')];
     final segundaPagina = [listaRemota('l500'), listaRemota('l501')];
