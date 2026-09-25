@@ -98,6 +98,38 @@ class RemotoQueEditaAoEnviar implements SyncRemoto {
   }
 }
 
+/// Servidor fake que edita durante um envio que falha: dispara o callback no
+/// primeiro item e lança erro — simula a edição do usuário no `await` de rede
+/// que não completa (R-03).
+class RemotoQueEditaEFalha implements SyncRemoto {
+  RemotoQueEditaEFalha(this.aoEnviar);
+
+  final Future<void> Function() aoEnviar;
+  var _jaEditou = false;
+
+  @override
+  Future<ResultadoEnvio> enviar(MutacaoSync mutacao) async {
+    if (mutacao.tabela == 'itens_lista' && !_jaEditou) {
+      _jaEditou = true;
+      await aoEnviar();
+      throw http.ClientException('servidor indisponível');
+    }
+    return const Enviado();
+  }
+}
+
+/// Servidor fake que sempre falha e conta as chamadas — mede em que tentativa
+/// o relatório de tentativas altas dispara.
+class RemotoContadorFalhas implements SyncRemoto {
+  var chamadas = 0;
+
+  @override
+  Future<ResultadoEnvio> enviar(MutacaoSync mutacao) async {
+    chamadas++;
+    throw http.ClientException('servidor indisponível');
+  }
+}
+
 /// Relógio do servidor injetável (doc 03 §5, R-06).
 class TempoServidorFake implements FonteTempoServidor {
   TempoServidorFake(this.agora);
@@ -912,5 +944,115 @@ void main() {
     await aguardarSincronizado(engine);
 
     expect(reportes, isNot(contains('sync_relogio_adiantado')));
+  });
+
+  test('deve_nao_incrementar_tentativas_de_mutacao_fora_do_lote', () async {
+    // R-03: a edição enfileirada durante um envio que falha (id maior que o
+    // lote) não pode queimar tentativa junto com o lote.
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+
+    final remoto = RemotoQueEditaEFalha(
+      () => repo.editarItem(item.id, nome: 'Arroz integral'),
+    );
+    final espera = Completer<void>();
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+      esperar: (_) => espera.future,
+    );
+    addTearDown(engine.dispose);
+
+    // Sem `iniciar()`: a fila não é reassinada, então a edição enfileirada não
+    // redispara o flush e medimos apenas o primeiro lote.
+    await engine.flush();
+
+    final linhas =
+        await (db.select(db.mutacaoPendente)
+              ..where((m) => m.registroId.equals(item.id))
+              ..orderBy([(m) => OrderingTerm.asc(m.id)]))
+            .get();
+    expect(linhas, hasLength(2));
+    expect(linhas.first.tentativas, 1); // linha do lote falhou
+    expect(linhas.last.tentativas, 0); // edição chegada depois do lote
+  });
+
+  test('deve_eleger_ultima_por_ts_local_quando_coalescing', () async {
+    // Duas mutações do mesmo registro com id invertido ao ts_local: vence a
+    // de maior ts_local, e o grupo é removido pelo maior id.
+    await db
+        .into(db.mutacaoPendente)
+        .insert(
+          MutacaoPendenteCompanion.insert(
+            tabela: 'itens_lista',
+            operacao: 'UPDATE',
+            registroId: 'r-1',
+            payload: jsonEncode({
+              'id': 'r-1',
+              'nome': 'Vencedor',
+              'updated_at': '2026-01-02T00:00:00.000Z',
+            }),
+            tsLocal: DateTime.utc(2026, 1, 2),
+            listaId: 'l-1',
+          ),
+        );
+    await db
+        .into(db.mutacaoPendente)
+        .insert(
+          MutacaoPendenteCompanion.insert(
+            tabela: 'itens_lista',
+            operacao: 'DELETE_SOFT',
+            registroId: 'r-1',
+            payload: jsonEncode({
+              'id': 'r-1',
+              'nome': 'Perdedor',
+              'updated_at': '2026-01-01T00:00:00.000Z',
+            }),
+            tsLocal: DateTime.utc(2026, 1, 1),
+            listaId: 'l-1',
+          ),
+        );
+
+    final remoto = RemotoFake();
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+    await aguardarSincronizado(engine);
+
+    expect(remoto.recebidas, hasLength(1));
+    expect(remoto.recebidas.single.operacao, 'UPDATE');
+    expect(remoto.recebidas.single.payload['nome'], 'Vencedor');
+    expect(await mutacoesNaFila(), 0);
+  });
+
+  test('deve_reportar_tentativas_altas_na_sexta_falha', () async {
+    // doc 07 §4 evento 1: relatório pós-incremento — na 6ª falha a mutação já
+    // contabiliza 6 tentativas.
+    await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final remoto = RemotoContadorFalhas();
+    final amostras = <(int, Object?)>[];
+    final engine = SyncEngine(
+      db: db,
+      remoto: remoto,
+      checarConexao: () async => true,
+      esperar: (_) async {},
+      reportar: (codigo, contexto) {
+        if (codigo == 'sync_falha_tentativas_altas') {
+          amostras.add((remoto.chamadas, contexto['tentativas']));
+        }
+      },
+    );
+    addTearDown(engine.dispose);
+    await engine.iniciar();
+    await engine.status.firstWhere((s) => s is ErroSync);
+
+    expect(amostras, isNotEmpty);
+    expect(amostras.first.$1, 6); // dispara já na 6ª falha
+    expect(amostras.first.$2, 6); // tentativas pós-incremento
   });
 }

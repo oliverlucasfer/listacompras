@@ -222,16 +222,21 @@ class SyncEngine {
   }
 
   /// Próximo grupo a drenar: da lista mais antiga, com coalescing por
-  /// registro (mantém a última mutação — maior id; doc 03 §3). Null quando
-  /// a fila não tem mutações enviáveis.
+  /// registro (vence a mutação de maior `ts_local`, desempate pelo maior id;
+  /// doc 03 §3). Null quando a fila não tem mutações enviáveis.
   ///
   /// O payload do lote é a **mescla** dos payloads do registro (última vence
-  /// por chave), não só o da última mutação. Desde o contrato do F26, updates
-  /// de lista que não são de arquivo **omitem** `arquivada_em`; descartar o
-  /// payload anterior perderia o arquivo (ex.: arquivar e depois renomear
-  /// offline). A chave só fica ausente se nunca apareceu no grupo, e um
-  /// `definirArquivada(false)` posterior traz `arquivada_em: null`, que vence
-  /// na mescla.
+  /// por chave, na ordem cronológica), não só o da última mutação. Desde o
+  /// contrato do F26, updates de lista que não são de arquivo **omitem**
+  /// `arquivada_em`; descartar o payload anterior perderia o arquivo (ex.:
+  /// arquivar e depois renomear offline). A chave só fica ausente se nunca
+  /// apareceu no grupo, e um `definirArquivada(false)` posterior traz
+  /// `arquivada_em: null`, que vence na mescla.
+  ///
+  /// O `id` do [MutacaoSync] é o **maior id do grupo** (corte do coalescing),
+  /// não o do vencedor por `ts_local`: a remoção e o incremento de tentativas
+  /// atingem todas as linhas do lote e preservam as enfileiradas depois dele
+  /// (doc 03 §4, R-03).
   Future<List<MutacaoSync>?> _proximoLote() async {
     final linhas =
         await (_db.select(_db.mutacaoPendente)
@@ -240,9 +245,14 @@ class SyncEngine {
             .get();
     if (linhas.isEmpty) return null;
     final listaId = linhas.first.listaId;
-    final doGrupo = linhas.where((m) => m.listaId == listaId);
+    final doGrupo = linhas.where((m) => m.listaId == listaId).toList()
+      ..sort((a, b) {
+        final porTs = a.tsLocal.compareTo(b.tsLocal);
+        return porTs != 0 ? porTs : a.id.compareTo(b.id);
+      });
     final porRegistro = <String, MutacaoPendenteData>{};
     final payloadMesclado = <String, Map<String, Object?>>{};
+    final ateId = <String, int>{};
     for (final linha in doGrupo) {
       final atual = jsonDecode(linha.payload) as Map<String, Object?>;
       payloadMesclado.update(
@@ -250,19 +260,29 @@ class SyncEngine {
         (anterior) => {...anterior, ...atual},
         ifAbsent: () => atual,
       );
+      ateId.update(
+        linha.registroId,
+        (max) => linha.id > max ? linha.id : max,
+        ifAbsent: () => linha.id,
+      );
       porRegistro[linha.registroId] = linha;
     }
     return [
-      for (final linha in porRegistro.values)
-        _paraSync(linha, payload: payloadMesclado[linha.registroId]),
+      for (final entry in porRegistro.entries)
+        _paraSync(
+          entry.value,
+          payload: payloadMesclado[entry.key],
+          ateId: ateId[entry.key]!,
+        ),
     ];
   }
 
   MutacaoSync _paraSync(
     MutacaoPendenteData linha, {
     Map<String, Object?>? payload,
+    required int ateId,
   }) => MutacaoSync(
-    id: linha.id,
+    id: ateId,
     tabela: linha.tabela,
     operacao: linha.operacao,
     registroId: linha.registroId,
@@ -296,9 +316,10 @@ class SyncEngine {
   Future<void> _reportarFalha(List<MutacaoSync> lote) async {
     if (_reportar == null) return;
     final fila = await _contarFila();
+    // O lote foi lido antes do incremento; +1 reflete as tentativas reais.
     final maiorTentativas = lote.fold<int>(
       0,
-      (maior, m) => m.tentativas > maior ? m.tentativas : maior,
+      (maior, m) => (m.tentativas + 1) > maior ? m.tentativas + 1 : maior,
     );
     if (fila > 10) {
       _reportar('sync_falha_fila_grande', {'fila': fila});
@@ -350,8 +371,12 @@ class SyncEngine {
       // deve disparar novo flush (o retry agendado cuida da fila).
       await _db.customUpdate(
         'UPDATE mutacao_pendente SET tentativas = tentativas + 1 '
-        'WHERE tabela = ? AND registro_id = ?',
-        variables: [Variable(mutacao.tabela), Variable(mutacao.registroId)],
+        'WHERE tabela = ? AND registro_id = ? AND id <= ?',
+        variables: [
+          Variable(mutacao.tabela),
+          Variable(mutacao.registroId),
+          Variable(mutacao.id),
+        ],
       );
     }
   }

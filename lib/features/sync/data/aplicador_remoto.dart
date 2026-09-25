@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:sqlite3/common.dart' show SqliteException;
 
 import '../../../drift/database.dart';
 import '../../../core/dominio/unidade.dart';
@@ -37,36 +38,41 @@ class AplicadorRemoto {
         );
   }
 
-  Future<void> _aplicarItem(Map<String, Object?> r) {
-    return _db
-        .into(_db.itemLocal)
-        .insertOnConflictUpdate(
-          ItemLocalCompanion.insert(
-            id: r['id'] as String,
-            createdAt: _data(r['created_at']),
-            updatedAt: _data(r['updated_at']),
-            listaId: r['lista_id'] as String,
-            nome: r['nome'] as String,
-            quantidade: Value((r['quantidade'] as num).toDouble()),
-            unidade: Value(Unidade.fromValor(r['unidade'] as String).valor),
-            // Tolerância (spec F6 §7): linha gravada por app antigo
-            // (1.0.0+2) chega sem a coluna → 'outros'.
-            categoria: Value(
-              r['categoria'] is String && (r['categoria'] as String).isNotEmpty
-                  ? r['categoria'] as String
-                  : 'outros',
+  Future<void> _aplicarItem(Map<String, Object?> r) async {
+    try {
+      await _db
+          .into(_db.itemLocal)
+          .insertOnConflictUpdate(
+            ItemLocalCompanion.insert(
+              id: r['id'] as String,
+              createdAt: _data(r['created_at']),
+              updatedAt: _data(r['updated_at']),
+              listaId: r['lista_id'] as String,
+              nome: r['nome'] as String,
+              quantidade: Value((r['quantidade'] as num).toDouble()),
+              unidade: Value(Unidade.fromValor(r['unidade'] as String).valor),
+              // Tolerância (spec F6 §7): linha gravada por app antigo
+              // (1.0.0+2) chega sem a coluna → 'outros'.
+              categoria: Value(
+                r['categoria'] is String &&
+                        (r['categoria'] as String).isNotEmpty
+                    ? r['categoria'] as String
+                    : 'outros',
+              ),
+              concluido: Value(r['concluido'] as bool? ?? false),
+              ordem: Value((r['ordem'] as num?)?.toInt() ?? 0),
+              // Tolerância (spec F25 §4): ausente ou não-numérico → null.
+              precoCentavos: Value(
+                r['preco_centavos'] is num
+                    ? (r['preco_centavos'] as num).toInt()
+                    : null,
+              ),
+              deletadoEm: Value(_dataOpcional(r['deletado_em'])),
             ),
-            concluido: Value(r['concluido'] as bool? ?? false),
-            ordem: Value((r['ordem'] as num?)?.toInt() ?? 0),
-            // Tolerância (spec F25 §4): ausente ou não-numérico → null.
-            precoCentavos: Value(
-              r['preco_centavos'] is num
-                  ? (r['preco_centavos'] as num).toInt()
-                  : null,
-            ),
-            deletadoEm: Value(_dataOpcional(r['deletado_em'])),
-          ),
-        );
+          );
+    } on SqliteException {
+      // Pai (lista) ainda não chegou; o próximo sync/re-sync reconcilia.
+    }
   }
 
   DateTime _data(Object? iso) => DateTime.parse(iso! as String).toUtc();

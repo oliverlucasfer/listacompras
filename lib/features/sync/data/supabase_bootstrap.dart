@@ -232,11 +232,14 @@ class SupabaseBootstrap {
   }
 
   /// Status do canal (doc 03 §7, R-12): em erro/fechamento o cache pode ter
-  /// defasado em silêncio (eventos perdidos); o SDK reconecta sozinho, então
-  /// re-sincroniza no `SUBSCRIBED` seguinte — inclusive o primeiro.
+  /// defasado em silêncio (eventos perdidos); re-sincroniza no `SUBSCRIBED`
+  /// seguinte — inclusive o primeiro — e já nos avisos de `CHANNEL_ERROR`/
+  /// `TIMED_OUT`, sem esperar a reassinatura do SDK.
   void _aoMudarStatusCanal(RealtimeSubscribeStatus status) {
     if (_disposed || _usuarioAtual == null) return;
-    if (status == RealtimeSubscribeStatus.subscribed) {
+    if (status == RealtimeSubscribeStatus.subscribed ||
+        status == RealtimeSubscribeStatus.channelError ||
+        status == RealtimeSubscribeStatus.timedOut) {
       _encadear(_reSincronizar);
     }
   }

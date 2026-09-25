@@ -49,13 +49,13 @@ Tabela local Drift (`mutacoes_pendentes`):
 | `operacao` | `text` | `'INSERT'` \| `'UPDATE'` \| `'DELETE_SOFT'` |
 | `registro_id` | `text` | UUID da entidade |
 | `payload` | `text` (JSON) | Estado completo do registro no momento da operação |
-| `ts_local` | `timestamptz` | Timestamp local da operação (vira `updated_at` no flush) |
+| `ts_local` | `timestamptz` | Hora local do enfileiramento — ordem da fila e critério do coalescing (o LWW usa o `updated_at` do payload) |
 | `lista_id` | `text` | Para agrupar/drenar por lista |
 | `tentativas` | `int` | Contador de retry |
 
 **Regras:**
 * Fila **ordenada por lista**, drenada em sequência (mutações da mesma lista são aplicadas em ordem; listas distintas podem paralelizar).
-* **Coalescing:** se houver múltiplas mutações do mesmo registro na fila (ex.: criar + editar + concluir), o flush envia uma só — a **última** mutação (maior `ts_local`) define `id`/operação/ts, e o **payload é a mescla** dos payloads do registro (última vence por chave) — reduz requisições e elimina conflitos intra-dispositivo. A mescla é necessária porque updates de lista que não são de arquivo **omitem** `arquivada_em` (RF-22/F26): sem ela, arquivar e depois renomear offline perderia o arquivo no servidor.
+* **Coalescing:** se houver múltiplas mutações do mesmo registro na fila (ex.: criar + editar + concluir), o flush envia uma só — a **última** mutação (maior `ts_local`, desempate pelo maior `id`) define operação/ts/payload, e o **payload é a mescla** dos payloads do registro (última vence por chave, na ordem cronológica) — reduz requisições e elimina conflitos intra-dispositivo. A mescla é necessária porque updates de lista que não são de arquivo **omitem** `arquivada_em` (RF-22/F26): sem ela, arquivar e depois renomear offline perderia o arquivo no servidor. A remoção e o incremento de tentativas do lote usam o **maior `id` do grupo** (corte do coalescing), preservando mutações enfileiradas depois do lote (R-03).
 * Retry com **backoff exponencial** (1s → 2s → 4s → ... → máx. 5 min); após 10 tentativas, a mutação entra em estado `erro` visível na UI com ação "tentar de novo".
 * **Payload de itens inclui `categoria`** (enum fechado [01 §3.2](01-banco-de-dados.md), Fase 6/ADR-011). Clientes antigos (1.0.0+2) sem a coluna recebem o default no INSERT e o upsert LWW não toca a coluna fora do payload — categoria existente preservada ([01 §4.3](01-banco-de-dados.md)).
 * **Payload de itens inclui `preco_centavos`** (preço unitário em centavos [01 §4.3](01-banco-de-dados.md), RF-21/F25). O aplicador trata a coluna com **tolerância**: ausente ou não numérica → `null` (linha gravada por app antigo), como em `categoria`; no merge LWW a coluna só é tocada quando presente no payload.
@@ -73,7 +73,7 @@ Tabela local Drift (`mutacoes_pendentes`):
 2. **Flush (online):** o Sync Engine drena a fila enviando ao Supabase (com coalescing por registro — payload **mesclado**, §3):
    * **Sem linha remota → `INSERT`** (F12-T04): o `upsert` do PostgREST avalia a policy de UPDATE e era negado para listas novas; ID client-side é UUID v4, colisão é improvável.
    * **Com linha remota → `UPDATE`** (LWW já decidiu — Seção 5).
-3. **Realtime (WebSocket):** mudanças remotas chegam → aplicadas ao Drift **se vencerem no LWW** → UI reage reativamente (Streams do Drift). O canal assina um **callback de status** (F20, R-12): a cada `SUBSCRIBED` — inclusive o primeiro e após uma reconexão — o bootstrap re-sincroniza o cache, cobrindo eventos perdidos em `CHANNEL_ERROR`/`TIMED_OUT` (Seção 7).
+3. **Realtime (WebSocket):** mudanças remotas chegam → aplicadas ao Drift **se vencerem no LWW** → UI reage reativamente (Streams do Drift). O canal assina um **callback de status** (F20, R-12): a cada `SUBSCRIBED` — inclusive o primeiro e após uma reconexão — e já em `CHANNEL_ERROR`/`TIMED_OUT`, o bootstrap re-sincroniza o cache, cobrindo eventos perdidos sem esperar a reassinatura (Seção 7).
 4. **Reconexão:** listener de conectividade dispara flush automático da fila.
 
 > **Robustez (F12-T03):** o engine assina a fila **antes** de checar a conexão —
@@ -143,7 +143,7 @@ Ao aplicar uma mudança remota sobre um registro local pendente:
 | **Item criado e removido offline** | Nenhuma mutação sai da fila: o coalescing mantém apenas o `DELETE_SOFT`, que vira delete físico no servidor (ou tombstone remoto). Item nunca existiu para os outros |
 | **Mesmo item marcado como concluído em 2 dispositivos offline** | Ambos geram UPDATE; o maior `updated_at` vence — sem perda além do esperado em LWW |
 | **Relógio do dispositivo minutos/anos adiantado** | O dispositivo "vence" injustamente até o flush; após isso o servidor registra seu `updated_at`. Risco aceito (ADR-004); desempate de empates pelo servidor |
-| **Relógio adiantado + servidor rejeita ts futuro?** | Servidor **aceita** o ts do cliente (não rejeita). Na dúvida, a divergência grosseira é detectada por `ts_local` vs `now()` do servidor no flush (RPC `agora_servidor`, [02 §4.5](02-seguranca-rls.md)) e logada no Sentry ([07](07-qualidade-ci.md)) |
+| **Relógio adiantado + servidor rejeita ts futuro?** | Servidor **aceita** o ts do cliente (não rejeita). Na dúvida, a divergência grosseira é detectada pelo `updated_at` do payload (carimbo do LWW) vs `now()` do servidor no flush (RPC `agora_servidor`, [02 §4.5](02-seguranca-rls.md)) e logada no Sentry ([07](07-qualidade-ci.md)) |
 | **Lista removida em A enquanto B adiciona itens offline** | Tombstone da lista vence; itens de B são criados mas a lista `deletado_em IS NOT NULL` some de todas as UIs. Aceitável no domínio |
 | **Duplicação de nome** | `UNIQUE (lista_id, lower(nome)) WHERE deletado_em IS NULL` rejeita; o sync converte em "aumento de quantidade" quando unidades coincidem |
 
@@ -183,7 +183,8 @@ Máquina de estados exposta por provider Riverpod (`syncStatusProvider`):
 ## 7. Bootstrap e manutenção do cache local
 
 * **Primeiro login:** baixa todas as listas/membros/itens ativos do usuário (query única por tabela) e popula o Drift.
-* **Incremental:** Realtime mantém o cache atualizado; em reconexão longa (gap > X ou erro de stream), re-sync completo das listas do usuário (barato no volume de dados de listas de compras).
+* **Incremental:** Realtime mantém o cache atualizado; em reconexão longa (gap > X) ou aviso de erro do canal (`CHANNEL_ERROR`/`TIMED_OUT`), re-sync completo das listas do usuário (barato no volume de dados de listas de compras).
+* **Item remoto com pai ausente:** um item cujo `lista_id` ainda não está no cache local (violação da FK) é ignorado no re-sync/Realtime — o próximo sync reconcilia — sem abortar a cadeia de trabalhos nem o flush da fila.
 * **Multi-conta:** cache por `user_id` (mesmo dispositivo com contas distintas não mistura dados).
 * **Logout:** limpa o cache local e a fila de mutações (após tentar flush final).
 

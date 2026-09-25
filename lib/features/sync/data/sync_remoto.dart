@@ -35,8 +35,10 @@ abstract interface class SyncRemoto {
 }
 
 /// Relógio do servidor (doc 03 §5, R-06): a divergência grosseira de relógio
-/// do dispositivo só é detectável comparando `ts_local` com o `now()` do
-/// banco — nunca com o relógio local, que gerou o próprio `ts_local`.
+/// do dispositivo só é detectável comparando o `updated_at` do payload (o
+/// carimbo do LWW) com o `now()` do banco — nunca com o relógio local, que
+/// gerou esse carimbo. O `ts_local` da fila é só a hora do enfileiramento
+/// (ordem/coalescing).
 abstract interface class FonteTempoServidor {
   /// `null` quando indisponível (sem rede, sem sessão): o chamador não
   /// reporta divergência em cima de incerteza.

@@ -8,7 +8,9 @@ class MutacaoPendente extends Table {
   TextColumn get operacao => text()(); // 'INSERT' | 'UPDATE' | 'DELETE_SOFT'
   TextColumn get registroId => text()(); // UUID da entidade
   TextColumn get payload => text()(); // JSON: estado completo do registro
-  DateTimeColumn get tsLocal => dateTime()(); // vira updated_at no flush
+  // Hora local da fila: ordem e coalescing. O carimbo do LWW é o
+  // `updated_at` do payload, não este.
+  DateTimeColumn get tsLocal => dateTime()();
   TextColumn get listaId => text()(); // agrupamento/dreno por lista
   IntColumn get tentativas => integer().withDefault(const Constant(0))();
 }

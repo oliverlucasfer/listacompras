@@ -518,6 +518,63 @@ void main() {
     expect(locais.map((l) => l.id), contains('l2'));
   });
 
+  test('deve_re_sincronizar_quando_canal_entra_em_erro', () async {
+    // R-12: erro/timeout do canal não pode esperar o próximo SUBSCRIBED — o
+    // re-sync é disparado já no aviso de erro do SDK.
+    final cliente = ClienteFake();
+    remotos['listas'] = [listaRemota('l1')];
+    final bootstrap = criarComRealtime(cliente: cliente, usuarioSalvo: 'U1');
+    addTearDown(bootstrap.dispose);
+    await bootstrap.iniciar();
+    await pumpEventQueue();
+    expect((await db.select(db.listaLocal).get()).map((l) => l.id), ['l1']);
+
+    remotos['listas'] = [listaRemota('l1'), listaRemota('l2')];
+    cliente.canal.cairStatus(RealtimeSubscribeStatus.channelError);
+    for (var i = 0; i < 20; i++) {
+      await pumpEventQueue();
+      if ((await db.select(db.listaLocal).get()).length > 1) break;
+    }
+    expect(
+      (await db.select(db.listaLocal).get()).map((l) => l.id),
+      contains('l2'),
+    );
+
+    remotos['listas'] = [
+      listaRemota('l1'),
+      listaRemota('l2'),
+      listaRemota('l3'),
+    ];
+    cliente.canal.cairStatus(RealtimeSubscribeStatus.timedOut);
+    for (var i = 0; i < 20; i++) {
+      await pumpEventQueue();
+      if ((await db.select(db.listaLocal).get()).length > 2) break;
+    }
+    expect(
+      (await db.select(db.listaLocal).get()).map((l) => l.id),
+      contains('l3'),
+    );
+  });
+
+  test('deve_seguir_re_sync_quando_item_remoto_sem_lista', () async {
+    // Item remoto cujo pai (lista) ainda não chegou não pode abortar o
+    // re-sync: a fila precisa ser drenada e o próximo sync reconcilia.
+    final cliente = ClienteFake();
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'U1');
+    remotos
+      ..['listas'] = const <Map<String, Object?>>[]
+      ..['itens_lista'] = [itemRemota('i-orfao', 'lista-inexistente')];
+    final bootstrap = criarComRealtime(cliente: cliente, usuarioSalvo: 'U1');
+    addTearDown(bootstrap.dispose);
+
+    await bootstrap.iniciar();
+    for (var i = 0; i < 30; i++) {
+      await pumpEventQueue();
+      if (remoto.recebidas.any((m) => m.registroId == lista.id)) break;
+    }
+    expect(remoto.recebidas.map((m) => m.registroId), contains(lista.id));
+  });
+
   test('deve_limpar_cache_quando_membro_removido_sou_eu', () async {
     // DELETE com REPLICA IDENTITY FULL traz user_id no old_record (08 §7).
     final cliente = ClienteFake();

@@ -384,4 +384,32 @@ void main() {
       expect(lista.orcamentoCentavos, isNull);
     },
   );
+
+  test('deve_ignorar_item_sem_lista_quando_aplicar', () async {
+    // Pai (lista) ainda não chegou — a FK local não pode propagar e travar a
+    // cadeia de re-sync/realtime (o próximo sync reconcilia).
+    final aplicador = AplicadorRemoto(db);
+
+    await expectLater(
+      aplicador.aplicar('itens_lista', {
+        'id': 'item-orfao',
+        'lista_id': 'lista-ausente',
+        'nome': 'Arroz',
+        'quantidade': 1,
+        'unidade': 'un',
+        'categoria': 'outros',
+        'concluido': false,
+        'ordem': 0,
+        'created_at': '2026-09-21T12:00:00.000Z',
+        'updated_at': '2026-09-21T12:00:00.000Z',
+        'deletado_em': null,
+      }),
+      completes,
+    );
+
+    final itens = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals('item-orfao'))).get();
+    expect(itens, isEmpty);
+  });
 }
