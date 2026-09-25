@@ -5,6 +5,8 @@
 -- N-11..N-14 cobrem as policies de `convites` (F7-T01, docs 02 §5 e 08 §2).
 -- N-15..N-17 e P-06..P-07 cobrem troca de papel e saída da lista
 -- (F7-T07, migration 0009 — doc 02 §4.3); N-07 já cobre "dono não sai".
+-- N-23 e P-13..P-14 cobrem `deletado_em` da lista imutável para editor
+-- (F43-T06, migration 0023 — doc 02 §3/§4.1).
 --
 -- Execução (após `supabase db reset`):
 --   Get-Content supabase/tests/rls_tests.sql -Raw | docker exec -i supabase_db_<proj> psql -U postgres -d postgres
@@ -457,6 +459,53 @@ begin
   else
     raise exception 'FALHOU R-19: atualizado_em nao foi carimbado (%)', depois;
   end if;
+end $$;
+
+-- ===== N-23: editor (B) não altera `deletado_em` da lista (G-03, F43-T06) =====
+-- Só o dono soft-deleta/ressuscita a lista. Defesa em profundidade: WITH CHECK
+-- da policy `listas_update_editores` + trigger `trg_listas_deletado_em_dono`
+-- (migration 0023). O editor deve ser barrado por qualquer uma das camadas.
+do $$
+declare d timestamptz;
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}', true);
+  begin
+    update public.listas set deletado_em = now()
+    where id = '22222222-2222-2222-2222-222222222222';
+  exception when others then
+    null; -- esperado: policy (42501) ou trigger (APENAS_O_DONO_PODE_EXCLUIR)
+  end;
+  select deletado_em into d from public.listas
+  where id = '22222222-2222-2222-2222-222222222222';
+  if d is null then raise notice 'OK N-23: editor nao soft-deletou a lista';
+  else raise exception 'FALHOU N-23: editor soft-deletou a lista (%)', d; end if;
+end $$;
+
+-- ===== P-13: editor (B) renomeia a lista sem tocar `deletado_em` → 1 linha (F43-T06) =====
+do $$
+declare c int;
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}', true);
+  update public.listas set titulo = 'Renomeada pelo editor'
+  where id = '22222222-2222-2222-2222-222222222222';
+  get diagnostics c = row_count;
+  if c = 1 then raise notice 'OK P-13: editor renomeou a lista';
+  else raise exception 'FALHOU P-13: editor alterou % linhas', c; end if;
+end $$;
+
+-- ===== P-14: dono (A) soft-deleta a lista → 1 linha (F43-T06) =====
+do $$
+declare c int;
+begin
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', true);
+  update public.listas set deletado_em = now()
+  where id = '22222222-2222-2222-2222-222222222222';
+  get diagnostics c = row_count;
+  if c = 1 then raise notice 'OK P-14: dono soft-deletou a lista';
+  else raise exception 'FALHOU P-14: dono alterou % linhas', c; end if;
 end $$;
 
 rollback;

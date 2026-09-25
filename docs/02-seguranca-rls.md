@@ -109,7 +109,7 @@ alter table public.push_tokens   force row level security;
 | :--- | :--- | :--- | :--- |
 | `listas` | SELECT | Qualquer membro | `is_member(id)` |
 | `listas` | INSERT | Dono (criação) | `dono_id = auth.uid()` |
-| `listas` | UPDATE | Membros `dono`/`editor` | `papel_na_lista(id) in ('dono','editor')` |
+| `listas` | UPDATE | Membros `dono`/`editor` | `papel_na_lista(id) in ('dono','editor')`; `dono_id` e `deletado_em` só mudam pelo **dono** (policy + trigger `protege_deletado_em`, migration `0023`) |
 | `listas` | DELETE | Só dono | `dono_id = auth.uid()` |
 | `itens_lista` | SELECT | Qualquer membro | `is_member(lista_id)` |
 | `itens_lista` | INSERT | Membros `dono`/`editor` | `papel_na_lista(lista_id) in ('dono','editor')` |
@@ -134,6 +134,7 @@ alter table public.push_tokens   force row level security;
 * Realtime respeita as mesmas políticas (usuário só recebe broadcast de listas de que participa).
 * `auth.uid()` é sempre avaliado do JWT — **nunca** confiar em campos enviados pelo cliente.
 * **Associação do dono garantida:** toda lista tem exatamente um `papel='dono'` em `lista_membros` (trigger `trg_listas_cria_dono`, migrations `0010`/`0011`). O app deriva o papel do dono de `listas.dono_id` (offline, independente de carregar os papéis) e a tela de membros mescla o dono da lista local quando o servidor não devolve a linha.
+* **`deletado_em` imutável para editor:** o soft delete/restauração da **lista** é exclusivo do dono (migration `0023`, F43-T06). O editor segue renomeando e editando outras colunas; tentar mudar `deletado_em` é barrado pelo `WITH CHECK` da policy e pelo trigger `trg_listas_deletado_em_dono` (`APENAS_O_DONO_PODE_EXCLUIR`).
 
 ---
 
@@ -165,12 +166,23 @@ create policy "listas_update_editores"
     and dono_id = (
       select l.dono_id from public.listas l where l.id = listas.id
     )
+    -- Só o dono muda `deletado_em` (soft delete / restauração da lista). Para
+    -- editor/leitor a coluna precisa manter o valor antigo (migration `0023`,
+    -- F43-T06); o trigger `protege_deletado_em` é a segunda barreira.
+    and (
+      public.papel_na_lista(id) = 'dono'
+      or deletado_em is not distinct from (
+        select l.deletado_em from public.listas l where l.id = listas.id
+      )
+    )
   );
 
 create policy "listas_delete_dono"
   on public.listas for delete
   using (dono_id = auth.uid());
 ```
+
+> **Soft delete da lista (G-03, F43-T06):** a coluna `deletado_em` de `listas` era herdada do UPDATE livre de dono/editor; a migration `0023` recria `listas_update_editores` exigindo que só o **dono** a altere e adiciona o trigger `trg_listas_deletado_em_dono` (função `protege_deletado_em()`, espelho de `protege_arquivo_dono` da `0018`) como defesa em profundidade. Editor continua renomeando/editando as demais colunas. Testes: N-23, P-13, P-14 (§5).
 
 > **Orçamento da lista (RF-28, F36):** `orcamento_centavos` **não cria policy** — herda o UPDATE de `listas` (`listas_update_editores`, dono/editor).
 
@@ -517,6 +529,7 @@ Casos que **DEVEM falhar** (executados como usuário autenticado sem acesso, via
 | N-20 | Usuário A insere token de push para B | violação de policy (`with check`, F38) |
 | N-21 | Usuário A apaga o token de push de B | 0 linhas (F38) |
 | N-22 | `anon` executa `registrar_push_token` | permissão negada (grant restrito, F38) |
+| N-23 | `editor` tenta alterar `listas.deletado_em` (soft delete) | violação de policy / trigger `protege_deletado_em` (migration `0023`, F43-T06) |
 | R-19 | UPDATE em `convites` como dono | `atualizado_em` carimbado pelo trigger (`0015`) |
 
 > N-12 é **positivo** apesar do prefixo N (cobria a leitura legítima dos convites pelo dono) — movido para a tabela "DEVEM passar" abaixo.
@@ -538,6 +551,8 @@ Casos que **DEVEM passar**:
 | P-10 | Dono tenta mudar `listas.dono_id` via UPDATE | violação de policy (F12-T04) |
 | P-11 | Dono se insere como `dono` em lista nova | sucesso (`0015`, R-18) |
 | P-12 | Usuário A lê/insere/apaga o próprio token de push; o RPC `registrar_push_token` reatribui o token de A para B | sucesso (F38) |
+| P-13 | `editor` renomeia a lista sem tocar `deletado_em` | 1 linha (F43-T06) |
+| P-14 | Dono soft-deleta a lista (`deletado_em`) | 1 linha (F43-T06) |
 
 Ferramentas: testes de integração com dois usuários reais (ver [07 Qualidade](07-qualidade-ci.md)) ou script SQL com `set local role authenticated; set local request.jwt.claims = ...` em ambiente dev.
 
@@ -552,9 +567,9 @@ Ferramentas: testes de integração com dois usuários reais (ver [07 Qualidade]
 ## 6. Checklist de validação (Fase 1)
 
 - [ ] `force row level security` aplicado em todas as tabelas.
-- [ ] Todos os casos de negação (N-01…N-22; N-12 é positivo — ver §5) falham como esperado.
-- [ ] Todos os casos positivos (P-01…P-12, exceto P-05 Realtime) passam.
-- [ ] Policies versionadas em migrations: `0002_rls_policies.sql` (base) e evoluções em `0007`, `0009`, `0012`, `0015` e `0021`.
+- [ ] Todos os casos de negação (N-01…N-23; N-12 é positivo — ver §5) falham como esperado.
+- [ ] Todos os casos positivos (P-01…P-14, exceto P-05 Realtime) passam.
+- [ ] Policies versionadas em migrations: `0002_rls_policies.sql` (base) e evoluções em `0007`, `0009`, `0012`, `0015`, `0021` e `0023`.
 - [ ] Realtime recebe apenas eventos autorizados (teste com 2 contas).
 
 ---

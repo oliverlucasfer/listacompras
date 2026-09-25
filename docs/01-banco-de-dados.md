@@ -54,7 +54,8 @@ supabase/
     ├── 0019_convites_email.sql  # RPCs de convite por e-mail (RF-13, ver 02 §4.7)
     ├── 0020_orcamento_lista.sql # coluna orcamento_centavos (RF-28, F36)
     ├── 0021_push_tokens.sql     # tabela push_tokens + RLS + RPC (RF-30, F38)
-    └── 0022_notificar_push.sql  # triggers pg_net → Edge Function enviar-push (RF-30, F38)
+    ├── 0022_notificar_push.sql  # triggers pg_net → Edge Function enviar-push (RF-30, F38)
+    └── 0023_protege_deletado_em_lista.sql # deletado_em só pelo dono (G-03, F43-T06)
 ```
 
 ---
@@ -117,7 +118,7 @@ A **ordem do enum é o padrão da ordem dos grupos na UI** (doc 05 §6.3); o usu
 | `updated_at` | `timestamptz NOT NULL DEFAULT now()` | Última modificação — **base do last-write-wins** (ver [03](03-sincronizacao-offline.md)) |
 | `titulo` | `text NOT NULL` | Nome da lista (ex: "Compras da Semana") |
 | `dono_id` | `uuid NOT NULL FK → auth.users(id)` | Criador. **Denormalização** de `lista_membros` para queries RLS rápidas; consistência por trigger (Seção 6) |
-| `deletado_em` | `timestamptz` nullable | Soft delete / tombstone |
+| `deletado_em` | `timestamptz` nullable | Soft delete / tombstone. Só o **dono** muda a coluna (policy + trigger `protege_deletado_em`, migration `0023`) |
 | `arquivada_em` | `timestamptz` nullable | Arquivada nesse instante (RF-22, F26) — `null` = **ativa**; `timestamptz` = arquivada (reversível: volta a `null`). Só o **dono** muda a coluna (trigger). Coluna aditiva da `0018` |
 | `orcamento_centavos` | `integer` nullable | Orçamento (limite de gasto) em centavos (RF-28, F36) — `null` = sem orçamento; `0` é válido; CHECK `null ou 0..99999999`. Coluna aditiva da `0020` |
 
@@ -388,6 +389,31 @@ where not exists (
 2. Não é possível ter 2 donos.
 3. Não é possível remover ou rebaixar o dono sem processo explícito de transferência — o RPC `transferir_dono` (migration `0016`, [08 §6](08-compartilhamento-colaborativo.md)) é esse processo: `security definer`, só o dono atual transfere para um membro existente; ele demove o antigo para `editor` e promove o novo na mesma transação, marcando `app.transferindo_dono` para o trigger liberar o downgrade. `listas.dono_id` continua sendo ajustado **só pelo trigger**.
 4. **Exceção — exclusão de conta ([06 §3.3.1](06-mvp-entregas.md), migration `0005`):** o RPC `excluir_conta()` marca a transação com `set_config('app.excluindo_conta', 'true')` e o trigger reconhece a marca, permitindo a remoção do dono em cascata — a conta inteira está sendo apagada, junto com suas listas. O `set_config` de namespace customizado só é executável por SQL direto (não via PostgREST), e o RPC é `security definer` — clientes não conseguem forjar a marca. O `sync_dono` v3 reconhece as duas marcas (`app.excluindo_conta` e `app.transferindo_dono`).
+
+**Proteção de exclusão da lista (G-03, migration `0023`):** a policy de UPDATE de `listas` permite dono **e** editor; para que um editor não soft-delete (nem ressuscite) a lista, a coluna `deletado_em` só muda pelo dono. Defesa em profundidade: `listas_update_editores` recriada com `WITH CHECK` comparando `deletado_em` à snapshot antiga e o trigger `trg_listas_deletado_em_dono` (espelho de `protege_arquivo_dono`, migration `0018`) rejeitando a mudança por não-dono. `auth.uid()` nulo (service_role/contexto definer) conta como "allow", como no trigger do arquivo:
+
+```sql
+create or replace function public.protege_deletado_em()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- `old.dono_id <> auth.uid()` trata NULL de auth.uid() (service_role ou
+  -- contexto definer) como "allow" de propósito; não transforme em bloqueio.
+  if new.deletado_em is distinct from old.deletado_em
+     and old.dono_id <> auth.uid() then
+    raise exception 'APENAS_O_DONO_PODE_EXCLUIR';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger trg_listas_deletado_em_dono
+  before update on public.listas
+  for each row execute function public.protege_deletado_em();
+```
 
 ---
 
