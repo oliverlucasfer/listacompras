@@ -16,6 +16,15 @@ class BackupInvalidoException implements Exception {
   String toString() => 'BackupInvalidoException: $mensagem';
 }
 
+/// Backup válido, mas que não pôde ser restaurado (FK/CHECK). O banco é
+/// revertido pela transação.
+class BackupRestauracaoException implements Exception {
+  const BackupRestauracaoException(this.mensagem);
+  final String mensagem;
+  @override
+  String toString() => 'BackupRestauracaoException: $mensagem';
+}
+
 class BackupRepository {
   BackupRepository(
     this._db, {
@@ -40,12 +49,8 @@ class BackupRepository {
   String _iso(DateTime d) => d.toUtc().toIso8601String();
 
   Future<String> exportarJson() async {
-    final listas = await (_db.select(
-      _db.listaLocal,
-    )..where((l) => l.deletadoEm.isNull())).get();
-    final itens = await (_db.select(
-      _db.itemLocal,
-    )..where((i) => i.deletadoEm.isNull())).get();
+    final listas = await _db.select(_db.listaLocal).get();
+    final itens = await _db.select(_db.itemLocal).get();
     final historico = await _db.select(_db.historicoPrecoLocal).get();
 
     final arquivo = BackupArquivo(
@@ -102,6 +107,7 @@ class BackupRepository {
       v == null ? null : DateTime.parse(v as String);
 
   Future<void> importarJson(String conteudo) async {
+    late final BackupArquivo arquivo;
     try {
       final mapa = jsonDecode(conteudo) as Map<String, dynamic>;
       if (mapa['versao'] != BackupArquivo.versao) {
@@ -109,8 +115,16 @@ class BackupRepository {
           'Versão de backup não suportada: ${mapa['versao']}',
         );
       }
-      final arquivo = BackupArquivo.fromJson(mapa);
+      arquivo = BackupArquivo.fromJson(mapa);
+    } on BackupInvalidoException {
+      rethrow;
+    } on FormatException {
+      throw const BackupInvalidoException('JSON inválido');
+    } on TypeError {
+      throw const BackupInvalidoException('JSON inválido');
+    }
 
+    try {
       await _db.transaction(() async {
         for (final l in arquivo.listas) {
           final id = l['id'] as String;
@@ -215,14 +229,20 @@ class BackupRepository {
               );
         }
       });
+    } on BackupInvalidoException {
+      rethrow;
     } on FormatException {
       throw const BackupInvalidoException('JSON inválido');
     } on TypeError {
       // Em Dart atual `CastError` é um alias de `TypeError`, então este `on`
-      // cobre também falhas de `as`/`Map.from`/`List.cast` na validação e na
-      // leitura dos campos de cada registro. A transação reverte o que já
-      // tiver sido gravado, então o banco permanece inalterado.
+      // cobre também falhas de `as`/`Map.from`/`List.cast` na leitura dos
+      // campos de cada registro. A transação reverte o que já tiver sido
+      // gravado, então o banco permanece inalterado.
       throw const BackupInvalidoException('JSON inválido');
+    } catch (e) {
+      // Backup válido, mas o banco recusou a restauração (FK/CHECK): a
+      // transação reverte e o erro é distinto de arquivo inválido.
+      throw BackupRestauracaoException(e.toString());
     }
   }
 }

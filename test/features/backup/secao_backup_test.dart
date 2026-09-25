@@ -112,6 +112,15 @@ void main() {
     expect(resultado, ResultadoImportacaoBackup.invalido);
   });
 
+  test('deve_retornar_restauracao_erro_quando_falha_restauracao', () async {
+    final fake = _BackupRepositoryFake()
+      ..erroImportacao = const BackupRestauracaoException('fk');
+
+    final resultado = await importarArquivoBackup(_arquivoJson('{}'), fake);
+
+    expect(resultado, ResultadoImportacaoBackup.restauracaoErro);
+  });
+
   test('deve_retornar_leitura_erro_quando_erro_inesperado', () async {
     final fake = _BackupRepositoryFake()..erroImportacao = StateError('boom');
 

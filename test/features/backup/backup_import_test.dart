@@ -151,4 +151,44 @@ void main() {
     final listas = await destino.select(destino.listaLocal).get();
     expect(listas.single.donoId, 'user-x');
   });
+
+  test(
+    'deve_restaurar_backup_com_lista_excluida_quando_export_completo',
+    () async {
+      final origem = AppDatabase(NativeDatabase.memory());
+      addTearDown(origem.close);
+      final repoOrigem = ListasRepository(origem);
+      final lista = await repoOrigem.criarLista(
+        titulo: 'Mercado',
+        donoId: 'local',
+      );
+      await repoOrigem.adicionarItem(listaId: lista.id, nome: 'Arroz');
+      await repoOrigem.excluirLista(lista.id);
+      final json = await BackupRepository(origem).exportarJson();
+
+      final destino = AppDatabase(NativeDatabase.memory());
+      addTearDown(destino.close);
+      await BackupRepository(destino).importarJson(json);
+
+      expect(await destino.select(destino.listaLocal).get(), hasLength(1));
+      expect(await destino.select(destino.itemLocal).get(), hasLength(1));
+    },
+  );
+
+  test('deve_lancar_restauracao_quando_item_sem_lista', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    const json =
+        '{"versao":1,"exportadoEm":"2026-01-01T00:00:00Z","listas":[],'
+        '"itens":[{"id":"i1","lista_id":"l1","nome":"Arroz","quantidade":1.0,'
+        '"unidade":"un","categoria":"outros","preco_centavos":null,'
+        '"concluido":false,"ordem":0,"created_at":"2026-01-01T00:00:00Z",'
+        '"updated_at":"2026-01-01T00:00:00Z","deletado_em":null}],'
+        '"historicoPrecos":[]}';
+    await expectLater(
+      BackupRepository(db).importarJson(json),
+      throwsA(isA<BackupRestauracaoException>()),
+    );
+    expect(await db.select(db.itemLocal).get(), isEmpty);
+  });
 }

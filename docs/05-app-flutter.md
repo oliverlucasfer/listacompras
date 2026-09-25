@@ -303,6 +303,11 @@ Push só no **Android** (iOS na Onda E; Web/Desktop nunca tocam o plugin — `pl
 Em Configurações → "Backup": **Exportar backup** gera um `.json` (versão + listas + itens + histórico de preços)
 e **Importar backup** restaura com merge por `id` e LWW por `updated_at`. Disponível nos dois modos.
 
+O export é **fiel ao banco**: inclui listas e itens com `deletado_em` preenchido (soft delete), para que
+a restauração nunca encontre item órfão de lista e viole a FK. A UI separa **arquivo inválido**
+(`BackupInvalidoException` → `AppStrings.backupInvalido`) de **falha ao restaurar**
+(`BackupRestauracaoException`, ex.: FK/CHECK → `AppStrings.backupRestauracaoErro`).
+
 > **Modo colaborativo (RF-31/F41):** a importação também alimenta a fila de mutações
 > ([03 §3](03-sincronizacao-offline.md)): cada registro efetivamente gravado (os descartados
 > pelo LWW não contam) propaga ao Supabase sem exigir uma edição posterior. No modo Lite não

@@ -410,6 +410,8 @@ abstract final class AppStrings {
   static const backupExportado = 'Backup exportado.';
   static const backupImportado = 'Backup importado.';
   static const backupInvalido = 'Arquivo de backup inválido.';
+  static const backupRestauracaoErro =
+      'Não foi possível restaurar o backup neste aparelho.';
   static const backupLeituraErro = 'Não foi possível ler o arquivo.';
 
   // Boas-vindas (RF-27, F31-T02)

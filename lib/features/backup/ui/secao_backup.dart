@@ -109,6 +109,8 @@ class SecaoBackup extends ConsumerWidget {
         mostrarSnackBar(context, AppStrings.backupImportado);
       case ResultadoImportacaoBackup.invalido:
         mostrarSnackBar(context, AppStrings.backupInvalido);
+      case ResultadoImportacaoBackup.restauracaoErro:
+        mostrarSnackBar(context, AppStrings.backupRestauracaoErro);
       case ResultadoImportacaoBackup.leituraErro:
         mostrarSnackBar(context, AppStrings.backupLeituraErro);
     }
@@ -116,7 +118,13 @@ class SecaoBackup extends ConsumerWidget {
 }
 
 /// Desfecho da leitura/importação de um backup escolhido pelo usuário.
-enum ResultadoImportacaoBackup { cancelado, importado, invalido, leituraErro }
+enum ResultadoImportacaoBackup {
+  cancelado,
+  importado,
+  invalido,
+  restauracaoErro,
+  leituraErro,
+}
 
 /// Lê o arquivo escolhido (ou `null` = cancelado) e mescla o backup.
 ///
@@ -132,6 +140,8 @@ Future<ResultadoImportacaoBackup> importarArquivoBackup(
     return ResultadoImportacaoBackup.importado;
   } on BackupInvalidoException {
     return ResultadoImportacaoBackup.invalido;
+  } on BackupRestauracaoException {
+    return ResultadoImportacaoBackup.restauracaoErro;
   } catch (_) {
     return ResultadoImportacaoBackup.leituraErro;
   }

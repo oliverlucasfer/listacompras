@@ -22,4 +22,27 @@ void main() {
     expect((mapa['itens'] as List), hasLength(1));
     expect((mapa['historicoPrecos'] as List), isEmpty);
   });
+
+  test(
+    'deve_exportar_lista_excluida_com_seus_itens_quando_soft_delete',
+    () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      final listas = ListasRepository(db);
+      final lista = await listas.criarLista(titulo: 'Mercado', donoId: 'local');
+      await listas.adicionarItem(listaId: lista.id, nome: 'Arroz');
+      await listas.excluirLista(lista.id);
+
+      final json = await BackupRepository(db).exportarJson();
+      final mapa = jsonDecode(json) as Map<String, dynamic>;
+
+      expect((mapa['listas'] as List), hasLength(1));
+      expect((mapa['itens'] as List), hasLength(1));
+      expect(
+        (mapa['listas'] as List).single['deletado_em'],
+        isNotNull,
+        reason: 'o backup é fiel ao banco',
+      );
+    },
+  );
 }
