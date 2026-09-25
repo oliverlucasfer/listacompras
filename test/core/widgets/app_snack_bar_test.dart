@@ -40,4 +40,29 @@ void main() {
     expect(snack.duration, const Duration(seconds: 3));
     await tester.pump(const Duration(seconds: 4));
   });
+
+  testWidgets(
+    'deve_usar_messenger_informado_quando_sem_messenger_no_contexto',
+    (tester) async {
+      final key = GlobalKey<ScaffoldMessengerState>();
+      late BuildContext semMessenger;
+      await tester.pumpWidget(
+        Builder(
+          builder: (context) {
+            semMessenger = context;
+            return MaterialApp(
+              scaffoldMessengerKey: key,
+              home: const Scaffold(body: SizedBox.expand()),
+            );
+          },
+        ),
+      );
+
+      mostrarSnackBar(semMessenger, 'Notificação', messenger: key.currentState);
+      await tester.pump();
+
+      expect(find.text('Notificação'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 3));
+    },
+  );
 }

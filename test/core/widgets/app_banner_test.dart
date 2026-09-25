@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/theme/app_theme.dart';
+import 'package:lista_compras/core/theme/tokens/app_spacing.dart';
 import 'package:lista_compras/core/widgets/app_banner.dart';
 
 Widget _app(Widget child) => MaterialApp(
@@ -25,5 +26,13 @@ void main() {
     final contexto = tester.element(find.text('Falhou'));
     final cores = Theme.of(contexto).colorScheme;
     expect(texto.style?.color, cores.onErrorContainer);
+  });
+
+  testWidgets('deve_dimensionar_icone_por_token_quando_banner', (tester) async {
+    await tester.pumpWidget(
+      _app(const AppBanner(tipo: AppBannerTipo.info, mensagem: 'Oi')),
+    );
+    final icone = tester.widget<Icon>(find.byIcon(Icons.info_outline));
+    expect(icone.size, AppSpacing.lg);
   });
 }

@@ -47,9 +47,11 @@ Título de tela (AppBar): **24sp bold** aplicado via `appBarTheme.titleTextStyle
 | `AppCampoTexto` | Campo de formulário com erro inline; aceita `hint`, `maxLength`, `minLines`/`maxLines`, `textInputAction` e `readOnly` (Fase 14) |
 | `AppDropdown<T>` | Dropdown de formulário padronizado (`label`/`valor`/`itens`/`onChanged`/`compacto`/`expandido`), mesma decoração dos campos; `expandido` ocupa a largura disponível (evita estouro em colunas estreitas) (Fase 14) |
 | `AppSheet.mostrar` | Bottom sheet padrão: `showModalBottomSheet` com `isScrollControlled`, drag handle, `SafeArea` e padding inferior que cresce com `viewInsets.bottom` (o teclado empurra o conteúdo para cima); usado pelo editor de item (F40) |
-| `mostrarSnackBar` | Snackbar (inclusive undo) com **duração curta**: 2s sem ação e 3s com ação (`duracao` sobrescreve — F12-T07); já anunciado por ser uma live region do próprio `SnackBar` |
+| `mostrarSnackBar` | Snackbar (inclusive undo) com **duração curta**: 2s sem ação e 3s com ação (`duracao` sobrescreve — F12-T07); já anunciado por ser uma live region do próprio `SnackBar`; aceita `messenger` (`ScaffoldMessengerState?`) para quando não há `ScaffoldMessenger` no contexto (primeiro plano do app e falhas fora de tela — G-31/G-32) |
 
 **Uso de componentes existentes na F22:** os chips de itens frequentes usam o **`ActionChip`** do Material (faixa horizontal rolável, alvo ≥48dp, `Semantics` de ação "Adicionar <nome>" — RF-19); a faixa "Marcados" do modo mercado usa `Material` + `ListTile` com `Semantics(button/expanded)`, sem componente novo (RF-18). Nenhum `App*` novo foi necessário.
+
+**Aplicações transversais (F43-T10):** o `SeletorTema` usa `AppDropdown` no ramo estreito/fonte ampliada (G-41); a rota `/login-callback` usa `AppBotao` e um progresso com rótulo semântico (`carregando` — G-33); o `AppBotao` reduz o conteúdo com `FittedBox` antes de estourar com fonte 2x (G-39); o sufixo do campo "Adicionar item" cede largura (`Flexible`/elipse) na unidade (G-39).
 
 ## 4. Acessibilidade (RNF-06)
 

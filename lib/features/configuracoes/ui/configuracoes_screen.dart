@@ -13,6 +13,7 @@ import '../../../core/widgets/app_cabecalho_secao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/widgets/app_politica_privacidade.dart';
+import '../../../core/widgets/app_snack_bar.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../backup/ui/secao_backup.dart';
 import '../../notificacoes/providers/notificacoes_providers.dart';
@@ -76,11 +77,7 @@ class ConfiguracoesScreen extends ConsumerWidget {
     } on Exception {
       if (context.mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(content: Text(AppStrings.erroGenerico)),
-          );
+        mostrarSnackBar(context, AppStrings.erroGenerico);
       }
     }
   }

@@ -148,6 +148,31 @@ void main() {
     expect(find.text(AppStrings.importColeOuDigite), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets('deve_rolar_conteudo_quando_escala_2x_em_tela_baixa', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 420);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await abrir(tester);
+
+    expect(find.text(AppStrings.importColeOuDigite), findsOneWidget);
+    expect(
+      find.ancestor(
+        of: find.text(AppStrings.importColeOuDigite),
+        matching: find.byType(SingleChildScrollView),
+      ),
+      findsWidgets,
+    );
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }
 
 class _TelaAbrirModal extends ConsumerWidget {

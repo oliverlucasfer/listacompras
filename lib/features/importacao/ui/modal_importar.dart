@@ -113,44 +113,46 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
           ),
         ],
       ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text(AppStrings.importColeOuDigite),
-          const SizedBox(height: AppSpacing.sm),
-          AppCampoTexto(
-            controller: _controller,
-            hint: AppStrings.importExemplo,
-            teclado: TextInputType.multiline,
-            textInputAction: TextInputAction.newline,
-            maxLength: _limite,
-            minLines: 5,
-            maxLines: 5,
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              '$_caracteres/$_limite',
-              style: excedeu
-                  ? TextStyle(color: Theme.of(context).colorScheme.error)
-                  : null,
-            ),
-          ),
-          if (_erro != null) ...[
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(AppStrings.importColeOuDigite),
             const SizedBox(height: AppSpacing.sm),
-            AppBanner(tipo: AppBannerTipo.erro, mensagem: _erro!),
+            AppCampoTexto(
+              controller: _controller,
+              hint: AppStrings.importExemplo,
+              teclado: TextInputType.multiline,
+              textInputAction: TextInputAction.newline,
+              maxLength: _limite,
+              minLines: 5,
+              maxLines: 5,
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '$_caracteres/$_limite',
+                style: excedeu
+                    ? TextStyle(color: Theme.of(context).colorScheme.error)
+                    : null,
+              ),
+            ),
+            if (_erro != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              AppBanner(tipo: AppBannerTipo.erro, mensagem: _erro!),
+            ],
+            const SizedBox(height: AppSpacing.md),
+            AppBotao(
+              rotulo: _carregando
+                  ? AppStrings.importLendo
+                  : AppStrings.importExtrairItens,
+              icone: Icons.bolt_outlined,
+              carregando: _carregando,
+              onPressed: _podeExtrair ? _extrair : null,
+            ),
           ],
-          const SizedBox(height: AppSpacing.md),
-          AppBotao(
-            rotulo: _carregando
-                ? AppStrings.importLendo
-                : AppStrings.importExtrairItens,
-            icone: Icons.bolt_outlined,
-            carregando: _carregando,
-            onPressed: _podeExtrair ? _extrair : null,
-          ),
-        ],
+        ),
       ),
     );
   }

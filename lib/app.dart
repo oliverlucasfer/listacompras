@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/l10n/app_strings.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_mode_provider.dart';
+import 'core/widgets/app_snack_bar.dart';
 import 'features/notificacoes/providers/push_navegacao.dart';
 import 'router.dart';
 
@@ -20,10 +21,9 @@ class ListaComprasApp extends ConsumerWidget {
     ref.listen(notificacoesForegroundProvider, (_, proximo) {
       final data = proximo.value;
       final corpo = data?['corpo'];
-      if (corpo is String && corpo.isNotEmpty) {
-        _messengerKey.currentState
-          ?..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(corpo)));
+      final messenger = _messengerKey.currentState;
+      if (corpo is String && corpo.isNotEmpty && messenger != null) {
+        mostrarSnackBar(context, corpo, messenger: messenger);
       }
     });
     return MaterialApp.router(

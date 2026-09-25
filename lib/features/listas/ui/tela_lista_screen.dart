@@ -302,7 +302,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
           title: const Text(AppStrings.lista),
           leading: botaoVoltarInicio(context, '/listas'),
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const AppEsqueleto(linhas: 5),
       ),
       error: (_, _) => Scaffold(
         appBar: AppBar(
@@ -704,24 +704,31 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
             sufixo: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                PopupMenuButton<Unidade>(
-                  tooltip: AppStrings.unidade,
-                  initialValue: _unidade,
-                  onSelected: (u) => setState(() => _unidade = u),
-                  itemBuilder: (context) => [
-                    for (final u in Unidade.values)
-                      PopupMenuItem(value: u, child: Text(u.valor)),
-                  ],
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.xs,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_unidade.valor),
-                        const Icon(Icons.arrow_drop_down),
-                      ],
+                Flexible(
+                  child: PopupMenuButton<Unidade>(
+                    tooltip: AppStrings.unidade,
+                    initialValue: _unidade,
+                    onSelected: (u) => setState(() => _unidade = u),
+                    itemBuilder: (context) => [
+                      for (final u in Unidade.values)
+                        PopupMenuItem(value: u, child: Text(u.valor)),
+                    ],
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xs,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              _unidade.valor,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const Icon(Icons.arrow_drop_down),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -923,8 +930,11 @@ class _LinhaItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final linha = ListTile(
-      // Tocar no item abre o editor (F12-T06) — o swipe continua disponível.
-      onTap: podeEscrever ? () => _abrirSheetEditar(context, ref) : null,
+      // Tocar no item abre o editor (F12-T06) — o swipe continua disponível;
+      // o leitor recebe a dica do papel ao tocar (doc 10 §3.3, G-36).
+      onTap: podeEscrever
+          ? () => _abrirSheetEditar(context, ref)
+          : () => mostrarSnackBar(context, AppStrings.somenteLeitorDica),
       leading: podeEscrever
           // O checkbox recebe o nome do item como rótulo (doc 15 §4): sem isso
           // o leitor de tela anuncia uma caixa de seleção sem contexto.

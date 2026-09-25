@@ -153,4 +153,27 @@ void main() {
 
     handle.dispose();
   });
+
+  testWidgets('deve_nao_estourar_quando_botao_com_rotulo_longo_em_2x', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await tester.pumpWidget(
+      _app(
+        AppBotao(
+          rotulo: 'Importar lista',
+          icone: Icons.playlist_add,
+          onPressed: () {},
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+  });
 }

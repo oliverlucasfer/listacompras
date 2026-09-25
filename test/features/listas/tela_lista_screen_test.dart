@@ -22,7 +22,6 @@ import 'package:lista_compras/features/convites/providers/papel_providers.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/features/listas/domain/item.dart';
-import 'package:lista_compras/features/listas/domain/lista.dart';
 import 'package:lista_compras/features/listas/domain/preco.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
@@ -1529,8 +1528,8 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           donoAtualIdProvider.overrideWithValue('user-a'),
-          listaPorIdProvider('falhou').overrideWith(
-            (ref) => Stream<Lista?>.error(Exception('cache corrompido')),
+          listaPorIdProvider('falhou').overrideWithValue(
+            AsyncValue.error(Exception('cache corrompido'), StackTrace.empty),
           ),
         ],
         child: MaterialApp.router(routerConfig: router),
@@ -1601,6 +1600,68 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(AppEsqueleto), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_esqueleto_quando_lista_carregando', (tester) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final sync = StreamController<SyncStatus>();
+    sync.add(const Sincronizado());
+    addTearDown(sync.close);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          papelRepositoryProvider.overrideWithValue(
+            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
+          ),
+          syncStatusProvider.overrideWith((ref) => sync.stream),
+        ],
+        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(AppEsqueleto), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+
+    await tester.pumpAndSettle();
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_dica_ao_leitor_quando_toca_no_item', (
+    tester,
+  ) async {
+    await listaComItens(tester, papel: Papel.leitor);
+
+    await tester.tap(find.text('Arroz'));
+    await tester.pump();
+
+    expect(find.text(AppStrings.somenteLeitorDica), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_nao_estourar_campo_adicionar_quando_escala_2x', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await listaComItens(tester);
+
+    expect(
+      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
 
     await fechar(tester);

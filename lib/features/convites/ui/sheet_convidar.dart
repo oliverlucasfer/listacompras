@@ -312,7 +312,12 @@ class _SheetConvidarState extends ConsumerState<SheetConvidar> {
             ),
           ] else ...[
             const SizedBox(height: AppSpacing.lg),
-            AppCampoTexto(controller: _linkController, readOnly: true),
+            AppCampoTexto(
+              controller: _linkController,
+              label: AppStrings.copiarLink,
+              hint: AppStrings.copiarLinkAjuda,
+              readOnly: true,
+            ),
             const SizedBox(height: AppSpacing.lg),
             Row(
               children: [

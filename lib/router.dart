@@ -8,6 +8,7 @@ import 'core/l10n/app_strings.dart';
 import 'core/navigation/app_shell.dart';
 import 'core/theme/tokens/app_spacing.dart';
 import 'core/utils/router_refresh_stream.dart';
+import 'core/widgets/app_botao.dart';
 import 'features/auth/providers/auth_providers.dart';
 import 'features/auth/ui/login_screen.dart';
 import 'features/auth/ui/redefinir_senha_screen.dart';
@@ -197,7 +198,15 @@ class _CallbackLoginScreenState extends State<_CallbackLoginScreen> {
   @override
   Widget build(BuildContext context) {
     if (!_demorou) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        body: Center(
+          child: Semantics(
+            label: AppStrings.carregando,
+            container: true,
+            child: const CircularProgressIndicator(),
+          ),
+        ),
+      );
     }
     return Scaffold(
       body: Center(
@@ -211,9 +220,10 @@ class _CallbackLoginScreenState extends State<_CallbackLoginScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.lg),
-              FilledButton(
+              AppBotao(
+                rotulo: AppStrings.voltarAoLogin,
+                expandido: false,
                 onPressed: () => context.go('/login'),
-                child: const Text(AppStrings.voltarAoLogin),
               ),
             ],
           ),

@@ -205,4 +205,53 @@ void main() {
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
     await fechar(tester);
   });
+
+  testWidgets('deve_manter_faixa_marcados_acima_do_inset_quando_abre', (
+    tester,
+  ) async {
+    const inset = 40.0;
+    tester.view.padding = const FakeViewPadding(bottom: inset);
+    tester.view.viewPadding = const FakeViewPadding(bottom: inset);
+    addTearDown(tester.view.resetPadding);
+    addTearDown(tester.view.resetViewPadding);
+
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      quantidade: 1,
+    );
+    await repo.editarItem(item.id, concluido: true);
+
+    await abrir(tester, lista.id);
+
+    final marcados = find.text('${AppStrings.mercadoMarcados} (1)');
+    expect(marcados, findsOneWidget);
+    final material = find
+        .ancestor(of: marcados, matching: find.byType(Material))
+        .first;
+    expect(tester.getBottomLeft(material).dy, lessThanOrEqualTo(640 - inset));
+    expect(tester.takeException(), isNull);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_nao_estourar_quando_escala_2x_com_marcados', (
+    tester,
+  ) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      quantidade: 1,
+    );
+    await repo.editarItem(item.id, concluido: true);
+
+    await abrir(tester, lista.id);
+
+    expect(find.text('${AppStrings.mercadoMarcados} (1)'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await fechar(tester);
+  });
 }

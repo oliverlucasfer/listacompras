@@ -245,6 +245,10 @@ A seção aparece no topo do filtro **Minhas** só quando há convites por e-mai
 
 **Adicionar por voz (RF-26/F30):** em Android/iOS, o campo "Adicionar item" (dono/editor) ganha um ícone de **microfone** à direita que **preenche o campo** com o texto reconhecido on-device (pt-BR); o usuário confirma (Enter). Ouvindo, o ícone muda (`mic`/`mic_none`); indisponível/permissão negada → SnackBar; ao sair da tela o ditado é cancelado. Web/Desktop não mostram o microfone.
 
+**Sufixo do campo de adicionar (G-39):** a área à direita (seletor de unidade + microfone + adicionar) é flexível — o rótulo da unidade cede largura (`Flexible`/elipse) antes de estourar quando a fonte é ampliada (2x) em telas estreitas.
+
+**Carregando da lista (G-07):** enquanto `listaPorIdProvider` carrega, o corpo inteiro vira `AppEsqueleto` (doc [15 §3](15-design-system.md)) — sem spinner cru.
+
 **Sheet do item (F12-T06 + preço RF-21/F25 + última compra RF-29/F37):** aberto por `AppSheet.mostrar` (bottom sheet, [15 §3](15-design-system.md)), com os campos em blocos e rolagem própria; o teclado sobe o rodapé (`viewInsets`).
 ```
 ┌─────────────────────────────────┐
@@ -283,11 +287,11 @@ A seção aparece no topo do filtro **Minhas** só quando há convites por e-mai
 │  👁 Somente leitura              │
 ├─────────────────────────────────┤
 │  ☐ Arroz            1 kg        │ ← sem steppers, sem swipe;
-│  ☐ Leite            2 un        │    toques mostram dica
-│                                 │    "Apenas o dono/editores editam"
+│  ☐ Leite            2 un        │    toques mostram a dica do papel
+│                                 │    "Apenas o dono/editores editam."
 └─────────────────────────────────┘
 ```
-O aviso usa `AppBannerTipo.leitura` ([15 §3](15-design-system.md)), não um `Container` manual (F14-T08).
+O aviso usa `AppBannerTipo.leitura` ([15 §3](15-design-system.md)), não um `Container` manual (F14-T08). Sem editor próprio, o `onTap` do item, para o leitor, dispara a dica (`AppStrings.somenteLeitorDica`) via `mostrarSnackBar` (G-36).
 
 ### 3.4. Diálogo "Excluir lista"
 ```
@@ -323,7 +327,7 @@ O trecho "para todos os participantes" aparece quando há membros conhecidos (be
 │    ☑ Queijo prato   500 g       │
 └─────────────────────────────────┘
 ```
-Com 0 pendentes, a área principal dá lugar ao vazio "Tudo comprado" com CTA para voltar à lista. A seta de voltar retorna à tela da lista (push); sem pilha (deep link), vai para `/listas`.
+Com 0 pendentes, a área principal dá lugar ao vazio "Tudo comprado" com CTA para voltar à lista. A seta de voltar retorna à tela da lista (push); sem pilha (deep link), vai para `/listas`. A faixa "Marcados" fica dentro de `SafeArea(top: false)`, sem encostar na área segura inferior (G-37).
 
 ### 3.6. Chips de itens frequentes na lista (F22/RF-19)
 Acima do campo de adicionar, uma faixa horizontal rolável de `ActionChip` (alvo ≥48dp, com `Semantics` de ação "Adicionar <nome>") mostra até 8 sugestões quando o campo está vazio; tocar adiciona o item. O ranking vem do histórico local do Drift (peso 2 para a lista aberta, exclui pendentes, limiar ≥2) — nenhum dado de rede.
@@ -403,7 +407,7 @@ Abaixo do bloco de link, o sheet (dono) ganha a seção **"Convidar por e-mail"*
 │  automático.                    │
 └─────────────────────────────────┘
 ```
-Comportamento em [05 §6.3](05-app-flutter.md).
+Comportamento em [05 §6.3](05-app-flutter.md). O campo do link gerado é somente leitura e tem rótulo acessível (`Copiar link`) e dica (`copiarLinkAjuda`) — G-09.
 
 ---
 
@@ -426,6 +430,7 @@ Comportamento em [05 §6.3](05-app-flutter.md).
 └─────────────────────────────────┘
    (erro → mensagem amigável do parser [04])
 ```
+O conteúdo do modal é rolável (`SingleChildScrollView`), para caber com fonte ampliada e teclado abertos (G-38).
 
 ### 4.2. Modal de pré-visualização
 ```

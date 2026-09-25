@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/app_strings.dart';
+import '../theme/tokens/app_spacing.dart';
 
 /// Ações padronizadas (doc 15 §3). Cobre os botões preenchidos, tonais,
 /// contornados, de texto e destrutivos — o destrutivo sempre com foreground
@@ -57,32 +58,42 @@ class AppBotao extends StatelessWidget {
 
   Widget _conteudo(BuildContext context) {
     if (carregando) {
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // O spinner é decorativo; o progresso é anunciado num nó próprio
-          // (container evita fundir no rótulo do botão) — doc 15 §4.
-          Semantics(
-            container: true,
-            liveRegion: true,
-            label: AppStrings.carregando,
-            child: const ExcludeSemantics(
-              child: SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
+      return FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // O spinner é decorativo; o progresso é anunciado num nó próprio
+            // (container evita fundir no rótulo do botão) — doc 15 §4.
+            Semantics(
+              container: true,
+              liveRegion: true,
+              label: AppStrings.carregando,
+              child: const ExcludeSemantics(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Text(rotulo),
-        ],
+            const SizedBox(width: AppSpacing.md),
+            Text(rotulo),
+          ],
+        ),
       );
     }
     if (icone == null) return Text(rotulo);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [Icon(icone), const SizedBox(width: 8), Text(rotulo)],
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icone),
+          const SizedBox(width: AppSpacing.sm),
+          Text(rotulo),
+        ],
+      ),
     );
   }
 }

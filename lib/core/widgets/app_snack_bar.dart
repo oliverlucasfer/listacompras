@@ -9,14 +9,15 @@ void mostrarSnackBar(
   String? rotuloAcao,
   VoidCallback? onAcao,
   Duration? duracao,
+  ScaffoldMessengerState? messenger,
 }) {
-  final messenger = ScaffoldMessenger.of(context);
+  final alvo = messenger ?? ScaffoldMessenger.of(context);
   final efetiva =
       duracao ??
       (rotuloAcao == null
           ? const Duration(seconds: 2)
           : const Duration(seconds: 3));
-  messenger
+  alvo
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(

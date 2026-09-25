@@ -70,7 +70,7 @@ class AppBanner extends StatelessWidget {
       decoration: BoxDecoration(color: fundo, borderRadius: AppRadius.mdTodos),
       child: Row(
         children: [
-          Icon(icone, color: frente, size: 20),
+          Icon(icone, color: frente, size: AppSpacing.lg),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Semantics(

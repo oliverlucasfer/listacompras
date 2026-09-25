@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/app_strings.dart';
+import '../widgets/app_dropdown.dart';
 import 'theme_mode_provider.dart';
 
 /// Largura a partir da qual os três segmentos (ícone + rótulo) cabem com
@@ -64,10 +65,10 @@ class SeletorTema extends ConsumerWidget {
             onSelectionChanged: (selecao) => definir(selecao.first),
           );
         }
-        return DropdownButtonFormField<ThemeMode>(
-          initialValue: atual,
-          decoration: const InputDecoration(labelText: AppStrings.aparencia),
-          items: const [
+        return AppDropdown<ThemeMode>(
+          label: AppStrings.aparencia,
+          valor: atual,
+          itens: const [
             DropdownMenuItem(
               value: ThemeMode.light,
               child: Text(AppStrings.temaClaro),

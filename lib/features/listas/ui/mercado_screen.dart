@@ -239,12 +239,15 @@ class _CorpoMercado extends StatelessWidget {
                 ),
         ),
         if (concluidos.isNotEmpty)
-          _FaixaMarcados(
-            itens: concluidos,
-            maxAltura: maxFaixa,
-            podeEscrever: podeEscrever,
-            abrirInicialmente: marcadosNaSessao > 0,
-            onDesmarcar: onDesmarcar,
+          SafeArea(
+            top: false,
+            child: _FaixaMarcados(
+              itens: concluidos,
+              maxAltura: maxFaixa,
+              podeEscrever: podeEscrever,
+              abrirInicialmente: marcadosNaSessao > 0,
+              onDesmarcar: onDesmarcar,
+            ),
           ),
       ],
     );

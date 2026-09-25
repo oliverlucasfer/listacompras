@@ -144,4 +144,20 @@ void main() {
 
     await fechar(tester);
   });
+
+  testWidgets('deve_ter_alca_com_alvo_de_48dp_quando_ordena', (tester) async {
+    final handle = tester.ensureSemantics();
+    await abrir(tester);
+
+    final alca = tester.getSize(
+      find.byType(ReorderableDragStartListener).first,
+    );
+    expect(alca.width, greaterThanOrEqualTo(48));
+    expect(alca.height, greaterThanOrEqualTo(48));
+
+    await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+
+    handle.dispose();
+    await fechar(tester);
+  });
 }

@@ -200,6 +200,7 @@ abstract final class AppStrings {
   static const somenteLeitura = 'Somente leitura';
   static const somenteLeituraDica =
       'Você pode visualizar esta lista, mas não editá-la.';
+  static const somenteLeitorDica = 'Apenas o dono/editores editam.';
 
   // Ações em massa (doc 05 §6.3, wireframe 10 §3.4)
   static const desmarcarTodos = 'Desmarcar todos';

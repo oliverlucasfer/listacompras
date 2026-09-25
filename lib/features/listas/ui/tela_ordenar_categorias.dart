@@ -52,7 +52,10 @@ class TelaOrdenarCategorias extends ConsumerWidget {
                     key: ValueKey(ordem[i].valor),
                     leading: ReorderableDragStartListener(
                       index: i,
-                      child: const Icon(Icons.drag_handle),
+                      child: const Padding(
+                        padding: EdgeInsets.all(AppSpacing.md),
+                        child: Icon(Icons.drag_handle),
+                      ),
                     ),
                     title: Text(ordem[i].rotulo),
                   ),

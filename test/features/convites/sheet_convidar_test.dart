@@ -519,4 +519,26 @@ void main() {
     expect(find.text(AppStrings.conviteEmailAviso), findsOneWidget);
     await fechar(tester);
   });
+
+  testWidgets('deve_rotular_campo_do_link_quando_gerado', (tester) async {
+    final servidor = ServidorFake((req) {
+      if (req.method == 'POST' && req.url.path.contains('/convites')) {
+        return (200, _linhaConvite(papel: 'editor'));
+      }
+      return (500, {'message': 'requisição inesperada: ${req.url.path}'});
+    });
+    addTearDown(servidor.close);
+    await abrir(tester, servidor);
+
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.gerarLink));
+    await tester.pumpAndSettle();
+
+    final campo = tester.widget<TextField>(
+      find.byWidgetPredicate((w) => w is TextField && w.readOnly),
+    );
+    expect(campo.decoration?.labelText, isNotEmpty);
+    expect(campo.decoration?.hintText, isNotEmpty);
+
+    await fechar(tester);
+  });
 }
