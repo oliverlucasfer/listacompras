@@ -6,6 +6,8 @@
 --   E-03: SELECT pós-exclusão retorna vazio em TODAS as tabelas do titular.
 --   E-04: Dados de terceiros permanecem; participação do titular some.
 --   E-05: RPC concede apenas a authenticated (anon falha permissão).
+--   E-06: PII — convites endereçados ao e-mail do titular somem; de terceiros
+--         permanecem (G-04, migration 0024).
 --
 -- Execução (após `supabase db reset`):
 --   psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/excluir_conta_tests.sql
@@ -41,6 +43,16 @@ values
 on conflict (lista_id, user_id) do nothing;
 insert into public.itens_lista (id, lista_id, nome)
 values ('aaaaaaa2-0000-0000-0000-000000000000', '99999999-9999-9999-9999-aaaaaaaaaaaa', 'Café');
+
+-- Convites de F (criado_por = F): um dirigido ao e-mail do titular (E) e um de
+-- terceiro. Criado por F para que o cascade de `criado_por` não os remova ao
+-- apagar E — a remoção do convite do titular deve vir do RPC (PII, G-04).
+insert into public.convites (lista_id, criado_por, token, tipo, email, papel_oferecido)
+values
+  ('99999999-9999-9999-9999-aaaaaaaaaaaa', '88888888-8888-8888-8888-888888888888',
+   'bbbbbbb1-0000-0000-0000-000000000000', 'email', 'E@test.com', 'leitor'),
+  ('99999999-9999-9999-9999-aaaaaaaaaaaa', '88888888-8888-8888-8888-888888888888',
+   'bbbbbbb2-0000-0000-0000-000000000000', 'email', 'terceiro@test.com', 'leitor');
 
 -- ===== E-01: RPC com role authenticated SEM claims → exceção =====
 do $$
@@ -110,6 +122,25 @@ begin
   if c <> 1 then raise exception 'FALHOU E-04: dono original foi afetado'; end if;
 
   raise notice 'OK E-04: dados de terceiros intactos; participacao do titular removida';
+end $$;
+
+-- ===== E-06: PII — convites do titular removidos; de terceiros permanecem =====
+do $$
+declare c int;
+begin
+  select count(*) into c from public.convites
+  where token = 'bbbbbbb1-0000-0000-0000-000000000000';
+  if c <> 0 then
+    raise exception 'FALHOU E-06: convite endereçado ao e-mail do titular (PII) sobreviveu';
+  end if;
+
+  select count(*) into c from public.convites
+  where token = 'bbbbbbb2-0000-0000-0000-000000000000';
+  if c <> 1 then
+    raise exception 'FALHOU E-06: convite de terceiro foi removido (c=%)', c;
+  end if;
+
+  raise notice 'OK E-06: PII do titular removida; convite de terceiro intacto';
 end $$;
 
 -- ===== E-05: anon não tem permissão de executar o RPC =====

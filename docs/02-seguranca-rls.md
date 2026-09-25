@@ -335,6 +335,8 @@ create policy "convites_delete_dono"
 ```
 
 > **Convite por link é "capacidade":** quem tem o token entra via RPC `aceitar_convite` (security definer, [08 §3.1](08-compartilhamento-colaborativo.md)) — contorna RLS por design, pois o convidado não é dono. O dono revoga com UPDATE direto (`estado = 'revogado'`).
+>
+> **Endurecimento (G-22/G-24, migration `0024`):** o RPC `aceitar_convite` tem `revoke execute ... from public, anon` + grant apenas a `authenticated` (§4.7); a rejeição do anônimo passa a ser por **privilégio**, não só pela guarda interna `auth.uid()`. A tabela ganha o CHECK `convites_tipo_email_check` (`(tipo = 'link' and email is null) or (tipo = 'email' and email is not null)`) — coerência `tipo` ↔ `email`, sem policy nova.
 
 ### 4.5. RPC `agora_servidor` (relógio do servidor — F20)
 
@@ -449,6 +451,7 @@ grant execute on function public.recusar_convite(uuid) to authenticated;
 ```
 
 > **Nenhuma policy nova:** os dois RPCs são `security definer` (dono `postgres`, migration `0019`) e atravessam o RLS de `convites`, como `aceitar_convite`/`transferir_dono`. A autorização é interna: o filtro `lower(email) = lower(public.email_autenticado())` garante que cada usuário só vê/recusa o convite dirigido ao **próprio** e-mail. O aceite **não** tem RPC novo — reusa `aceitar_convite` (idempotente, [08 §3.1](08-compartilhamento-colaborativo.md)).
+> **Grant de `aceitar_convite` (G-22, migration `0024`):** o aceite é `execute` **apenas por `authenticated`** (`revoke execute on function public.aceitar_convite(uuid) from public, anon; grant execute ... to authenticated`) — mesma postura das RPCs de e-mail acima. A guarda interna `auth.uid() is null` segue no corpo da função como defesa em profundidade, e a comparação de e-mail é explícita (`tipo='email'` exige `email` não nulo; `tipo='link'` com `email is null` segue valendo para qualquer autenticado — CHECK `convites_tipo_email_check`, G-24).
 > **Guarda de expiração:** as duas funções exigem `expira_em >= now()` — `meus_convites_pendentes` não lista convites vencidos e `recusar_convite` rejeita com `CONVITE_INVALIDO` a recusa de um convite expirado do próprio e-mail (o estado `expirado` nunca é gravado, [08 §2](08-compartilhamento-colaborativo.md)); `recusar_convite` também exige `estado = 'pendente'`, então não "recusa" um convite já aceito.
 
 ### 4.8. `push_tokens` (RF-30, F38)

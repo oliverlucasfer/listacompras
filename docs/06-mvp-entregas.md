@@ -70,9 +70,10 @@ Uma fase só está "pronta" quando:
 
 * Fluxo: Configurações → "Excluir conta" → confirmação dupla (senha + diálogo) → execução.
 * **Estratégia: delete físico em cascata** (ADR-008):
-  1. RPC `excluir_conta()` (SECURITY DEFINER) executa: `delete from auth.users where id = auth.uid()`.
+  1. RPC `excluir_conta()` (SECURITY DEFINER, executável só por `authenticated`) executa: apaga os `convites` endereçados ao e-mail do titular (`lower(email) = lower(e-mail)`) e, em seguida, `delete from auth.users where id = auth.uid()`.
   2. Cascades propagam: `lista_membros` (participações), `listas` onde `dono_id`, `itens_lista` por CASCADE de lista, `convites` por CASCADE de lista e `convites` por `criado_por` (migration `0016`, R-17) — o ex-dono de uma lista transferida não fica preso por convites que criou.
   3. Sessão invalidada; app limpa cache local e fila de pendências.
+* **PII de convites (G-04, migration `0024`):** o cascade por `criado_por`/lista **não** remove convites que **terceiros** criaram endereçados ao e-mail do titular; por isso o passo 1 apaga explicitamente `public.convites` com `lower(email) = lower(e-mail do titular)` antes do `delete` — não sobra PII do titular em convites ([01 §4.2](01-banco-de-dados.md)/[01 §4.4](01-banco-de-dados.md)).
 * Listas compartilhadas onde o usuário era apenas membro: sua participação some; a lista do outro dono permanece (dados do titular removidos das membresias).
 * Confirmação final para o usuário: "Esta ação é permanente e apaga todas as suas listas."
 

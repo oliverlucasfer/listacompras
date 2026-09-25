@@ -5,9 +5,11 @@
 --   A-02: 2º aceite (mesma pessoa ou outra, mesmo link) → idempotente, sem duplicar membro.
 --   A-03: convite expirado (expira_em no passado) → CONVITE_INVALIDO.
 --   A-04: convite revogado → CONVITE_INVALIDO.
---   A-05: anônimo → CONVITE_INVALIDO (guarda de auth.uid() — sem sessão não aceita).
+--   A-05: anônimo → privilégio insuficiente (sem grant, migration 0024); a
+--         guarda interna auth.uid() segue rejeitando com CONVITE_INVALIDO.
 --   A-06: convite por e-mail dirigido a outra pessoa → CONVITE_NAO_DIRIGIDO_A_VOCE.
 --   A-07: convite por e-mail dirigido ao próprio → entra (caminho do e-mail).
+--   A-08: CHECK convites_tipo_email_check — tipo='email' exige email (G-24).
 --
 -- Execução (após `supabase db reset`):
 --   psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -f supabase/tests/aceitar_convite_tests.sql
@@ -159,20 +161,34 @@ exception
     end if;
 end $$;
 
--- ===== A-05: anônimo não aceita → CONVITE_INVALIDO (guarda de auth.uid()) =====
+-- ===== A-05: anônimo barrado por privilégio; guarda de auth.uid() intacta =====
 do $$
 begin
+  -- Guarda interna: autenticado sem claims (auth.uid() nulo) → CONVITE_INVALIDO.
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', '{}', true);
+  begin
+    perform public.aceitar_convite('11111111-1111-1111-1111-111111111111');
+    raise exception 'FALHOU A-05: guarda de auth.uid() nao bloqueou';
+  exception
+    when raise_exception then
+      if sqlerrm = 'CONVITE_INVALIDO' then
+        raise notice 'OK A-05: guarda de auth.uid() rejeitou (CONVITE_INVALIDO)';
+      else
+        raise exception 'FALHOU A-05: erro inesperado: %', sqlerrm;
+      end if;
+  end;
+
+  -- Anônimo não tem grant → privilégio insuficiente (não depende só da guarda).
   perform set_config('role', 'anon', true);
   perform set_config('request.jwt.claims', '{}', true);
-  perform public.aceitar_convite('11111111-1111-1111-1111-111111111111');
-  raise exception 'FALHOU A-05: anon aceitou convite';
-exception
-  when raise_exception then
-    if sqlerrm = 'CONVITE_INVALIDO' then
-      raise notice 'OK A-05: anon rejeitado (CONVITE_INVALIDO)';
-    else
-      raise exception 'FALHOU A-05: erro inesperado: %', sqlerrm;
-    end if;
+  begin
+    perform public.aceitar_convite('11111111-1111-1111-1111-111111111111');
+    raise exception 'FALHOU A-05: anon executou o RPC';
+  exception
+    when insufficient_privilege then
+      raise notice 'OK A-05: grant do RPC negado a anon';
+  end;
 end $$;
 
 -- ===== A-06: convite por e-mail dirigido a outra pessoa =====
@@ -222,6 +238,21 @@ begin
   end if;
 
   raise notice 'OK A-07: convite por e-mail aceito pelo proprio destinatario (leitor)';
+end $$;
+
+-- ===== A-08: CHECK convites_tipo_email_check — tipo='email' exige email =====
+do $$
+begin
+  perform set_config('role', 'postgres', true);
+  insert into public.convites (lista_id, criado_por, token, tipo, email, papel_oferecido)
+  values (
+    'c9000000-0000-0000-0000-000000000000', 'c0000000-0000-0000-0000-000000000000',
+    '55555555-5555-5555-5555-555555555555', 'email', null, 'leitor'
+  );
+  raise exception 'FALHOU A-08: CHECK aceitou tipo=email sem email';
+exception
+  when check_violation then
+    raise notice 'OK A-08: tipo=email sem email rejeitado pelo CHECK';
 end $$;
 
 rollback;

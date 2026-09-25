@@ -55,7 +55,8 @@ supabase/
     ├── 0020_orcamento_lista.sql # coluna orcamento_centavos (RF-28, F36)
     ├── 0021_push_tokens.sql     # tabela push_tokens + RLS + RPC (RF-30, F38)
     ├── 0022_notificar_push.sql  # triggers pg_net → Edge Function enviar-push (RF-30, F38)
-    └── 0023_protege_deletado_em_lista.sql # deletado_em só pelo dono (G-03, F43-T06)
+    ├── 0023_protege_deletado_em_lista.sql # deletado_em só pelo dono (G-03, F43-T06)
+    └── 0024_pii_e_rpc_convites.sql # PII na exclusão + grant/CHECK de convites (G-04/22/24, F43-T07)
 ```
 
 ---
@@ -172,7 +173,7 @@ create table public.lista_membros (
 create index idx_membros_user on public.lista_membros (user_id);
 ```
 
-> **Nota (exclusão de conta / LGPD):** `ON DELETE CASCADE` em `user_id` garante que, ao excluir o usuário do Auth, suas participações somem; a exclusão da conta dispara também a remoção das listas de que é dono (cascade em `listas.dono_id`). Detalhes operacionais em [06 MVP & Entregas](06-mvp-entregas.md).
+> **Nota (exclusão de conta / LGPD):** `ON DELETE CASCADE` em `user_id` garante que, ao excluir o usuário do Auth, suas participações somem; a exclusão da conta dispara também a remoção das listas de que é dono (cascade em `listas.dono_id`). Os **convites endereçados ao e-mail do titular** (PII) são removidos explicitamente pelo RPC `excluir_conta()` antes do `delete` — o cascade de `criado_por`/lista não cobre convite criado por terceiro para o e-mail do titular (migration `0024`, G-04). Detalhes operacionais em [06 MVP & Entregas](06-mvp-entregas.md) §3.3.1.
 
 ### 4.3. `itens_lista`
 
@@ -236,6 +237,9 @@ Tabela de convites por link/e-mail: `id`, `lista_id` (CASCADE), `criado_por` (FK
 * **`atualizado_em`:** carimbado pelo trigger `trg_convites_updated` (`touch_convites_updated_at`, migration `0015`) — mesmo contrato de `listas`/`itens_lista` (§5).
 * **R-17 resolvido (migration `0016`):** `criado_por` ganhou `ON DELETE CASCADE` — com a transferência de dono (RF-14), o ex-dono pode deixar de ser dono e ainda ter convites criados; sem a cascata, excluir a conta dele falharia por FK.
 * **RPCs de convite por e-mail (RF-13, F32 — migration `0019`):** `meus_convites_pendentes()` (devolve `id`, `token`, `lista_titulo`, `papel_oferecido`, `expira_em` — só convites `email` `pendente` **não expirados** dirigidos ao e-mail do chamador) e `recusar_convite(p_id)` (revoga só o convite do próprio e-mail, exigindo `expira_em >= now()`). Ambos `security definer` com grant apenas a `authenticated`; o RLS de `convites` fica **intacto** — SQL e racional em [02 §4.7](02-seguranca-rls.md).
+* **CHECK `convites_tipo_email_check` (G-24, migration `0024`):** `(tipo = 'link' and email is null) or (tipo = 'email' and email is not null)` — convite `link` não carrega e-mail; convite `email` exige destinatário. Aditiva e validada após backfill (`add constraint ... not valid` + `validate`).
+* **Grant de `aceitar_convite` (G-22, migration `0024`):** o RPC de aceite é executável **apenas por `authenticated`** (`revoke execute on function public.aceitar_convite(uuid) from public, anon`) e compara o e-mail de forma explícita — `tipo = 'email'` exige `email` não nulo e igual ao do autenticado; `tipo = 'link'` (`email is null`) segue aceito por qualquer autenticado. SQL e racional em [02 §4.4](02-seguranca-rls.md)/[02 §4.7](02-seguranca-rls.md).
+* **PII na exclusão de conta (G-04, migration `0024`):** `excluir_conta()` apaga os `convites` com `lower(email) = lower(e-mail do titular)` antes de excluir `auth.users` — a PII do titular não depende do cascade ([06 §3.3.1](06-mvp-entregas.md)).
 
 ---
 
