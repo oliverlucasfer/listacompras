@@ -102,4 +102,40 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(find.byType(AppDropdown<ThemeMode>), findsOneWidget);
   });
+
+  testWidgets('deve_trocar_para_dropdown_e_nao_estourar_quando_estreito_e_2x', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          home: Scaffold(
+            body: MediaQuery(
+              data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+              child: const SeletorTema(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(AppDropdown<ThemeMode>), findsOneWidget);
+
+    await tester.tap(find.byType(AppDropdown<ThemeMode>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.temaEscuro).last);
+    await tester.pumpAndSettle();
+    expect(container.read(temaModoProvider).value, ThemeMode.dark);
+  });
 }

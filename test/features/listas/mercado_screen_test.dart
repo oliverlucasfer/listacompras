@@ -209,11 +209,13 @@ void main() {
   testWidgets('deve_manter_faixa_marcados_acima_do_inset_quando_abre', (
     tester,
   ) async {
+    const altura = 640.0;
     const inset = 40.0;
+    tester.view.physicalSize = const Size(360, altura);
+    tester.view.devicePixelRatio = 1.0;
     tester.view.padding = const FakeViewPadding(bottom: inset);
     tester.view.viewPadding = const FakeViewPadding(bottom: inset);
-    addTearDown(tester.view.resetPadding);
-    addTearDown(tester.view.resetViewPadding);
+    addTearDown(tester.view.reset);
 
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
     final item = await repo.adicionarItem(
@@ -230,7 +232,9 @@ void main() {
     final material = find
         .ancestor(of: marcados, matching: find.byType(Material))
         .first;
-    expect(tester.getBottomLeft(material).dy, lessThanOrEqualTo(640 - inset));
+    // Sem o SafeArea(top:false) o rodapé encosta no fim da tela (640); com ele,
+    // termina acima do inset inferior do sistema (640 - 40).
+    expect(tester.getBottomLeft(material).dy, moreOrLessEquals(altura - inset));
     expect(tester.takeException(), isNull);
     await fechar(tester);
   });
