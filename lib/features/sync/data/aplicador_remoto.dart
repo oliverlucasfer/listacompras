@@ -70,8 +70,10 @@ class AplicadorRemoto {
               deletadoEm: Value(_dataOpcional(r['deletado_em'])),
             ),
           );
-    } on SqliteException {
-      // Pai (lista) ainda não chegou; o próximo sync/re-sync reconcilia.
+    } on SqliteException catch (e) {
+      // 787 = FOREIGN KEY: pai (lista) ainda não chegou, o próximo sync
+      // reconcilia. Unique/CHECK e afins sobem para não sumirem em silêncio.
+      if (e.extendedResultCode != 787) rethrow;
     }
   }
 

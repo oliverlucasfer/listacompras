@@ -412,4 +412,92 @@ void main() {
     )..where((i) => i.id.equals('item-orfao'))).get();
     expect(itens, isEmpty);
   });
+
+  test('deve_propagar_erro_quando_item_violar_unique_ativo', () async {
+    // Só a FK (pai ausente) é ignorada: um conflito legítimo de nome ativo
+    // precisa subir, senão o registro remoto sumiria em silêncio.
+    final aplicador = AplicadorRemoto(db);
+    await db
+        .into(db.listaLocal)
+        .insert(
+          ListaLocalCompanion.insert(
+            id: 'l-uniq',
+            createdAt: DateTime.utc(2026, 9, 21),
+            updatedAt: DateTime.utc(2026, 9, 21),
+            titulo: 'Compras',
+            donoId: 'u',
+          ),
+        );
+    await db
+        .into(db.itemLocal)
+        .insert(
+          ItemLocalCompanion.insert(
+            id: 'i-existente',
+            createdAt: DateTime.utc(2026, 9, 21),
+            updatedAt: DateTime.utc(2026, 9, 21),
+            listaId: 'l-uniq',
+            nome: 'Arroz',
+          ),
+        );
+
+    await expectLater(
+      aplicador.aplicar('itens_lista', {
+        'id': 'i-duplicado',
+        'lista_id': 'l-uniq',
+        'nome': 'Arroz',
+        'quantidade': 1,
+        'unidade': 'un',
+        'categoria': 'outros',
+        'concluido': false,
+        'ordem': 0,
+        'created_at': '2026-09-21T12:00:00.000Z',
+        'updated_at': '2026-09-21T12:00:00.000Z',
+        'deletado_em': null,
+      }),
+      throwsA(isA<SqliteException>()),
+    );
+
+    final itens = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals('i-duplicado'))).get();
+    expect(itens, isEmpty);
+  });
+
+  test('deve_propagar_erro_quando_item_violar_check', () async {
+    // CHECK (quantidade > 0) também não pode ser silenciado.
+    final aplicador = AplicadorRemoto(db);
+    await db
+        .into(db.listaLocal)
+        .insert(
+          ListaLocalCompanion.insert(
+            id: 'l-check',
+            createdAt: DateTime.utc(2026, 9, 21),
+            updatedAt: DateTime.utc(2026, 9, 21),
+            titulo: 'Compras',
+            donoId: 'u',
+          ),
+        );
+
+    await expectLater(
+      aplicador.aplicar('itens_lista', {
+        'id': 'i-check',
+        'lista_id': 'l-check',
+        'nome': 'Arroz',
+        'quantidade': 0,
+        'unidade': 'un',
+        'categoria': 'outros',
+        'concluido': false,
+        'ordem': 0,
+        'created_at': '2026-09-21T12:00:00.000Z',
+        'updated_at': '2026-09-21T12:00:00.000Z',
+        'deletado_em': null,
+      }),
+      throwsA(isA<SqliteException>()),
+    );
+
+    final itens = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals('i-check'))).get();
+    expect(itens, isEmpty);
+  });
 }
