@@ -51,6 +51,7 @@
   - respeita `MediaQuery.textScaler` (2x) e `disableAnimations` (sem transição).
 - **`tour_keys.dart`** — `GlobalKey`s nomeadas usadas pelos alvos (`chaveNovaLista`, `chaveCampoAdicionar`, `chaveUnidade`, …), importadas pelas telas.
 - **`tour_roteiro.dart`** — a lista ordenada de `TourStep` por etapa (dados em §5), filtrando por `AppCapacidades` e por **existência do alvo** (passo sem alvo montado é adiado/pulado).
+- **Cada etapa roda dentro de UMA tela** (etapa 1 em `painel_listas`; etapa 2 em `tela_lista_screen`): o motor **não navega** entre rotas — terminada a etapa 1, o usuário segue; a etapa 2 dispara quando ele abrir uma lista com itens. Evita coordenar navegação no meio do overlay.
 
 **Alvo visível é pré-requisito:** cada passo só entra na fila quando `alvo.currentContext != null` e o widget está montado; senão o motor **espera** (etapa 2 nasce na primeira lista com itens) ou **pula** (modo sem o recurso).
 
@@ -113,7 +114,7 @@
 
 ## 9. Riscos
 
-- **Multi-tela:** o tour atravessa `painel_listas` e `tela_lista`; navegação entre passos precisa aguardar o alvo montar (mitigação: fila que espera `currentContext != null` e um limite de tempo por passo, caindo para o próximo sem travar).
+- **Multi-tela:** ~~o tour atravessa `painel_listas` e `tela_lista`~~ **Resolvido em §4**: cada etapa roda dentro de uma tela (sem navegação no meio do overlay); a fila espera `currentContext != null` e tem limite de tempo por passo, caindo para o próximo sem travar.
 - **Ancoragem frágil:** `GlobalKey` errada = bolha apontando para o nada; mitigação: teste por passo conferindo que a chave resolve, e `fallback` centralizado quando o alvo não resolve.
 - **Tour pulado por engano:** como não bloqueia toques, o usuário pode seguir; `Pular` é explícito e a reabertura em Configurações garante que nada se perde.
 
