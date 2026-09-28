@@ -43,7 +43,7 @@ Fluxo de UX completo (modal, pré-visualização, confirmação) está em [05 §
 
 ## 4. Enums
 
-- **Unidades** (fonte única [01 §3.1](01-banco-de-dados.md)): `un, kg, g, l, ml, caixa, pacote, pct, dz` — replicado em `lib/core/dominio/unidade.dart`.
+- **Unidades** (fonte única [01 §3.1](01-banco-de-dados.md)): `un, kg, g, l, ml, caixa, pacote, pct, pt, dz` — replicado em `lib/core/dominio/unidade.dart`. O parser reconhece `pt`, `pote` e `potes` como `Unidade.pt` (F45-T01).
 - **Categorias** (fonte única [01 §3.2](01-banco-de-dados.md)): `hortifruti, mercearia, frios, laticinios, congelados, padaria, bebidas, pet, limpeza, higiene, outros`.
 
 As frações (RF-25) **não alteram** os enums: a quantidade continua `numeric` e a unidade segue esta mesma lista.

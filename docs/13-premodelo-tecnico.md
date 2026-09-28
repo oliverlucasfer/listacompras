@@ -43,7 +43,7 @@ App local (Drift): ListaLocal, ItemLocal, MutacaoPendente (fila)
 | `convites` (F6) | token, tipo link/email, papel_oferecido ≠ dono, estado, expira_em | [08 §2](08-compartilhamento-colaborativo.md) |
 | `mutacoes_pendentes` (local) | tabela, operacao, registro_id, payload JSON, ts_local, tentativas | [03 §3](03-sincronizacao-offline.md) |
 
-**Enum de unidades (fechado):** `un, kg, g, l, ml, caixa, pacote, pct, dz` — mesma lista no Postgres e no Dart.
+**Enum de unidades (fechado):** `un, kg, g, l, ml, caixa, pacote, pct, pt, dz` — mesma lista no Postgres e no Dart.
 
 **Enum de categorias (fechado, ADR-011):** `hortifruti, mercearia, frios, laticinios, congelados, padaria, bebidas, pet, limpeza, higiene, outros` — mesma lista no Postgres e no Dart; a ordem do enum define a ordem dos grupos na UI. Sugestão **local em camadas** (memória por nome → dicionário estático → `outros`).
 

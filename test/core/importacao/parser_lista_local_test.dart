@@ -76,6 +76,23 @@ void main() {
     expect(r.itens.single.unidade, Unidade.pct);
   });
 
+  test('deve_reconhecer_unidade_pt_quando_abreviacao', () {
+    final r = analisarListaLocal('2 pt de café');
+    expect(r.itens.single.quantidade, 2);
+    expect(r.itens.single.unidade, Unidade.pt);
+  });
+
+  test('deve_reconhecer_unidade_pt_quando_palavra_e_plural', () {
+    expect(
+      analisarListaLocal('1 pote de sorvete').itens.single.unidade,
+      Unidade.pt,
+    );
+    expect(
+      analisarListaLocal('3 potes de iogurte').itens.single.unidade,
+      Unidade.pt,
+    );
+  });
+
   test('deve_tolerar_acento_e_caixa', () {
     expect(
       analisarListaLocal('1 DÚZIA DE BANANAS').itens.single.unidade,

@@ -57,7 +57,8 @@ supabase/
     ├── 0022_notificar_push.sql  # triggers pg_net → Edge Function enviar-push (RF-30, F38)
     ├── 0023_protege_deletado_em_lista.sql # deletado_em só pelo dono (G-03, F43-T06)
     ├── 0024_pii_e_rpc_convites.sql # PII na exclusão + grant/CHECK de convites (G-04/22/24, F43-T07)
-    └── 0025_higiene_policies_limites.sql # policies de membros/convites, limites e search_path='' (G-23/26/27/29/30, F43-T08)
+    ├── 0025_higiene_policies_limites.sql # policies de membros/convites, limites e search_path='' (G-23/26/27/29/30, F43-T08)
+    └── 0026_add_unidade_pt.sql # unidade 'pt' (pote) no enum fechado (RF-03, F45-T01)
 ```
 
 ---
@@ -70,7 +71,7 @@ supabase/
 
 ```sql
 create type public.unidade_item as enum (
-  'un', 'kg', 'g', 'l', 'ml', 'caixa', 'pacote', 'pct', 'dz'
+  'un', 'kg', 'g', 'l', 'ml', 'caixa', 'pacote', 'pct', 'pt', 'dz'
 );
 ```
 
@@ -79,7 +80,7 @@ create type public.unidade_item as enum (
 | `un` | Unidade |
 | `kg` / `g` | Massa |
 | `l` / `ml` | Volume |
-| `caixa` / `pacote` / `pct` | Embalagens |
+| `caixa` / `pacote` / `pct` / `pt` | Embalagens (`pct` = pacote; `pt` = pote, migration `0026`) |
 | `dz` | Dúzia |
 
 ### 3.2. Categorias (`categoria_item`, ADR-011)

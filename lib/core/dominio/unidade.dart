@@ -9,6 +9,7 @@ enum Unidade {
   caixa('caixa'),
   pacote('pacote'),
   pct('pct'),
+  pt('pt'),
   dz('dz');
 
   const Unidade(this.valor);

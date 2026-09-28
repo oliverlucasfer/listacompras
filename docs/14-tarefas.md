@@ -961,6 +961,16 @@ Spec: [superpowers/specs/2026-09-28-identidade-visual-lite-design.md](superpower
 
 Nota: *(fase fechada com o app `1.5.0+14`; casco nativo apenas Android — iOS/Web/desktop do Lite seguem fora de escopo/adiados; `prod` inalterado — verde, carrinho, "Lista de Compras")*
 
+## Fase 45 — Unidade `pt` (pote) (RF-03)
+
+Requisito: RF-03 (CRUD de itens com unidade do enum). · Docs donos: [01](01-banco-de-dados.md), [04](04-importacao-lista.md), [13](13-premodelo-tecnico.md), [14](14-tarefas.md). · Sem spec/plano (mudança bounded).
+
+- [x] **F45-T01** — Unidade `pt` (pote) no enum fechado
+  Docs: [01](01-banco-de-dados.md) §3.1 · [04](04-importacao-lista.md) §2. Requisito: RF-03.
+  CP: migration `0026` adiciona `pt` ao enum `unidade_item`; `Unidade.pt` no Dart; parser reconhece `pt`/`pote`/`potes`; suíte Flutter verde e `rls_tests.sql` com o caso positivo U-01.
+
+Nota: *(aditivo; `pt` = "pote"; sem migration Drift — a coluna `unidade` é `text`)*
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -1007,7 +1017,8 @@ Nota: *(fase fechada com o app `1.5.0+14`; casco nativo apenas Android — iOS/W
 | F42 Dívidas da Fase 41 | 2 | 2 |
 | F43 Correções da revisão 2 | 14 | 14 |
 | F44 Identidade visual do Lite | 4 | 4 |
-| **Total** | **242** | **240** |
+| F45 Unidade `pt` (pote) | 1 | 1 |
+| **Total** | **243** | **241** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

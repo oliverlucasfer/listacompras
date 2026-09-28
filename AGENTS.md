@@ -17,7 +17,7 @@ Projeto: app de lista de compras inteligente e colaborativa (Flutter + Supabase)
 - **Nenhuma chave/segredo** em código, commit ou log.
 - **RLS é sagrado:** qualquer dado acessado deve passar pelas policies de `02`. Nunca use a service_role key no client.
 - **Offline-first:** UI nunca bloqueia em rede; escrita vai sempre ao Drift + fila ([03](docs/03-sincronizacao-offline.md)); IDs UUID v4 gerados no cliente.
-- **Enum de unidades fechado:** `un, kg, g, l, ml, caixa, pacote, pct, dz` — mantenha idêntico no Postgres (`01`), Dart (`05`) e no parser local (`04`).
+- **Enum de unidades fechado:** `un, kg, g, l, ml, caixa, pacote, pct, pt, dz` — mantenha idêntico no Postgres (`01`), Dart (`05`) e no parser local (`04`).
 - **CI verde obrigatório** antes de considerar qualquer tarefa concluída ([07](docs/07-qualidade-ci.md)).
 
 ## Comandos

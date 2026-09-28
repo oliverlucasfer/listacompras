@@ -693,6 +693,13 @@ begin
   end;
 end $$;
 
+-- ===== Unidade pt (pote) no enum fechado (01 §3.1, F45-T01) =====
+do $$
+begin
+  perform 'pt'::public.unidade_item;
+  raise notice 'OK U-01: unidade pt aceita no enum';
+end $$;
+
 do $$
 begin
   perform set_config('role', 'authenticated', true);
