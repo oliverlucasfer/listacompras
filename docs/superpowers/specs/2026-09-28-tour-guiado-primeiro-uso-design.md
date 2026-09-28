@@ -17,8 +17,8 @@
 
 **Dentro:**
 - **Motor próprio de tour** (`TourGuide` + `TourStep`) com overlay/spotlight — **sem dependência nova**.
-- **Roteiro em 2 etapas** (§5): etapa 1 sem dados (criar lista/adicionar/importar/busca/configurações); etapa 2 ao abrir uma lista com itens (marcar/editar, mercado, orçamento).
-- Disparo: após as boas-vindas na primeira vez; etapa 2 na primeira lista com itens; **reabrível** em Configurações → "Ver tutorial".
+- **Roteiro em 2 etapas** (§5): etapa 1 sem dados (criar lista/busca/configurações); etapa 2 ao abrir uma lista com itens pendentes (nome, adicionar, unidade, importar, marcar/editar, mercado, orçamento, convite).
+- Disparo: após as boas-vindas na primeira vez; etapa 2 na primeira lista com itens pendentes; **reabrível** em Configurações → "Ver tutorial".
 - Acessibilidade (RNF-06): foco/semântica, alvo do spotlight, respeitar `textScaler` 2x, movimento reduzido.
 - Docs donos (05/15/12/10/14) + testes (widget) + flag de conclusão.
 
@@ -53,30 +53,30 @@
 - **`tour_roteiro.dart`** — a lista ordenada de `TourStep` por etapa (dados em §5), filtrando por `AppCapacidades` e por **existência do alvo** (passo sem alvo montado é adiado/pulado).
 - **Cada etapa roda dentro de UMA tela** (etapa 1 em `painel_listas`; etapa 2 em `tela_lista_screen`): o motor **não navega** entre rotas — terminada a etapa 1, o usuário segue; a etapa 2 dispara quando ele abrir uma lista com itens. Evita coordenar navegação no meio do overlay.
 
-**Alvo visível é pré-requisito:** cada passo só entra na fila quando `alvo.currentContext != null` e o widget está montado; senão o motor **espera** (etapa 2 nasce na primeira lista com itens) ou **pula** (modo sem o recurso).
+**Alvo visível é pré-requisito:** cada passo só entra na fila quando `alvo.currentContext != null` e o widget está montado; senão o motor **espera** (etapa 2 nasce na primeira lista com itens pendentes) ou **pula** (modo sem o recurso).
 
 ## 5. Roteiro (2 etapas)
 
-**Etapa 1 — sem dados (após as boas-vindas, na home de listas):**
+**Etapa 1 — sem dados (após as boas-vindas, na home de listas) — 3 passos:**
 
 | # | Passo | Alvo | Modo |
 | :--- | :--- | :--- | :--- |
 | 1 | Criar sua primeira lista | botão "Nova lista"/"Criar primeira lista" | ambos |
-| 2 | Nome e orçamento | sheet de título (`sheet_titulo_lista`) | ambos |
-| 3 | Adicionar item | campo "Adicionar item" | ambos |
-| 4 | Unidade (inclui `pt`) | seletor de unidade | ambos |
-| 5 | Importar por texto | botão "Importar lista" | ambos |
-| 6 | Busca e filtros | lupa na AppBar | ambos |
-| 7 | Configurações e backup | aba Configurações | ambos |
+| 2 | Busca e filtros | lupa na AppBar | ambos |
+| 3 | Configurações e backup | aba Configurações | ambos |
 
-**Etapa 2 — na primeira lista com itens (dispara ao abrir):**
+**Etapa 2 — na primeira lista com itens pendentes (dispara ao abrir) — 8 passos:**
 
 | # | Passo | Alvo | Modo |
 | :--- | :--- | :--- | :--- |
-| 8 | Marcar, editar e remover | checkbox / linha do item | ambos |
-| 9 | Modo mercado | ícone carrinho na AppBar | ambos (dono/editor) |
-| 10 | Orçamento e total | menu ⋮ / topo da lista | ambos |
-| 11 | Compartilhar / convites | ação convidar / menu | **prod** (pulado no Lite) |
+| 1 | Nome e orçamento | sheet de título (`sheet_titulo_lista`) | ambos |
+| 2 | Adicionar item | campo "Adicionar item" | ambos |
+| 3 | Unidade (inclui `pt`) | seletor de unidade | ambos |
+| 4 | Importar por texto | botão "Importar lista" | ambos |
+| 5 | Marcar, editar e remover | checkbox / linha do item | ambos |
+| 6 | Modo mercado | ícone carrinho na AppBar | ambos (dono/editor) |
+| 7 | Orçamento e total | menu ⋮ / topo da lista | ambos |
+| 8 | Compartilhar / convites | ação convidar / menu | **prod** (pulado no Lite) |
 
 - **Conclusão:** `Pular` ou `Concluir` marcam a etapa como vista (flag própria). `Pular` na etapa 1 não impede a etapa 2.
 - **Reabrir:** Configurações → "Ver tutorial" **navega para a home de listas e reinicia a etapa 1** (ignora a flag de conclusão; não altera a conclusão já registrada de forma destrutiva). A etapa 2 não é reapresentada dali — os alvos dela vivem na tela da lista; ela só reaparece se ainda não tiver sido vista (flag própria). Motivo: o motor só aponta para alvos **visíveis**, e a tela de Configurações não monta os alvos das etapas.
@@ -84,7 +84,7 @@
 ## 6. Disparo e persistência
 
 - **Etapa 1:** em `minhas_listas_screen`, após resolver `onboarding_visto`; se `!tourEtapa1Visto` e há alvos, inicia. Espelha exatamente o padrão atual das boas-vindas.
-- **Etapa 2:** em `tela_lista_screen`, quando a lista tem ≥ 1 item ativo e `!tourEtapa2Visto`; inicia uma vez.
+- **Etapa 2:** em `tela_lista_screen`, quando a lista tem ≥ 1 item **pendente** e `!tourEtapa2Visto`; inicia uma vez.
 - **Flags:** `tour_etapa1_visto` e `tour_etapa2_visto` (SharedPreferences), em `TourVistoNotifier` (espelho de `OnboardingNotifier`). Sem Drift/sem rede.
 - **Reabrir (Configurações):** "Ver tutorial" navega para `/listas` e inicia a etapa 1 (`iniciar(TourEtapa.primeira)`), sem reescrever flags. A etapa 2 segue o fluxo normal (dispara na lista, se não vista).
 
@@ -106,8 +106,8 @@
 3. **Disparo:** 1ª vez **e** reabrível em Configurações.
 4. **Abordagem:** **motor próprio (A2)** — sem dependência nova.
 5. **Apresentação:** **spotlight + bolha abaixo** (opção A).
-6. **Etapas:** **tour em 2 etapas** (opção 1) — etapa 1 sem dados; etapa 2 ao abrir lista com itens.
-7. **Etapa 2:** dispara ao abrir lista com itens, flag própria (mesmo se a etapa 1 foi pulada).
+6. **Etapas:** **tour em 2 etapas** (opção 1) — etapa 1 sem dados; etapa 2 ao abrir lista com itens pendentes.
+7. **Etapa 2:** dispara ao abrir lista com itens pendentes, flag própria (mesmo se a etapa 1 foi pulada).
 8. **Reabrir:** Configurações → "Ver tutorial" navega para a home e reinicia a etapa 1 (a etapa 2 segue o fluxo normal na lista).
 9. **Sem dados de exemplo:** nada de lista-demo criada/apagada.
 10. **Fase 46**; requisito **RF-27** estendido; **sem** dependência, **sem** migration/schema/sync.

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lista_compras/core/config/app_modo.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
+import 'package:lista_compras/features/auth/data/auth_local_repository.dart';
 import 'package:lista_compras/features/auth/providers/auth_providers.dart';
 import 'package:lista_compras/features/configuracoes/ui/configuracoes_screen.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
@@ -16,6 +17,7 @@ import 'package:lista_compras/features/onboarding/providers/onboarding_provider.
 import 'package:lista_compras/features/tour/tour_controller.dart';
 import 'package:lista_compras/features/tour/tour_keys.dart';
 import 'package:lista_compras/features/tour/ui/tour_overlay.dart';
+import 'package:lista_compras/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Espelha `lib/app.dart`: o overlay do tour vive na raiz, ocupando a tela
@@ -157,7 +159,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(c.read(tourControllerProvider).ativo, isTrue);
-    expect(find.text(AppStrings.tourMarcarTitulo), findsOneWidget);
+    expect(c.read(tourControllerProvider).atual?.id, 'recursos.adicionar');
   });
 
   testWidgets('nao_deve_iniciar_tour_etapa2_quando_flag_vista', (tester) async {
@@ -172,7 +174,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(c.read(tourControllerProvider).ativo, isFalse);
-    expect(find.text(AppStrings.tourMarcarTitulo), findsNothing);
+    expect(c.read(tourControllerProvider).atual, isNull);
   });
 
   testWidgets('nao_deve_iniciar_tour_etapa2_quando_lista_sem_item', (
@@ -188,49 +190,53 @@ void main() {
     expect(c.read(tourControllerProvider).ativo, isFalse);
   });
 
-  testWidgets('deve_abrir_tour_quando_toca_ver_tutorial', (tester) async {
-    final c = container(
-      prefs: {
-        'onboarding_visto': true,
-        'tour_etapa1_visto': true,
-        'tour_etapa2_visto': true,
-      },
+  testWidgets('deve_navegar_para_home_e_rodar_etapa1_quando_reabrir', (
+    tester,
+  ) async {
+    // Shell e rotas de verdade: parte de Configurações (sem alvos da etapa 1
+    // montados além da própria aba) e reabre o tour.
+    SharedPreferences.setMockInitialValues({
+      'onboarding_visto': true,
+      'tour_etapa1_visto': true,
+      'tour_etapa2_visto': true,
+    });
+    final c = ProviderContainer(
+      overrides: [
+        capacidadesProvider.overrideWithValue(AppCapacidades.lite),
+        authRepositoryProvider.overrideWithValue(AuthLocalRepository()),
+        appDatabaseProvider.overrideWithValue(db),
+        donoAtualIdProvider.overrideWithValue('user-a'),
+        emailUsuarioProvider.overrideWithValue('user@exemplo.com'),
+      ],
     );
+    addTearDown(c.dispose);
+    final router = c.read(routerProvider);
 
-    await tester.pumpWidget(
-      _app(
-        c,
-        Stack(
-          children: [
-            const ConfiguracoesScreen(),
-            Positioned(
-              key: TourKeys.novaLista,
-              left: 40,
-              top: 96,
-              width: 120,
-              height: 48,
-              child: const SizedBox(),
-            ),
-            Positioned(
-              key: TourKeys.lupa,
-              left: 200,
-              top: 96,
-              width: 48,
-              height: 48,
-              child: const SizedBox(),
-            ),
-          ],
-        ),
-      ),
-    );
+    await tester.pumpWidget(_appRouter(c, router));
     await tester.pumpAndSettle();
+    expect(find.byType(MinhasListasScreen), findsOneWidget);
+
+    await tester.tap(find.text(AppStrings.configuracoes).last);
+    await tester.pumpAndSettle();
+    expect(find.byType(ConfiguracoesScreen), findsOneWidget);
+    expect(c.read(tourControllerProvider).ativo, isFalse);
 
     await tester.scrollUntilVisible(find.text(AppStrings.tourAbrir), 200);
     await tester.tap(find.text(AppStrings.tourAbrir));
     await tester.pumpAndSettle();
 
-    expect(c.read(tourControllerProvider).ativo, isTrue);
+    // Navegou para a home e a etapa 1 abriu lá, com os 3 passos da tela.
+    expect(find.byType(MinhasListasScreen), findsOneWidget);
+    expect(c.read(tourControllerProvider).etapa, TourEtapa.primeira);
+    expect(c.read(tourControllerProvider).passos.length, 3);
     expect(find.text(AppStrings.tourNovaListaTitulo), findsOneWidget);
+
+    // Concluir a etapa 1 encerra o tour — não encadeia a etapa 2.
+    final tour = c.read(tourControllerProvider.notifier);
+    while (c.read(tourControllerProvider).ativo) {
+      await tour.proximo();
+    }
+    expect(c.read(tourControllerProvider).ativo, isFalse);
   });
 
   testWidgets('deve_ignorar_alvo_quando_offstage', (tester) async {
@@ -284,98 +290,6 @@ void main() {
         .iniciar(TourEtapa.primeira);
 
     expect(iniciou, isFalse);
-    expect(c.read(tourControllerProvider).ativo, isFalse);
-  });
-
-  testWidgets('deve_encadear_etapa2_quando_concluir_etapa1_reaberta', (
-    tester,
-  ) async {
-    final c = container(
-      prefs: {
-        'onboarding_visto': true,
-        'tour_etapa1_visto': true,
-        'tour_etapa2_visto': true,
-      },
-    );
-
-    await tester.pumpWidget(
-      _app(
-        c,
-        Stack(
-          children: [
-            Positioned(
-              key: TourKeys.novaLista,
-              left: 40,
-              top: 96,
-              width: 120,
-              height: 48,
-              child: const SizedBox(),
-            ),
-            Positioned(
-              key: TourKeys.itemLista,
-              left: 40,
-              top: 300,
-              width: 300,
-              height: 48,
-              child: const SizedBox(),
-            ),
-          ],
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    final tour = c.read(tourControllerProvider.notifier);
-    // Ambos os alvos visíveis: reabre encadeando primeira → recursos.
-    expect(tour.iniciar(TourEtapa.primeira, encadear: true), isTrue);
-    expect(c.read(tourControllerProvider).etapa, TourEtapa.primeira);
-
-    // Conclui todos os passos da etapa 1.
-    while (c.read(tourControllerProvider).etapa == TourEtapa.primeira) {
-      await tour.proximo();
-    }
-
-    expect(c.read(tourControllerProvider).etapa, TourEtapa.recursos);
-    expect(c.read(tourControllerProvider).ativo, isTrue);
-  });
-
-  testWidgets('nao_deve_ter_etapa2_ao_reabrir_de_configuracoes', (
-    tester,
-  ) async {
-    final c = container(
-      prefs: {
-        'onboarding_visto': true,
-        'tour_etapa1_visto': true,
-        'tour_etapa2_visto': true,
-      },
-    );
-
-    await tester.pumpWidget(
-      _app(
-        c,
-        Stack(
-          children: [
-            const ConfiguracoesScreen(),
-            Positioned(
-              key: TourKeys.abaConfiguracoes,
-              left: 40,
-              top: 96,
-              width: 120,
-              height: 48,
-              child: const SizedBox(),
-            ),
-          ],
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    final tour = c.read(tourControllerProvider.notifier);
-    // Só o alvo de Configurações existe: a etapa 1 tem 1 passo e não há
-    // alvos da etapa 2 — concluir encerra o tour (não fica preso/ativo).
-    expect(tour.iniciar(TourEtapa.primeira, encadear: true), isTrue);
-    await tour.proximo();
-
     expect(c.read(tourControllerProvider).ativo, isFalse);
   });
 }

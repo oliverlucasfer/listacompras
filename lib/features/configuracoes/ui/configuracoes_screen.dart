@@ -27,19 +27,25 @@ class ConfiguracoesScreen extends ConsumerWidget {
 
   /// Reabre o tour ignorando as flags de conclusão (RF-27, F46).
   ///
-  /// Os alvos da etapa 1 vivem na home de listas e os da etapa 2 na tela da
-  /// lista; nenhum está em Configurações. Por isso o botão **navega** para a
-  /// home de listas e inicia a etapa 1 lá (a etapa 2 volta a disparar sozinha
-  /// quando o usuário abrir uma lista com itens). Sem navegação, o motor —
-  /// que só aponta para alvos visíveis — cairia num tour de 1 passo.
+  /// Os alvos da etapa 1 vivem na home de listas; por isso o botão **navega**
+  /// para lá e inicia a etapa 1. A etapa 2 segue o fluxo normal: dispara sozinha
+  /// ao abrir uma lista com itens pendentes, se ainda não tiver sido vista.
   void _abrirTour(WidgetRef ref, BuildContext context) {
     final tour = ref.read(tourControllerProvider.notifier);
-    if (tour.iniciar(TourEtapa.primeira, encadear: true)) {
-      return;
-    }
     context.go('/listas');
+    _iniciarEtapa1(tour);
+  }
+
+  static const _tentativasEtapa1 = 5;
+
+  /// Tenta iniciar a etapa 1 nos próximos frames: a home precisa montar e
+  /// visibilizar os alvos antes de o motor conseguir enfileirá-los.
+  void _iniciarEtapa1(TourController tour, [int tentativa = 0]) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      tour.iniciar(TourEtapa.primeira, encadear: true);
+      if (tour.iniciar(TourEtapa.primeira)) return;
+      if (tentativa >= _tentativasEtapa1) return;
+      _iniciarEtapa1(tour, tentativa + 1);
+      WidgetsBinding.instance.scheduleFrame();
     });
   }
 

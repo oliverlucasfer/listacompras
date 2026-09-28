@@ -978,15 +978,15 @@ Spec: [superpowers/specs/2026-09-28-tour-guiado-primeiro-uso-design.md](superpow
 - [x] **F46-T01** — Modelo, chaves, controller e flags
   CP: `TourStep`/`TourKeys`/`TourEtapa`/`TourController` + `tourEtapaVistaProvider` (`tour_etapa1_visto`/`tour_etapa2_visto`); unit tests verdes; sem rede/Drift/schema.
 - [x] **F46-T02** — Roteiro (2 etapas, filtro por capacidades)
-  CP: `passosEtapa1` (7) e `passosEtapa2` (4) com `elegivel` por `AppCapacidades` (convite só no colaborativo); textos em `AppStrings`.
+  CP: `passosEtapa1` (3) e `passosEtapa2` (8) com `elegivel` por `AppCapacidades` (convite só no colaborativo); textos em `AppStrings`.
 - [x] **F46-T03** — Overlay (spotlight + bolha)
   CP: `Spotlight`/`TourOverlay` com tokens `App*`, halo/scrim do `colorScheme`, indicador `n/total`, `Pular`/`Anterior`/`Próximo`, live region "Passo n de m" e `disableAnimations`; widget tests verdes.
 - [x] **F46-T04** — Ligar nas telas + loader e gatilhos
-  CP: `TourLoader` na home e na lista; `TourKeys` anexadas; `iniciar` rejeita alvos offstage; "Ver tutorial" navega para `/listas` e inicia a etapa 1; reabertura encadeia as etapas; widget tests verdes.
+  CP: `TourLoader` na home e na lista; `TourKeys` anexadas; `iniciar` rejeita alvos offstage; "Ver tutorial" navega para `/listas` e inicia a etapa 1; widget tests verdes.
 - [x] **F46-T05** — Docs donos e fechamento
   CP: docs donos 05/15/10/12/14 refletem o tour; RF-27 estendido; Fase 46 na tabela de progresso (248/246); `dart format .`, `flutter analyze` e `flutter test` verdes; sem tocar código.
 
-Nota: *(motor próprio, sem dependência nova; sem migration/schema/sync; passos sem alvo montado são pulados — a etapa 1 na tela da lista cobre campo/unidade/importar quando visíveis; etapa 2 dispara na primeira lista com itens)*
+Nota: *(motor próprio, sem dependência nova; sem migration/schema/sync; passos sem alvo montado são pulados — a etapa 1 cobre criar/busca/configurações na home e a etapa 2 cobre nome/adicionar/unidade/importar/marcar/mercado/orçamento/convite na lista, disparando na primeira lista com itens pendentes)*
 
 ## Progresso por fase (atualize ao concluir)
 

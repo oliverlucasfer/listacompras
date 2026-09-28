@@ -193,7 +193,7 @@ class TourController extends Notifier<TourEstado> {
   TourEstado build() => const TourEstado();
 
   /// Inicia uma etapa; retorna false se não houver passos elegíveis/montados.
-  bool iniciar(TourEtapa etapa, {bool encadear = false}) {
+  bool iniciar(TourEtapa etapa) {
     final cap = ref.read(capacidadesProvider);
     final lista = (etapa == TourEtapa.primeira ? passosEtapa1 : passosEtapa2)
         .where((p) => p.elegivel(cap))
@@ -327,7 +327,7 @@ void main() {
       'Convide alguem para comprar junto, cada um no seu aparelho.';
 ```
 
-- [ ] **Step 4: Roteiro** — crie `tour_roteiro.dart` com os 11 passos (etapa 1: 7; etapa 2: 4). `elegivel` é `(cap) => true` em todos, **exceto** `recursos.convite` (`(cap) => cap.colaboracao`). Os passos de mercado/orçamento/marcar/editar são visíveis conforme o papel na lista, que a própria tela já esconde (papel efetivo) — o motor não decide por papel. Use `TourKeys` correspondentes e `AppStrings`.
+- [ ] **Step 4: Roteiro** — crie `tour_roteiro.dart` com os 11 passos (etapa 1: 3; etapa 2: 8). `elegivel` é `(cap) => true` em todos, **exceto** `recursos.convite` (`(cap) => cap.colaboracao`). Os passos de mercado/orçamento/marcar/editar são visíveis conforme o papel na lista, que a própria tela já esconde (papel efetivo) — o motor não decide por papel. Use `TourKeys` correspondentes e `AppStrings`.
 
 - [ ] **Step 5: Rodar e ver passar** → PASS.
 
@@ -384,14 +384,14 @@ testWidgets('deve_mostrar_bolha_e_avancar_quando_proximo', (tester) async {
 - [ ] **Step 2: Ancorar chaves nos widgets reais** (usar `key: TourKeys.x`):
   - `painel_listas`: FAB/botão "Criar primeira lista" → `novaLista`; lupa (AppBar) → `lupa`; `AppShell` aba Configurações → `abaConfiguracoes`.
   - `tela_lista_screen`: `_CampoAdicionar` → `campoAdicionar`; `PopupMenuButton<Unidade>` → `seletorUnidade`; botão "Importar lista" → `botaoImportar`; ícone mercado → `botaoMercado`; `PopupMenuButton` ⋮ → `menuMais`; primeira linha de item → `itemLista`.
-  - `sheet_titulo_lista`: campo de nome → usar o passo dentro do sheet (etapa 1, passo 2) — se o sheet não estiver montado, o motor pula (já tratado).
+  - `sheet_titulo_lista`: campo de nome → usar o passo dentro do sheet (etapa 2, passo 1) — se o sheet não estiver montado, o motor pula (já tratado).
   - `configuracoes_screen`: aba / linha "Ver tutorial" → `acaoConvite` (convite) e a própria linha de tutorial.
 
 - [ ] **Step 3: `TourLoader`** — chama `iniciar` no `initState`/`ref.listen` quando `!vista && alvos montados`; renderiza `TourOverlay` num `Overlay` (via `Overlay.of(context).insert` ou dentro do `Scaffold` com `Stack`).
 
 - [ ] **Step 4: Gatilhos**
   - Etapa 1: em `MinhasListasScreen`/`painel_listas`, após `onboarding_visto` (mesmo ponto do `/boas-vindas`).
-  - Etapa 2: em `tela_lista_screen`, quando a lista tem ≥1 item ativo e `!tour_etapa2_visto`.
+  - Etapa 2: em `tela_lista_screen`, quando a lista tem ≥1 item pendente e `!tour_etapa2_visto`.
   - Reabrir: `configuracoes_screen` → "Ver tutorial" **navega para `/listas`** e inicia a etapa 1 ali (`iniciar(TourEtapa.primeira)`), pois a tela de Configurações não monta os alvos das etapas; a etapa 2 segue o fluxo normal (dispara na lista, se não vista).
 
 - [ ] **Step 5: Rodar e ver passar**; rodar a suíte completa (prod intacto quando flags vistas).

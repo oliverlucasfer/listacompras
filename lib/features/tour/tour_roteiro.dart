@@ -2,42 +2,15 @@ import '../../core/l10n/app_strings.dart';
 import 'tour_keys.dart';
 import 'tour_step.dart';
 
-/// Roteiro da etapa 1 (primeiro contato, sem dados): criar lista, nome e
-/// orçamento, adicionar item, unidade, importar, busca e configurações.
+/// Roteiro da etapa 1 (primeiro contato, na home de listas): criar lista,
+/// busca/filtros e configurações. Os demais recursos dependem da tela da lista
+/// e vivem na etapa 2.
 List<TourStep> get passosEtapa1 => <TourStep>[
   TourStep(
     id: 'lista.criar',
     alvo: TourKeys.novaLista,
     titulo: AppStrings.tourNovaListaTitulo,
     corpo: AppStrings.tourNovaListaCorpo,
-    elegivel: (cap) => true,
-  ),
-  TourStep(
-    id: 'lista.nome',
-    alvo: TourKeys.nomeLista,
-    titulo: AppStrings.tourNomeTitulo,
-    corpo: AppStrings.tourNomeCorpo,
-    elegivel: (cap) => true,
-  ),
-  TourStep(
-    id: 'lista.adicionar',
-    alvo: TourKeys.campoAdicionar,
-    titulo: AppStrings.tourAdicionarTitulo,
-    corpo: AppStrings.tourAdicionarCorpo,
-    elegivel: (cap) => true,
-  ),
-  TourStep(
-    id: 'lista.unidade',
-    alvo: TourKeys.seletorUnidade,
-    titulo: AppStrings.tourUnidadeTitulo,
-    corpo: AppStrings.tourUnidadeCorpo,
-    elegivel: (cap) => true,
-  ),
-  TourStep(
-    id: 'lista.importar',
-    alvo: TourKeys.botaoImportar,
-    titulo: AppStrings.tourImportarTitulo,
-    corpo: AppStrings.tourImportarCorpo,
     elegivel: (cap) => true,
   ),
   TourStep(
@@ -56,10 +29,39 @@ List<TourStep> get passosEtapa1 => <TourStep>[
   ),
 ];
 
-/// Roteiro da etapa 2 (ao abrir uma lista com itens): marcar/editar, modo
-/// mercado, orçamento/total e convite. O convite só existe no colaborativo;
-/// mercado/orçamento/marcar são escondidos pela própria tela conforme o papel.
+/// Roteiro da etapa 2 (ao abrir uma lista com itens pendentes): nome, adicionar,
+/// unidade, importar, marcar/editar, modo mercado, orçamento/total e convite.
+/// O convite só existe no colaborativo; mercado/orçamento/marcar são escondidos
+/// pela própria tela conforme o papel.
 List<TourStep> get passosEtapa2 => <TourStep>[
+  TourStep(
+    id: 'recursos.nome',
+    alvo: TourKeys.nomeLista,
+    titulo: AppStrings.tourNomeTitulo,
+    corpo: AppStrings.tourNomeCorpo,
+    elegivel: (cap) => true,
+  ),
+  TourStep(
+    id: 'recursos.adicionar',
+    alvo: TourKeys.campoAdicionar,
+    titulo: AppStrings.tourAdicionarTitulo,
+    corpo: AppStrings.tourAdicionarCorpo,
+    elegivel: (cap) => true,
+  ),
+  TourStep(
+    id: 'recursos.unidade',
+    alvo: TourKeys.seletorUnidade,
+    titulo: AppStrings.tourUnidadeTitulo,
+    corpo: AppStrings.tourUnidadeCorpo,
+    elegivel: (cap) => true,
+  ),
+  TourStep(
+    id: 'recursos.importar',
+    alvo: TourKeys.botaoImportar,
+    titulo: AppStrings.tourImportarTitulo,
+    corpo: AppStrings.tourImportarCorpo,
+    elegivel: (cap) => true,
+  ),
   TourStep(
     id: 'recursos.marcar',
     alvo: TourKeys.itemLista,

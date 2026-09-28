@@ -36,11 +36,7 @@ Future<void> _montar(WidgetTester tester) async {
               Positioned(
                 left: 24,
                 top: 200,
-                child: SizedBox(
-                  key: TourKeys.nomeLista,
-                  width: 120,
-                  height: 48,
-                ),
+                child: SizedBox(key: TourKeys.lupa, width: 120, height: 48),
               ),
               const Positioned.fill(child: TourOverlay()),
             ],
@@ -69,7 +65,7 @@ void main() {
 
     await _avancarParaUltimo(tester);
 
-    expect(find.text(AppStrings.tourNomeTitulo), findsOneWidget);
+    expect(find.text(AppStrings.tourBuscaTitulo), findsOneWidget);
     expect(find.text('2/2'), findsOneWidget);
     expect(find.text(AppStrings.tourConcluir), findsOneWidget);
     expect(find.text(AppStrings.tourProximo), findsNothing);
@@ -103,7 +99,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(_container.read(tourControllerProvider).ativo, isFalse);
-    expect(find.text(AppStrings.tourNomeTitulo), findsNothing);
+    expect(find.text(AppStrings.tourBuscaTitulo), findsNothing);
     expect(
       await _container.read(tourEtapaVistaProvider(TourEtapa.primeira).future),
       isTrue,
