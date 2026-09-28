@@ -450,7 +450,7 @@ abstract final class AppStrings {
       'Digite aqui. "1kg de arroz" já vira nome, quantidade e unidade.';
   static const tourUnidadeTitulo = 'Unidade';
   static const tourUnidadeCorpo =
-      'Escolha a medida (un, kg, pacote, pote...). O app tenta adivinhar.';
+      'Escolha a medida (un, kg, pacote, pct, pt...). O app tenta adivinhar.';
   static const tourImportarTitulo = 'Importe por texto';
   static const tourImportarCorpo =
       'Cole uma anotação e o app organiza os itens para você.';
