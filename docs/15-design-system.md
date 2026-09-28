@@ -44,7 +44,7 @@ Título de tela (AppBar): **24sp bold** aplicado via `appBarTheme.titleTextStyle
 | `AppCabecalhoSecao` | Cabeçalho de seção (`título (n)`) |
 | `AppEstadoVazio` | Vazio com ícone + texto + CTA; rótulo único (título + descrição) para o leitor de tela, com a ação em nó próprio (Fase 14) |
 | `AppEstadoErro` | Erro de carga com retry rotulado |
-| `AppCampoTexto` | Campo de formulário com erro inline; aceita `hint`, `maxLength`, `minLines`/`maxLines`, `textInputAction` e `readOnly` (Fase 14) |
+| `AppCampoTexto` | Campo de formulário com erro inline; aceita `hint`, `maxLength`, `minLines`/`maxLines`, `textInputAction`, `readOnly` (Fase 14) e `inputFormatters` (F43) |
 | `AppDropdown<T>` | Dropdown de formulário padronizado (`label`/`valor`/`itens`/`onChanged`/`compacto`/`expandido`), mesma decoração dos campos; `expandido` ocupa a largura disponível (evita estouro em colunas estreitas) (Fase 14) |
 | `AppSheet.mostrar` | Bottom sheet padrão: `showModalBottomSheet` com `isScrollControlled`, drag handle, `SafeArea` e padding inferior que cresce com `viewInsets.bottom` (o teclado empurra o conteúdo para cima); usado pelo editor de item (F40) |
 | `mostrarSnackBar` | Snackbar (inclusive undo) com **duração curta**: 2s sem ação e 3s com ação (`duracao` sobrescreve — F12-T07); já anunciado por ser uma live region do próprio `SnackBar`; aceita `messenger` (`ScaffoldMessengerState?`) para quando não há `ScaffoldMessenger` no contexto (primeiro plano do app e falhas fora de tela — G-31/G-32) |

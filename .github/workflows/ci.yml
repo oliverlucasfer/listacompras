@@ -9,39 +9,24 @@ on:
 
 jobs:
   flutter:
-    # Projeto Flutter nasce na F3-T01 (docs/14); etapas ativas quando existir pubspec.yaml
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - id: check
-        run: |
-          if [ -f pubspec.yaml ]; then
-            echo "flutter=enabled" >> "$GITHUB_OUTPUT"
-          else
-            echo "flutter=skipped" >> "$GITHUB_OUTPUT"
-          fi
-      - if: steps.check.outputs.flutter == 'enabled'
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           channel: stable
           flutter-version: 3.44.5  # pinado ao SDK do dev — formatter de versões novas diverge
-      - if: steps.check.outputs.flutter == 'enabled'
-        run: dart format --set-exit-if-changed .
-      - if: steps.check.outputs.flutter == 'enabled'
-        run: flutter analyze
-      - if: steps.check.outputs.flutter == 'enabled'
-        run: flutter test
-      - if: steps.check.outputs.flutter == 'enabled'
-        run: >-
+      - run: dart format --set-exit-if-changed .
+      - run: flutter analyze
+      - run: flutter test
+      - run: >-
           flutter build web --release
           --dart-define=SUPABASE_URL=https://exemplo.supabase.co
           --dart-define=SUPABASE_ANON_KEY=teste
-      - if: steps.check.outputs.flutter == 'enabled'
-        run: flutter build apk --debug --flavor prod
+      - run: flutter build apk --debug --flavor prod
       # O flavor `lite` NÃO seleciona o modo: sem `-t lib/main_lite.dart` ele
       # empacota o app colaborativo com o pacote `.lite` (defeito real da F41/F42).
-      - if: steps.check.outputs.flutter == 'enabled'
-        run: flutter build apk --debug --flavor lite -t lib/main_lite.dart
+      - run: flutter build apk --debug --flavor lite -t lib/main_lite.dart
 
   supabase:
     runs-on: ubuntu-latest
@@ -100,7 +85,6 @@ jobs:
             npm test && break
             if [ "$i" = "2" ]; then echo "Realtime falhou 2x"; exit 1; fi
           done
-      # Fase 4+: sync tests no job flutter
 
   desktop:
     # Valida os builds desktop (F18-T03, ADR-012). A matriz cobre Linux e
