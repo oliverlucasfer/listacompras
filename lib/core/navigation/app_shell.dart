@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/tour/tour_keys.dart';
 import '../config/app_modo.dart';
 import '../l10n/app_strings.dart';
 
@@ -29,6 +30,8 @@ class AppShell extends ConsumerWidget {
       if (colaboracao) AppStrings.compartilhadas,
       AppStrings.configuracoes,
     ];
+    // Aba Configurações é o alvo do passo "Configurações e backup" (F46).
+    final indiceConfig = rotulos.length - 1;
     final largura = MediaQuery.sizeOf(context).width;
     if (largura >= 600) {
       return Scaffold(
@@ -41,7 +44,10 @@ class AppShell extends ConsumerWidget {
               destinations: [
                 for (var i = 0; i < rotulos.length; i++)
                   NavigationRailDestination(
-                    icon: Icon(icones[i].normal),
+                    icon: Icon(
+                      icones[i].normal,
+                      key: i == indiceConfig ? TourKeys.abaConfiguracoes : null,
+                    ),
                     selectedIcon: Icon(icones[i].selecionado),
                     label: Text(rotulos[i]),
                   ),
@@ -61,6 +67,7 @@ class AppShell extends ConsumerWidget {
         destinations: [
           for (var i = 0; i < rotulos.length; i++)
             NavigationDestination(
+              key: i == indiceConfig ? TourKeys.abaConfiguracoes : null,
               icon: Icon(icones[i].normal),
               selectedIcon: Icon(icones[i].selecionado),
               label: rotulos[i],

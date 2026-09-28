@@ -26,6 +26,7 @@ import '../../convites/providers/papel_providers.dart';
 import '../../convites/ui/acao_sair_da_lista.dart';
 import '../../convites/ui/convites_pendentes_secao.dart';
 import '../../notificacoes/providers/notificacoes_providers.dart';
+import '../../tour/tour_keys.dart';
 import '../domain/lista_com_contagem.dart';
 import '../providers/listas_providers.dart';
 import 'sheet_titulo_lista.dart';
@@ -121,6 +122,7 @@ class _PainelListasState extends ConsumerState<PainelListas> {
                   setState(() => _mostrarArquivadas = !_mostrarArquivadas),
             ),
             IconButton(
+              key: _compartilhadas ? null : TourKeys.lupa,
               tooltip: AppStrings.buscar,
               icon: const Icon(Icons.search),
               onPressed: _abrirBusca,
@@ -196,6 +198,7 @@ class _PainelListasState extends ConsumerState<PainelListas> {
       floatingActionButton: _compartilhadas
           ? null
           : FloatingActionButton.extended(
+              key: TourKeys.novaLista,
               heroTag: 'fab-nova-lista',
               onPressed: () => abrirSheetNovaLista(context, ref),
               icon: const Icon(Icons.add),

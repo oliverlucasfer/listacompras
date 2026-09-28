@@ -17,12 +17,22 @@ import '../../../core/widgets/app_snack_bar.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../backup/ui/secao_backup.dart';
 import '../../notificacoes/providers/notificacoes_providers.dart';
+import '../../tour/tour_controller.dart';
 
 /// Tela Configurações (doc 06 §3, wireframe 10 §5, RF-11): e-mail da conta,
 /// política de privacidade, versão e exclusão de conta (confirmação dupla —
 /// fluxo completo na F5-T02).
 class ConfiguracoesScreen extends ConsumerWidget {
   const ConfiguracoesScreen({super.key});
+
+  /// Reabre o tour ignorando as flags de conclusão (RF-27, F46). A tela atual
+  /// pode não ter os alvos da etapa 1 montados; nesse caso cai para a etapa 2.
+  void _abrirTour(WidgetRef ref) {
+    final tour = ref.read(tourControllerProvider.notifier);
+    if (!tour.iniciar(TourEtapa.primeira, forcar: true)) {
+      tour.iniciar(TourEtapa.recursos, forcar: true);
+    }
+  }
 
   Future<void> _confirmarSair(BuildContext context, WidgetRef ref) async {
     final confirmou = await AppDialog.confirmarDestrutivo(
@@ -140,6 +150,12 @@ class ConfiguracoesScreen extends ConsumerWidget {
               builder: (context, snapshot) =>
                   Text(snapshot.data?.version ?? AppStrings.semValor),
             ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.school_outlined),
+            title: const Text(AppStrings.tourAbrir),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _abrirTour(ref),
           ),
           if (cap.backup) const SecaoBackup(),
           if (cap.colaboracao) ...[

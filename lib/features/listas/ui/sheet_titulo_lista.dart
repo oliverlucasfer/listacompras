@@ -7,6 +7,7 @@ import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_snack_bar.dart';
+import '../../tour/tour_keys.dart';
 
 /// Bottom sheet de título reutilizável (nova lista / renomear).
 class SheetTituloLista extends StatefulWidget {
@@ -111,6 +112,7 @@ class _SheetTituloListaState extends State<SheetTituloLista> {
           ],
           const SizedBox(height: AppSpacing.lg),
           AppCampoTexto(
+            key: TourKeys.nomeLista,
             controller: _controller,
             label: AppStrings.nomeDaLista,
             erro: _erro,

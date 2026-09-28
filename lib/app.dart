@@ -7,6 +7,7 @@ import 'core/theme/identidade_visual.dart';
 import 'core/theme/theme_mode_provider.dart';
 import 'core/widgets/app_snack_bar.dart';
 import 'features/notificacoes/providers/push_navegacao.dart';
+import 'features/tour/ui/tour_overlay.dart';
 import 'router.dart';
 
 final _messengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -42,6 +43,16 @@ class ListaComprasApp extends ConsumerWidget {
       routerConfig: router,
       scaffoldMessengerKey: _messengerKey,
       debugShowCheckedModeBanner: false,
+      // O tour é ancorado na raiz, com constraints cheias: o `Spotlight` lê
+      // posições globais (`localToGlobal`), então um overlay dentro do
+      // `Scaffold.body` desalinharia o recorte (contrato da F46-T03).
+      builder: (context, child) => Stack(
+        fit: StackFit.expand,
+        children: [
+          if (child != null) child else const SizedBox.shrink(),
+          const TourOverlay(),
+        ],
+      ),
     );
   }
 }

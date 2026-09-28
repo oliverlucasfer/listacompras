@@ -30,6 +30,9 @@ import '../../convites/ui/sheet_convidar.dart';
 import '../../importacao/ui/modal_importar.dart';
 import '../../importacao/ui/modal_previsao_importacao.dart';
 import '../../sync/ui/indicador_sync.dart';
+import '../../tour/tour_controller.dart';
+import '../../tour/tour_keys.dart';
+import '../../tour/ui/tour_loader.dart';
 import '../../voz/domain/reconhecimento_voz.dart';
 import '../../voz/providers/reconhecimento_voz_provider.dart';
 import '../../../core/dominio/categoria.dart';
@@ -348,6 +351,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                 if (_papelNaLista(lista.id) == Papel.dono ||
                     _papelNaLista(lista.id) == Papel.editor)
                   IconButton(
+                    key: TourKeys.botaoMercado,
                     tooltip: AppStrings.modoMercado,
                     icon: const Icon(Icons.shopping_cart_checkout),
                     onPressed: () => context.push('/mercado/${lista.id}'),
@@ -365,6 +369,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                     onPressed: _abrirBusca,
                   ),
                 PopupMenuButton<String>(
+                  key: TourKeys.menuMais,
                   tooltip: AppStrings.menu,
                   onSelected: (acao) => _acaoMenu(context, ref, lista.id, acao),
                   itemBuilder: (context) {
@@ -409,9 +414,10 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                           child: Text(AppStrings.membros),
                         ),
                       if (ehDono && cap.colaboracao)
-                        const PopupMenuItem(
+                        PopupMenuItem(
+                          key: TourKeys.acaoConvite,
                           value: 'convidar',
-                          child: Text(AppStrings.convidar),
+                          child: const Text(AppStrings.convidar),
                         ),
                       if (ehDono)
                         PopupMenuItem(
@@ -473,6 +479,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                         AppSpacing.xl,
                       ),
                       child: AppBotao(
+                        key: TourKeys.botaoImportar,
                         rotulo: AppStrings.importarLista,
                         variante: AppBotaoVariante.outlined,
                         icone: Icons.playlist_add,
@@ -696,6 +703,7 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
               ),
             ),
           AppCampoTexto(
+            key: TourKeys.campoAdicionar,
             controller: _controller,
             label: AppStrings.adicionarItem,
             erro: _erro,
@@ -706,6 +714,7 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
               children: [
                 Flexible(
                   child: PopupMenuButton<Unidade>(
+                    key: TourKeys.seletorUnidade,
                     tooltip: AppStrings.unidade,
                     initialValue: _unidade,
                     onSelected: (u) => setState(() => _unidade = u),
@@ -837,6 +846,25 @@ class _ListaItens extends ConsumerWidget {
         // (categoria, ordem, id) — o stream já chega ordenado por (ordem, id).
         final ordemCategorias =
             ref.watch(ordemCategoriasProvider).value ?? CategoriaItem.values;
+        // Primeiro item pendente na ordem exibida: alvo do passo do tour
+        // (RF-27, F46). O loader também só existe quando há item ativo.
+        String? alvoTourId;
+        for (final categoria in ordemCategorias) {
+          for (final item in pendentes) {
+            if (item.categoria == categoria) {
+              alvoTourId = item.id;
+              break;
+            }
+          }
+          if (alvoTourId != null) break;
+        }
+        if (pendentes.isNotEmpty) {
+          slivers.add(
+            const SliverToBoxAdapter(
+              child: TourLoader(etapa: TourEtapa.recursos),
+            ),
+          );
+        }
         for (final categoria in ordemCategorias) {
           final grupo = pendentes
               .where((i) => i.categoria == categoria)
@@ -868,6 +896,7 @@ class _ListaItens extends ConsumerWidget {
                         listaId: listaId,
                         item: grupo[index],
                         index: index,
+                        tourAlvo: grupo[index].id == alvoTourId,
                       ),
                     )
                   : SliverList(
@@ -878,6 +907,7 @@ class _ListaItens extends ConsumerWidget {
                           item: grupo[index],
                           index: -1,
                           podeEscrever: podeEscrever,
+                          tourAlvo: grupo[index].id == alvoTourId,
                         ),
                         childCount: grupo.length,
                       ),
@@ -922,6 +952,7 @@ class _LinhaItem extends ConsumerWidget {
     required this.item,
     required this.index,
     this.podeEscrever = true,
+    this.tourAlvo = false,
   });
 
   final String listaId;
@@ -933,9 +964,13 @@ class _LinhaItem extends ConsumerWidget {
   /// Leitor (doc 08 §1, F7-T04): sem checkbox, sem swipe, sem alça.
   final bool podeEscrever;
 
+  /// Primeira linha ativa: ancora o passo do tour (RF-27, F46).
+  final bool tourAlvo;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final linha = ListTile(
+      key: tourAlvo ? TourKeys.itemLista : null,
       // Tocar no item abre o editor (F12-T06) — o swipe continua disponível;
       // o leitor recebe a dica do papel ao tocar (doc 10 §3.3, G-36).
       onTap: podeEscrever
