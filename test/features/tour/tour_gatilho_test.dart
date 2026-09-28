@@ -232,4 +232,58 @@ void main() {
     expect(c.read(tourControllerProvider).ativo, isTrue);
     expect(find.text(AppStrings.tourNovaListaTitulo), findsOneWidget);
   });
+
+  testWidgets('deve_ignorar_alvo_quando_offstage', (tester) async {
+    final c = container(
+      prefs: {
+        'onboarding_visto': true,
+        'tour_etapa1_visto': true,
+        'tour_etapa2_visto': true,
+      },
+    );
+
+    await tester.pumpWidget(
+      _app(
+        c,
+        Stack(
+          children: [
+            const ConfiguracoesScreen(),
+            // Alvos da aba "Minhas" escondida (IndexedStack offstage): o tour
+            // não pode apontar para eles a partir de Configurações.
+            Offstage(
+              offstage: true,
+              child: Stack(
+                children: [
+                  Positioned(
+                    key: TourKeys.novaLista,
+                    left: 40,
+                    top: 96,
+                    width: 120,
+                    height: 48,
+                    child: const SizedBox(),
+                  ),
+                  Positioned(
+                    key: TourKeys.lupa,
+                    left: 200,
+                    top: 96,
+                    width: 48,
+                    height: 48,
+                    child: const SizedBox(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final iniciou = c
+        .read(tourControllerProvider.notifier)
+        .iniciar(TourEtapa.primeira);
+
+    expect(iniciou, isFalse);
+    expect(c.read(tourControllerProvider).ativo, isFalse);
+  });
 }

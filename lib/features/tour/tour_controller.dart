@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -61,15 +62,50 @@ class TourController extends Notifier<TourEstado> {
   TourEstado build() => const TourEstado();
 
   /// Inicia uma etapa; retorna false se não houver passos elegíveis/montados.
+  ///
+  /// Um alvo só entra na fila se estiver **de fato visível**: `currentContext`
+  /// sozinho não basta — no `IndexedStack` do shell as abas ocultas continuam
+  /// montadas (offstage) e o spotlight apontaria para um widget invisível.
   bool iniciar(TourEtapa etapa) {
     final cap = ref.read(capacidadesProvider);
     final lista = (etapa == TourEtapa.primeira ? passosEtapa1 : passosEtapa2)
         .where((p) => p.elegivel(cap))
-        .where((p) => p.alvo.currentContext != null)
+        .where((p) => _alvoVisivel(p.alvo))
         .toList();
     if (lista.isEmpty) return false;
     state = TourEstado(ativo: true, passos: lista, indice: 0, etapa: etapa);
     return true;
+  }
+
+  static bool _alvoVisivel(GlobalKey alvo) {
+    final ctx = alvo.currentContext;
+    if (ctx == null || !ctx.mounted) return false;
+    final render = ctx.findRenderObject();
+    if (render is! RenderBox || !render.attached || !render.hasSize) {
+      return false;
+    }
+    // `visitAncestorElements` percorre a cadeia até a raiz; se algum ancestral
+    // for `Offstage`/`Visibility` invisível ou tiver tamanho zero, o alvo está
+    // escondido (ex.: aba não selecionada no IndexedStack).
+    var visivel = true;
+    ctx.visitAncestorElements((element) {
+      final widget = element.widget;
+      if (widget is Offstage && widget.offstage) {
+        visivel = false;
+        return false;
+      }
+      if (widget is Visibility && !widget.visible) {
+        visivel = false;
+        return false;
+      }
+      return true;
+    });
+    if (!visivel || render.size.isEmpty) return false;
+    final origem = render.localToGlobal(Offset.zero);
+    final tela = WidgetsBinding.instance.platformDispatcher.views.first;
+    final tam = tela.physicalSize / tela.devicePixelRatio;
+    final rect = origem & render.size;
+    return rect.overlaps(Offset.zero & tam);
   }
 
   Future<void> proximo() async {
