@@ -568,8 +568,8 @@ foreach ($d in "mdpi","hdpi","xhdpi","xxhdpi","xxxhdpi") {
 
 - [ ] **Step 5: Restaurar o `main` (ícones do Lite não vazam para o `prod`)**
 
-Run: `git checkout -- android/app/src/main/res`
-Expected: `git status --short android` mostra apenas `M build.gradle.kts` e arquivos novos em `src/lite/res` (nada modificado em `src/main/res`).
+Run: `git checkout -- android/app/src/main/res ; git clean -fd android/app/src/main/res`
+Expected: `git status --short android` mostra apenas `M build.gradle.kts` e arquivos novos em `src/lite/res` (nada modificado nem não rastreado em `src/main/res`).
 
 - [ ] **Step 6: Gerar o splash do Lite**
 
@@ -615,7 +615,7 @@ Copy-Item "$src/values-night-v31/styles.xml" "$dst/values-night-v31/styles.xml" 
 
 - [ ] **Step 8: Restaurar `main` e o `pubspec` do `prod`**
 
-Run: `git checkout -- pubspec.yaml android/app/src/main/res`
+Run: `git checkout -- pubspec.yaml android/app/src/main/res ; git clean -fd android/app/src/main/res`
 Expected: `pubspec.yaml` volta a `#2E7D32`/`logo_glyph.png`; `git status --short` lista apenas mudanças em `build.gradle.kts`, `flutter_launcher_icons.yaml` (remover) e `android/app/src/lite/res/**`.
 
 - [ ] **Step 9: Remover a config temporária e conferir o merge do `prod`**
