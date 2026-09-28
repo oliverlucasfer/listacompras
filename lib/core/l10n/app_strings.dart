@@ -438,6 +438,7 @@ abstract final class AppStrings {
   static const tourAnterior = 'Anterior';
   static const tourProximo = 'Próximo';
   static const tourConcluir = 'Concluir';
+  static String tourPasso(int numero, int total) => 'Passo $numero de $total';
   static const tourAbrir = 'Ver tutorial';
   static const tourNovaListaTitulo = 'Criar sua primeira lista';
   static const tourNovaListaCorpo =

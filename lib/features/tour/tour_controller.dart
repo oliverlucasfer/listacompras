@@ -72,9 +72,9 @@ class TourController extends Notifier<TourEstado> {
     return true;
   }
 
-  void proximo() {
+  Future<void> proximo() async {
     final i = state.indice + 1;
-    if (i >= state.passos.length) return _encerrar();
+    if (i >= state.passos.length) return _encerrarMarcandoVista();
     state = state.copyWith(indice: i);
   }
 
@@ -83,7 +83,9 @@ class TourController extends Notifier<TourEstado> {
     state = state.copyWith(indice: state.indice - 1);
   }
 
-  Future<void> pular() async {
+  Future<void> pular() => _encerrarMarcandoVista();
+
+  Future<void> _encerrarMarcandoVista() async {
     final etapa = state.etapa;
     _encerrar();
     if (etapa != null) {
