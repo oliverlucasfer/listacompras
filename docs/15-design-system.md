@@ -72,9 +72,11 @@ Rota de debug `/design` (`kDebugMode`) renderiza tokens e componentes em claro/e
 
 ## 6. Identidade visual
 
-- **Marca:** carrinho de compras, branco sobre o verde da marca `#2E7D32`. O glifo vem do Material Symbols `shopping_cart` (Apache-2.0), na mesma linguagem dos ícones do app.
-- **Masters vetoriais** (fonte de verdade, editáveis): `assets/branding/logo.svg` (ícone cheio, fundo verde) e `assets/branding/logo_glyph.svg` (glifo com fundo transparente, já dentro da área segura do ícone adaptativo).
-- **Bitmaps gerados** (commitados, 1024px): `assets/branding/logo.png` (ícones/splash/cabeçalho) e `logo_glyph.png` (ícone adaptativo e splash).
+- **Duas marcas:** a escolha é feita por [`IdentidadeVisual`](../lib/core/theme/identidade_visual.dart) (`logoAsset`/`nomeApp`), **nunca** por `AppModo` diretamente. O flavor `prod` usa a marca colaborativa e o flavor `lite` (Minhas Listas) usa a marca Lite.
+- **Marca colaborativa (`prod`):** carrinho de compras, branco sobre o verde da marca `#2E7D32`. O glifo vem do Material Symbols `shopping_cart` (Apache-2.0), na mesma linguagem dos ícones do app.
+- **Marca Lite (`lite`):** cesta de compras (`shopping_basket`, Apache-2.0), branca sobre o índigo da marca `#4F46E5`.
+- **Masters vetoriais** (fonte de verdade, editáveis): `assets/branding/logo.svg` e `assets/branding/logo_glyph.svg` (colaborativa); `assets/branding/logo_lite.svg` (ícone cheio, fundo índigo) e `assets/branding/logo_glyph_lite.svg` (glifo transparente, dentro da área segura do ícone adaptativo) para o Lite.
+- **Bitmaps gerados** (commitados, 1024px): `assets/branding/logo.png` e `logo_glyph.png` (colaborativa); `assets/branding/logo_lite.png` e `logo_glyph_lite.png` (Lite) — usados em ícones/splash/cabeçalho (`AppLogo`).
 - **Usos:** ícone do app (Android/iOS/web), splash e cabeçalho das telas de topo (`AppLogo`, 28dp). O ícone cheio vai full-bleed — as plataformas aplicam a máscara (squircle/círculo).
 - **Área de respiro / tamanho mínimo:** não encostar o glifo nas bordas (o `logo_glyph` já traz ~19% de margem); não exibir o glifo abaixo de **24dp**.
 - **Splash:** fundo verde `#2E7D32` (escuro `#1B5E20`) com o glifo centrado.
