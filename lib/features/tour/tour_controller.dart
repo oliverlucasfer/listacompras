@@ -41,41 +41,65 @@ class TourEstado {
     this.passos = const [],
     this.indice = 0,
     this.etapa,
+    this.proximaEtapa,
   });
   final bool ativo;
   final List<TourStep> passos;
   final int indice;
   final TourEtapa? etapa;
+
+  /// Etapa que continua em seguida (reabertura roda as duas em sequência).
+  final TourEtapa? proximaEtapa;
+
   TourStep? get atual =>
       ativo && indice < passos.length ? passos[indice] : null;
-  TourEstado copyWith({bool? ativo, List<TourStep>? passos, int? indice}) =>
-      TourEstado(
-        ativo: ativo ?? this.ativo,
-        passos: passos ?? this.passos,
-        indice: indice ?? this.indice,
-        etapa: etapa,
-      );
+  TourEstado copyWith({
+    bool? ativo,
+    List<TourStep>? passos,
+    int? indice,
+    TourEtapa? etapa,
+    TourEtapa? proximaEtapa,
+  }) => TourEstado(
+    ativo: ativo ?? this.ativo,
+    passos: passos ?? this.passos,
+    indice: indice ?? this.indice,
+    etapa: etapa ?? this.etapa,
+    proximaEtapa: proximaEtapa ?? this.proximaEtapa,
+  );
 }
 
 class TourController extends Notifier<TourEstado> {
   @override
   TourEstado build() => const TourEstado();
 
-  /// Inicia uma etapa; retorna false se não houver passos elegíveis/montados.
+  /// Inicia uma etapa; retorna false se não houver passos elegíveis/visíveis.
+  ///
+  /// `encadear` monta a fila de etapas: ao fim da atual, [proximo] inicia a
+  /// seguinte (`primeira` → `recursos`) quando ela tiver alvos visíveis.
   ///
   /// Um alvo só entra na fila se estiver **de fato visível**: `currentContext`
   /// sozinho não basta — no `IndexedStack` do shell as abas ocultas continuam
   /// montadas (offstage) e o spotlight apontaria para um widget invisível.
-  bool iniciar(TourEtapa etapa) {
+  bool iniciar(TourEtapa etapa, {bool encadear = false}) {
     final cap = ref.read(capacidadesProvider);
-    final lista = (etapa == TourEtapa.primeira ? passosEtapa1 : passosEtapa2)
-        .where((p) => p.elegivel(cap))
-        .where((p) => _alvoVisivel(p.alvo))
-        .toList();
+    final lista = _passosDe(
+      etapa,
+    ).where((p) => p.elegivel(cap)).where((p) => _alvoVisivel(p.alvo)).toList();
     if (lista.isEmpty) return false;
-    state = TourEstado(ativo: true, passos: lista, indice: 0, etapa: etapa);
+    state = TourEstado(
+      ativo: true,
+      passos: lista,
+      indice: 0,
+      etapa: etapa,
+      proximaEtapa: encadear && etapa == TourEtapa.primeira
+          ? TourEtapa.recursos
+          : null,
+    );
     return true;
   }
+
+  List<TourStep> _passosDe(TourEtapa etapa) =>
+      etapa == TourEtapa.primeira ? passosEtapa1 : passosEtapa2;
 
   static bool _alvoVisivel(GlobalKey alvo) {
     final ctx = alvo.currentContext;
@@ -123,9 +147,15 @@ class TourController extends Notifier<TourEstado> {
 
   Future<void> _encerrarMarcandoVista() async {
     final etapa = state.etapa;
+    final proxima = state.proximaEtapa;
     _encerrar();
     if (etapa != null) {
       await ref.read(tourEtapaVistaProvider(etapa).notifier).marcarVista(etapa);
+    }
+    // Reabertura: segue para a próxima etapa (ex.: primeira → recursos) se
+    // ainda houver alvos visíveis; senão encerra em definitivo.
+    if (proxima != null && !iniciar(proxima, encadear: false)) {
+      state = const TourEstado();
     }
   }
 

@@ -286,4 +286,57 @@ void main() {
     expect(iniciou, isFalse);
     expect(c.read(tourControllerProvider).ativo, isFalse);
   });
+
+  testWidgets('deve_encadear_etapa2_quando_concluir_etapa1_reaberta', (
+    tester,
+  ) async {
+    final c = container(
+      prefs: {
+        'onboarding_visto': true,
+        'tour_etapa1_visto': true,
+        'tour_etapa2_visto': true,
+      },
+    );
+
+    await tester.pumpWidget(
+      _app(
+        c,
+        Stack(
+          children: [
+            const ConfiguracoesScreen(),
+            Positioned(
+              key: TourKeys.novaLista,
+              left: 40,
+              top: 96,
+              width: 120,
+              height: 48,
+              child: const SizedBox(),
+            ),
+            Positioned(
+              key: TourKeys.itemLista,
+              left: 40,
+              top: 300,
+              width: 300,
+              height: 48,
+              child: const SizedBox(),
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final tour = c.read(tourControllerProvider.notifier);
+    // Reabre forçando o encadeamento primeira → recursos (ambos com alvo).
+    expect(tour.iniciar(TourEtapa.primeira, encadear: true), isTrue);
+    expect(c.read(tourControllerProvider).etapa, TourEtapa.primeira);
+
+    // Conclui todos os passos visíveis da etapa 1.
+    while (c.read(tourControllerProvider).etapa == TourEtapa.primeira) {
+      await tour.proximo();
+    }
+
+    expect(c.read(tourControllerProvider).etapa, TourEtapa.recursos);
+    expect(c.read(tourControllerProvider).ativo, isTrue);
+  });
 }

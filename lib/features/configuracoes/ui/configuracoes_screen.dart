@@ -25,11 +25,13 @@ import '../../tour/tour_controller.dart';
 class ConfiguracoesScreen extends ConsumerWidget {
   const ConfiguracoesScreen({super.key});
 
-  /// Reabre o tour ignorando as flags de conclusão (RF-27, F46). A tela atual
-  /// pode não ter os alvos da etapa 1 montados; nesse caso cai para a etapa 2.
+  /// Reabre o tour ignorando as flags de conclusão (RF-27, F46), rodando as
+  /// **duas etapas em sequência**. A tela atual pode não ter os alvos da etapa
+  /// 1 montados (ex.: só Configurações visível); nesse caso cai direto para a
+  /// etapa 2.
   void _abrirTour(WidgetRef ref) {
     final tour = ref.read(tourControllerProvider.notifier);
-    if (!tour.iniciar(TourEtapa.primeira)) {
+    if (!tour.iniciar(TourEtapa.primeira, encadear: true)) {
       tour.iniciar(TourEtapa.recursos);
     }
   }

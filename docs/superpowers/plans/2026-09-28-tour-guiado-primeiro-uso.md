@@ -193,7 +193,7 @@ class TourController extends Notifier<TourEstado> {
   TourEstado build() => const TourEstado();
 
   /// Inicia uma etapa; retorna false se não houver passos elegíveis/montados.
-  bool iniciar(TourEtapa etapa, {bool forcar = false}) {
+  bool iniciar(TourEtapa etapa, {bool encadear = false}) {
     final cap = ref.read(capacidadesProvider);
     final lista = (etapa == TourEtapa.primeira ? passosEtapa1 : passosEtapa2)
         .where((p) => p.elegivel(cap))
@@ -392,7 +392,7 @@ testWidgets('deve_mostrar_bolha_e_avancar_quando_proximo', (tester) async {
 - [ ] **Step 4: Gatilhos**
   - Etapa 1: em `MinhasListasScreen`/`painel_listas`, após `onboarding_visto` (mesmo ponto do `/boas-vindas`).
   - Etapa 2: em `tela_lista_screen`, quando a lista tem ≥1 item ativo e `!tour_etapa2_visto`.
-  - Reabrir: `configuracoes_screen` → linha "Ver tutorial" chama `iniciar(forcar: true)` para as duas etapas.
+  - Reabrir: `configuracoes_screen` → linha "Ver tutorial" chama `iniciar(TourEtapa.primeira, encadear: true)` — roda as duas etapas em sequência (fallback para a etapa 2 se a 1 não tiver alvos visíveis).
 
 - [ ] **Step 5: Rodar e ver passar**; rodar a suíte completa (prod intacto quando flags vistas).
 
