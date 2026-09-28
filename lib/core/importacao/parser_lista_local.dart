@@ -96,7 +96,12 @@ bool _tinhaNumero(String parte) {
   final primeiro = _numeroDoToken(tokens.first);
   if (primeiro != null && primeiro > 0) return true;
   final ultimo = _numeroDoToken(tokens.last);
-  return ultimo != null && ultimo > 0;
+  if (ultimo != null && ultimo > 0) return true;
+  if (tokens.length >= 2 && _unidades[normalizarTexto(tokens.last)] != null) {
+    final antes = _numeroDoToken(tokens[tokens.length - 2]);
+    if (antes != null && antes > 0) return true;
+  }
+  return false;
 }
 
 /// Quantidade bruta do texto: `≤ 0` é inválida e vira ausente (`1`) — o
@@ -195,6 +200,27 @@ _Segmento? _lerSegmento(String bruto) {
 }
 
 (double, Unidade, int, bool)? _qtdFim(List<String> t) {
+  // Unidade separada no fim: "<nome> <qtd> <un>" (ex.: "leite 2 kg",
+  // "arroz 1 1/2 kg").
+  final unidadeFim = _unidades[normalizarTexto(t.last)];
+  if (unidadeFim != null && t.length >= 2) {
+    final indiceQtd = t.length - 2;
+    final quantidade = _numeroDoToken(t[indiceQtd]);
+    if (quantidade != null) {
+      var total = quantidade;
+      var inicioNome = indiceQtd;
+      if (inicioNome >= 1 &&
+          _soInteiro.hasMatch(t[inicioNome - 1]) &&
+          _soFracaoSo.hasMatch(t[inicioNome])) {
+        final inteiro = parseQuantidade(t[inicioNome - 1]);
+        if (inteiro != null) {
+          total += inteiro;
+          inicioNome -= 1;
+        }
+      }
+      return (_quantidadeValida(total), unidadeFim, inicioNome, true);
+    }
+  }
   final colado = _numeroColado.firstMatch(t.last);
   if (colado != null) {
     final unidade = _unidades[normalizarTexto(colado.group(2)!)];

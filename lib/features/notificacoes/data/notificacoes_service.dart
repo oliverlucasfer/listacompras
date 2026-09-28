@@ -42,6 +42,7 @@ class NotificacoesService {
 
   Future<bool> definirAtivas(bool ativas) async {
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_chavePedido, true);
     if (!ativas) {
       await prefs.setBool(_chaveAtivas, false);
       final token = await _obterToken();

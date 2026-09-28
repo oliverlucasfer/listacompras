@@ -20,14 +20,28 @@ class SugestaoCategorias {
     final chave = normalizarTexto(nome);
     if (chave.isEmpty) return CategoriaItem.outros;
 
-    final candidatos = await (_db.select(
-      _db.itemLocal,
-    )..where((i) => i.deletadoEm.isNull())).get();
+    final candidatos = await _db
+        .customSelect(
+          '''
+    SELECT i.nome AS nome, i.categoria AS categoria, i.updated_at AS updated_at
+    FROM item_local i
+    JOIN lista_local l ON l.id = i.lista_id AND l.deletado_em IS NULL
+    WHERE i.deletado_em IS NULL
+  ''',
+          readsFrom: {_db.itemLocal, _db.listaLocal},
+        )
+        .get();
     final memoria =
-        candidatos.where((i) => normalizarTexto(i.nome) == chave).toList()
-          ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+        candidatos
+            .where((row) => normalizarTexto(row.read<String>('nome')) == chave)
+            .toList()
+          ..sort(
+            (a, b) => b
+                .read<DateTime>('updated_at')
+                .compareTo(a.read<DateTime>('updated_at')),
+          );
     if (memoria.isNotEmpty) {
-      return CategoriaItem.fromValor(memoria.first.categoria);
+      return CategoriaItem.fromValor(memoria.first.read<String>('categoria'));
     }
 
     return categoriaPorDicionario(chave);

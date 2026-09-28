@@ -14,5 +14,8 @@ class ListaComContagem {
   final int totalItens;
   final int concluidos;
 
+  /// Orçamento da lista em centavos (RF-28, F36); `null` = sem orçamento.
+  int? get orcamentoCentavos => lista.orcamentoCentavos;
+
   String get contagem => AppStrings.progressoLista(concluidos, totalItens);
 }

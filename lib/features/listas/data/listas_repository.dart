@@ -121,7 +121,7 @@ class ListasRepository {
         .customSelect(
           '''
     SELECT l.id, l.titulo, l.dono_id, l.created_at, l.updated_at,
-           l.arquivada_em,
+           l.arquivada_em, l.orcamento_centavos,
            COUNT(i.id) AS total_itens,
            COUNT(CASE WHEN i.concluido = 1 THEN 1 END) AS itens_concluidos
     FROM lista_local l
@@ -144,6 +144,7 @@ class ListasRepository {
                     criadoEm: row.read<DateTime>('created_at'),
                     atualizadoEm: row.read<DateTime>('updated_at'),
                     arquivadaEm: row.read<DateTime?>('arquivada_em'),
+                    orcamentoCentavos: row.read<int?>('orcamento_centavos'),
                   ),
                   totalItens: row.read<int>('total_itens'),
                   concluidos: row.read<int>('itens_concluidos'),

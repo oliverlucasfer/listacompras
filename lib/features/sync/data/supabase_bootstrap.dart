@@ -33,6 +33,7 @@ class SupabaseBootstrap {
     Future<List<Map<String, Object?>>> Function(String tabela)? baixar,
     this._papelRepository,
     this._onPerdaAcesso,
+    this._onSessaoEncerrada,
   }) : _lerUsuarioSalvo = lerUsuarioSalvo ?? _lerSharedPreferences,
        _salvarUsuario = salvarUsuario ?? _gravarSharedPreferences {
     _baixar = baixar ?? _baixarDoSupabase;
@@ -54,6 +55,7 @@ class SupabaseBootstrap {
   late Future<List<Map<String, Object?>>> Function(String tabela) _baixar;
   final PapelRepository? _papelRepository;
   final void Function()? _onPerdaAcesso;
+  final void Function()? _onSessaoEncerrada;
 
   String? _usuarioAtual;
   RealtimeChannel? _canal;
@@ -172,6 +174,7 @@ class SupabaseBootstrap {
 
   Future<void> _aoMudarUsuario(String? novoId) async {
     if (novoId == _usuarioAtual) return;
+    final encerrouSessao = _usuarioAtual != null && novoId == null;
     if (_usuarioAtual != null) {
       await _desassinarRealtime();
       try {
@@ -180,6 +183,7 @@ class SupabaseBootstrap {
         // Offline: a fila é descartada junto com o cache da conta antiga.
       }
     }
+    if (encerrouSessao) _onSessaoEncerrada?.call();
     await _limparCache(limparHistorico: true);
     _usuarioAtual = novoId;
     await _salvarUsuario(novoId);

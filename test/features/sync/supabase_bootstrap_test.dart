@@ -359,6 +359,43 @@ void main() {
     expect(await (db.select(db.mutacaoPendente)).get(), isEmpty);
   });
 
+  test('deve_avisar_fim_de_sessao_quando_logout', () async {
+    var encerradas = 0;
+    final usuario = StreamController<String?>();
+    final bootstrap = SupabaseBootstrap(
+      db: db,
+      engine: SyncEngine(
+        db: db,
+        remoto: remoto,
+        checarConexao: () async => true,
+      ),
+      client: SupabaseClient('http://127.0.0.1:54321', 'test-key'),
+      baixar: (tabela) async => remotos[tabela] ?? const [],
+      mudancasDeUsuario: usuario.stream,
+      checarConexao: () async => true,
+      lerUsuarioSalvo: () async => null,
+      salvarUsuario: (id) async {},
+      onSessaoEncerrada: () => encerradas++,
+    );
+    addTearDown(() async {
+      await bootstrap.dispose();
+      await usuario.close();
+    });
+    await bootstrap.iniciar();
+
+    usuario.add('U1');
+    await pumpEventQueue();
+    expect(encerradas, 0);
+
+    usuario.add('U2');
+    await pumpEventQueue();
+    expect(encerradas, 0);
+
+    usuario.add(null);
+    await pumpEventQueue();
+    expect(encerradas, 1);
+  });
+
   test('deve_limpar_historico_de_precos_quando_troca_de_usuario', () async {
     final usuario = StreamController<String?>();
     final bootstrap = criar(usuario: usuario.stream);

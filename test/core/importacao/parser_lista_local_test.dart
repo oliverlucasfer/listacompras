@@ -229,4 +229,19 @@ void main() {
     expect(r.itens.single.quantidade, 1.5);
     expect(r.itens.single.unidade, Unidade.kg);
   });
+
+  test('deve_ler_nome_quantidade_unidade_quando_separados_no_fim', () {
+    final r = analisarListaLocal('leite 2 kg');
+    expect(r.itens.single.nome, 'Leite');
+    expect(r.itens.single.quantidade, 2);
+    expect(r.itens.single.unidade, Unidade.kg);
+    expect(r.aviso, isNull);
+  });
+
+  test('deve_ler_misto_separado_quando_nome_quantidade_unidade_no_fim', () {
+    final r = analisarListaLocal('arroz 1 1/2 kg');
+    expect(r.itens.single.nome, 'Arroz');
+    expect(r.itens.single.quantidade, 1.5);
+    expect(r.itens.single.unidade, Unidade.kg);
+  });
 }

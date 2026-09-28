@@ -46,6 +46,8 @@ dependencies:
   sentry_flutter: ^9.28.0
   path_provider: ^2.1.6
   path: ^1.9.1
+  # Dependência direta usada por test/drift/database_test.dart (abre o SQLite
+  # nativo via package:sqlite3) — não remover (G-53).
   sqlite3: ^3.5.2
   shared_preferences: ^2.5.5
   package_info_plus: ^9.0.0

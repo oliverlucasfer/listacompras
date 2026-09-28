@@ -19,9 +19,12 @@ final notificacoesPushProvider = Provider<NotificacoesPush>((ref) {
   return NotificacoesPushFirebase();
 });
 
-final pushTokensRepositoryProvider = Provider<PushTokensRepository>(
-  (ref) => PushTokensRepository(Supabase.instance.client),
-);
+final pushTokensRepositoryProvider = Provider<PushTokensRepository>((ref) {
+  if (!ref.watch(capacidadesProvider).nuvem) {
+    return const _PushTokensRepositoryNulo();
+  }
+  return PushTokensRepository(Supabase.instance.client);
+});
 
 final notificacoesServiceProvider = Provider<NotificacoesService>(
   (ref) => NotificacoesService(
@@ -45,3 +48,14 @@ class NotificacoesAtivas extends AsyncNotifier<bool> {
 
 final notificacoesAtivasProvider =
     AsyncNotifierProvider<NotificacoesAtivas, bool>(NotificacoesAtivas.new);
+
+/// Sem nuvem (modo Lite) o token de push não existe: qualquer consumo lança
+/// só se uma operação for de fato executada — o construtor não toca o
+/// `Supabase.instance`.
+class _PushTokensRepositoryNulo implements PushTokensRepository {
+  const _PushTokensRepositoryNulo();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnsupportedError('Push indisponível no modo Lite');
+}

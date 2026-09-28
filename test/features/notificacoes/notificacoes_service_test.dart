@@ -107,6 +107,36 @@ void main() {
     expect(repo.registrados, ['token-fake']);
   });
 
+  test('deve_nao_religar_quando_desativado_antes_de_pedir_permissao', () async {
+    final push = NotificacoesPushFake();
+    final repo = RepositorioTokensFake();
+    final servico = NotificacoesService(
+      push: push,
+      repositorio: repo,
+      plataforma: 'android',
+    );
+
+    await servico.definirAtivas(false);
+    expect(await servico.talvezPedirPermissao(), isFalse);
+    expect(await servico.ativas(), isFalse);
+    expect(push.pedidos, 0);
+  });
+
+  test('deve_remover_token_quando_sair_da_sessao', () async {
+    final push = NotificacoesPushFake();
+    final repo = RepositorioTokensFake();
+    final servico = NotificacoesService(
+      push: push,
+      repositorio: repo,
+      plataforma: 'android',
+    );
+
+    await servico.aoSair();
+
+    expect(repo.removidos, ['token-fake']);
+    expect(push.apagouToken, isTrue);
+  });
+
   test('deve_nao_pedir_quando_plataforma_sem_suporte', () async {
     final push = NotificacoesPushFake(suportado: false);
     final servico = NotificacoesService(

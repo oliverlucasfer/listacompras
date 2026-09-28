@@ -52,6 +52,11 @@ final syncBootstrapProvider = Provider<SupabaseBootstrap>((ref) {
     engine: ref.watch(syncEngineProvider),
     client: Supabase.instance.client,
     papelRepository: ref.watch(papelRepositoryProvider),
+    // Fim de sessão (logout ou revogação/expiração detectada pelo bootstrap):
+    // remove o token de push do dispositivo e do servidor (G-51), não só no
+    // botão "Sair".
+    onSessaoEncerrada: () =>
+        unawaited(ref.read(notificacoesServiceProvider).aoSair()),
   );
   ref.onDispose(bootstrap.dispose);
   unawaited(bootstrap.iniciar());

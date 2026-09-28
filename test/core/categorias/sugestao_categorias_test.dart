@@ -78,6 +78,18 @@ void main() {
     );
   });
 
+  test('deve_ignorar_memoria_quando_lista_excluida', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Leite',
+      categoria: CategoriaItem.pet,
+    );
+    await repo.excluirLista(lista.id);
+
+    expect(await sugestao.sugerirCategoria('leite'), CategoriaItem.laticinios);
+  });
+
   test('deve_lembrar_mesmo_com_variacao_de_acento_quando_memoria', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
     await repo.adicionarItem(

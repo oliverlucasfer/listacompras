@@ -170,6 +170,18 @@ void main() {
     expect(contagens.single.contagem, '1/2 itens concluídos');
   });
 
+  test('deve_expor_orcamento_quando_watch_listas_com_contagem', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    await repo.definirOrcamento(lista.id, centavos: 25000);
+
+    final contagens = await repo.watchListasComContagem().first.timeout(
+      const Duration(seconds: 2),
+    );
+
+    expect(contagens.single.orcamentoCentavos, 25000);
+    expect(contagens.single.lista.orcamentoCentavos, 25000);
+  });
+
   test('deve_adicionar_ordem_sequencial_quando_adicionar_tres_itens', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
 

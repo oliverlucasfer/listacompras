@@ -17,6 +17,7 @@
 | `connectivity_plus` | Detecção online/offline |
 | `uuid` | Geração de UUID v4 no cliente (ADR-006) |
 | `sentry_flutter` | Observabilidade ([07](07-qualidade-ci.md)) |
+| `sqlite3` | Dependência **direta** usada por `test/drift/database_test.dart` (abre o SQLite nativo para inspecionar o banco); **não** remover (G-53) |
 
 ---
 
@@ -130,9 +131,11 @@ Builds: `flutter build apk --flavor prod` / `--flavor lite` (com flavors, `--fla
 | `sugestaoCategoriasProvider` | Provider | Cadeia de sugestão local (Fase 6/RF-15) |
 | `redefinindoSenhaProvider` | NotifierProvider (bool) | true no evento `passwordRecovery`: força o redirect a `/redefinir-senha` até `concluir()` (F14-T03) — assinado antes do refresh do router (ordem de listeners) |
 
+No modo Lite (`capacidadesProvider`), os providers de rede — `notificacoesPushProvider`/`pushTokensRepositoryProvider`, `convitesRepositoryProvider` e `papelRepositoryProvider` — não resolvem `Supabase.instance` no construtor: devolvem um no-op e só lançam se uma operação for de fato consumida (G-45).
+
 **Sugestão de categoria em camadas (Fase 6, ADR-011, spec §4)** — `SugestaoCategorias.sugerirCategoria(nome)`, zero rede:
 
-1. **Memória por nome:** categoria do item ativo mais recente com o mesmo nome (qualquer lista do usuário no dispositivo; comparação sem acento/caixa; `updated_at` DESC).
+1. **Memória por nome:** categoria do item ativo mais recente com o mesmo nome (qualquer lista **ativa** do usuário no dispositivo — itens de listas com `deletado_em` não entram; comparação sem acento/caixa; `updated_at` DESC).
 2. **Dicionário estático** (`core/categorias/dicionario_categorias.dart`, ~230 termos pt-BR versionados no repo): casa quando **todas** as palavras do termo aparecem no nome; multi-palavra casa antes de palavra única ("leite condensado" → Mercearia antes de "leite" → Laticínios), empate por ordem alfabética.
 3. **Fallback:** `outros`.
 
@@ -201,7 +204,7 @@ O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado
 * Estados: carregando (spinner no botão), erro (mensagem inline amigável).
 
 ### 6.2. Painel "Minhas Listas"
-* Lista de cards: título, contagem de itens pendentes/total, atualização relativa ("há 5 min").
+* Lista de cards: título, contagem de itens pendentes/total, atualização relativa ("há 5 min"). A consulta do painel (`watchListasComContagem`/`ListaComContagem`) inclui `orcamento_centavos` da lista (G-43), exposto por `ListaComContagem.orcamentoCentavos`.
 * Cabeçalho das telas de topo exibe a marca (`AppLogo`) à esquerda do título (F13-T02).
 * FAB "Nova lista" → bottom sheet com campo de título. O título (novo ou renomeado) é limitado a **120 caracteres**, com limite aplicado no próprio campo e contador visível (F43-T11/G-50).
 * **Ações do card:** botão `⋮` com renomear / excluir (com confirmação) — nas Compartilhadas, membros / sair da lista; o **long-press abre o mesmo menu** (atalho, não mais o único caminho) (F14-T06).
@@ -295,9 +298,9 @@ Primeiro acesso ao app **autenticado** — apresenta o valor em **uma** página 
 
 Push só no **Android** (iOS na Onda E; Web/Desktop nunca tocam o plugin — `plataformaComPush()`, `features/notificacoes/domain/plataforma_push.dart`). Arquitetura server-side e eventos em [08 §11](08-compartilhamento-colaborativo.md); layout em [10 §5](10-wireframes-telas.md).
 
-* **Toggle "Notificações" (Configurações):** `SwitchListTile` (abaixo de Aparência) ligado ao `notificacoesAtivasProvider`; só aparece onde `plataformaComPush()` é verdadeiro. Ligar pede a permissão do sistema e **só fica ligado se concedida** (`definirAtivas` devolve o resultado real); desligar remove o token do dispositivo (RPC e `deleteToken`) e desativa a flag local.
+* **Toggle "Notificações" (Configurações):** `SwitchListTile` (abaixo de Aparência) ligado ao `notificacoesAtivasProvider`; só aparece onde `plataformaComPush()` é verdadeiro. Ligar pede a permissão do sistema e **só fica ligado se concedida** (`definirAtivas` devolve o resultado real); desligar remove o token do dispositivo (RPC e `deleteToken`) e desativa a flag local — o **opt-out é final**: `definirAtivas` marca o pedido como consumido (G-44), então `talvezPedirPermissao` não religa; só o switch volta a ativar.
 * **Permissão contextual (uma vez):** `talvezPedirPermissao()` é chamado no **primeiro momento relevante** — primeira lista criada (painel de listas) ou primeiro convite aceito (`/entrar` e seção de convites pendentes). O pedido é marcado como consumido apenas quando o plugin responde; falha de plugin não consome (tenta de novo depois). Se concedido, ativa a flag e registra o token.
-* **Registro/limpeza do token:** `PushTokensRepository` chama o RPC `registrar_push_token` (device handoff; [02 §4.8](02-seguranca-rls.md)) — reafirmado no start logado (`registrarSeAtivo`) e no `onTokenRefresh` do FCM (ponte no `syncBootstrapProvider`). No **logout** (`aoSair`) o token é removido e apagado do dispositivo.
+* **Registro/limpeza do token:** `PushTokensRepository` chama o RPC `registrar_push_token` (device handoff; [02 §4.8](02-seguranca-rls.md)) — reafirmado no start logado (`registrarSeAtivo`) e no `onTokenRefresh` do FCM (ponte no `syncBootstrapProvider`). No **fim da sessão** (`aoSair`) o token é removido e apagado do dispositivo — vale para o logout manual **e** para a sessão encerrada detectada pelo bootstrap (G-51), inclusive expiração/revogação. Em Lite os providers de rede não resolvem `Supabase.instance` (G-45).
 * **Toque na notificação (deep link):** `pushNavegacaoProvider` liga o push ao `go_router`: convite → `/entrar?token=…`; novo membro → `/lista/:id`. Cobre app aberto e *cold start* (`toqueInicial`). Só no Android.
 * **Primeiro plano:** `notificacoesForegroundProvider` alimenta um `SnackBar` quando a notificação chega com o app aberto (payload → toque abre a tela certa).
 

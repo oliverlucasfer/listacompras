@@ -7,10 +7,23 @@ import '../../listas/providers/listas_providers.dart';
 import '../data/papel_repository.dart';
 import '../domain/papel.dart';
 
-/// Repositório de papéis do usuário corrente (doc 08 §4, F7-T02).
+/// Repositório de papéis do usuário corrente (doc 08 §4, F7-T02). Sem
+/// colaboração (modo Lite) o construtor não toca o `Supabase.instance` — as
+/// operações lançam só se consumidas.
 final papelRepositoryProvider = Provider<PapelRepository>((ref) {
+  if (!ref.watch(capacidadesProvider).colaboracao) {
+    return const _PapelRepositoryNulo();
+  }
   return PapelRepository(Supabase.instance.client);
 });
+
+class _PapelRepositoryNulo implements PapelRepository {
+  const _PapelRepositoryNulo();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnsupportedError('Papéis indisponíveis no modo Lite');
+}
 
 /// Papel reativo (F7-T03): stream do [PapelRepository] — a UI acompanha
 /// mudanças em memória (bootstrap, ações locais, realtime da F7-T06).
