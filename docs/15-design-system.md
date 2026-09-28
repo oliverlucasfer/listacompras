@@ -54,6 +54,8 @@ Título de tela (AppBar): **24sp bold** aplicado via `appBarTheme.titleTextStyle
 
 **Aplicações transversais (F43-T10):** o `SeletorTema` usa `AppDropdown` no ramo estreito/fonte ampliada (G-41); a rota `/login-callback` usa `AppBotao` e um progresso com rótulo semântico (`carregando` — G-33); o `AppBotao` reduz o conteúdo com `FittedBox` antes de estourar com fonte 2x (G-39); o sufixo do campo "Adicionar item" cede largura (`Flexible`/elipse) na unidade (G-39).
 
+**Tour do primeiro uso (F46/RF-27):** `TourOverlay` + `Spotlight` (`lib/features/tour/ui/tour_overlay.dart`) são componentes do design system (feature-specific, montados na raiz do app). O `Spotlight` desenha o scrim (`colorScheme.scrim`) com recorte e halo (`colorScheme.primary`); a bolha é `Material` sobre `surfaceContainerHigh` com `AppElevation.nivel3`/`AppRadius.lg` e botões `AppBotao` — **tudo com tokens `App*` (`AppSpacing`/`AppRadius`/`AppElevation`/`AppMotion`) e `colorScheme`, sem cor literal**. A animação de troca de passo respeita `disableAnimations` (`AppMotion.media` ou `Duration.zero`). Spec: [tour-guiado](superpowers/specs/2026-09-28-tour-guiado-primeiro-uso-design.md).
+
 ## 4. Acessibilidade (RNF-06)
 
 Regras vinculantes (detalhe e evidência na [spec da Fase 14](superpowers/specs/2026-09-14-ux-acessibilidade-design.md)):
@@ -61,7 +63,7 @@ Regras vinculantes (detalhe e evidência na [spec da Fase 14](superpowers/specs/
 - **Contraste ≥ AA** nos pares `container`/`on*`.
 - **Alvos de toque ≥ 48dp**.
 - **Semântica:** `tooltip` em todo `IconButton`/`PopupMenuButton`; ícones decorativos (logo, ícones de estado de 48–72dp) fora da árvore com `excludeSemantics`; controles com rótulo do contexto (ex.: `Checkbox` do item usa o nome do item).
-- **Live regions:** `AppBanner` (erro/offline/aviso), `mostrarSnackBar` e `IndicadorSync` são anunciados (`Semantics(liveRegion: true)`).
+- **Live regions:** `AppBanner` (erro/offline/aviso), `mostrarSnackBar` e `IndicadorSync` são anunciados (`Semantics(liveRegion: true)`); a bolha do tour (`TourOverlay`) é live region anunciada **"Passo n de m"** (F46).
 - **Localização:** o Material é localizado em pt-BR via `flutter_localizations` (`app.dart` com `Locale('pt','BR')` e os delegados `Global*`, F43-T09) — rótulos e tooltips nativos (ex.: "Voltar") saem em português; strings do produto ficam em `AppStrings` ([05 §7](05-app-flutter.md)).
 - **Escala de texto:** as telas-chave não estouram com `textScaler` 1.3 e 2.0 (verificado com `textScaleFactor` 2.0 nos testes de tela).
 - **Verificação automatizada:** testes com `meetsGuideline(androidTapTargetGuideline)`, `labeledTapTargetGuideline` e `textContrastGuideline` (`test/core/widgets/acessibilidade_test.dart`) + os testes de semântica/estado nas telas — a acessibilidade é verificada por teste, não por inspeção.

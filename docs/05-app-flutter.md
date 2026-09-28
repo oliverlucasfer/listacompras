@@ -325,6 +325,17 @@ a restauração nunca encontre item órfão de lista e viole a FK. A UI separa *
 > pelo LWW não contam) propaga ao Supabase sem exigir uma edição posterior. No modo Lite não
 > há sync — a importação permanece local-only — e o histórico de preços nunca propaga.
 
+### 6.11. Tour guiado do primeiro uso (RF-27, F46)
+
+Motor próprio em `lib/features/tour/` (sem dependência nova): `tour_step.dart`/`tour_keys.dart`/`tour_roteiro.dart`/`tour_controller.dart` + `ui/tour_overlay.dart` e `ui/tour_loader.dart`. O overlay vive na **raiz** (`MaterialApp.router.builder` em `app.dart`) — não dentro do `Scaffold.body` — porque o `Spotlight` lê coordenadas globais (`localToGlobal`); ancorado no corpo, o recorte desalinharia pela AppBar/safe area. Spec: [2026-09-28-tour-guiado-primeiro-uso-design.md](superpowers/specs/2026-09-28-tour-guiado-primeiro-uso-design.md).
+
+* **Duas etapas:** a **etapa 1** (7 passos, sem dados — criar lista, nome/orçamento, adicionar item, unidade, importar, busca e configurações) começa **após as boas-vindas**, na home de listas; a **etapa 2** (4 passos — marcar/editar item, modo mercado, orçamento no menu `⋮` e convite) dispara ao abrir a **primeira lista com itens**. O passo de convite só existe no colaborativo (`elegivel` filtra por `AppCapacidades.colaboracao`); no Lite ele é pulado.
+* **Alvo visível é pré-requisito:** `TourController.iniciar` só enfileira passos cujo alvo está **de fato visível** — rejeita `Offstage`/`Visibility` invisível, tamanho zero ou fora da tela (no `IndexedStack` do shell as abas ocultas seguem montadas). Assim, passos cujo alvo não está montado na tela corrente (ex.: o sheet de nome e os controles da tela da lista durante a etapa 1 na home) são pulados; se nenhum passo sobra, a etapa não inicia.
+* **Flags:** `tour_etapa1_visto` e `tour_etapa2_visto` (`SharedPreferences`, `TourVistoNotifier`, espelho do onboarding). `Pular` e `Concluir` (no último passo) marcam a etapa vista; `Pular` na etapa 1 **não** impede a etapa 2.
+* **Gatilhos:** `TourLoader(etapa: primeira)` na `MinhasListasScreen` (após `onboardingVistoProvider` resolver) e `TourLoader(etapa: recursos)` na tela da lista; cada loader inicia a etapa **uma vez**, só se a flag respectiva ainda for falsa.
+* **Reabrir:** Configurações → **"Ver tutorial"** (`AppStrings.tourAbrir`) ignora as flags e **navega para a home de listas** (`/listas`), onde inicia a etapa 1 com `encadear: true`. Como os alvos da etapa 2 vivem na tela da lista, ela **volta a disparar sozinha** quando o usuário abrir uma lista com itens — não há como rodá-la de dentro de Configurações. Não reescreve de forma destrutiva a conclusão já registrada.
+* **Interação e acessibilidade (RNF-06):** spotlight sobre o alvo + bolha (abaixo, com fallback acima/centro) com indicador `n/total` e botões `Pular`/`Anterior`/`Próximo` (vira `Concluir` no último). O overlay **não bloqueia** os toques fora da bolha — avança só pelos botões; a bolha é live region anunciada **"Passo n de m"** e a transição respeita `disableAnimations`. Layout e spots em [10 §2/§3/§5](10-wireframes-telas.md); tokens em [15 §3](15-design-system.md).
+
 ---
 
 ## 7. Design System

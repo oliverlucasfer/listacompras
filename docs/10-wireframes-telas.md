@@ -124,6 +124,8 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 ```
 Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardTheme` zera a margem do `Card`, então o espaçamento entre cards empilhados é responsabilidade do layout da lista (`ListView.separated`, F12-T05).
 
+**Tour — etapa 1 (RF-27/F46):** nesta tela (home de listas) ficam os spots `TourKeys` da etapa 1 — Fab "Nova lista" (`TourKeys.novaLista`), campo do sheet de nome (`TourKeys.nomeLista`), lupa (`TourKeys.lupa`, só no filtro Minhas) e a aba Configurações (`TourKeys.abaConfiguracoes`, na barra inferior/rail). Os passos de campo/unidade/importar têm alvo na tela da lista e são pulados quando não montados (§3; [05 §6.11](05-app-flutter.md)).
+
 **Marca no cabeçalho (F13-T02):** as telas de **topo** (Minhas Listas / Compartilhadas, sem botão voltar) mostram a marca do app (`AppLogo`, 28dp) à esquerda do título; telas internas (`push`: lista, membros, configurações, auth) mantêm apenas o texto. Título de tela em **24sp bold** (F13-T03, doc [15 §1](15-design-system.md)).
 
 **Arquivar listas (RF-22, F26):** o card de uma lista arquivada exibe o chip **"Arquivada"** no card (no subtítulo, junto da contagem e da atualização; só aparece com o toggle ligado, pois arquivadas ficam ocultas por padrão). O toggle `[▤]` "Mostrar arquivadas" fica na AppBar e vale para **Minhas** e **Compartilhadas**; o menu `⋮` do **dono** mostra "Arquivar" (ativa) ou "Desarquivar" (arquivada visível) — comportamento em [05 §6.2](05-app-flutter.md).
@@ -156,6 +158,7 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 │  (       Criar lista      )     │ ← salva local + fila [03 §4]
 └─────────────────────────────────┘
 ```
+Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 2º passo da etapa 1; como o sheet precisa estar aberto, o passo é pulado se o alvo não estiver montado ([05 §6.11](05-app-flutter.md)).
 
 ### 2.4. Convites pendentes (RF-13, Fase 32 — [08 §4](08-compartilhamento-colaborativo.md))
 ```
@@ -248,6 +251,8 @@ A seção aparece no topo do filtro **Minhas** só quando há convites por e-mai
 **Sufixo do campo de adicionar (G-39):** a área à direita (seletor de unidade + microfone + adicionar) é flexível — o rótulo da unidade cede largura (`Flexible`/elipse) antes de estourar quando a fonte é ampliada (2x) em telas estreitas.
 
 **Carregando da lista (G-07):** enquanto `listaPorIdProvider` carrega, o corpo inteiro vira `AppEsqueleto` (doc [15 §3](15-design-system.md)) — sem spinner cru.
+
+**Tour — etapa 2 (RF-27/F46):** dispara ao abrir a primeira lista com itens. Spots `TourKeys` na tela: checkbox/linha do item (`itemLista`), campo "Adicionar item" (`campoAdicionar`), seletor de unidade (`seletorUnidade`), botão "Importar lista" (`botaoImportar`), botão do modo mercado (`botaoMercado`), menu `⋮` (`menuMais`) e ação convidar (`acaoConvite`, só no colaborativo). A etapa 1 usa `campoAdicionar`/`seletorUnidade`/`botaoImportar` para os passos 3–5 quando estão visíveis; passos sem alvo montado são pulados ([05 §6.11](05-app-flutter.md)).
 
 **Sheet do item (F12-T06 + preço RF-21/F25 + última compra RF-29/F37):** aberto por `AppSheet.mostrar` (bottom sheet, [15 §3](15-design-system.md)), com os campos em blocos e rolagem própria; o teclado sobe o rodapé (`viewInsets`).
 ```
@@ -478,6 +483,8 @@ Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstad
 ```
 
 **Sair** pede confirmação destrutiva antes de encerrar a sessão (F14-T05).
+
+**Tour (RF-27/F46):** a seção "Sobre" ganha o item **"Ver tutorial"** (`AppStrings.tourAbrir`, ícone `school_outlined`, à esquerda de "Backup"): tocar reabre o tour ignorando as flags — **navega para a home de listas** e inicia a etapa 1 lá (se os alvos ainda não estão montados, navega e inicia no próximo frame); a etapa 2 volta a disparar sozinha na lista ([05 §6.11](05-app-flutter.md)).
 
 ### 5.1. Tela "Ordenar categorias" (RF-24, F28)
 ```

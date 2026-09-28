@@ -971,6 +971,23 @@ Requisito: RF-03 (CRUD de itens com unidade do enum). · Docs donos: [01](01-ban
 
 Nota: *(aditivo; `pt` = "pote"; sem migration Drift — a coluna `unidade` é `text`)*
 
+## Fase 46 — Tour guiado interativo do primeiro uso (RF-27)
+
+Spec: [superpowers/specs/2026-09-28-tour-guiado-primeiro-uso-design.md](superpowers/specs/2026-09-28-tour-guiado-primeiro-uso-design.md) · Plano: [superpowers/plans/2026-09-28-tour-guiado-primeiro-uso.md](superpowers/plans/2026-09-28-tour-guiado-primeiro-uso.md) · Requisito: RF-27 (extensão: onboarding interativo). · Docs donos: 05, 15, 10, 12, 14.
+
+- [x] **F46-T01** — Modelo, chaves, controller e flags
+  CP: `TourStep`/`TourKeys`/`TourEtapa`/`TourController` + `tourEtapaVistaProvider` (`tour_etapa1_visto`/`tour_etapa2_visto`); unit tests verdes; sem rede/Drift/schema.
+- [x] **F46-T02** — Roteiro (2 etapas, filtro por capacidades)
+  CP: `passosEtapa1` (7) e `passosEtapa2` (4) com `elegivel` por `AppCapacidades` (convite só no colaborativo); textos em `AppStrings`.
+- [x] **F46-T03** — Overlay (spotlight + bolha)
+  CP: `Spotlight`/`TourOverlay` com tokens `App*`, halo/scrim do `colorScheme`, indicador `n/total`, `Pular`/`Anterior`/`Próximo`, live region "Passo n de m" e `disableAnimations`; widget tests verdes.
+- [x] **F46-T04** — Ligar nas telas + loader e gatilhos
+  CP: `TourLoader` na home e na lista; `TourKeys` anexadas; `iniciar` rejeita alvos offstage; "Ver tutorial" navega para `/listas` e inicia a etapa 1; reabertura encadeia as etapas; widget tests verdes.
+- [x] **F46-T05** — Docs donos e fechamento
+  CP: docs donos 05/15/10/12/14 refletem o tour; RF-27 estendido; Fase 46 na tabela de progresso (248/246); `dart format .`, `flutter analyze` e `flutter test` verdes; sem tocar código.
+
+Nota: *(motor próprio, sem dependência nova; sem migration/schema/sync; passos sem alvo montado são pulados — a etapa 1 na tela da lista cobre campo/unidade/importar quando visíveis; etapa 2 dispara na primeira lista com itens)*
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -1018,7 +1035,8 @@ Nota: *(aditivo; `pt` = "pote"; sem migration Drift — a coluna `unidade` é `t
 | F43 Correções da revisão 2 | 14 | 14 |
 | F44 Identidade visual do Lite | 4 | 4 |
 | F45 Unidade `pt` (pote) | 1 | 1 |
-| **Total** | **243** | **241** |
+| F46 Tour guiado do 1º uso | 5 | 5 |
+| **Total** | **248** | **246** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

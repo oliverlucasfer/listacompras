@@ -47,7 +47,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-24 | Ordem pessoal das categorias (global, local por dispositivo) | 05 §6 + 10 §5 | F28 | [05 §8](05-app-flutter.md) |
 | RF-25 | Quantidades em fração na entrada e exibição (½, 1/2, 1 1/2) | 04 §3 + 05 §6.3 | F29 | [05 §8](05-app-flutter.md) |
 | RF-26 | Adicionar item por voz (reconhecimento on-device, pt-BR, preenche o campo) | 05 §6.3 | F30 | [05 §8](05-app-flutter.md) |
-| RF-27 | Boas-vindas (uma vez) + estados vazios explicativos | 05 §6.8 + 10 §1.4 | F31 | [05 §8](05-app-flutter.md) |
+| RF-27 | Boas-vindas (uma vez) + estados vazios explicativos + **tour guiado interativo do primeiro uso** (2 etapas, spotlight sobre a UI real, reabrível em Configurações) | 05 §6.8/§6.11 + 10 §2/§3/§5 | F31 · F46 | [05 §8](05-app-flutter.md) |
 | RF-28 | Orçamento (limite de gasto) por lista, sincronizado, comparado ao total do carrinho (RF-21), editável por dono/editor | 05 §6.3/§6.5 + 10 §3.1/§3.5 + 01 §4.1 + 03 | F36 | [05 §8](05-app-flutter.md) |
 | RF-29 | Comparação de preços entre idas: "Última compra: R$ X (dd/mm)" + variação no editor, a partir do histórico **local por dispositivo (não sincronizado)** | 05 §6.3 + 10 §3.1 + 03 | F37 | [05 §8](05-app-flutter.md) |
 | RF-30 | Notificação push (Android) de convite por e-mail recebido e de novo membro numa lista sua | 08 §7 + 01 §4.5 + 09 §2 | F38 | [08 §7](08-compartilhamento-colaborativo.md) |
@@ -151,7 +151,7 @@ Cada requisito liga story → design → tarefas ([14](14-tarefas.md)) → verif
 | RF-24 | US-07 | F28 | F28-T01, F28-T02 | Unit ordem + provider + widgets |
 | RF-25 | US-01, US-02 | F29 | F29-T01, F29-T02 | Unit parse/format + parser + editor |
 | RF-26 | US-01 | F30 | F30-T01, F30-T02 | Unit fake + widgets (plugin real: smoke em device) |
-| RF-27 | US-01 | F31 | F31-T01, F31-T02 | Unit provider + widgets |
+| RF-27 | US-01 | F31 · F46 | F31-T01, F31-T02; F46-T01…T05 | Unit provider/widgets (boas-vindas) + motor/roteiro/overlay do tour |
 | RF-28 | US-01 | F36 | F36-T02…T04 | Unit repo/aplicador + widgets |
 | RF-29 | US-01 | F37 | F37-T01, F37-T02 | Unit repo/histórico + widgets |
 | RF-30 | US-01, US-03 | F38 | F38-T05, F38-T08 | Unit fake/roteamento + Deno/SQL + widgets |
