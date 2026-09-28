@@ -14,7 +14,7 @@ List<TourStep> get passosEtapa1 => <TourStep>[
   ),
   TourStep(
     id: 'lista.nome',
-    alvo: TourKeys.novaLista,
+    alvo: TourKeys.nomeLista,
     titulo: AppStrings.tourNomeTitulo,
     corpo: AppStrings.tourNomeCorpo,
     elegivel: (cap) => true,

@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 /// aos widgets reais; o overlay lê a posição via `currentContext`.
 abstract final class TourKeys {
   static final novaLista = GlobalKey();
+  static final nomeLista = GlobalKey();
   static final campoAdicionar = GlobalKey();
   static final seletorUnidade = GlobalKey();
   static final botaoImportar = GlobalKey();
