@@ -25,15 +25,22 @@ import '../../tour/tour_controller.dart';
 class ConfiguracoesScreen extends ConsumerWidget {
   const ConfiguracoesScreen({super.key});
 
-  /// Reabre o tour ignorando as flags de conclusão (RF-27, F46), rodando as
-  /// **duas etapas em sequência**. A tela atual pode não ter os alvos da etapa
-  /// 1 montados (ex.: só Configurações visível); nesse caso cai direto para a
-  /// etapa 2.
-  void _abrirTour(WidgetRef ref) {
+  /// Reabre o tour ignorando as flags de conclusão (RF-27, F46).
+  ///
+  /// Os alvos da etapa 1 vivem na home de listas e os da etapa 2 na tela da
+  /// lista; nenhum está em Configurações. Por isso o botão **navega** para a
+  /// home de listas e inicia a etapa 1 lá (a etapa 2 volta a disparar sozinha
+  /// quando o usuário abrir uma lista com itens). Sem navegação, o motor —
+  /// que só aponta para alvos visíveis — cairia num tour de 1 passo.
+  void _abrirTour(WidgetRef ref, BuildContext context) {
     final tour = ref.read(tourControllerProvider.notifier);
-    if (!tour.iniciar(TourEtapa.primeira, encadear: true)) {
-      tour.iniciar(TourEtapa.recursos);
+    if (tour.iniciar(TourEtapa.primeira, encadear: true)) {
+      return;
     }
+    context.go('/listas');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      tour.iniciar(TourEtapa.primeira, encadear: true);
+    });
   }
 
   Future<void> _confirmarSair(BuildContext context, WidgetRef ref) async {
@@ -157,7 +164,7 @@ class ConfiguracoesScreen extends ConsumerWidget {
             leading: const Icon(Icons.school_outlined),
             title: const Text(AppStrings.tourAbrir),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _abrirTour(ref),
+            onTap: () => _abrirTour(ref, context),
           ),
           if (cap.backup) const SecaoBackup(),
           if (cap.colaboracao) ...[

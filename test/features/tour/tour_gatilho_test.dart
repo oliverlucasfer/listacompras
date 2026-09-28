@@ -303,7 +303,6 @@ void main() {
         c,
         Stack(
           children: [
-            const ConfiguracoesScreen(),
             Positioned(
               key: TourKeys.novaLista,
               left: 40,
@@ -327,16 +326,56 @@ void main() {
     await tester.pumpAndSettle();
 
     final tour = c.read(tourControllerProvider.notifier);
-    // Reabre forçando o encadeamento primeira → recursos (ambos com alvo).
+    // Ambos os alvos visíveis: reabre encadeando primeira → recursos.
     expect(tour.iniciar(TourEtapa.primeira, encadear: true), isTrue);
     expect(c.read(tourControllerProvider).etapa, TourEtapa.primeira);
 
-    // Conclui todos os passos visíveis da etapa 1.
+    // Conclui todos os passos da etapa 1.
     while (c.read(tourControllerProvider).etapa == TourEtapa.primeira) {
       await tour.proximo();
     }
 
     expect(c.read(tourControllerProvider).etapa, TourEtapa.recursos);
     expect(c.read(tourControllerProvider).ativo, isTrue);
+  });
+
+  testWidgets('nao_deve_ter_etapa2_ao_reabrir_de_configuracoes', (
+    tester,
+  ) async {
+    final c = container(
+      prefs: {
+        'onboarding_visto': true,
+        'tour_etapa1_visto': true,
+        'tour_etapa2_visto': true,
+      },
+    );
+
+    await tester.pumpWidget(
+      _app(
+        c,
+        Stack(
+          children: [
+            const ConfiguracoesScreen(),
+            Positioned(
+              key: TourKeys.abaConfiguracoes,
+              left: 40,
+              top: 96,
+              width: 120,
+              height: 48,
+              child: const SizedBox(),
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final tour = c.read(tourControllerProvider.notifier);
+    // Só o alvo de Configurações existe: a etapa 1 tem 1 passo e não há
+    // alvos da etapa 2 — concluir encerra o tour (não fica preso/ativo).
+    expect(tour.iniciar(TourEtapa.primeira, encadear: true), isTrue);
+    await tour.proximo();
+
+    expect(c.read(tourControllerProvider).ativo, isFalse);
   });
 }
