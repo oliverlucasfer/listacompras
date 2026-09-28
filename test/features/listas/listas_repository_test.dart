@@ -215,6 +215,24 @@ void main() {
   test('deve_rejeitar_unidade_fora_do_enum_quando_converter_valor', () {
     expect(() => Unidade.fromValor('quilos'), throwsArgumentError);
     expect(Unidade.fromValor('kg'), Unidade.kg);
+    expect(Unidade.fromValor('pt'), Unidade.pt);
+  });
+
+  test('deve_gravar_unidade_pt_quando_adicionar_item', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+
+    final item = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Sorvete',
+      quantidade: 2,
+      unidade: Unidade.pt,
+    );
+
+    final gravado = await (db.select(
+      db.itemLocal,
+    )..where((t) => t.id.equals(item.id))).getSingle();
+    expect(gravado.unidade, 'pt');
+    expect(Unidade.fromValor(gravado.unidade), Unidade.pt);
   });
 
   test('deve_editar_campos_e_enfileirar_update_quando_editar_item', () async {

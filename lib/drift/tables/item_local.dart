@@ -28,7 +28,7 @@ class ItemLocal extends Table {
   List<String> get customConstraints => [
     'CHECK (quantidade > 0)',
     'CHECK (quantidade <= 1000000)',
-    "CHECK (unidade IN ('un','kg','g','l','ml','caixa','pacote','pct','dz'))",
+    "CHECK (unidade IN ('un','kg','g','l','ml','caixa','pacote','pct','pt','dz'))",
     "CHECK (categoria IN ('hortifruti','mercearia','frios','laticinios',"
         "'congelados','padaria','bebidas','pet','limpeza','higiene','outros'))",
     'CHECK (preco_centavos IS NULL OR '

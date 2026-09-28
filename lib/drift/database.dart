@@ -17,7 +17,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   /// Paridade com o índice único parcial `uq_item_ativo` do Postgres
   /// (`0001_init.sql:57-59`): parcial não é expressável no `@TableIndex`.
@@ -140,6 +140,12 @@ class AppDatabase extends _$AppDatabase {
       if (de < 9) {
         // v8 → v9: teto de `quantidade` espelhado do Postgres (F43-T08) —
         // `alterTable` recria a tabela; o índice manual é refeito em seguida.
+        await m.alterTable(TableMigration(itemLocal));
+        await customStatement(_criarIndiceItemAtivo);
+      }
+      if (de < 10) {
+        // v9 → v10: unidade `pt` no CHECK local, espelhando o enum do Postgres
+        // (doc 01 §3.1, F45-T01) — `alterTable` recria a tabela.
         await m.alterTable(TableMigration(itemLocal));
         await customStatement(_criarIndiceItemAtivo);
       }
