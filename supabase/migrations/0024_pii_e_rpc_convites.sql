@@ -95,7 +95,7 @@ revoke execute on function public.aceitar_convite(uuid) from public, anon;
 grant execute on function public.aceitar_convite(uuid) to authenticated;
 
 -- ============================================================================
--- G-24 — CHECK tipo ↔ email (aditivo; `not valid` + `validate`)
+-- G-24 — CHECK tipo ↔ email (aditivo; `not valid`, aplicado a writes novos)
 -- ============================================================================
 alter table public.convites
   add constraint convites_tipo_email_check
@@ -103,5 +103,3 @@ alter table public.convites
     (tipo = 'link' and email is null)
     or (tipo = 'email' and email is not null)
   ) not valid;
-
-alter table public.convites validate constraint convites_tipo_email_check;

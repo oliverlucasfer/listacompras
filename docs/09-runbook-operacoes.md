@@ -88,6 +88,23 @@ supabase db push
 
 ### 2.6. Histórico de operações em produção
 
+**Pré-checagem de constraints `NOT VALID` antes do `db push` (F43):** as migrations `0024`/`0025` adicionam `CHECK`s como `not valid` — eles passam a valer para `INSERT`/`UPDATE` **novos**, mas a validação das linhas existentes (`VALIDATE CONSTRAINT`) é omitida da migration para que uma linha legada violadora **não aborte o `db push` transacional**. Antes do push, confira as contagens; qualquer valor `> 0` exige normalização manual (ou a pendência de validação fica registrada):
+
+```sql
+select count(*) from public.convites
+  where not ((tipo = 'link' and email is null) or (tipo = 'email' and email is not null));
+select count(*) from public.itens_lista where quantidade > 1000000;
+select count(*) from public.push_tokens where char_length(token) not between 1 and 4096;
+```
+
+Depois de normalizar (e aplicar a migration), valide manualmente:
+
+```sql
+alter table public.convites validate constraint convites_tipo_email_check;
+alter table public.itens_lista validate constraint itens_lista_quantidade_teto;
+alter table public.push_tokens validate constraint push_tokens_token_tamanho;
+```
+
 **2026-09-08 — Provisionamento inicial** (F5-T05b):
 - `supabase db push` — migrations 0001–0005 aplicadas (`migration list` local = remote).
 - Auth → URL Configuration → Redirect URLs: `br.com.oliverlucas.listacompras://login-callback` (dashboard).

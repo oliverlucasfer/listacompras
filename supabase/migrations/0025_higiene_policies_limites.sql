@@ -66,12 +66,11 @@ create policy "convites_insert_dono"
 -- ============================================================================
 alter table public.push_tokens
   add constraint push_tokens_token_tamanho
-  check (char_length(token) between 1 and 4096);
+  check (char_length(token) between 1 and 4096) not valid;
 
 alter table public.itens_lista
   add constraint itens_lista_quantidade_teto
   check (quantidade <= 1000000) not valid;
-alter table public.itens_lista validate constraint itens_lista_quantidade_teto;
 
 -- ============================================================================
 -- G-23 — definers com `search_path = ''` e identificadores qualificados

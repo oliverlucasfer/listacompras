@@ -283,6 +283,7 @@ class SupabaseBootstrap {
       final pagina = await _client
           .from(tabela)
           .select()
+          .order('id')
           .range(inicio, inicio + _tamanhoPagina - 1);
       linhas.addAll([
         for (final linha in pagina as List)

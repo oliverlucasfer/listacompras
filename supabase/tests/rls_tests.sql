@@ -10,7 +10,7 @@
 -- G-26/G-27/G-29/G-30 (F43-T08, migration 0025 — doc 02 §3/§4.3/§4.4/§4.8):
 -- G-26a/b/c impedem trocar `user_id`/`lista_id` de `lista_membros` (só `papel`
 -- muda); G-27a/b/c restringem `convites.estado`/`expira_em` no INSERT do dono;
--- G-29a/b aplicam o teto de `itens_lista.quantidade`; G-30a..i cobrem anon em
+-- G-29a/b aplicam o teto de `itens_lista.quantidade`; G-30a..k cobrem anon em
 -- `lista_membros`/`convites`, grant de `agora_servidor` e enums inválidos.
 --
 -- Execução (após `supabase db reset`):

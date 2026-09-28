@@ -502,6 +502,13 @@ void main() {
       locais.map((l) => l.id),
       containsAll(['l0', 'l499', 'l500', 'l501']),
     );
+
+    final ordens = servidor.pedidos
+        .where((p) => p.url.path.contains('listas'))
+        .map((p) => p.url.queryParameters['order'])
+        .toList();
+    expect(ordens, isNotEmpty);
+    expect(ordens.every((o) => o != null && o.contains('id')), isTrue);
   });
 
   test('deve_preservar_cache_e_fila_quando_mesmo_usuario_no_restart', () async {
