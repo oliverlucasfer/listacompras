@@ -7,6 +7,7 @@ void main() {
   Future<void> abrir(
     WidgetTester tester, {
     ValueChanged<String>? onSalvar,
+    String? valorInicial,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -18,6 +19,7 @@ void main() {
                   context,
                   titulo: AppStrings.novaLista,
                   rotuloBotao: AppStrings.criarLista,
+                  valorInicial: valorInicial,
                   onSalvar: (nome) async => onSalvar?.call(nome),
                 ),
                 child: const Text('abrir'),
@@ -66,6 +68,27 @@ void main() {
     await tester.pump();
 
     expect(find.text('3/120'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('deve_limitar_valor_inicial_longo_quando_abrir', (tester) async {
+    String? salvo;
+    await abrir(
+      tester,
+      valorInicial: 'x' * 130,
+      onSalvar: (nome) => salvo = nome,
+    );
+
+    final campo = tester.widget<TextField>(find.byType(TextField));
+    expect(campo.controller!.text.length, 120);
+    expect(find.text('120/120'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, AppStrings.criarLista));
+    await tester.pumpAndSettle();
+
+    expect(salvo, isNotNull);
+    expect(salvo!.length, 120);
 
     await tester.pumpWidget(const SizedBox.shrink());
   });

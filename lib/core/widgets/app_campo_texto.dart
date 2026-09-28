@@ -21,6 +21,7 @@ class AppCampoTexto extends StatelessWidget {
     this.readOnly = false,
     this.onChanged,
     this.onSubmitted,
+    this.inputFormatters,
   });
 
   final TextEditingController? controller;
@@ -39,6 +40,7 @@ class AppCampoTexto extends StatelessWidget {
   final bool readOnly;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onSubmitted;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +62,7 @@ class AppCampoTexto extends StatelessWidget {
       readOnly: readOnly,
       onChanged: onChanged,
       onSubmitted: onSubmitted == null ? null : (_) => onSubmitted!(),
+      inputFormatters: inputFormatters,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,

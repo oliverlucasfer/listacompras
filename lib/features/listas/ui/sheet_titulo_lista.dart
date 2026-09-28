@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
@@ -32,25 +33,17 @@ class SheetTituloLista extends StatefulWidget {
 
 class _SheetTituloListaState extends State<SheetTituloLista> {
   static const _limiteTitulo = 120;
+  static final _limitador = LengthLimitingTextInputFormatter(_limiteTitulo);
 
-  late final _controller = TextEditingController(text: widget.valorInicial);
+  static String _clampTitulo(String texto) => _limitador
+      .formatEditUpdate(TextEditingValue.empty, TextEditingValue(text: texto))
+      .text;
+
+  late final _controller = TextEditingController(
+    text: _clampTitulo(widget.valorInicial ?? ''),
+  );
   bool _salvando = false;
   String? _erro;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller.addListener(_limitarTitulo);
-  }
-
-  void _limitarTitulo() {
-    final texto = _controller.text;
-    if (texto.length <= _limiteTitulo) return;
-    _controller.value = TextEditingValue(
-      text: texto.substring(0, _limiteTitulo),
-      selection: const TextSelection.collapsed(offset: _limiteTitulo),
-    );
-  }
 
   @override
   void dispose() {
@@ -59,7 +52,7 @@ class _SheetTituloListaState extends State<SheetTituloLista> {
   }
 
   Future<void> _salvar() async {
-    final nome = _controller.text.trim();
+    final nome = _clampTitulo(_controller.text.trim());
     if (nome.isEmpty) {
       setState(() => _erro = AppStrings.erroNomeVazio);
       return;
@@ -123,6 +116,7 @@ class _SheetTituloListaState extends State<SheetTituloLista> {
             erro: _erro,
             autofocus: true,
             maxLength: _limiteTitulo,
+            inputFormatters: [_limitador],
             onSubmitted: _salvar,
           ),
           Align(
@@ -130,7 +124,7 @@ class _SheetTituloListaState extends State<SheetTituloLista> {
             child: ValueListenableBuilder<TextEditingValue>(
               valueListenable: _controller,
               builder: (context, valor, _) =>
-                  Text('${valor.text.length}/$_limiteTitulo'),
+                  Text('${valor.text.characters.length}/$_limiteTitulo'),
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
