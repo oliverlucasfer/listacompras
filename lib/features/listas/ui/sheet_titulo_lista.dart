@@ -31,9 +31,26 @@ class SheetTituloLista extends StatefulWidget {
 }
 
 class _SheetTituloListaState extends State<SheetTituloLista> {
+  static const _limiteTitulo = 120;
+
   late final _controller = TextEditingController(text: widget.valorInicial);
   bool _salvando = false;
   String? _erro;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_limitarTitulo);
+  }
+
+  void _limitarTitulo() {
+    final texto = _controller.text;
+    if (texto.length <= _limiteTitulo) return;
+    _controller.value = TextEditingValue(
+      text: texto.substring(0, _limiteTitulo),
+      selection: const TextSelection.collapsed(offset: _limiteTitulo),
+    );
+  }
 
   @override
   void dispose() {
@@ -105,7 +122,16 @@ class _SheetTituloListaState extends State<SheetTituloLista> {
             label: AppStrings.nomeDaLista,
             erro: _erro,
             autofocus: true,
+            maxLength: _limiteTitulo,
             onSubmitted: _salvar,
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _controller,
+              builder: (context, valor, _) =>
+                  Text('${valor.text.length}/$_limiteTitulo'),
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
           AppBotao(

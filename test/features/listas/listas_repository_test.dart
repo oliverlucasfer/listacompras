@@ -657,6 +657,34 @@ void main() {
     expect(payload['orcamento_centavos'], 0);
   });
 
+  test('deve_rejeitar_orcamento_negativo_quando_definir', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+
+    expect(
+      () => repo.definirOrcamento(lista.id, centavos: -1),
+      throwsArgumentError,
+    );
+
+    final local = await (db.select(
+      db.listaLocal,
+    )..where((l) => l.id.equals(lista.id))).getSingle();
+    expect(local.orcamentoCentavos, isNull);
+  });
+
+  test('deve_rejeitar_orcamento_acima_do_teto_quando_definir', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+
+    expect(
+      () => repo.definirOrcamento(lista.id, centavos: 100000000),
+      throwsArgumentError,
+    );
+
+    final local = await (db.select(
+      db.listaLocal,
+    )..where((l) => l.id.equals(lista.id))).getSingle();
+    expect(local.orcamentoCentavos, isNull);
+  });
+
   test('deve_incluir_orcamento_nulo_no_payload_quando_criar_lista', () async {
     await repo.criarLista(titulo: 'X', donoId: 'user-a');
 

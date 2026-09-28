@@ -99,6 +99,28 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
+  testWidgets(
+    'deve_exibir_erro_generico_e_liberar_botao_quando_falha_de_rede',
+    (tester) async {
+      repo.onEntrar = (email, senha) async => throw StateError('sem rede');
+      await abrirDialogoExclusao(tester);
+
+      await tester.enterText(find.byType(TextField), '123456');
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilledButton, AppStrings.continuar));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.erroGenerico), findsOneWidget);
+      final botao = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, AppStrings.continuar),
+      );
+      expect(botao.onPressed, isNotNull);
+      expect(repo.excluirContaChamado, isFalse);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
   testWidgets('deve_mostrar_confirmacao_final_quando_senha_correta', (
     tester,
   ) async {

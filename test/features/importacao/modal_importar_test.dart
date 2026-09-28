@@ -2,11 +2,22 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lista_compras/core/categorias/sugestao_categorias.dart';
+import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/core/importacao/resposta_import.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/importacao/ui/modal_importar.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
+
+class _SugestaoQueFalha extends SugestaoCategorias {
+  _SugestaoQueFalha(super.db);
+
+  @override
+  Future<CategoriaItem> sugerirCategoria(String nome) async {
+    throw StateError('drift indisponível');
+  }
+}
 
 void main() {
   FilledButton botaoExtrair(WidgetTester tester) => tester.widget<FilledButton>(
@@ -16,12 +27,17 @@ void main() {
   Future<void> abrir(
     WidgetTester tester, {
     ValueChanged<RespostaParse?>? onResultado,
+    SugestaoCategorias? sugestao,
   }) async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          if (sugestao != null)
+            sugestaoCategoriasProvider.overrideWithValue(sugestao),
+        ],
         child: MaterialApp(home: _TelaAbrirModal(onResultado: onResultado)),
       ),
     );
@@ -135,6 +151,24 @@ void main() {
     await tester.pump();
 
     expect(find.text(AppStrings.importRespostaInvalida), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('deve_liberar_botao_quando_falha_de_categoria', (tester) async {
+    final dbFake = AppDatabase(NativeDatabase.memory());
+    addTearDown(dbFake.close);
+    await abrir(tester, sugestao: _SugestaoQueFalha(dbFake));
+
+    await tester.enterText(find.byType(TextField), '1kg de arroz');
+    await tester.pump();
+    await tester.tap(
+      find.widgetWithText(FilledButton, AppStrings.importExtrairItens),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.erroGenerico), findsOneWidget);
+    expect(botaoExtrair(tester).onPressed, isNotNull);
 
     await tester.pumpWidget(const SizedBox.shrink());
   });

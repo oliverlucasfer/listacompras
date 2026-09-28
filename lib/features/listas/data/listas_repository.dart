@@ -247,6 +247,9 @@ class ListasRepository {
   /// Define/limpa o orçamento da lista (RF-28, F36). Offline-first: Drift +
   /// fila. `centavos == null` remove o orçamento; `0` é um orçamento válido.
   Future<void> definirOrcamento(String id, {required int? centavos}) {
+    if (centavos != null && (centavos < 0 || centavos > 99999999)) {
+      throw ArgumentError.value(centavos, 'centavos');
+    }
     return _db.transaction(() async {
       final agora = DateTime.now().toUtc();
       await (_db.update(_db.listaLocal)..where((l) => l.id.equals(id))).write(

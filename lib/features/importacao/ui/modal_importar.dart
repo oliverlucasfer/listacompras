@@ -68,12 +68,11 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
       final resposta = await _extrairLocal(_controller.text);
       if (mounted) Navigator.pop(context, resposta);
     } on ErroImportacao catch (e) {
-      if (mounted) {
-        setState(() {
-          _carregando = false;
-          _erro = e.mensagem;
-        });
-      }
+      if (mounted) setState(() => _erro = e.mensagem);
+    } catch (_) {
+      if (mounted) setState(() => _erro = AppStrings.erroGenerico);
+    } finally {
+      if (mounted) setState(() => _carregando = false);
     }
   }
 

@@ -206,12 +206,11 @@ class _DialogoSenhaExclusaoState extends ConsumerState<_DialogoSenhaExclusao> {
           .entrar(email: email ?? '', senha: _senha.text);
       if (mounted) Navigator.pop(context, true);
     } on AuthException {
-      if (mounted) {
-        setState(() {
-          _verificando = false;
-          _erro = AppStrings.senhaIncorreta;
-        });
-      }
+      if (mounted) setState(() => _erro = AppStrings.senhaIncorreta);
+    } catch (_) {
+      if (mounted) setState(() => _erro = AppStrings.erroGenerico);
+    } finally {
+      if (mounted) setState(() => _verificando = false);
     }
   }
 

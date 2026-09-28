@@ -770,21 +770,26 @@ class _ListaItens extends ConsumerWidget {
   bool _casa(Item item) =>
       consulta.trim().isEmpty || contemBusca(item.nome, consulta);
 
-  void _reordenarGrupo(
+  Future<void> _reordenarGrupo(
+    BuildContext context,
     WidgetRef ref,
     CategoriaItem categoria,
     List<Item> grupo,
     int oldIndex,
     int newIndex,
-  ) {
+  ) async {
     // Drag é restrito ao grupo (F6-T04, spec §6): reordena só os ids do
     // grupo; a exibição ordena por (categoria, ordem, id).
     final ordenados = [...grupo]
       ..removeAt(oldIndex)
       ..insert(newIndex, grupo[oldIndex]);
-    ref.read(listasRepositoryProvider).reordenarItens(listaId, [
-      for (final i in ordenados) i.id,
-    ]);
+    try {
+      await ref.read(listasRepositoryProvider).reordenarItens(listaId, [
+        for (final i in ordenados) i.id,
+      ]);
+    } catch (_) {
+      if (context.mounted) mostrarSnackBar(context, AppStrings.erroGenerico);
+    }
   }
 
   @override
@@ -851,6 +856,7 @@ class _ListaItens extends ConsumerWidget {
                   ? SliverReorderableList(
                       itemCount: grupo.length,
                       onReorderItem: (oldIndex, newIndex) => _reordenarGrupo(
+                        context,
                         ref,
                         categoria,
                         grupo,

@@ -12,6 +12,7 @@ import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_esqueleto.dart';
 import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
+import '../../../core/widgets/app_snack_bar.dart';
 import '../../auth/providers/auth_providers.dart';
 import '../../convites/domain/papel.dart';
 import '../../convites/providers/papel_providers.dart';
@@ -39,17 +40,35 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
   final _marcadosNaSessao = <String>{};
 
   Future<void> _marcar(Item item) async {
+    final jaContava = _marcadosNaSessao.contains(item.id);
     setState(() => _marcadosNaSessao.add(item.id));
-    await ref
-        .read(listasRepositoryProvider)
-        .editarItem(item.id, concluido: true);
+    try {
+      await ref
+          .read(listasRepositoryProvider)
+          .editarItem(item.id, concluido: true);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        if (!jaContava) _marcadosNaSessao.remove(item.id);
+      });
+      mostrarSnackBar(context, AppStrings.erroGenerico);
+    }
   }
 
   Future<void> _desmarcar(Item item) async {
+    final jaContava = _marcadosNaSessao.contains(item.id);
     setState(() => _marcadosNaSessao.remove(item.id));
-    await ref
-        .read(listasRepositoryProvider)
-        .editarItem(item.id, concluido: false);
+    try {
+      await ref
+          .read(listasRepositoryProvider)
+          .editarItem(item.id, concluido: false);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        if (jaContava) _marcadosNaSessao.add(item.id);
+      });
+      mostrarSnackBar(context, AppStrings.erroGenerico);
+    }
   }
 
   /// Ids marcados nesta sessão que ainda existem **e** estão concluídos no

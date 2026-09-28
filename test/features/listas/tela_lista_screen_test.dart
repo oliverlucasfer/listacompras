@@ -39,6 +39,15 @@ import '../convites/servidor_fake.dart';
 import '../auth/fakes.dart';
 import '../voz/fake_reconhecimento_voz.dart';
 
+class _RepoReordenarFalha extends ListasRepository {
+  _RepoReordenarFalha(super.db);
+
+  @override
+  Future<void> reordenarItens(String listaId, List<String> idsOrdenados) async {
+    throw StateError('falha ao reordenar');
+  }
+}
+
 void main() {
   setUpAll(inicializarSupabaseTeste);
 
@@ -1097,6 +1106,48 @@ void main() {
         .map((m) => m.registroId)
         .toSet();
     expect(idsComUpdate, {arroz.id, feijao.id});
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_erro_quando_reordenar_falha', (tester) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      categoria: CategoriaItem.mercearia,
+    );
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Feijão',
+      categoria: CategoriaItem.mercearia,
+    );
+    final sync = StreamController<SyncStatus>();
+    sync.add(const Sincronizado());
+    addTearDown(sync.close);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          listasRepositoryProvider.overrideWithValue(_RepoReordenarFalha(db)),
+          papelRepositoryProvider.overrideWithValue(
+            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
+          ),
+          syncStatusProvider.overrideWith((ref) => sync.stream),
+        ],
+        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.drag(
+      find.byIcon(Icons.drag_handle).first,
+      const Offset(0, 150),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.erroGenerico), findsOneWidget);
 
     await fechar(tester);
   });

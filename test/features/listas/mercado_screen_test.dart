@@ -4,6 +4,8 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lista_compras/core/dominio/categoria.dart';
+import 'package:lista_compras/core/dominio/unidade.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/auth/providers/auth_providers.dart';
@@ -12,6 +14,24 @@ import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/mercado_screen.dart';
 import 'package:lista_compras/features/sync/domain/sync_status.dart';
 import 'package:lista_compras/features/sync/providers/sync_providers.dart';
+
+class _RepoEditarFalha extends ListasRepository {
+  _RepoEditarFalha(super.db);
+
+  @override
+  Future<void> editarItem(
+    String id, {
+    String? nome,
+    double? quantidade,
+    Unidade? unidade,
+    CategoriaItem? categoria,
+    bool? concluido,
+    int? precoCentavos,
+    bool limparPreco = false,
+  }) async {
+    throw StateError('falha de escrita');
+  }
+}
 
 void main() {
   late AppDatabase db;
@@ -24,7 +44,11 @@ void main() {
 
   tearDown(() async => db.close());
 
-  Future<void> abrir(WidgetTester tester, String listaId) async {
+  Future<void> abrir(
+    WidgetTester tester,
+    String listaId, {
+    bool escritaFalha = false,
+  }) async {
     final sync = StreamController<SyncStatus>();
     sync.add(const Sincronizado());
     addTearDown(sync.close);
@@ -32,6 +56,8 @@ void main() {
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
+          if (escritaFalha)
+            listasRepositoryProvider.overrideWithValue(_RepoEditarFalha(db)),
           donoAtualIdProvider.overrideWithValue('user-a'),
           syncStatusProvider.overrideWith((ref) => sync.stream),
         ],
@@ -169,6 +195,45 @@ void main() {
     expect(find.text('0 de 1'), findsOneWidget);
     expect(find.text(AppStrings.mercadoMarcados), findsNothing);
     expect(find.text('Arroz'), findsOneWidget);
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_erro_quando_marcar_falha', (tester) async {
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz', quantidade: 1);
+    await abrir(tester, lista.id, escritaFalha: true);
+
+    await tester.tap(find.text('Arroz'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.erroGenerico), findsOneWidget);
+    expect(find.text('0 de 1'), findsOneWidget);
+    final item = (await db.select(db.itemLocal).get()).single;
+    expect(item.concluido, isFalse);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_erro_quando_desmarcar_falha', (tester) async {
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final item = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      quantidade: 1,
+    );
+    await repo.editarItem(item.id, concluido: true);
+    await abrir(tester, lista.id, escritaFalha: true);
+
+    await tester.tap(find.text('${AppStrings.mercadoMarcados} (1)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Arroz'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.erroGenerico), findsOneWidget);
+    expect(find.text('0 de 1'), findsOneWidget);
+    final persistido = (await db.select(db.itemLocal).get()).single;
+    expect(persistido.concluido, isTrue);
+
     await fechar(tester);
   });
 
