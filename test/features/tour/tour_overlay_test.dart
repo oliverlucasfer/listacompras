@@ -13,6 +13,7 @@ late ProviderContainer _container;
 /// Monta dois alvos elegíveis (passos 1 e 2 da etapa 1) e o overlay por cima,
 /// então inicia a etapa 1 — a fila fica com exatamente esses dois passos.
 Future<void> _montar(WidgetTester tester) async {
+  SharedPreferences.setMockInitialValues({});
   _container = ProviderContainer();
   addTearDown(_container.dispose);
   await tester.pumpWidget(
@@ -152,7 +153,7 @@ void main() {
   testWidgets('deve_nao_renderizar_quando_inativo', (tester) async {
     await _montar(tester);
 
-    _container.read(tourControllerProvider.notifier).pular();
+    await _container.read(tourControllerProvider.notifier).pular();
     await tester.pumpAndSettle();
 
     expect(find.text(AppStrings.tourNovaListaTitulo), findsNothing);
