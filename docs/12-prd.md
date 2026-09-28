@@ -51,7 +51,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-28 | Orçamento (limite de gasto) por lista, sincronizado, comparado ao total do carrinho (RF-21), editável por dono/editor | 05 §6.3/§6.5 + 10 §3.1/§3.5 + 01 §4.1 + 03 | F36 | [05 §8](05-app-flutter.md) |
 | RF-29 | Comparação de preços entre idas: "Última compra: R$ X (dd/mm)" + variação no editor, a partir do histórico **local por dispositivo (não sincronizado)** | 05 §6.3 + 10 §3.1 + 03 | F37 | [05 §8](05-app-flutter.md) |
 | RF-30 | Notificação push (Android) de convite por e-mail recebido e de novo membro numa lista sua | 08 §7 + 01 §4.5 + 09 §2 | F38 | [08 §7](08-compartilhamento-colaborativo.md) |
-| RF-31 | Versão Lite: uso sem conta, 100% no aparelho (sem login, sem convites, sem notificações), com backup local exportar/importar | 05 §2.3 + 05 §6.10 | F41 | [05 §2.3](05-app-flutter.md) |
+| RF-31 | Versão Lite: uso sem conta, 100% no aparelho (sem login, sem convites, sem notificações), com backup local exportar/importar; identidade visual própria (índigo/cesta, nome Minhas Listas) | 05 §2.3 + 05 §6.10 | F41 | [05 §2.3](05-app-flutter.md) |
 
 ## 3. Requisitos Não-Funcionais
 

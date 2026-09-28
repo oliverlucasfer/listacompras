@@ -950,6 +950,17 @@ Fonte: [relatorio-revisao-geral-2.md](relatorio-revisao-geral-2.md) · Spec: [su
   Dep: F43-T00 · Docs: [07](07-qualidade-ci.md), [09](09-runbook-operacoes.md), [14](14-tarefas.md)
   CP: doc 07 espelha o `ci.yml`; progresso do 14 coerente; README/flavors atualizados.
 
+## Fase 44 — Identidade visual do Lite (RF-31)
+
+Spec: [superpowers/specs/2026-09-28-identidade-visual-lite-design.md](superpowers/specs/2026-09-28-identidade-visual-lite-design.md) · Plano: [superpowers/plans/2026-09-28-identidade-visual-lite.md](superpowers/plans/2026-09-28-identidade-visual-lite.md) · Requisito: RF-31 (identidade visual própria do Lite: índigo `#4F46E5`, cesta, nome "Minhas Listas"). · Docs donos: 15, 05, 09, 12, 14.
+
+- [x] **F44-T01** — Identidade por capacidades (`IdentidadeVisual`) e tema do Lite
+- [x] **F44-T02** — Assets da marca do Lite (cesta índigo) e `AppLogo` por identidade
+- [x] **F44-T03** — Casco nativo do Lite: nome, ícone e splash
+- [x] **F44-T04** — Docs donos, versão `1.5.0+14` e fechamento da Fase 44
+
+Nota: *(fase fechada com o app `1.5.0+14`; casco nativo apenas Android — iOS/Web/desktop do Lite seguem fora de escopo/adiados; `prod` inalterado — verde, carrinho, "Lista de Compras")*
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -995,7 +1006,8 @@ Fonte: [relatorio-revisao-geral-2.md](relatorio-revisao-geral-2.md) · Spec: [su
 | F41 Flavor Lite | 14 | 14 |
 | F42 Dívidas da Fase 41 | 2 | 2 |
 | F43 Correções da revisão 2 | 14 | 14 |
-| **Total** | **238** | **236** |
+| F44 Identidade visual do Lite | 4 | 4 |
+| **Total** | **242** | **240** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

@@ -115,6 +115,9 @@ O Lite usa o dono local `'local'` e nunca toca a rede. Decisões e costura compl
 [superpowers/specs/2026-09-24-flavor-lite-sem-conta-design.md](superpowers/specs/2026-09-24-flavor-lite-sem-conta-design.md).
 Builds: `flutter build apk --flavor prod` / `--flavor lite` (com flavors, `--flavor` é obrigatório).
 
+O modo Lite tem **identidade visual própria** (índigo `#4F46E5`, símbolo de cesta, nome **"Minhas Listas"**), escolhida por `IdentidadeVisual` a partir de `AppCapacidades` — nunca por `AppModo` — para o tema, o `AppLogo` e o título do app; o `prod` segue verde, com carrinho e "Lista de Compras". Spec e decisões em
+[superpowers/specs/2026-09-28-identidade-visual-lite-design.md](superpowers/specs/2026-09-28-identidade-visual-lite-design.md); tokens em [15 §1/§6](15-design-system.md).
+
 ---
 
 ## 3. Providers Riverpod (por feature)
