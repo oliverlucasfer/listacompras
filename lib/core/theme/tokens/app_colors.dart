@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 abstract final class AppColors {
   static const seed = Color(0xFF2E7D32);
 
-  /// Seed da identidade visual do flavo Lite (doc 15 §1/§6).
+  /// Seed da identidade visual do flavor Lite (doc 15 §1/§6).
   static const seedLite = Color(0xFF4F46E5);
 
   // Semânticas — claro

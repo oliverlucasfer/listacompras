@@ -77,9 +77,9 @@ Rota de debug `/design` (`kDebugMode`) renderiza tokens e componentes em claro/e
 - **Marca Lite (`lite`):** cesta de compras (`shopping_basket`, Apache-2.0), branca sobre o índigo da marca `#4F46E5`.
 - **Masters vetoriais** (fonte de verdade, editáveis): `assets/branding/logo.svg` e `assets/branding/logo_glyph.svg` (colaborativa); `assets/branding/logo_lite.svg` (ícone cheio, fundo índigo) e `assets/branding/logo_glyph_lite.svg` (glifo transparente, dentro da área segura do ícone adaptativo) para o Lite.
 - **Bitmaps gerados** (commitados, 1024px): `assets/branding/logo.png` e `logo_glyph.png` (colaborativa); `assets/branding/logo_lite.png` e `logo_glyph_lite.png` (Lite) — usados em ícones/splash/cabeçalho (`AppLogo`).
-- **Usos:** ícone do app (Android/iOS/web), splash e cabeçalho das telas de topo (`AppLogo`, 28dp). O ícone cheio vai full-bleed — as plataformas aplicam a máscara (squircle/círculo).
-- **Área de respiro / tamanho mínimo:** não encostar o glifo nas bordas (o `logo_glyph` já traz ~19% de margem); não exibir o glifo abaixo de **24dp**.
-- **Splash:** fundo verde `#2E7D32` (escuro `#1B5E20`) com o glifo centrado.
+- **Usos:** ícone do app (Android/iOS/web), splash e cabeçalho das telas de topo (`AppLogo`, 28dp) — valem para as duas marcas. O ícone cheio vai full-bleed — as plataformas aplicam a máscara (squircle/círculo).
+- **Área de respiro / tamanho mínimo:** não encostar o glifo nas bordas (os masters `logo_glyph` e `logo_glyph_lite` já trazem ~19% de margem); não exibir o glifo abaixo de **24dp**, nos dois masters.
+- **Splash:** com o glifo centrado — `prod`: fundo verde `#2E7D32` (escuro `#1B5E20`); `lite`: fundo índigo `#4F46E5` (escuro `#3730A3`).
 - **Regenerar** (após editar o SVG, re-renderizar o PNG de 1024 a partir dele — qualquer rasterizador serve; no dev usamos Chromium headless — e então):
   ```bash
   dart run flutter_launcher_icons
