@@ -61,7 +61,7 @@ class TourController extends Notifier<TourEstado> {
   TourEstado build() => const TourEstado();
 
   /// Inicia uma etapa; retorna false se não houver passos elegíveis/montados.
-  bool iniciar(TourEtapa etapa, {bool forcar = false}) {
+  bool iniciar(TourEtapa etapa) {
     final cap = ref.read(capacidadesProvider);
     final lista = (etapa == TourEtapa.primeira ? passosEtapa1 : passosEtapa2)
         .where((p) => p.elegivel(cap))

@@ -29,8 +29,8 @@ class ConfiguracoesScreen extends ConsumerWidget {
   /// pode não ter os alvos da etapa 1 montados; nesse caso cai para a etapa 2.
   void _abrirTour(WidgetRef ref) {
     final tour = ref.read(tourControllerProvider.notifier);
-    if (!tour.iniciar(TourEtapa.primeira, forcar: true)) {
-      tour.iniciar(TourEtapa.recursos, forcar: true);
+    if (!tour.iniciar(TourEtapa.primeira)) {
+      tour.iniciar(TourEtapa.recursos);
     }
   }
 
