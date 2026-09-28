@@ -392,7 +392,7 @@ testWidgets('deve_mostrar_bolha_e_avancar_quando_proximo', (tester) async {
 - [ ] **Step 4: Gatilhos**
   - Etapa 1: em `MinhasListasScreen`/`painel_listas`, após `onboarding_visto` (mesmo ponto do `/boas-vindas`).
   - Etapa 2: em `tela_lista_screen`, quando a lista tem ≥1 item ativo e `!tour_etapa2_visto`.
-  - Reabrir: `configuracoes_screen` → linha "Ver tutorial" chama `iniciar(TourEtapa.primeira, encadear: true)` — roda as duas etapas em sequência (fallback para a etapa 2 se a 1 não tiver alvos visíveis).
+  - Reabrir: `configuracoes_screen` → "Ver tutorial" **navega para `/listas`** e inicia a etapa 1 ali (`iniciar(TourEtapa.primeira)`), pois a tela de Configurações não monta os alvos das etapas; a etapa 2 segue o fluxo normal (dispara na lista, se não vista).
 
 - [ ] **Step 5: Rodar e ver passar**; rodar a suíte completa (prod intacto quando flags vistas).
 

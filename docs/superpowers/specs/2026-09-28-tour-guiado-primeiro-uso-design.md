@@ -79,14 +79,14 @@
 | 11 | Compartilhar / convites | ação convidar / menu | **prod** (pulado no Lite) |
 
 - **Conclusão:** `Pular` ou `Concluir` marcam a etapa como vista (flag própria). `Pular` na etapa 1 não impede a etapa 2.
-- **Reabrir:** Configurações → "Ver tutorial" roda **as duas etapas na ordem** (ignora as flags; não altera conclusão já registrada de forma destrutiva).
+- **Reabrir:** Configurações → "Ver tutorial" **navega para a home de listas e reinicia a etapa 1** (ignora a flag de conclusão; não altera a conclusão já registrada de forma destrutiva). A etapa 2 não é reapresentada dali — os alvos dela vivem na tela da lista; ela só reaparece se ainda não tiver sido vista (flag própria). Motivo: o motor só aponta para alvos **visíveis**, e a tela de Configurações não monta os alvos das etapas.
 
 ## 6. Disparo e persistência
 
 - **Etapa 1:** em `minhas_listas_screen`, após resolver `onboarding_visto`; se `!tourEtapa1Visto` e há alvos, inicia. Espelha exatamente o padrão atual das boas-vindas.
 - **Etapa 2:** em `tela_lista_screen`, quando a lista tem ≥ 1 item ativo e `!tourEtapa2Visto`; inicia uma vez.
 - **Flags:** `tour_etapa1_visto` e `tour_etapa2_visto` (SharedPreferences), em `TourVistoNotifier` (espelho de `OnboardingNotifier`). Sem Drift/sem rede.
-- **Reabrir (Configurações):** `tourReabrirProvider` (ou método no controller) roda o roteiro completo, sem reescrever flags.
+- **Reabrir (Configurações):** "Ver tutorial" navega para `/listas` e inicia a etapa 1 (`iniciar(TourEtapa.primeira)`), sem reescrever flags. A etapa 2 segue o fluxo normal (dispara na lista, se não vista).
 
 ## 7. Acessibilidade, design e testes
 
@@ -108,7 +108,7 @@
 5. **Apresentação:** **spotlight + bolha abaixo** (opção A).
 6. **Etapas:** **tour em 2 etapas** (opção 1) — etapa 1 sem dados; etapa 2 ao abrir lista com itens.
 7. **Etapa 2:** dispara ao abrir lista com itens, flag própria (mesmo se a etapa 1 foi pulada).
-8. **Reabrir:** Configurações → "Ver tutorial", roda o roteiro completo.
+8. **Reabrir:** Configurações → "Ver tutorial" navega para a home e reinicia a etapa 1 (a etapa 2 segue o fluxo normal na lista).
 9. **Sem dados de exemplo:** nada de lista-demo criada/apagada.
 10. **Fase 46**; requisito **RF-27** estendido; **sem** dependência, **sem** migration/schema/sync.
 
