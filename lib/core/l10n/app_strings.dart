@@ -432,4 +432,44 @@ abstract final class AppStrings {
   static const boasVindasDitar = 'Dite um item';
   static const boasVindasDitarDica = 'Use o microfone para adicionar falando.';
   static const comecar = 'Começar';
+
+  // Tour guiado (RF-27, F46)
+  static const tourPular = 'Pular';
+  static const tourAnterior = 'Anterior';
+  static const tourProximo = 'Proximo';
+  static const tourConcluir = 'Concluir';
+  static const tourAbrir = 'Ver tutorial';
+  static const tourNovaListaTitulo = 'Criar sua primeira lista';
+  static const tourNovaListaCorpo =
+      'Toque em "Nova lista" para comecar. Voce pode criar quantas quiser.';
+  static const tourNomeTitulo = 'Dê um nome';
+  static const tourNomeCorpo =
+      'O nome aparece no topo. Opcionalmente, defina um orcamento.';
+  static const tourAdicionarTitulo = 'Adicionar item';
+  static const tourAdicionarCorpo =
+      'Digite aqui. "1kg de arroz" ja vira nome, quantidade e unidade.';
+  static const tourUnidadeTitulo = 'Unidade';
+  static const tourUnidadeCorpo =
+      'Escolha a medida (un, kg, pacote, pote...). O app tenta adivinhar.';
+  static const tourImportarTitulo = 'Importe por texto';
+  static const tourImportarCorpo =
+      'Cole uma anotacao e o app organiza os itens para voce.';
+  static const tourBuscaTitulo = 'Busca e filtros';
+  static const tourBuscaCorpo =
+      'Encontre itens por nome e filtre por categoria ou unidade.';
+  static const tourConfigTitulo = 'Configuracoes';
+  static const tourConfigCorpo =
+      'Tema, categorias, backup e onde rever este tutorial.';
+  static const tourMarcarTitulo = 'Marcar, editar e remover';
+  static const tourMarcarCorpo =
+      'Toque no item para editar; marque no circulo; arraste para remover.';
+  static const tourMercadoTitulo = 'Modo mercado';
+  static const tourMercadoCorpo =
+      'No mercado, marque as compras sem perder o que falta.';
+  static const tourOrcamentoTitulo = 'Orcamento e total';
+  static const tourOrcamentoCorpo =
+      'Defina um teto e acompanhe o total do carrinho.';
+  static const tourConviteTitulo = 'Compartilhe a lista';
+  static const tourConviteCorpo =
+      'Convide alguem para comprar junto, cada um no seu aparelho.';
 }
