@@ -185,9 +185,11 @@ firebase appdistribution:distribute build/app/outputs/flutter-apk/app-lite-relea
 
 Os dois flavors instalam **lado a lado** (applicationIds distintos).
 
+**Recursos nativos do Lite (nome, ícone e splash — F44/T03):** vivem no source set `android/app/src/lite/res/` e **sobrescrevem** os de `android/app/src/main/res/` apenas no flavor `lite` (merge de recursos do Android). O `prod` continua com os recursos do `main` (verde `#2E7D32`, carrinho, "Lista de Compras"). O nome do app Lite é definido por `resValue("string", "app_name", "Minhas Listas")` no flavor `lite` de `android/app/build.gradle.kts`; a cor do fundo do ícone adaptativo é o `ic_launcher_background` `#4F46E5` em `lite/res/values/colors.xml`; a cor do splash (API 31+) é o `windowSplashScreenBackground` `#4F46E5` em `lite/res/values-v31/styles.xml`. Os PNGs de ícone/splash do Lite **não podem vazar** para `main/res` (o `prod` não usa `flutter_launcher_icons.yaml`/`flutter_native_splash` com a paleta do Lite; a config temporária é removida após a geração).
+
 **Smoke do Lite em device (obrigatório a cada release do flavor):**
 
-1. Abrir o app pelo ícone azul ("Lista de Compras Lite") — deve abrir direto em **Minhas listas**, sem login e sem aba "Compartilhadas". **Se aparecer tela de login, o build está errado** (flavor sem `-t lib/main_lite.dart`): não distribuir e refazer com o entrypoint.
+1. No launcher, conferir a identidade do Lite: ícone **cesta sobre fundo índigo** (`#4F46E5`), nome **"Minhas Listas"** e splash **índigo** (`#3730A3` no modo escuro) antes da UI. Abrir o app pelo ícone — deve abrir direto em **Minhas listas**, sem login e sem aba "Compartilhadas". **Se aparecer tela de login, o build está errado** (flavor sem `-t lib/main_lite.dart`): não distribuir e refazer com o entrypoint; **se o ícone/nome/splash vierem verdes com carrinho, o flavor `lite` não sobrescreveu os recursos nativos**.
 2. Criar uma lista e alguns itens; fechar e reabrir — os dados persistem (100% local).
 3. **Configurações → Exportar backup** — o arquivo `backup_<data>.json` deve ser compartilhado/baixado.
 4. **Configurações → Importar backup** — escolher um `.json` **real** no seletor do sistema. Este é o ponto que o CI não cobre: confirmar que o seletor **abre** e que o arquivo aparece **selecionável** (o filtro de tipo foi removido justamente para não esconder backup válido; a validação do conteúdo fica no import, que rejeita arquivo inválido com mensagem clara).

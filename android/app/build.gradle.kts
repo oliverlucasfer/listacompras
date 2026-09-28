@@ -46,7 +46,7 @@ android {
         create("lite") {
             dimension = "modo"
             applicationId = "br.com.oliverlucas.listacompras.lite"
-            resValue("string", "app_name", "Lista de Compras Lite")
+            resValue("string", "app_name", "Minhas Listas")
         }
     }
 
