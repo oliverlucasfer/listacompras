@@ -67,6 +67,8 @@ void main() {
 
     expect(find.text(AppStrings.boasVindasBackup), findsOneWidget);
     expect(find.text(AppStrings.boasVindasBackupDica), findsOneWidget);
+    expect(find.text(AppStrings.boasVindasTituloLite), findsOneWidget);
+    expect(find.text(AppStrings.boasVindasTitulo), findsNothing);
   });
 
   testWidgets(

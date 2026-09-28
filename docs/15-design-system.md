@@ -2,6 +2,7 @@
 
 > Navegação: [← 14 Tarefas](14-tarefas.md) · [← Índice](../planejamento_lista_compras.md) · [16 Roadmap →](16-roadmap-pos-mvp.md)
 > Spec: [superpowers/specs/2026-09-11-revisao-visual-ux-design.md](superpowers/specs/2026-09-11-revisao-visual-ux-design.md)
+> Identidade Lite: [superpowers/specs/2026-09-28-identidade-visual-lite-design.md](superpowers/specs/2026-09-28-identidade-visual-lite-design.md)
 
 **Este documento é o dono do design system** (tokens, tipografia, componentes, motion, acessibilidade). Fundação: Material 3 Expressive sobre seed verde `#2E7D32`. Comportamento/UX continua em [05 §6](05-app-flutter.md); layout de telas em [10](10-wireframes-telas.md); verificação de acessibilidade (RNF-06) em [12 §3](12-prd.md).
 
@@ -11,7 +12,7 @@ Fonte única em `lib/core/theme/tokens/` — proibido valor hardcoded na UI.
 
 | Arquivo | Tokens |
 | :--- | :--- |
-| `app_colors.dart` | seed + paleta semântica (success/warning/info) clara/escura |
+| `app_colors.dart` | seed + `seedLite=#4F46E5` (identidade do Lite, §6) + paleta semântica (success/warning/info) clara/escura |
 | `app_spacing.dart` | `xs=4, sm=8, md=12, lg=16, xl=24, xxl=32, xxxl=48` |
 | `app_radius.dart` | `sm=8, md=12, lg=16, xl=24, xxl=28, full=999` |
 | `app_elevation.dart` | níveis M3 `0..3` |
@@ -24,7 +25,7 @@ Título de tela (AppBar): **24sp bold** aplicado via `appBarTheme.titleTextStyle
 
 ## 2. Tema
 
-- `AppTheme.claro` / `AppTheme.escuro` (`lib/core/theme/app_theme.dart`).
+- `AppTheme.claroDe/escuroDe(IdentidadeVisual)` (`lib/core/theme/app_theme.dart`) geram o tema a partir do seed da identidade (F44-T01); os getters `AppTheme.claro`/`AppTheme.escuro` mantêm a identidade colaborativa como default (seed `#2E7D32`). O Lite usa seed índigo `#4F46E5` (`AppColors.seedLite`) — a UI lê a marca via `identidadeVisualProvider` (`lib/core/theme/identidade_visual.dart`), derivada de `AppCapacidades`, nunca de `AppModo`.
 - `ColorScheme.fromSeed` + component themes (appBar, card, input, botões, chip, sheet, dialog, snackbar, navigationBar, etc.).
 - Cores semânticas via `ThemeExtension<AppSemanticColors>` (`lib/core/theme/app_semantic_colors.dart`), lidas com `Theme.of(context).extension<AppSemanticColors>()!`.
 - `TextTheme` derivado do `ColorScheme`/brilho (`app_typography.dart`, F12-T01): o claro usa cores escuras (`onSurface`) e o escuro, claras — um `TextTheme` fixo em `.black` sobrepõe o default do `ThemeData` e deixa texto preto no fundo escuro (viola §4).

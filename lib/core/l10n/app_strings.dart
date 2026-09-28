@@ -3,6 +3,7 @@
 abstract final class AppStrings {
   // App
   static const appNome = 'Lista de Compras';
+  static const appNomeLite = 'Minhas Listas';
 
   // Autenticação
   static const entrar = 'Entrar';
@@ -410,6 +411,7 @@ abstract final class AppStrings {
 
   // Boas-vindas (RF-27, F31-T02)
   static const boasVindasTitulo = 'Bem-vindo ao Lista de Compras';
+  static const boasVindasTituloLite = 'Bem-vindo(a)';
   static const boasVindasSubtitulo =
       'Organize suas compras e compartilhe com quem quiser.';
   static const boasVindasSubtituloLite =

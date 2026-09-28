@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_semantic_colors.dart';
-import 'tokens/app_colors.dart';
+import 'identidade_visual.dart';
 import 'tokens/app_elevation.dart';
 import 'tokens/app_radius.dart';
 import 'tokens/app_spacing.dart';
@@ -9,15 +9,23 @@ import 'tokens/app_typography.dart';
 
 /// Tema do app (doc 15 §2): Material 3 Expressive, claro/escuro com paridade.
 abstract final class AppTheme {
-  static ThemeData get claro =>
-      _base(Brightness.light, AppSemanticColors.claro);
+  static ThemeData get claro => claroDe(IdentidadeVisual.colaborativo);
 
-  static ThemeData get escuro =>
-      _base(Brightness.dark, AppSemanticColors.escuro);
+  static ThemeData get escuro => escuroDe(IdentidadeVisual.colaborativo);
 
-  static ThemeData _base(Brightness brightness, AppSemanticColors semanticas) {
+  static ThemeData claroDe(IdentidadeVisual identidade) =>
+      _base(Brightness.light, AppSemanticColors.claro, identidade.seed);
+
+  static ThemeData escuroDe(IdentidadeVisual identidade) =>
+      _base(Brightness.dark, AppSemanticColors.escuro, identidade.seed);
+
+  static ThemeData _base(
+    Brightness brightness,
+    AppSemanticColors semanticas,
+    Color seed,
+  ) {
     final scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.seed,
+      seedColor: seed,
       brightness: brightness,
     );
     final texto = AppTypography.textTheme(brightness, scheme);

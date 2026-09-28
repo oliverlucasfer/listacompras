@@ -32,7 +32,9 @@ class BoasVindasScreen extends ConsumerWidget {
                   const Center(child: AppLogo()),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
-                    AppStrings.boasVindasTitulo,
+                    colaborativo
+                        ? AppStrings.boasVindasTitulo
+                        : AppStrings.boasVindasTituloLite,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
