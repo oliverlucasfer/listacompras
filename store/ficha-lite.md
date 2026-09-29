@@ -33,10 +33,10 @@ Sem conta, sem anúncios e **sem rastreamento**. Seus dados ficam com você.
 
 ## Artefatos (binários da ficha)
 
-Os textos acima já estão versionados; a **arte** é gerada em passo manual (mesmo processo Playwright da F44, a partir de `assets/branding/logo_lite.png`) e as **screenshots** exigem um device/emulador com o app Lite release.
+Gerados e versionados (a partir de `assets/branding/logo_lite.png` e do Lite release no emulador Pixel 9a, capturado em 1080×1920 / 9:16):
 
-- `store/icone-512.png` — **512×512** (PNG), derivado de `assets/branding/logo_lite.png` (1024×1024).
+- `store/icone-512.png` — **512×512** (PNG).
 - `store/feature-graphic-1024x500.png` — **1024×500** (PNG), marca sobre índigo `#4F46E5`.
-- `store/screenshots/` — **mínimo 2** capturas de telefone do Lite release (ex.: Minhas listas, lista aberta, modo mercado, backup).
+- `store/screenshots/` — **6** capturas 9:16 (1080×1920): boas-vindas, Minhas listas (vazio), nova lista, lista por categoria, modo mercado e Configurações (backup).
 
 > **Status:** os três itens binários ainda **não** foram gerados (sem Playwright/imagem e sem device nesta sessão). Gerar antes do envio à Play; os caminhos e dimensões acima são os esperados pela ficha.
