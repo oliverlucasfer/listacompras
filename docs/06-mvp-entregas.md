@@ -144,6 +144,18 @@ Uma fase só está "pronta" quando:
 
 **Nota do dono do projeto:** a publicação na Play (teste interno) está **adiada** — será executada apenas sob solicitação explícita, junto com a F5-T05 ([14-tarefas](14-tarefas.md)). **O Web não será publicado em URL pública** (decisão de 18/09/2026, ADR-013): fica para execução local. Canal provisório de distribuição de builds de teste: Firebase App Distribution (F5-T05b). Os critérios do DoD (§2) permanecem válidos para o dia do lançamento.
 
+### 4.1. Checklist de publicação do Lite (RF-32, F47)
+
+Publicação do Lite ("Minhas Listas") em produção — app 100% local, sem conta. Passos externos no runbook [09 §2.10](09-runbook-operacoes.md); textos e arte em [`store/ficha-lite.md`](../store/ficha-lite.md).
+
+- [ ] AAB release assinado com a upload key (não debug key)
+- [ ] Manifest do Lite sem `INTERNET`/push/Firebase; Auto Backup desligado
+- [ ] Política de privacidade com URL pública (site/privacidade.html)
+- [ ] Declaração de Dados preenchida (nenhum dado, exceto Áudio)
+- [ ] Ficha da loja completa (ícone 512, feature graphic, screenshots, descrições)
+- [ ] Closed test com 12 testadores por 14 dias
+- [ ] Smoke em device release (identidade, offline, backup, voz)
+
 ---
 
 ## 5. Métricas de sucesso (pós-lançamento, opcional)

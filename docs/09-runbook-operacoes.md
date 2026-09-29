@@ -157,7 +157,7 @@ O web usa `<origem>/login-callback` (http em dev, https em produção) como `red
 
 ### 2.9. Build e distribuição (flavors `prod`/`lite` — F41)
 
-Com flavors, **todo build exige `--flavor`**; o flavor `prod` é o único que liga nuvem, colaboração e push. Para gerar os APKs release de teste (assinados via `android/key.properties` com fallback para debug quando ausente, e com os dart-defines de produção em `dart_defines_prod.json`, que fica **fora do git**):
+Com flavors, **todo build exige `--flavor`**; o flavor `prod` é o único que liga nuvem, colaboração e push. Para gerar o **APK release de teste** do colaborativo (assinado via `android/key.properties` com fallback para debug quando ausente, e com os dart-defines de produção em `dart_defines_prod.json`, que fica **fora do git**) e o **AAB de publicação do Lite** (sem dart-defines, §2.10):
 
 > **⚠️ O flavor `lite` não seleciona o modo — o entrypoint é que seleciona.** Sem `-t lib/main_lite.dart`, `--flavor lite` empacota o **app colaborativo** com o pacote `.lite` (tela de login, mesmo backend). Isso aconteceu de verdade na F41: o `1.5.0 (12)` distribuído como "Lite" era o app colaborativo. Desde a F42 há uma trava em debug (`bootstrap.dart` compara o pacote com o modo) e, desde a F47, a trava também vale no **release**: pacote/modo divergente exibe uma tela bloqueante (`TelaBuildIncorreto`) em vez de subir o app errado. O passo 1 do smoke abaixo pega o caso.
 
@@ -165,9 +165,12 @@ Com flavors, **todo build exige `--flavor`**; o flavor `prod` é o único que li
 flutter build apk --release --flavor prod --dart-define-from-file=dart_defines_prod.json
 # → build/app/outputs/flutter-apk/app-prod-release.apk
 
-flutter build apk --release --flavor lite -t lib/main_lite.dart --dart-define-from-file=dart_defines_prod.json
-# → build/app/outputs/flutter-apk/app-lite-release.apk
+# AAB de publicação do Lite — SEM dart-defines (sem Supabase, sem Sentry)
+flutter build appbundle --release --flavor lite -t lib/main_lite.dart
+# → build/app/outputs/bundle/liteRelease/app-lite-release.aab
 ```
+
+Se `android/key.properties` não existir, o AAB sai assinado com a **debug key** e **não** deve ser enviado à Play.
 
 Distribuição ao grupo `testadores` (Firebase App Distribution; projeto `lista-compras-34f93` — o `--app` de cada flavor é o app Android correspondente no console):
 
@@ -177,7 +180,9 @@ firebase appdistribution:distribute build/app/outputs/flutter-apk/app-prod-relea
   --app "<app-id do prod (console do Firebase)>" --groups testadores
 
 # lite (sem conta, 100% local) — app Android `br.com.oliverlucas.listacompras.lite`
-# ATENÇÃO: o build acima leva `-t lib/main_lite.dart`; sem isso o APK é o colaborativo.
+# Canal de teste (F5-T05b): o AAB acima é de publicação; gere o APK com -t lib/main_lite.dart antes de distribuir
+#   flutter build apk --release --flavor lite -t lib/main_lite.dart
+# Sem `-t lib/main_lite.dart` o APK é o colaborativo.
 firebase appdistribution:distribute build/app/outputs/flutter-apk/app-lite-release.apk \
   --app "1:407606670898:android:1dfbf8ce7930a968bbae2b" --groups testadores \
   --release-notes "Versao Lite (RF-31): uso sem conta, 100% no aparelho, com backup exportar/importar."
@@ -196,6 +201,19 @@ Os dois flavors instalam **lado a lado** (applicationIds distintos).
 3. **Configurações → Exportar backup** — o arquivo `backup_<data>.json` deve ser compartilhado/baixado.
 4. **Configurações → Importar backup** — escolher um `.json` **real** no seletor do sistema. Este é o ponto que o CI não cobre: confirmar que o seletor **abre** e que o arquivo aparece **selecionável** (o filtro de tipo foi removido justamente para não esconder backup válido; a validação do conteúdo fica no import, que rejeita arquivo inválido com mensagem clara).
 5. Importar um arquivo inválido (ex.: um `.txt` renomeado) — deve mostrar a mensagem de backup inválido **sem** alterar os dados.
+
+### 2.10. Publicação do Lite na Play (RF-32, F47)
+
+Publicação do Lite (**"Minhas Listas"**) em **produção** na Google Play, a partir do AAB do §2.9 (`app-lite-release.aab`, `--flavor lite -t lib/main_lite.dart`, **sem** dart-defines). O caminho crítico é a trilha de testes (1–4, ~2+ semanas), que roda em paralelo ao código.
+
+1. **Conta e verificação:** criar a **conta pessoal nova** no Play Console; concluir a **verificação de identidade** e a **verificação de aparelho** (exigidas de contas novas antes de publicar).
+2. **App e assinatura:** criar o app `br.com.oliverlucas.listacompras.lite`; habilitar o **Play App Signing** e guardar a **upload key** (`android/key.properties`, fora do git). O AAB de produção tem de estar assinado com a upload key — o fallback para debug key (§2.9) **não** serve para envio.
+3. **Trilha de testes:** subir o AAB em **internal testing** para o smoke em device release (§2.9: identidade, modo avião, backup, voz); em seguida, **closed testing** com **≥12 testadores opt-in por 14 dias contínuos** (o relógio só conta com testadores ativos).
+4. **Produção:** aplicar para acesso à produção → revisão do Google → rollout **10% → 50% → 100%**.
+5. **Segurança de dados:** Declaração de Dados = **nenhum dado** coletado, exceto **Áudio** (voz, processada pelo reconhecedor do sistema). **Classificação de conteúdo** e **público-alvo 16+** (não direcionado a menores); **anúncios: não**.
+6. **Ficha:** título **"Minhas Listas"**, descrições, ícone **512×512**, feature graphic **1024×500** e screenshots de telefone — textos e arte versionados em [`store/ficha-lite.md`](../store/ficha-lite.md).
+
+Hotfix de um Lite já publicado segue o §4 (branch `hotfix/...` → novo AAB → produção/teste interno).
 
 ---
 

@@ -992,14 +992,14 @@ Nota: *(motor próprio, sem dependência nova; sem migration/schema/sync; passos
 
 Spec: [superpowers/specs/2026-09-29-publicacao-lite-play-design.md](superpowers/specs/2026-09-29-publicacao-lite-play-design.md) · Plano: [superpowers/plans/2026-09-29-publicacao-lite-play.md](superpowers/plans/2026-09-29-publicacao-lite-play.md) · Relatório: [relatorio-revisao-lite-play.md](relatorio-revisao-lite-play.md) · Requisito: RF-32 (Lite publicável na Play, produção). · Docs donos: 06, 09, 12, 14, 05, 07.
 
-- [ ] **F47-T01** — Planejamento: RF-32, Fase 47 e docs de roadmap
-- [ ] **F47-T02** — Sentry desligado no Lite por capacidades
-- [ ] **F47-T03** — Trava flavor×modo também no release (tela bloqueante)
-- [ ] **F47-T04** — Política de privacidade por capacidades + contato
-- [ ] **F47-T05** — Manifest `liteRelease`: sem rede/push/Firebase + Auto Backup off
-- [ ] **F47-T06** — CI: AAB release do Lite + verificação do manifest mergeado
-- [ ] **F47-T07** — Página pública da política + GitHub Pages
-- [ ] **F47-T08** — Runbook de publicação, checklist do Lite e ficha da loja
+- [x] **F47-T01** — Planejamento: RF-32, Fase 47 e docs de roadmap
+- [x] **F47-T02** — Sentry desligado no Lite por capacidades
+- [x] **F47-T03** — Trava flavor×modo também no release (tela bloqueante)
+- [x] **F47-T04** — Política de privacidade por capacidades + contato
+- [x] **F47-T05** — Manifest `liteRelease`: sem rede/push/Firebase + Auto Backup off
+- [x] **F47-T06** — CI: AAB release do Lite + verificação do manifest mergeado
+- [x] **F47-T07** — Página pública da política + GitHub Pages
+- [x] **F47-T08** — Runbook de publicação, checklist do Lite e ficha da loja
 
 ## Progresso por fase (atualize ao concluir)
 
@@ -1049,8 +1049,8 @@ Spec: [superpowers/specs/2026-09-29-publicacao-lite-play-design.md](superpowers/
 | F44 Identidade visual do Lite | 4 | 4 |
 | F45 Unidade `pt` (pote) | 1 | 1 |
 | F46 Tour guiado do 1º uso | 5 | 5 |
-| F47 Publicação do Lite | 8 | 0 |
-| **Total** | **256** | **246** |
+| F47 Publicação do Lite | 8 | 8 |
+| **Total** | **256** | **254** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
