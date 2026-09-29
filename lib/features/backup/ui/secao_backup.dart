@@ -62,8 +62,7 @@ class SecaoBackup extends ConsumerWidget {
         mostrarSnackBar(context, AppStrings.backupExportado);
       }
     } on MissingPluginException {
-      // Compartilhamento indisponível (desktop/sem plugin) — mesma orientação
-      // usada em `sheet_convidar.dart`.
+      // Compartilhamento indisponível neste dispositivo (desktop/web sem plugin).
       if (context.mounted) {
         mostrarSnackBar(context, AppStrings.compartilharIndisponivel);
       }
