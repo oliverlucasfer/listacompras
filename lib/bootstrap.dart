@@ -11,11 +11,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
 import 'core/config/app_modo.dart';
+import 'core/config/compatibilidade_modo_pacote.dart';
 import 'core/config/supabase_config.dart';
 import 'core/observabilidade/sentry_config.dart';
 import 'core/observabilidade/sentry_privacidade.dart';
 import 'core/utils/deeplink_convite.dart';
 import 'core/web/url_strategy.dart';
+import 'core/widgets/tela_build_incorreto.dart';
 import 'features/auth/data/auth_local_repository.dart';
 import 'features/auth/providers/auth_providers.dart';
 import 'features/notificacoes/providers/push_navegacao.dart';
@@ -34,14 +36,22 @@ Future<void> bootstrap(AppModo modo) async {
   WidgetsFlutterBinding.ensureInitialized();
   usarPathUrlStrategy();
 
-  // Trava de modo (F42): o flavor sozinho **não** seleciona o modo — quem o faz
-  // é o entrypoint (`-t lib/main_lite.dart`). Sem esta conferência, buildar
+  // Trava de modo (F42/F47): o flavor sozinho **não** seleciona o modo — quem o
+  // faz é o entrypoint (`-t lib/main_lite.dart`). Sem esta conferência, buildar
   // `--flavor lite` sem `-t` empacota o app **colaborativo** com o pacote
   // `.lite` (já aconteceu: a distribuição da F41 saiu errada). Em debug falha
-  // na hora, em vez de passar batido num teste manual. Só vale onde existem
-  // flavors — no desktop o pacote é único, então não há o que conferir.
-  if (kDebugMode && _plataformaTemFlavor()) {
-    await _conferirModoDoPacote(modo);
+  // na hora; em release a divergência mostra uma tela bloqueante em vez de
+  // subir o app errado. Só vale onde existem flavors — no desktop o pacote é
+  // único, então não há o que conferir.
+  if (_plataformaTemFlavor() && !await _pacoteCompativel(modo)) {
+    if (kDebugMode) {
+      throw StateError(
+        'Pacote e modo divergem: confira o flavor e o entrypoint '
+        '(`-t lib/main_lite.dart` para o Lite).',
+      );
+    }
+    runApp(const TelaBuildIncorreto());
+    return;
   }
 
   if (cap.nuvem) {
@@ -105,28 +115,14 @@ bool _plataformaTemFlavor() =>
     (defaultTargetPlatform == TargetPlatform.android ||
         defaultTargetPlatform == TargetPlatform.iOS);
 
-/// Falha cedo quando o **pacote** e o **modo** divergem (F42): o flavor
-/// `lite` empacota o app colaborativo (ou o inverso). Sem o plugin (testes/
-/// plataformas sem registro) a conferência não se aplica; só a leitura do
-/// pacote é protegida — o erro da própria trava continua propagando.
-Future<void> _conferirModoDoPacote(AppModo modo) async {
+/// true quando o pacote instalado casa com o modo do entrypoint; sem o plugin
+/// (testes/plataformas sem registro) não há o que conferir.
+Future<bool> _pacoteCompativel(AppModo modo) async {
   final String pacote;
   try {
     pacote = (await PackageInfo.fromPlatform()).packageName;
   } on Exception {
-    return;
+    return true;
   }
-  final ehPacoteLite = pacote.endsWith('.lite');
-  if (modo == AppModo.lite && !ehPacoteLite) {
-    throw StateError(
-      'Entrypoint Lite em pacote colaborativo ($pacote): '
-      'use `flutter build ... --flavor lite`.',
-    );
-  }
-  if (modo == AppModo.colaborativo && ehPacoteLite) {
-    throw StateError(
-      'Flavor `lite` construído com o entrypoint colaborativo: '
-      'use `-t lib/main_lite.dart`.',
-    );
-  }
+  return modoCompativelComPacote(modo, pacote);
 }

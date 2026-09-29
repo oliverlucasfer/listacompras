@@ -159,7 +159,7 @@ O web usa `<origem>/login-callback` (http em dev, https em produção) como `red
 
 Com flavors, **todo build exige `--flavor`**; o flavor `prod` é o único que liga nuvem, colaboração e push. Para gerar os APKs release de teste (assinados via `android/key.properties` com fallback para debug quando ausente, e com os dart-defines de produção em `dart_defines_prod.json`, que fica **fora do git**):
 
-> **⚠️ O flavor `lite` não seleciona o modo — o entrypoint é que seleciona.** Sem `-t lib/main_lite.dart`, `--flavor lite` empacota o **app colaborativo** com o pacote `.lite` (tela de login, mesmo backend). Isso aconteceu de verdade na F41: o `1.5.0 (12)` distribuído como "Lite" era o app colaborativo. Desde a F42 há uma trava em debug (`bootstrap.dart` compara o pacote com o modo) e o passo 1 do smoke abaixo pega o caso.
+> **⚠️ O flavor `lite` não seleciona o modo — o entrypoint é que seleciona.** Sem `-t lib/main_lite.dart`, `--flavor lite` empacota o **app colaborativo** com o pacote `.lite` (tela de login, mesmo backend). Isso aconteceu de verdade na F41: o `1.5.0 (12)` distribuído como "Lite" era o app colaborativo. Desde a F42 há uma trava em debug (`bootstrap.dart` compara o pacote com o modo) e, desde a F47, a trava também vale no **release**: pacote/modo divergente exibe uma tela bloqueante (`TelaBuildIncorreto`) em vez de subir o app errado. O passo 1 do smoke abaixo pega o caso.
 
 ```bash
 flutter build apk --release --flavor prod --dart-define-from-file=dart_defines_prod.json
