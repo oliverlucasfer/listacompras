@@ -12,6 +12,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'core/config/app_modo.dart';
 import 'core/config/supabase_config.dart';
+import 'core/observabilidade/sentry_config.dart';
 import 'core/observabilidade/sentry_privacidade.dart';
 import 'core/utils/deeplink_convite.dart';
 import 'core/web/url_strategy.dart';
@@ -83,7 +84,7 @@ Future<void> bootstrap(AppModo modo) async {
     }
   }
 
-  if (sentryDsn.isEmpty) {
+  if (!sentryDeveIniciar(cap, sentryDsn)) {
     app();
   } else {
     await SentryFlutter.init((options) {

@@ -121,6 +121,8 @@ Builds: `flutter build apk --flavor prod` / `--flavor lite` (com flavors, `--fla
 O modo Lite tem **identidade visual própria** (índigo `#4F46E5`, símbolo de cesta, nome **"Minhas Listas"**), escolhida por `IdentidadeVisual` a partir de `AppCapacidades` — nunca por `AppModo` — para o tema, o `AppLogo` e o título do app; o `prod` segue verde, com carrinho e "Lista de Compras". Spec e decisões em
 [superpowers/specs/2026-09-28-identidade-visual-lite-design.md](superpowers/specs/2026-09-28-identidade-visual-lite-design.md); tokens em [15 §1/§6](15-design-system.md).
 
+**Sentry no Lite (F47):** desligado por capacidades (`sentryDeveIniciar`) — nenhum dado de erro sai do aparelho, mesmo com `SENTRY_DSN` no build.
+
 ---
 
 ## 3. Providers Riverpod (por feature)
