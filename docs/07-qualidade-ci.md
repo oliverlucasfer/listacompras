@@ -49,6 +49,8 @@ Pipeline único `.github/workflows/ci.yml`, disparado em PR e push em `main`:
 │  4. flutter build web --release                │
 │  5. flutter build apk --debug --flavor prod    │
 │  6. build apk lite -t lib/main_lite.dart       │
+│  7. build aab lite -t lib/main_lite.dart       │
+│  8. manifest lite: sem INTERNET/Firebase       │
 ├────────────────────────────────────────────────┤
 │ job: supabase (paralelo)                       │
 │  1. supabase db reset (aplica migrations)      │
@@ -61,7 +63,7 @@ Pipeline único `.github/workflows/ci.yml`, disparado em PR e push em `main`:
 ```
 
 * PR só mergea com CI verde (branch protection).
-* **Builds de plataforma (F18-T05, ADR-012; apk F38; flavors F41-T13):** o job `flutter` compila o Web (`flutter build web --release`) e o **apk Android em debug dos dois flavors** — `flutter build apk --debug --flavor prod` e `flutter build apk --debug --flavor lite -t lib/main_lite.dart` (RF-31); o flavor `lite` só seleciona o modo local com o entrypoint `-t lib/main_lite.dart` (sem ele o apk sai como o app colaborativo — F41/F42); o flavor `prod` é o único alvo do push (RF-30/F38). A suíte de testes roda **uma vez** e cobre os dois modos (o gating é de runtime, não de código separado). O job `desktop` valida `flutter build linux` (ubuntu-latest, instala `clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libcurl4-openssl-dev libssl-dev` — as duas últimas são exigidas pelo `sentry-native` via `FindCURL`) e `flutter build windows` (windows-latest) numa matriz com `fail-fast: false`. Os builds usam **valores fictícios** de `--dart-define` (`SUPABASE_URL=https://exemplo.supabase.co`, `SUPABASE_ANON_KEY=teste`) — nenhum segredo real entra no CI.
+* **Builds de plataforma (F18-T05, ADR-012; apk F38; flavors F41-T13):** o job `flutter` compila o Web (`flutter build web --release`) e o **apk Android em debug dos dois flavors** — `flutter build apk --debug --flavor prod` e `flutter build apk --debug --flavor lite -t lib/main_lite.dart` (RF-31); o flavor `lite` só seleciona o modo local com o entrypoint `-t lib/main_lite.dart` (sem ele o apk sai como o app colaborativo — F41/F42); o flavor `prod` é o único alvo do push (RF-30/F38). A suíte de testes roda **uma vez** e cobre os dois modos (o gating é de runtime, não de código separado). **Publicação do Lite (F47-T06, RF-32):** além do apk debug, o job compila o **AAB release do flavor lite** (`flutter build appbundle --release --flavor lite -t lib/main_lite.dart`, assinado com a debug key — o CI não usa keystore) para exercitar R8/empacotamento e, na sequência, **verifica o manifest mergeado** (`build/app/intermediates/merged_manifests/liteRelease/processLiteReleaseManifest/AndroidManifest.xml`): o passo falha se `INTERNET`, `com.google.firebase`, `com.google.android.c2dm` ou os componentes `io.flutter.plugins.firebase.*`/`FirebaseInitProvider`/`FlutterFirebaseMessagingInitProvider` voltarem ao Lite, se `allowBackup` não for `false` ou se `RECORD_AUDIO` sumir. O job `desktop` valida `flutter build linux` (ubuntu-latest, instala `clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libcurl4-openssl-dev libssl-dev` — as duas últimas são exigidas pelo `sentry-native` via `FindCURL`) e `flutter build windows` (windows-latest) numa matriz com `fail-fast: false`. Os builds usam **valores fictícios** de `--dart-define` (`SUPABASE_URL=https://exemplo.supabase.co`, `SUPABASE_ANON_KEY=teste`) — nenhum segredo real entra no CI.
 * **Assets WASM do Drift versionados (F18-T01):** `web/drift_worker.js` e `web/sqlite3.wasm` são cópias fiéis da release oficial `drift-2.34.4` (mesma versão pinada em `pubspec.lock`), necessárias ao banco no navegador (`WasmDatabase`/OPFS-IndexedDB, [05 §2](05-app-flutter.md), ADR-012). Para regenerar (ex.: subir o Drift), baixar da release correspondente e substituir os dois arquivos:
   ```bash
   curl -L -o web/drift_worker.js https://github.com/simolus3/drift/releases/download/drift-2.34.4/drift_worker.js
@@ -97,6 +99,21 @@ jobs:
           --dart-define=SUPABASE_ANON_KEY=teste
       - run: flutter build apk --debug --flavor prod   # alvo do push (RF-30, F38)
       - run: flutter build apk --debug --flavor lite -t lib/main_lite.dart
+      - run: flutter build appbundle --release --flavor lite -t lib/main_lite.dart   # F47/RF-32: R8/empacotamento (debug key)
+      - name: Manifest do Lite sem INTERNET nem Firebase   # F47/RF-32
+        run: |
+          MANIFEST=build/app/intermediates/merged_manifests/liteRelease/processLiteReleaseManifest/AndroidManifest.xml
+          test -f "$MANIFEST" || { echo "manifest mergeado do Lite não encontrado"; exit 1; }
+          falhou=0
+          grep -q 'android.permission.INTERNET' "$MANIFEST" && { echo "INTERNET vazou no Lite"; falhou=1; }
+          grep -q 'com.google.firebase' "$MANIFEST" && { echo "Firebase vazou no Lite"; falhou=1; }
+          grep -q 'com.google.android.c2dm' "$MANIFEST" && { echo "c2dm vazou no Lite"; falhou=1; }
+          grep -q 'io.flutter.plugins.firebase' "$MANIFEST" && { echo "io.flutter.plugins.firebase vazou no Lite"; falhou=1; }
+          grep -qi 'firebaseinitprovider' "$MANIFEST" && { echo "FirebaseInitProvider vazou no Lite"; falhou=1; }
+          grep -qi 'flutterfirebasemessaginginitprovider' "$MANIFEST" && { echo "FlutterFirebaseMessagingInitProvider vazou no Lite"; falhou=1; }
+          grep -q 'android:allowBackup="false"' "$MANIFEST" || { echo "allowBackup não desligado no Lite"; falhou=1; }
+          grep -q 'android.permission.RECORD_AUDIO' "$MANIFEST" || { echo "RECORD_AUDIO sumiu do Lite"; falhou=1; }
+          exit $falhou
 
   desktop:
     strategy:

@@ -27,6 +27,27 @@ jobs:
       # O flavor `lite` NÃO seleciona o modo: sem `-t lib/main_lite.dart` ele
       # empacota o app colaborativo com o pacote `.lite` (defeito real da F41/F42).
       - run: flutter build apk --debug --flavor lite -t lib/main_lite.dart
+      # F47/RF-32: valida o artefato de publicação do Lite (R8/empacotamento).
+      - name: Build AAB release do Lite
+        run: flutter build appbundle --release --flavor lite -t lib/main_lite.dart
+      # F47/RF-32: o Lite publicado não pode herdar rede nem Firebase. Os
+      # componentes `io.flutter.plugins.firebase.messaging.*` não contêm
+      # `com.google.firebase`, então as classes são checadas também pelo
+      # nome (grep -i cobre a grafia CamelCase das classes Java).
+      - name: Manifest do Lite sem INTERNET nem Firebase
+        run: |
+          MANIFEST=build/app/intermediates/merged_manifests/liteRelease/processLiteReleaseManifest/AndroidManifest.xml
+          test -f "$MANIFEST" || { echo "manifest mergeado do Lite não encontrado"; exit 1; }
+          falhou=0
+          grep -q 'android.permission.INTERNET' "$MANIFEST" && { echo "INTERNET vazou no Lite"; falhou=1; }
+          grep -q 'com.google.firebase' "$MANIFEST" && { echo "Firebase vazou no Lite"; falhou=1; }
+          grep -q 'com.google.android.c2dm' "$MANIFEST" && { echo "c2dm vazou no Lite"; falhou=1; }
+          grep -q 'io.flutter.plugins.firebase' "$MANIFEST" && { echo "io.flutter.plugins.firebase vazou no Lite"; falhou=1; }
+          grep -qi 'firebaseinitprovider' "$MANIFEST" && { echo "FirebaseInitProvider vazou no Lite"; falhou=1; }
+          grep -qi 'flutterfirebasemessaginginitprovider' "$MANIFEST" && { echo "FlutterFirebaseMessagingInitProvider vazou no Lite"; falhou=1; }
+          grep -q 'android:allowBackup="false"' "$MANIFEST" || { echo "allowBackup não desligado no Lite"; falhou=1; }
+          grep -q 'android.permission.RECORD_AUDIO' "$MANIFEST" || { echo "RECORD_AUDIO sumiu do Lite"; falhou=1; }
+          exit $falhou
 
   supabase:
     runs-on: ubuntu-latest
