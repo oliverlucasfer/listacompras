@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:drift/drift.dart';
 
+import '../../../core/config/usuario_local.dart';
 import '../../../drift/database.dart';
-import '../../auth/data/auth_local_repository.dart';
 import '../../sync/data/outbox_mutacoes.dart';
 import '../domain/backup_arquivo.dart';
 
@@ -143,9 +143,7 @@ class BackupRepository {
                   createdAt: DateTime.parse(l['created_at'] as String),
                   updatedAt: atualizadoEm,
                   titulo: l['titulo'] as String,
-                  donoId: donoLocal
-                      ? AuthLocalRepository.idLocal
-                      : l['dono_id'] as String,
+                  donoId: donoLocal ? idLocal : l['dono_id'] as String,
                   deletadoEm: Value(_parseOpt(l['deletado_em'])),
                   arquivadaEm: Value(_parseOpt(l['arquivada_em'])),
                   orcamentoCentavos: Value(l['orcamento_centavos'] as int?),
