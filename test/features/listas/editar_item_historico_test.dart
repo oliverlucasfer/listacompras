@@ -1,33 +1,19 @@
-import 'dart:async';
-
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
-import 'package:lista_compras/drift/database.dart';
-import 'package:lista_compras/features/auth/providers/auth_providers.dart';
-import 'package:lista_compras/features/convites/data/papel_repository.dart';
-import 'package:lista_compras/features/convites/domain/papel.dart';
-import 'package:lista_compras/features/convites/providers/papel_providers.dart';
-import 'package:lista_compras/features/listas/data/historico_precos_repository.dart';
-import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/core/dominio/unidade.dart';
+import 'package:lista_compras/core/l10n/app_strings.dart';
+import 'package:lista_compras/drift/database.dart';
+import 'package:lista_compras/features/listas/data/historico_precos_repository.dart';
+import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/tela_lista_screen.dart';
-import 'package:lista_compras/features/sync/domain/sync_status.dart';
-import 'package:lista_compras/features/sync/providers/sync_providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '../auth/fakes.dart';
-import '../convites/servidor_fake.dart';
 
 /// Histórico de preços no editor do item (RF-29, F37).
 void main() {
-  setUpAll(inicializarSupabaseTeste);
-
   late AppDatabase db;
   final quando = DateTime.utc(2026, 9, 20, 12, 0);
 
@@ -47,45 +33,20 @@ void main() {
         '${local.month.toString().padLeft(2, '0')}';
   }
 
-  PapelRepository papelRepo({required String listaId, required Papel papel}) {
-    final servidor = ServidorFake((req) => (200, const <Object>[]));
-    addTearDown(servidor.close);
-    final repo = PapelRepository(
-      SupabaseClient(
-        'http://127.0.0.1:54321',
-        'test-key',
-        httpClient: servidor,
-        authOptions: const AuthClientOptions(autoRefreshToken: false),
-      ),
-    );
-    repo.atualizar(listaId, papel);
-    return repo;
-  }
-
   Future<void> abrirLista(WidgetTester tester) async {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(
       titulo: 'Compras da Semana',
-      donoId: 'user-a',
+      donoId: 'local',
     );
     await repo.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       categoria: CategoriaItem.mercearia,
     );
-    final sync = StreamController<SyncStatus>();
-    sync.add(const Sincronizado());
-    addTearDown(sync.close);
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          papelRepositoryProvider.overrideWithValue(
-            papelRepo(listaId: lista.id, papel: Papel.dono),
-          ),
-          donoAtualIdProvider.overrideWithValue(''),
-          syncStatusProvider.overrideWith((ref) => sync.stream),
-        ],
+        overrides: [appDatabaseProvider.overrideWithValue(db)],
         child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
       ),
     );

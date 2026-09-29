@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,12 +6,9 @@ import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/core/dominio/unidade.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
-import 'package:lista_compras/features/auth/providers/auth_providers.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/mercado_screen.dart';
-import 'package:lista_compras/features/sync/domain/sync_status.dart';
-import 'package:lista_compras/features/sync/providers/sync_providers.dart';
 
 class _RepoEditarFalha extends ListasRepository {
   _RepoEditarFalha(super.db);
@@ -49,17 +44,12 @@ void main() {
     String listaId, {
     bool escritaFalha = false,
   }) async {
-    final sync = StreamController<SyncStatus>();
-    sync.add(const Sincronizado());
-    addTearDown(sync.close);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           if (escritaFalha)
             listasRepositoryProvider.overrideWithValue(_RepoEditarFalha(db)),
-          donoAtualIdProvider.overrideWithValue('user-a'),
-          syncStatusProvider.overrideWith((ref) => sync.stream),
         ],
         child: MaterialApp(home: MercadoScreen(listaId: listaId)),
       ),
@@ -152,27 +142,6 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('${AppStrings.mercadoMarcados} (11)'), findsOneWidget);
-    await fechar(tester);
-  });
-
-  testWidgets('deve_ignorar_marcado_remoto_quando_conta_progresso', (
-    tester,
-  ) async {
-    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
-    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz', quantidade: 1);
-    await abrir(tester, lista.id);
-
-    await tester.tap(find.text('Arroz'));
-    await tester.pumpAndSettle();
-    expect(find.text('1 de 1'), findsOneWidget);
-
-    // Sync remoto desmarca por baixo (LWW): o stream atualiza e o contador
-    // precisa reconciliar — o id não está mais concluído.
-    final item = (await db.select(db.itemLocal).get()).single;
-    await repo.editarItem(item.id, concluido: false);
-    await tester.pumpAndSettle();
-
-    expect(find.text('0 de 1'), findsOneWidget);
     await fechar(tester);
   });
 

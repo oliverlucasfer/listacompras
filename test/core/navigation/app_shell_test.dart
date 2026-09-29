@@ -2,37 +2,15 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lista_compras/core/config/usuario_local.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
-import 'package:lista_compras/features/auth/data/supabase_auth_repository.dart';
-import 'package:lista_compras/features/auth/domain/sessao.dart';
-import 'package:lista_compras/features/auth/providers/auth_providers.dart';
-import 'package:lista_compras/features/convites/domain/convite_pendente.dart';
-import 'package:lista_compras/features/convites/providers/convites_providers.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
-import 'package:lista_compras/features/sync/domain/sync_status.dart';
-import 'package:lista_compras/features/sync/providers/sync_providers.dart';
 import 'package:lista_compras/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '../../features/auth/fakes.dart';
-
-class _AuthAutenticado extends SupabaseAuthRepository {
-  _AuthAutenticado() : super(Supabase.instance.client);
-
-  @override
-  Stream<EventoSessao> get onAuthStateChange =>
-      const Stream<EventoSessao>.empty();
-
-  @override
-  UsuarioAtual? get sessaoAtual => const UsuarioAtual(id: 'user-a');
-}
 
 void main() {
-  setUpAll(inicializarSupabaseTeste);
-
   setUp(() {
     SharedPreferences.setMockInitialValues({'onboarding_visto': true});
   });
@@ -50,16 +28,7 @@ void main() {
     addTearDown(db.close);
     if (seed != null) await seed(db);
     final container = ProviderContainer(
-      overrides: [
-        authRepositoryProvider.overrideWithValue(_AuthAutenticado()),
-        appDatabaseProvider.overrideWithValue(db),
-        syncStatusProvider.overrideWith(
-          (ref) => Stream<SyncStatus>.value(const Sincronizado()),
-        ),
-        meusConvitesPendentesProvider.overrideWith(
-          (ref) async => const <ConvitePendente>[],
-        ),
-      ],
+      overrides: [appDatabaseProvider.overrideWithValue(db)],
     );
     addTearDown(container.dispose);
     await tester.pumpWidget(
@@ -86,13 +55,11 @@ void main() {
 
     expect(find.byType(NavigationBar), findsOneWidget);
     expect(find.text(AppStrings.abaMinhas), findsOneWidget);
-    expect(find.text(AppStrings.compartilhadas), findsOneWidget);
     expect(find.text(AppStrings.configuracoes), findsOneWidget);
 
     await tester.tap(find.text(AppStrings.configuracoes));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.configuracoes), findsWidgets);
-    expect(find.text(AppStrings.sair), findsOneWidget);
+    expect(find.text(AppStrings.aparencia), findsOneWidget);
 
     await fechar(tester);
   });
@@ -114,8 +81,7 @@ void main() {
       tamanho: const Size(500, 800),
       seed: (db) async {
         final repo = ListasRepository(db);
-        await repo.criarLista(titulo: 'Minha lista', donoId: 'user-a');
-        await repo.criarLista(titulo: 'Do outro', donoId: 'user-b');
+        await repo.criarLista(titulo: 'Minha lista', donoId: idLocal);
       },
     );
 
@@ -125,15 +91,6 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
     expect(find.text(AppStrings.abaMinhas), findsOneWidget);
-
-    await tester.tap(find.text(AppStrings.compartilhadas));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Do outro'));
-    await tester.pumpAndSettle();
-    expect(find.byType(BackButton), findsOneWidget);
-    await tester.pageBack();
-    await tester.pumpAndSettle();
-    expect(find.text(AppStrings.compartilhadas), findsWidgets);
 
     await fechar(tester);
   });

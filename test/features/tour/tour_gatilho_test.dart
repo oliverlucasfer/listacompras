@@ -3,11 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lista_compras/core/config/app_modo.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
-import 'package:lista_compras/features/auth/data/auth_local_repository.dart';
-import 'package:lista_compras/features/auth/providers/auth_providers.dart';
 import 'package:lista_compras/features/configuracoes/ui/configuracoes_screen.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
@@ -89,12 +86,7 @@ void main() {
   ProviderContainer container({required Map<String, Object> prefs}) {
     SharedPreferences.setMockInitialValues(prefs);
     final c = ProviderContainer(
-      overrides: [
-        capacidadesProvider.overrideWithValue(AppCapacidades.lite),
-        appDatabaseProvider.overrideWithValue(db),
-        donoAtualIdProvider.overrideWithValue('user-a'),
-        emailUsuarioProvider.overrideWithValue('user@exemplo.com'),
-      ],
+      overrides: [appDatabaseProvider.overrideWithValue(db)],
     );
     addTearDown(c.dispose);
     return c;
@@ -151,7 +143,7 @@ void main() {
 
   testWidgets('deve_iniciar_tour_etapa2_quando_lista_tem_item', (tester) async {
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
     await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
     final c = container(prefs: {'onboarding_visto': true});
 
@@ -164,7 +156,7 @@ void main() {
 
   testWidgets('nao_deve_iniciar_tour_etapa2_quando_flag_vista', (tester) async {
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
     await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
     final c = container(
       prefs: {'onboarding_visto': true, 'tour_etapa2_visto': true},
@@ -181,7 +173,7 @@ void main() {
     tester,
   ) async {
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Vazia', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Vazia', donoId: 'local');
     final c = container(prefs: {'onboarding_visto': true});
 
     await tester.pumpWidget(_app(c, TelaListaScreen(listaId: lista.id)));
@@ -201,13 +193,7 @@ void main() {
       'tour_etapa2_visto': true,
     });
     final c = ProviderContainer(
-      overrides: [
-        capacidadesProvider.overrideWithValue(AppCapacidades.lite),
-        authRepositoryProvider.overrideWithValue(AuthLocalRepository()),
-        appDatabaseProvider.overrideWithValue(db),
-        donoAtualIdProvider.overrideWithValue('user-a'),
-        emailUsuarioProvider.overrideWithValue('user@exemplo.com'),
-      ],
+      overrides: [appDatabaseProvider.overrideWithValue(db)],
     );
     addTearDown(c.dispose);
     final router = c.read(routerProvider);

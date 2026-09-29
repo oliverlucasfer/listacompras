@@ -1,21 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lista_compras/core/config/usuario_local.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 
-import '../features/auth/fakes.dart';
 import 'fluxo_harness.dart';
 
 void main() {
-  setUpAll(inicializarSupabaseTeste);
-
   testWidgets('deve_importar_quando_cola_texto_e_confirma', (tester) async {
     await montarApp(
       tester,
       seed: (db) async {
         await ListasRepository(
           db,
-        ).criarLista(titulo: 'Compras', donoId: 'user-a');
+        ).criarLista(titulo: 'Compras', donoId: idLocal);
       },
     );
 

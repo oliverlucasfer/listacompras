@@ -2,12 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 
-import '../features/auth/fakes.dart';
 import 'fluxo_harness.dart';
 
 void main() {
-  setUpAll(inicializarSupabaseTeste);
-
   testWidgets(
     'deve_criar_lista_adicionar_marcar_e_limpar_quando_fluxo_completo',
     (tester) async {

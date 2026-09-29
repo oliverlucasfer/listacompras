@@ -13,5 +13,4 @@ abstract final class TourKeys {
   static final itemLista = GlobalKey();
   static final botaoMercado = GlobalKey();
   static final menuMais = GlobalKey();
-  static final acaoConvite = GlobalKey();
 }

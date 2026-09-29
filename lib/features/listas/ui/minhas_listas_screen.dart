@@ -45,7 +45,7 @@ class _MinhasListasScreenState extends ConsumerState<MinhasListasScreen> {
     final onboardingVisto = ref.watch(onboardingVistoProvider).value ?? false;
     return Stack(
       children: [
-        const PainelListas(filtro: FiltroListas.minhas),
+        const PainelListas(),
         if (onboardingVisto) const TourLoader(etapa: TourEtapa.primeira),
       ],
     );

@@ -11,83 +11,64 @@ List<TourStep> get passosEtapa1 => <TourStep>[
     alvo: TourKeys.novaLista,
     titulo: AppStrings.tourNovaListaTitulo,
     corpo: AppStrings.tourNovaListaCorpo,
-    elegivel: (cap) => true,
   ),
   TourStep(
     id: 'lista.busca',
     alvo: TourKeys.lupa,
     titulo: AppStrings.tourBuscaTitulo,
     corpo: AppStrings.tourBuscaCorpo,
-    elegivel: (cap) => true,
   ),
   TourStep(
     id: 'lista.config',
     alvo: TourKeys.abaConfiguracoes,
     titulo: AppStrings.tourConfigTitulo,
     corpo: AppStrings.tourConfigCorpo,
-    elegivel: (cap) => true,
   ),
 ];
 
 /// Roteiro da etapa 2 (ao abrir uma lista com itens pendentes): nome, adicionar,
-/// unidade, importar, marcar/editar, modo mercado, orçamento/total e convite.
-/// O convite só existe no colaborativo; mercado/orçamento/marcar são escondidos
-/// pela própria tela conforme o papel.
+/// unidade, importar, marcar/editar, modo mercado e orçamento/total.
 List<TourStep> get passosEtapa2 => <TourStep>[
   TourStep(
     id: 'recursos.nome',
     alvo: TourKeys.nomeLista,
     titulo: AppStrings.tourNomeTitulo,
     corpo: AppStrings.tourNomeCorpo,
-    elegivel: (cap) => true,
   ),
   TourStep(
     id: 'recursos.adicionar',
     alvo: TourKeys.campoAdicionar,
     titulo: AppStrings.tourAdicionarTitulo,
     corpo: AppStrings.tourAdicionarCorpo,
-    elegivel: (cap) => true,
   ),
   TourStep(
     id: 'recursos.unidade',
     alvo: TourKeys.seletorUnidade,
     titulo: AppStrings.tourUnidadeTitulo,
     corpo: AppStrings.tourUnidadeCorpo,
-    elegivel: (cap) => true,
   ),
   TourStep(
     id: 'recursos.importar',
     alvo: TourKeys.botaoImportar,
     titulo: AppStrings.tourImportarTitulo,
     corpo: AppStrings.tourImportarCorpo,
-    elegivel: (cap) => true,
   ),
   TourStep(
     id: 'recursos.marcar',
     alvo: TourKeys.itemLista,
     titulo: AppStrings.tourMarcarTitulo,
     corpo: AppStrings.tourMarcarCorpo,
-    elegivel: (cap) => true,
   ),
   TourStep(
     id: 'recursos.mercado',
     alvo: TourKeys.botaoMercado,
     titulo: AppStrings.tourMercadoTitulo,
     corpo: AppStrings.tourMercadoCorpo,
-    elegivel: (cap) => true,
   ),
   TourStep(
     id: 'recursos.orcamento',
     alvo: TourKeys.menuMais,
     titulo: AppStrings.tourOrcamentoTitulo,
     corpo: AppStrings.tourOrcamentoCorpo,
-    elegivel: (cap) => true,
-  ),
-  TourStep(
-    id: 'recursos.convite',
-    alvo: TourKeys.acaoConvite,
-    titulo: AppStrings.tourConviteTitulo,
-    corpo: AppStrings.tourConviteCorpo,
-    elegivel: (cap) => cap.colaboracao,
   ),
 ];

@@ -3,42 +3,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lista_compras/core/config/usuario_local.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/theme/tokens/app_spacing.dart';
-import 'package:lista_compras/core/widgets/app_banner.dart';
 import 'package:lista_compras/core/widgets/app_card.dart';
 import 'package:lista_compras/core/widgets/app_logo.dart';
 import 'package:lista_compras/drift/database.dart';
-import 'package:lista_compras/features/auth/providers/auth_providers.dart';
-import 'package:lista_compras/features/convites/domain/papel.dart';
-import 'package:lista_compras/features/convites/providers/papel_providers.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
-import 'package:lista_compras/features/sync/domain/sync_status.dart';
-import 'package:lista_compras/features/sync/providers/sync_providers.dart';
-import 'package:lista_compras/features/sync/ui/indicador_sync.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../auth/fakes.dart';
-
 void main() {
-  setUpAll(inicializarSupabaseTeste);
-
   late AppDatabase db;
-  late FakeAuthRepository authRepo;
 
   setUp(() {
     SharedPreferences.setMockInitialValues({'onboarding_visto': true});
     db = AppDatabase(NativeDatabase.memory());
-    authRepo = FakeAuthRepository();
   });
 
   tearDown(() async {
     await db.close();
   });
 
-  Future<void> abrirTela(WidgetTester tester, {SyncStatus? syncStatus}) async {
+  Future<void> abrirTela(WidgetTester tester) async {
     final router = GoRouter(
       initialLocation: '/listas',
       routes: [
@@ -58,13 +46,7 @@ void main() {
     );
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          authRepositoryProvider.overrideWithValue(authRepo),
-          donoAtualIdProvider.overrideWithValue('user-a'),
-          if (syncStatus != null)
-            syncStatusProvider.overrideWith((ref) => Stream.value(syncStatus)),
-        ],
+        overrides: [appDatabaseProvider.overrideWithValue(db)],
         child: MaterialApp.router(routerConfig: router),
       ),
     );
@@ -107,7 +89,7 @@ void main() {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(
       titulo: 'Compras da Semana',
-      donoId: 'user-a',
+      donoId: idLocal,
     );
     final arroz = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
     await repo.adicionarItem(listaId: lista.id, nome: 'Feijão');
@@ -125,8 +107,8 @@ void main() {
   ) async {
     // F12-T05: cards empilhados não podem ficar "grudados" (doc 10 §2.1).
     final repo = ListasRepository(db);
-    await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
-    await repo.criarLista(titulo: 'Churrasco', donoId: 'user-a');
+    await repo.criarLista(titulo: 'Compras', donoId: idLocal);
+    await repo.criarLista(titulo: 'Churrasco', donoId: idLocal);
 
     await abrirTela(tester);
 
@@ -138,7 +120,7 @@ void main() {
     await fechar(tester);
   });
 
-  testWidgets('deve_ocultar_lista_compartilhada_quando_nao_e_dono', (
+  testWidgets('deve_ocultar_lista_de_outro_dono_quando_nao_e_do_aparelho', (
     tester,
   ) async {
     final repo = ListasRepository(db);
@@ -189,7 +171,7 @@ void main() {
     tester,
   ) async {
     final repo = ListasRepository(db);
-    await repo.criarLista(titulo: 'Antigo', donoId: 'user-a');
+    await repo.criarLista(titulo: 'Antigo', donoId: idLocal);
     await abrirTela(tester);
 
     await tester.longPress(find.text('Antigo'));
@@ -211,7 +193,7 @@ void main() {
 
   testWidgets('deve_excluir_lista_quando_confirmar_dialogo', (tester) async {
     final repo = ListasRepository(db);
-    await repo.criarLista(titulo: 'Para excluir', donoId: 'user-a');
+    await repo.criarLista(titulo: 'Para excluir', donoId: idLocal);
     await abrirTela(tester);
 
     await tester.longPress(find.text('Para excluir'));
@@ -231,33 +213,11 @@ void main() {
     await fechar(tester);
   });
 
-  testWidgets('deve_marcar_dono_quando_cria_lista', (tester) async {
-    await abrirTela(tester);
-
-    await tester.tap(find.byType(FloatingActionButton));
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.nomeDaLista),
-      'Minha nova',
-    );
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.criarLista));
-    await tester.pumpAndSettle();
-
-    final container = ProviderScope.containerOf(
-      tester.element(find.text('Minha nova')),
-    );
-    final registros = await (db.select(db.listaLocal)).get();
-    final id = registros.firstWhere((l) => l.titulo == 'Minha nova').id;
-    expect(container.read(papelRepositoryProvider).papelDe(id), Papel.dono);
-
-    await fechar(tester);
-  });
-
   testWidgets('deve_empilhar_e_voltar_ao_painel_quando_abrir_lista', (
     tester,
   ) async {
     final repo = ListasRepository(db);
-    await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.criarLista(titulo: 'Compras', donoId: idLocal);
     await abrirTela(tester);
 
     await tester.tap(find.text('Compras'));
@@ -295,31 +255,9 @@ void main() {
     await fechar(tester);
   });
 
-  testWidgets('deve_mostrar_indicador_de_sync_quando_painel', (tester) async {
-    // R-20 / wireframe 10 §3.2: o estado de sync aparece no topo do painel,
-    // não só dentro da tela da lista.
-    await abrirTela(tester);
-
-    expect(find.byType(IndicadorSync), findsOneWidget);
-
-    await fechar(tester);
-  });
-
-  testWidgets('deve_ficar_em_16dp_quando_indicador_no_painel', (tester) async {
-    // F40-T05 (RNF-06): o wrapper do painel é `only(top: sm)`; o banner
-    // offline traz o próprio horizontal `lg`, então o inset final é 16dp e
-    // não 32dp (padding duplo). Trava o uso do `painel_listas.dart`.
-    await abrirTela(tester, syncStatus: const Offline());
-
-    expect(find.byType(AppBanner), findsOneWidget);
-    expect(tester.getTopLeft(find.byType(AppBanner)).dx, AppSpacing.lg);
-
-    await fechar(tester);
-  });
-
   testWidgets('deve_renomear_lista_quando_toca_menu_do_card', (tester) async {
     final repo = ListasRepository(db);
-    await repo.criarLista(titulo: 'Antigo', donoId: 'user-a');
+    await repo.criarLista(titulo: 'Antigo', donoId: idLocal);
     await abrirTela(tester);
 
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -340,7 +278,7 @@ void main() {
 
   testWidgets('deve_exibir_tooltip_no_menu_do_card', (tester) async {
     final repo = ListasRepository(db);
-    await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.criarLista(titulo: 'Compras', donoId: idLocal);
     await abrirTela(tester);
 
     expect(find.byTooltip(AppStrings.menu), findsOneWidget);
@@ -349,8 +287,8 @@ void main() {
 
   testWidgets('deve_filtrar_listas_quando_buscar_pelo_titulo', (tester) async {
     final repo = ListasRepository(db);
-    await repo.criarLista(titulo: 'Compras da Semana', donoId: 'user-a');
-    await repo.criarLista(titulo: 'Churrasco', donoId: 'user-a');
+    await repo.criarLista(titulo: 'Compras da Semana', donoId: idLocal);
+    await repo.criarLista(titulo: 'Churrasco', donoId: idLocal);
     await abrirTela(tester);
 
     await tester.tap(find.byTooltip(AppStrings.buscar));
@@ -369,7 +307,7 @@ void main() {
 
   testWidgets('deve_mostrar_vazio_quando_busca_sem_resultado', (tester) async {
     final repo = ListasRepository(db);
-    await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    await repo.criarLista(titulo: 'Compras', donoId: idLocal);
     await abrirTela(tester);
 
     await tester.tap(find.byTooltip(AppStrings.buscar));
@@ -387,8 +325,8 @@ void main() {
 
   testWidgets('deve_limpar_e_restaurar_quando_fechar_busca', (tester) async {
     final repo = ListasRepository(db);
-    await repo.criarLista(titulo: 'Compras da Semana', donoId: 'user-a');
-    await repo.criarLista(titulo: 'Churrasco', donoId: 'user-a');
+    await repo.criarLista(titulo: 'Compras da Semana', donoId: idLocal);
+    await repo.criarLista(titulo: 'Churrasco', donoId: idLocal);
     await abrirTela(tester);
 
     await tester.tap(find.byTooltip(AppStrings.buscar));
@@ -416,7 +354,7 @@ void main() {
     tester,
   ) async {
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: idLocal);
     await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
     await abrirTela(tester);
 
@@ -431,7 +369,7 @@ void main() {
     tester,
   ) async {
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: idLocal);
     final item = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
     await repo.editarItem(item.id, concluido: true);
     await abrirTela(tester);
@@ -445,7 +383,7 @@ void main() {
 
   testWidgets('deve_criar_e_navegar_quando_confirma_duplicar', (tester) async {
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: idLocal);
     await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
     await abrirTela(tester);
 
@@ -482,7 +420,7 @@ void main() {
 
   testWidgets('nao_deve_criar_quando_cancela_duplicar', (tester) async {
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: idLocal);
     await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
     await abrirTela(tester);
 
@@ -502,7 +440,7 @@ void main() {
     tester,
   ) async {
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Velha', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Velha', donoId: idLocal);
     await repo.definirArquivada(lista.id, arquivada: true);
     await abrirTela(tester);
 
@@ -514,7 +452,7 @@ void main() {
     tester,
   ) async {
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Velha', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Velha', donoId: idLocal);
     await repo.definirArquivada(lista.id, arquivada: true);
     await abrirTela(tester);
 
@@ -528,7 +466,7 @@ void main() {
 
   testWidgets('deve_arquivar_quando_dono_toca_menu', (tester) async {
     final repo = ListasRepository(db);
-    await repo.criarLista(titulo: 'Ativa', donoId: 'user-a');
+    await repo.criarLista(titulo: 'Ativa', donoId: idLocal);
     await abrirTela(tester);
 
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -545,7 +483,7 @@ void main() {
     tester,
   ) async {
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Velha', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Velha', donoId: idLocal);
     await repo.definirArquivada(lista.id, arquivada: true);
     await abrirTela(tester);
 

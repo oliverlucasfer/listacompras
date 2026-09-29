@@ -2,7 +2,6 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../core/config/app_modo.dart';
 import 'tour_roteiro.dart';
 import 'tour_step.dart';
 
@@ -72,10 +71,7 @@ class TourController extends Notifier<TourEstado> {
   /// sozinho não basta — no `IndexedStack` do shell as abas ocultas continuam
   /// montadas (offstage) e o spotlight apontaria para um widget invisível.
   bool iniciar(TourEtapa etapa) {
-    final cap = ref.read(capacidadesProvider);
-    final lista = _passosDe(
-      etapa,
-    ).where((p) => p.elegivel(cap)).where((p) => _alvoVisivel(p.alvo)).toList();
+    final lista = _passosDe(etapa).where((p) => _alvoVisivel(p.alvo)).toList();
     if (lista.isEmpty) return false;
     state = TourEstado(ativo: true, passos: lista, indice: 0, etapa: etapa);
     return true;

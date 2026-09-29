@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/config/app_modo.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/navigation/voltar_para_inicio.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
@@ -13,10 +12,6 @@ import '../../../core/widgets/app_esqueleto.dart';
 import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_snack_bar.dart';
-import '../../auth/providers/auth_providers.dart';
-import '../../convites/domain/papel.dart';
-import '../../convites/providers/papel_providers.dart';
-import '../../sync/ui/indicador_sync.dart';
 import '../domain/item.dart';
 import '../../../core/dominio/quantidade.dart';
 import '../providers/listas_providers.dart';
@@ -134,12 +129,7 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
             ),
           );
         }
-        final ehDono = lista.donoId == ref.watch(donoAtualIdProvider);
-        final inicio = inicioDaLista(ehDono: ehDono);
-        // Default conservador: enquanto o papel não carrega, trata como
-        // leitor (tela somente leitura, sem checkbox ativo — doc 05 §6.5).
-        final podeEscrever =
-            ref.watch(papelEfetivoProvider(listaId)) != Papel.leitor;
+        final inicio = inicioDaLista(ehDono: true);
         final itensAsync = ref.watch(itensDaListaProvider(listaId));
         return PopScopeVoltarInicio(
           inicio: inicio,
@@ -150,7 +140,6 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
             ),
             body: Column(
               children: [
-                if (ref.watch(capacidadesProvider).nuvem) const IndicadorSync(),
                 Expanded(
                   child: itensAsync.when(
                     loading: () => const AppEsqueleto(linhas: 5),
@@ -163,7 +152,6 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
                       listaId: listaId,
                       itens: itens,
                       marcadosNaSessao: _marcadosValidos(itens),
-                      podeEscrever: podeEscrever,
                       onMarcar: _marcar,
                       onDesmarcar: _desmarcar,
                       onVoltarParaLista: _voltarParaLista,
@@ -184,7 +172,6 @@ class _CorpoMercado extends StatelessWidget {
     required this.listaId,
     required this.itens,
     required this.marcadosNaSessao,
-    required this.podeEscrever,
     required this.onMarcar,
     required this.onDesmarcar,
     required this.onVoltarParaLista,
@@ -195,7 +182,6 @@ class _CorpoMercado extends StatelessWidget {
 
   /// Quantidade de itens marcados nesta sessão e ainda concluídos no stream.
   final int marcadosNaSessao;
-  final bool podeEscrever;
   final ValueChanged<Item> onMarcar;
   final ValueChanged<Item> onDesmarcar;
   final VoidCallback onVoltarParaLista;
@@ -252,7 +238,6 @@ class _CorpoMercado extends StatelessWidget {
                   itemBuilder: (context, index) => _LinhaMercado(
                     item: pendentes[index],
                     concluido: false,
-                    podeEscrever: podeEscrever,
                     onAlternar: () => onMarcar(pendentes[index]),
                   ),
                 ),
@@ -263,7 +248,6 @@ class _CorpoMercado extends StatelessWidget {
             child: _FaixaMarcados(
               itens: concluidos,
               maxAltura: maxFaixa,
-              podeEscrever: podeEscrever,
               abrirInicialmente: marcadosNaSessao > 0,
               onDesmarcar: onDesmarcar,
             ),
@@ -279,20 +263,18 @@ class _LinhaMercado extends StatelessWidget {
   const _LinhaMercado({
     required this.item,
     required this.concluido,
-    required this.podeEscrever,
     required this.onAlternar,
   });
 
   final Item item;
   final bool concluido;
-  final bool podeEscrever;
   final VoidCallback onAlternar;
 
   @override
   Widget build(BuildContext context) {
     final cores = Theme.of(context).colorScheme;
     return InkWell(
-      onTap: podeEscrever ? onAlternar : null,
+      onTap: onAlternar,
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 56),
         child: Padding(
@@ -307,7 +289,7 @@ class _LinhaMercado extends StatelessWidget {
                   label: item.nome,
                   child: Checkbox(
                     value: concluido,
-                    onChanged: podeEscrever ? (_) => onAlternar() : null,
+                    onChanged: (_) => onAlternar(),
                   ),
                 ),
               ),
@@ -359,7 +341,6 @@ class _FaixaMarcados extends StatefulWidget {
   const _FaixaMarcados({
     required this.itens,
     required this.maxAltura,
-    required this.podeEscrever,
     required this.abrirInicialmente,
     required this.onDesmarcar,
   });
@@ -368,7 +349,6 @@ class _FaixaMarcados extends StatefulWidget {
 
   /// Teto da área expansível quando aberta (rolagem interna a partir daí).
   final double maxAltura;
-  final bool podeEscrever;
   final bool abrirInicialmente;
   final ValueChanged<Item> onDesmarcar;
 
@@ -388,7 +368,6 @@ class _FaixaMarcadosState extends State<_FaixaMarcados> {
   }
 
   void _alternar() {
-    if (!widget.podeEscrever) return;
     setState(() => _aberta = !_aberta);
   }
 
@@ -428,7 +407,6 @@ class _FaixaMarcadosState extends State<_FaixaMarcados> {
                     itemBuilder: (context, index) => _LinhaMercado(
                       item: widget.itens[index],
                       concluido: true,
-                      podeEscrever: widget.podeEscrever,
                       onAlternar: () => widget.onDesmarcar(widget.itens[index]),
                     ),
                   ),

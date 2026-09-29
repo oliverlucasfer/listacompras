@@ -5,38 +5,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/categorias/sugestao_categorias.dart';
-import 'package:lista_compras/core/widgets/app_banner.dart';
+import 'package:lista_compras/core/dominio/categoria.dart';
+import 'package:lista_compras/core/dominio/unidade.dart';
+import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/widgets/app_campo_texto.dart';
 import 'package:lista_compras/core/widgets/app_dropdown.dart';
 import 'package:lista_compras/core/widgets/app_esqueleto.dart';
 import 'package:lista_compras/core/widgets/app_estado_erro.dart';
 import 'package:lista_compras/drift/database.dart';
-import 'package:lista_compras/features/auth/providers/auth_providers.dart';
-import 'package:lista_compras/features/convites/data/convites_repository.dart';
-import 'package:lista_compras/features/convites/data/papel_repository.dart';
-import 'package:lista_compras/features/convites/domain/papel.dart';
-import 'package:lista_compras/features/convites/providers/convites_providers.dart';
-import 'package:lista_compras/features/convites/providers/papel_providers.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
-import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/features/listas/domain/item.dart';
 import 'package:lista_compras/features/listas/domain/preco.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
-import 'package:lista_compras/features/convites/ui/tela_membros_screen.dart';
-import 'package:lista_compras/core/dominio/unidade.dart';
 import 'package:lista_compras/features/listas/ui/tela_lista_screen.dart';
-import 'package:lista_compras/features/sync/domain/sync_status.dart';
-import 'package:lista_compras/features/sync/providers/sync_providers.dart';
 import 'package:lista_compras/features/voz/domain/reconhecimento_voz.dart';
 import 'package:lista_compras/features/voz/providers/reconhecimento_voz_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../convites/servidor_fake.dart';
-import '../auth/fakes.dart';
 import '../voz/fake_reconhecimento_voz.dart';
 
 class _RepoReordenarFalha extends ListasRepository {
@@ -49,8 +36,6 @@ class _RepoReordenarFalha extends ListasRepository {
 }
 
 void main() {
-  setUpAll(inicializarSupabaseTeste);
-
   late AppDatabase db;
 
   setUp(() {
@@ -62,37 +47,24 @@ void main() {
     await db.close();
   });
 
-  /// PapelRepository de teste com papel pré-carregado (state em memória;
-  /// servidor fake não é consultado pelo estado).
-  PapelRepository papelRepo(
-    WidgetTester tester, {
-    required String listaId,
-    required Papel papel,
-  }) {
-    final servidor = ServidorFake((req) => (200, const <Object>[]));
-    addTearDown(servidor.close);
-    final repo = PapelRepository(
-      SupabaseClient(
-        'http://127.0.0.1:54321',
-        'test-key',
-        httpClient: servidor,
-        authOptions: const AuthClientOptions(autoRefreshToken: false),
+  Future<void> montarTela(WidgetTester tester, String listaId) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        child: MaterialApp(home: TelaListaScreen(listaId: listaId)),
       ),
     );
-    repo.atualizar(listaId, papel);
-    return repo;
+    await tester.pumpAndSettle();
   }
 
   Future<String> listaComItens(
     WidgetTester tester, {
     bool comConcluido = false,
-    Papel papel = Papel.dono,
-    String donoAtual = '',
   }) async {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(
       titulo: 'Compras da Semana',
-      donoId: 'user-a',
+      donoId: 'local',
     );
     await repo.adicionarItem(
       listaId: lista.id,
@@ -112,23 +84,7 @@ void main() {
       );
       await repo.editarItem(detergente.id, concluido: true);
     }
-    final sync = StreamController<SyncStatus>();
-    sync.add(const Sincronizado());
-    addTearDown(sync.close);
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          papelRepositoryProvider.overrideWithValue(
-            papelRepo(tester, listaId: lista.id, papel: papel),
-          ),
-          donoAtualIdProvider.overrideWithValue(donoAtual),
-          syncStatusProvider.overrideWith((ref) => sync.stream),
-        ],
-        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
-      ),
-    );
-    await tester.pumpAndSettle();
+    await montarTela(tester, lista.id);
     return lista.id;
   }
 
@@ -146,7 +102,7 @@ void main() {
   }) async {
     final repo = ListasRepository(db);
     for (var i = 0; i < vezes; i++) {
-      final outra = await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
+      final outra = await repo.criarLista(titulo: 'Outra', donoId: 'local');
       await repo.adicionarItem(
         listaId: outra.id,
         nome: nome,
@@ -154,6 +110,32 @@ void main() {
         categoria: categoria,
       );
     }
+  }
+
+  /// Abre a tela de uma lista com um item "Arroz" (para fluxos que precisam de
+  /// uma lista pronta, com voz opcional).
+  Future<String> abrirListaComItem(
+    WidgetTester tester, {
+    String? listaId,
+    ReconhecimentoVoz? reconhecimento,
+  }) async {
+    final repo = ListasRepository(db);
+    final id =
+        listaId ??
+        (await repo.criarLista(titulo: 'Compras', donoId: 'local')).id;
+    await repo.adicionarItem(listaId: id, nome: 'Arroz');
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          if (reconhecimento != null)
+            reconhecimentoVozProvider.overrideWithValue(reconhecimento),
+        ],
+        child: MaterialApp(home: TelaListaScreen(listaId: id)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    return id;
   }
 
   testWidgets('deve_exibir_titulo_itens_e_secao_concluidos_quando_abrir', (
@@ -193,24 +175,9 @@ void main() {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(
       titulo: 'Compras da Semana',
-      donoId: 'user-a',
+      donoId: 'local',
     );
-    final sync = StreamController<SyncStatus>();
-    sync.add(const Sincronizado());
-    addTearDown(sync.close);
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          papelRepositoryProvider.overrideWithValue(
-            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
-          ),
-          syncStatusProvider.overrideWith((ref) => sync.stream),
-        ],
-        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
-      ),
-    );
-    await tester.pumpAndSettle();
+    await montarTela(tester, lista.id);
 
     expect(find.text(AppStrings.nenhumItem), findsOneWidget);
     expect(
@@ -225,7 +192,7 @@ void main() {
     tester,
   ) async {
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
     await repo.adicionarItem(
       listaId: lista.id,
       nome: 'Leite',
@@ -246,22 +213,7 @@ void main() {
       nome: 'Café',
       categoria: CategoriaItem.mercearia,
     );
-    final sync = StreamController<SyncStatus>();
-    sync.add(const Sincronizado());
-    addTearDown(sync.close);
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          papelRepositoryProvider.overrideWithValue(
-            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
-          ),
-          syncStatusProvider.overrideWith((ref) => sync.stream),
-        ],
-        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
-      ),
-    );
-    await tester.pumpAndSettle();
+    await montarTela(tester, lista.id);
 
     expect(find.text('Hortifrúti (1)'), findsOneWidget);
     expect(find.text('Mercearia (2)'), findsOneWidget);
@@ -285,7 +237,7 @@ void main() {
           '${CategoriaItem.hortifruti.valor}',
     });
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
     await repo.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
@@ -301,22 +253,7 @@ void main() {
       nome: 'Suco',
       categoria: CategoriaItem.bebidas,
     );
-    final sync = StreamController<SyncStatus>();
-    sync.add(const Sincronizado());
-    addTearDown(sync.close);
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          papelRepositoryProvider.overrideWithValue(
-            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
-          ),
-          syncStatusProvider.overrideWith((ref) => sync.stream),
-        ],
-        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
-      ),
-    );
-    await tester.pumpAndSettle();
+    await montarTela(tester, lista.id);
 
     final dyBebidas = tester
         .getTopLeft(find.text('${CategoriaItem.bebidas.rotulo} (1)'))
@@ -882,7 +819,7 @@ void main() {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(
       titulo: 'Compras da Semana',
-      donoId: 'user-a',
+      donoId: 'local',
     );
     await repo.adicionarItem(
       listaId: lista.id,
@@ -895,20 +832,12 @@ void main() {
       categoria: CategoriaItem.limpeza,
     );
     await repo.editarItem(detergente.id, concluido: true);
-    final sync = StreamController<SyncStatus>();
-    sync.add(const Sincronizado());
-    addTearDown(sync.close);
 
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           listasRepositoryProvider.overrideWithValue(_RepoLimparFalha(db)),
-          papelRepositoryProvider.overrideWithValue(
-            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
-          ),
-          donoAtualIdProvider.overrideWithValue('user-a'),
-          syncStatusProvider.overrideWith((ref) => sync.stream),
         ],
         child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
       ),
@@ -933,7 +862,7 @@ void main() {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(
       titulo: 'Compras da Semana',
-      donoId: 'user-a',
+      donoId: 'local',
     );
     await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
 
@@ -948,20 +877,10 @@ void main() {
         GoRoute(path: '/listas', builder: (_, _) => const MinhasListasScreen()),
       ],
     );
-    final sync = StreamController<SyncStatus>();
-    sync.add(const Sincronizado());
-    addTearDown(sync.close);
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          papelRepositoryProvider.overrideWithValue(
-            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
-          ),
-          donoAtualIdProvider.overrideWithValue('user-a'),
-          syncStatusProvider.overrideWith((ref) => sync.stream),
-        ],
+        overrides: [appDatabaseProvider.overrideWithValue(db)],
         child: MaterialApp.router(routerConfig: router),
       ),
     );
@@ -1012,25 +931,9 @@ void main() {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(
       titulo: 'Compras da Semana',
-      donoId: 'user-a',
+      donoId: 'local',
     );
-    final sync = StreamController<SyncStatus>();
-    sync.add(const Sincronizado());
-    addTearDown(sync.close);
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          papelRepositoryProvider.overrideWithValue(
-            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
-          ),
-          syncStatusProvider.overrideWith((ref) => sync.stream),
-        ],
-        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
-      ),
-    );
-    await tester.pumpAndSettle();
+    await montarTela(tester, lista.id);
 
     await tester.tap(find.text(AppStrings.importarLista));
     await tester.pumpAndSettle();
@@ -1045,7 +948,7 @@ void main() {
     tester,
   ) async {
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
     await repo.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
@@ -1061,22 +964,7 @@ void main() {
       nome: 'Leite',
       categoria: CategoriaItem.laticinios,
     ); // laticinios
-    final sync = StreamController<SyncStatus>();
-    sync.add(const Sincronizado());
-    addTearDown(sync.close);
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          papelRepositoryProvider.overrideWithValue(
-            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
-          ),
-          syncStatusProvider.overrideWith((ref) => sync.stream),
-        ],
-        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
-      ),
-    );
-    await tester.pumpAndSettle();
+    await montarTela(tester, lista.id);
 
     // Arrasta a alça do Arroz (1º do grupo Mercearia) sobre o Feijão:
     // troca de posição dentro do grupo; Leite (outro grupo) fica intacto.
@@ -1100,19 +988,12 @@ void main() {
     expect(arroz.ordem, 1);
     expect(leite.ordem, 2); // outro grupo — sem mutação
 
-    final mutacoes = await (db.select(db.mutacaoPendente)).get();
-    final idsComUpdate = mutacoes
-        .where((m) => m.operacao == 'UPDATE' && m.tabela == 'itens_lista')
-        .map((m) => m.registroId)
-        .toSet();
-    expect(idsComUpdate, {arroz.id, feijao.id});
-
     await fechar(tester);
   });
 
   testWidgets('deve_mostrar_erro_quando_reordenar_falha', (tester) async {
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
     await repo.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
@@ -1123,18 +1004,11 @@ void main() {
       nome: 'Feijão',
       categoria: CategoriaItem.mercearia,
     );
-    final sync = StreamController<SyncStatus>();
-    sync.add(const Sincronizado());
-    addTearDown(sync.close);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           listasRepositoryProvider.overrideWithValue(_RepoReordenarFalha(db)),
-          papelRepositoryProvider.overrideWithValue(
-            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
-          ),
-          syncStatusProvider.overrideWith((ref) => sync.stream),
         ],
         child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
       ),
@@ -1172,14 +1046,6 @@ void main() {
           );
       expect(arroz.ordem, 0);
 
-      final mutacoes = await (db.select(db.mutacaoPendente)).get();
-      expect(
-        mutacoes.where(
-          (m) => m.operacao == 'UPDATE' && m.tabela == 'itens_lista',
-        ),
-        isEmpty,
-      );
-
       await fechar(tester);
     },
   );
@@ -1211,313 +1077,6 @@ void main() {
     )..where((i) => i.deletadoEm.isNull())).get();
     expect(itens.firstWhere((i) => i.nome == 'Arroz').categoria, 'frios');
 
-    final mutacoes = await (db.select(db.mutacaoPendente)).get();
-    final payload = mutacoes
-        .where((m) => m.operacao == 'UPDATE' && m.tabela == 'itens_lista')
-        .map((m) => m.payload)
-        .last;
-    expect(payload, contains('"categoria":"frios"'));
-
-    await fechar(tester);
-  });
-
-  testWidgets('deve_abrir_sheet_convidar_quando_dono_menu_f7t03', (
-    tester,
-  ) async {
-    await listaComItens(tester);
-
-    await tester.tap(find.byIcon(Icons.more_vert));
-    await tester.pumpAndSettle();
-    expect(find.text(AppStrings.membros), findsOneWidget);
-    expect(find.text(AppStrings.convidar), findsOneWidget);
-
-    await tester.tap(find.text(AppStrings.convidar));
-    await tester.pumpAndSettle();
-
-    // Sheet "Convidar" (F7-T03): radios de papel + botão gerar.
-    expect(
-      find.widgetWithText(FilledButton, AppStrings.gerarLink),
-      findsOneWidget,
-    );
-    expect(
-      find.widgetWithText(RadioListTile<Papel>, AppStrings.convidarPapelEditor),
-      findsOneWidget,
-    );
-    expect(
-      find.widgetWithText(RadioListTile<Papel>, AppStrings.convidarPapelLeitor),
-      findsOneWidget,
-    );
-
-    await fechar(tester);
-  });
-
-  testWidgets('deve_abrir_tela_membros_quando_membro_nao_dono_menu_f7t03', (
-    tester,
-  ) async {
-    final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-c');
-    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
-    final servidor = ServidorFake((req) {
-      if (req.method == 'GET' && req.url.path.contains('/lista_membros')) {
-        return (
-          200,
-          [
-            {'lista_id': lista.id, 'user_id': 'user-a', 'papel': 'leitor'},
-          ],
-        );
-      }
-      return (200, const <Object>[]);
-    });
-    addTearDown(servidor.close);
-    final sync = StreamController<SyncStatus>();
-    sync.add(const Sincronizado());
-    addTearDown(sync.close);
-
-    final router = GoRouter(
-      initialLocation: '/lista/${lista.id}',
-      routes: [
-        GoRoute(
-          path: '/lista/:listaId',
-          builder: (_, state) =>
-              TelaListaScreen(listaId: state.pathParameters['listaId']!),
-        ),
-        GoRoute(
-          path: '/membros/:listaId',
-          builder: (_, state) =>
-              TelaMembrosScreen(listaId: state.pathParameters['listaId']!),
-        ),
-      ],
-    );
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          papelRepositoryProvider.overrideWithValue(
-            papelRepo(tester, listaId: lista.id, papel: Papel.leitor),
-          ),
-          convitesRepositoryProvider.overrideWithValue(
-            ConvitesRepository(
-              SupabaseClient(
-                'http://127.0.0.1:54321',
-                'test-key',
-                httpClient: servidor,
-                authOptions: const AuthClientOptions(autoRefreshToken: false),
-              ),
-            ),
-          ),
-          donoAtualIdProvider.overrideWithValue('user-a'),
-          syncStatusProvider.overrideWith((ref) => sync.stream),
-        ],
-        child: MaterialApp.router(routerConfig: router),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byIcon(Icons.more_vert));
-    await tester.pumpAndSettle();
-    expect(find.text(AppStrings.convidar), findsNothing);
-    expect(find.text(AppStrings.membros), findsOneWidget);
-
-    await tester.tap(find.text(AppStrings.membros));
-    await tester.pumpAndSettle();
-
-    // Navegação via rota /membros/:listaId (F7-T03): tela de membros com
-    // próprio usuário destacado, chip de papel e "Sair da lista".
-    expect(find.text('${AppStrings.membros} · Compras'), findsOneWidget);
-    expect(find.text(AppStrings.voce), findsOneWidget);
-    expect(find.text(AppStrings.convidarPapelLeitor), findsOneWidget);
-    expect(
-      find.widgetWithText(TextButton, AppStrings.sairDaLista),
-      findsOneWidget,
-    );
-    await fechar(tester);
-  });
-
-  // ---- Papel na tela da lista (F7-T04, doc 08 §1, RF-13) ----
-
-  testWidgets('deve_mostrar_banner_e_menu_reduzido_quando_leitor_f7t04', (
-    tester,
-  ) async {
-    await listaComItens(tester, papel: Papel.leitor);
-
-    // Banner de leitura pelo componente padrão (F14-T08).
-    final bannerApp = tester.widget<AppBanner>(find.byType(AppBanner).first);
-    expect(bannerApp.tipo, AppBannerTipo.leitura);
-    expect(
-      find.text(
-        '${AppStrings.somenteLeitura}: ${AppStrings.somenteLeituraDica}',
-      ),
-      findsOneWidget,
-    );
-
-    // Menu do leitor: sem escritas em massa, sem renomear/excluir/convidar.
-    await tester.tap(find.byIcon(Icons.more_vert));
-    await tester.pumpAndSettle();
-    expect(find.text(AppStrings.desmarcarTodos), findsNothing);
-    expect(find.text(AppStrings.limparConcluidos), findsNothing);
-    expect(find.text(AppStrings.renomearLista), findsNothing);
-    expect(find.text(AppStrings.excluirLista), findsNothing);
-    expect(find.text(AppStrings.convidar), findsNothing);
-    expect(find.text(AppStrings.membros), findsOneWidget);
-
-    await fechar(tester);
-  });
-
-  testWidgets('deve_bloquear_escritas_quando_leitor_f7t04', (tester) async {
-    await listaComItens(tester, papel: Papel.leitor);
-
-    // Sem campo adicionar, sem botão IA, sem checkbox, sem swipe, sem alça.
-    expect(find.byType(TextField), findsNothing);
-    expect(find.byType(Checkbox), findsNothing);
-    expect(find.byIcon(Icons.drag_handle), findsNothing);
-    expect(find.text(AppStrings.importarLista), findsNothing);
-
-    // Swipe não abre edição nem remove (Dismissible não existe).
-    await tester.drag(find.text('Arroz'), const Offset(-500, 0));
-    await tester.pumpAndSettle();
-    expect(find.text('Arroz'), findsOneWidget);
-    expect(find.text(AppStrings.itemRemovido), findsNothing);
-    expect(find.byType(SnackBar), findsNothing);
-
-    final itens = await (db.select(
-      db.itemLocal,
-    )..where((i) => i.deletadoEm.isNull())).get();
-    expect(itens.firstWhere((i) => i.nome == 'Arroz').concluido, isFalse);
-
-    await fechar(tester);
-  });
-
-  testWidgets('deve_esconder_itens_dono_quando_editor_f7t04', (tester) async {
-    await listaComItens(tester, papel: Papel.editor);
-
-    // Editor escreve: campo, IA, checkbox.
-    expect(
-      find.widgetWithText(TextField, AppStrings.adicionarItem),
-      findsOneWidget,
-    );
-    expect(find.text(AppStrings.importarLista), findsOneWidget);
-    expect(find.byType(Checkbox), findsWidgets);
-
-    // Menu: dono-only ausente; demais escritas presentes.
-    await tester.tap(find.byIcon(Icons.more_vert));
-    await tester.pumpAndSettle();
-    expect(find.text(AppStrings.excluirLista), findsNothing);
-    expect(find.text(AppStrings.convidar), findsNothing);
-    expect(find.text(AppStrings.membros), findsOneWidget);
-    expect(find.text(AppStrings.desmarcarTodos), findsOneWidget);
-    expect(find.text(AppStrings.limparConcluidos), findsOneWidget);
-    expect(find.text(AppStrings.renomearLista), findsOneWidget);
-
-    await fechar(tester);
-  });
-
-  testWidgets('deve_manter_tudo_quando_dono_f7t04', (tester) async {
-    await listaComItens(tester, papel: Papel.dono);
-
-    expect(
-      find.widgetWithText(TextField, AppStrings.adicionarItem),
-      findsOneWidget,
-    );
-    expect(find.text(AppStrings.importarLista), findsOneWidget);
-    expect(find.byType(Checkbox), findsWidgets);
-    expect(find.text(AppStrings.somenteLeitura), findsNothing);
-
-    await tester.tap(find.byIcon(Icons.more_vert));
-    await tester.pumpAndSettle();
-    expect(find.text(AppStrings.excluirLista), findsOneWidget);
-    expect(find.text(AppStrings.convidar), findsOneWidget);
-    expect(find.text(AppStrings.membros), findsOneWidget);
-    expect(find.text(AppStrings.desmarcarTodos), findsOneWidget);
-    expect(find.text(AppStrings.limparConcluidos), findsOneWidget);
-    expect(find.text(AppStrings.renomearLista), findsOneWidget);
-
-    await fechar(tester);
-  });
-
-  testWidgets('deve_editar_quando_donoId_e_do_usuario_mesmo_sem_papel', (
-    tester,
-  ) async {
-    // Correção: dono derivado da lista local, mesmo sem papel do servidor
-    // (ex.: após reiniciar o app a associação ainda não carregou).
-    await listaComItens(tester, papel: Papel.leitor, donoAtual: 'user-a');
-
-    expect(find.text(AppStrings.somenteLeitura), findsNothing);
-    expect(
-      find.widgetWithText(TextField, AppStrings.adicionarItem),
-      findsOneWidget,
-    );
-
-    await fechar(tester);
-  });
-
-  // ---- Feedback "membro entrou" (F7-T07, doc 08 §7) ----
-
-  Future<(PapelRepository, String)> abrirListaF7t07(
-    WidgetTester tester, {
-    String? listaId,
-    ReconhecimentoVoz? reconhecimento,
-  }) async {
-    final repo = ListasRepository(db);
-    final id =
-        listaId ??
-        (await repo.criarLista(titulo: 'Compras', donoId: 'user-a')).id;
-    await repo.adicionarItem(listaId: id, nome: 'Arroz');
-    final servidor = ServidorFake((req) => (200, const <Object>[]));
-    addTearDown(servidor.close);
-    final papelRepo = PapelRepository(
-      SupabaseClient(
-        'http://127.0.0.1:54321',
-        'test-key',
-        httpClient: servidor,
-        authOptions: const AuthClientOptions(autoRefreshToken: false),
-      ),
-    );
-    papelRepo.atualizar(id, Papel.dono);
-    final sync = StreamController<SyncStatus>();
-    sync.add(const Sincronizado());
-    addTearDown(sync.close);
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          papelRepositoryProvider.overrideWithValue(papelRepo),
-          if (reconhecimento != null)
-            reconhecimentoVozProvider.overrideWithValue(reconhecimento),
-          syncStatusProvider.overrideWith((ref) => sync.stream),
-        ],
-        child: MaterialApp(home: TelaListaScreen(listaId: id)),
-      ),
-    );
-    await tester.pumpAndSettle();
-    return (papelRepo, id);
-  }
-
-  testWidgets('deve_mostrar_membro_entrou_quando_outro_entrar_f7t07', (
-    tester,
-  ) async {
-    final (papelRepo, listaId) = await abrirListaF7t07(tester);
-    expect(find.text(AppStrings.membroEntrou), findsNothing);
-
-    papelRepo.notificarEntrada(listaId);
-    await tester.pump();
-
-    expect(find.text(AppStrings.membroEntrou), findsOneWidget);
-    expect(papelRepo.membroEntrou.value, isNull); // consumido pela tela
-
-    await fechar(tester);
-  });
-
-  testWidgets('deve_ignorar_entrada_de_outra_lista_quando_notificar_f7t07', (
-    tester,
-  ) async {
-    final (papelRepo, _) = await abrirListaF7t07(tester);
-
-    papelRepo.notificarEntrada('outra-lista');
-    await tester.pump();
-
-    expect(find.text(AppStrings.membroEntrou), findsNothing);
-    expect(papelRepo.membroEntrou.value, 'outra-lista'); // não consumido
-
     await fechar(tester);
   });
 
@@ -1540,10 +1099,7 @@ void main() {
       );
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            appDatabaseProvider.overrideWithValue(db),
-            donoAtualIdProvider.overrideWithValue('user-a'),
-          ],
+          overrides: [appDatabaseProvider.overrideWithValue(db)],
           child: MaterialApp.router(routerConfig: router),
         ),
       );
@@ -1578,7 +1134,6 @@ void main() {
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
-          donoAtualIdProvider.overrideWithValue('user-a'),
           listaPorIdProvider('falhou').overrideWithValue(
             AsyncValue.error(Exception('cache corrompido'), StackTrace.empty),
           ),
@@ -1594,22 +1149,15 @@ void main() {
 
   testWidgets('deve_mostrar_esqueleto_quando_itens_carregando', (tester) async {
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
     final itens = StreamController<List<Item>>();
     addTearDown(itens.close);
-    final sync = StreamController<SyncStatus>();
-    sync.add(const Sincronizado());
-    addTearDown(sync.close);
 
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           itensDaListaProvider(lista.id).overrideWith((ref) => itens.stream),
-          papelRepositoryProvider.overrideWithValue(
-            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
-          ),
-          syncStatusProvider.overrideWith((ref) => sync.stream),
         ],
         child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
       ),
@@ -1628,22 +1176,15 @@ void main() {
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
     final itens = StreamController<List<Item>>();
     addTearDown(itens.close);
-    final sync = StreamController<SyncStatus>();
-    sync.add(const Sincronizado());
-    addTearDown(sync.close);
 
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           itensDaListaProvider(lista.id).overrideWith((ref) => itens.stream),
-          papelRepositoryProvider.overrideWithValue(
-            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
-          ),
-          syncStatusProvider.overrideWith((ref) => sync.stream),
         ],
         child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
       ),
@@ -1658,20 +1199,11 @@ void main() {
 
   testWidgets('deve_mostrar_esqueleto_quando_lista_carregando', (tester) async {
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
-    final sync = StreamController<SyncStatus>();
-    sync.add(const Sincronizado());
-    addTearDown(sync.close);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          papelRepositoryProvider.overrideWithValue(
-            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
-          ),
-          syncStatusProvider.overrideWith((ref) => sync.stream),
-        ],
+        overrides: [appDatabaseProvider.overrideWithValue(db)],
         child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
       ),
     );
@@ -1681,19 +1213,6 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsNothing);
 
     await tester.pumpAndSettle();
-    await fechar(tester);
-  });
-
-  testWidgets('deve_mostrar_dica_ao_leitor_quando_toca_no_item', (
-    tester,
-  ) async {
-    await listaComItens(tester, papel: Papel.leitor);
-
-    await tester.tap(find.text('Arroz'));
-    await tester.pump();
-
-    expect(find.text(AppStrings.somenteLeitorDica), findsOneWidget);
-
     await fechar(tester);
   });
 
@@ -2030,49 +1549,8 @@ void main() {
   testWidgets('deve_mostrar_botao_de_mercado_quando_pode_escrever', (
     tester,
   ) async {
-    await listaComItens(tester, papel: Papel.dono);
+    await listaComItens(tester);
     expect(find.byTooltip(AppStrings.modoMercado), findsOneWidget);
-    await fechar(tester);
-  });
-
-  testWidgets('nao_deve_mostrar_botao_de_mercado_para_leitor', (tester) async {
-    await listaComItens(tester, papel: Papel.leitor);
-    expect(find.byTooltip(AppStrings.modoMercado), findsNothing);
-    await fechar(tester);
-  });
-
-  testWidgets('deve_mostrar_botao_de_mercado_quando_editor', (tester) async {
-    await listaComItens(tester, papel: Papel.editor);
-    expect(find.byTooltip(AppStrings.modoMercado), findsOneWidget);
-    await fechar(tester);
-  });
-
-  testWidgets('deve_mostrar_voce_agora_dono_quando_papel_vira_dono', (
-    tester,
-  ) async {
-    final (papelRepo, listaId) = await abrirListaF7t07(tester);
-    expect(find.text(AppStrings.voceAgoraDono), findsNothing);
-
-    papelRepo.notificarDono(listaId);
-    await tester.pump();
-
-    expect(find.text(AppStrings.voceAgoraDono), findsOneWidget);
-    expect(papelRepo.donoTransferido.value, isNull); // consumido pela tela
-
-    await fechar(tester);
-  });
-
-  testWidgets('deve_ignorar_dono_de_outra_lista_quando_notificar', (
-    tester,
-  ) async {
-    final (papelRepo, _) = await abrirListaF7t07(tester);
-
-    papelRepo.notificarDono('outra-lista');
-    await tester.pump();
-
-    expect(find.text(AppStrings.voceAgoraDono), findsNothing);
-    expect(papelRepo.donoTransferido.value, 'outra-lista'); // não consumido
-
     await fechar(tester);
   });
 
@@ -2084,7 +1562,7 @@ void main() {
     int? orcamentoCentavos,
   }) async {
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
     final item = await repo.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
@@ -2094,22 +1572,7 @@ void main() {
     if (orcamentoCentavos != null) {
       await repo.definirOrcamento(lista.id, centavos: orcamentoCentavos);
     }
-    final sync = StreamController<SyncStatus>();
-    sync.add(const Sincronizado());
-    addTearDown(sync.close);
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          papelRepositoryProvider.overrideWithValue(
-            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
-          ),
-          syncStatusProvider.overrideWith((ref) => sync.stream),
-        ],
-        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
-      ),
-    );
-    await tester.pumpAndSettle();
+    await montarTela(tester, lista.id);
     return lista.id;
   }
 
@@ -2129,7 +1592,7 @@ void main() {
 
   testWidgets('nao_deve_somar_sem_preco_quando_total', (tester) async {
     final repo = ListasRepository(db);
-    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
     // Marcado COM preço (R$ 5,49) + marcado SEM preço (R$ 999,00 no nome):
     // o total soma só o primeiro e conta o segundo como "1 sem preço".
     final comPreco = await repo.adicionarItem(
@@ -2144,22 +1607,7 @@ void main() {
     );
     await repo.editarItem(comPreco.id, concluido: true);
     await repo.editarItem(semPreco.id, concluido: true, limparPreco: true);
-    final sync = StreamController<SyncStatus>();
-    sync.add(const Sincronizado());
-    addTearDown(sync.close);
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          appDatabaseProvider.overrideWithValue(db),
-          papelRepositoryProvider.overrideWithValue(
-            papelRepo(tester, listaId: lista.id, papel: Papel.dono),
-          ),
-          syncStatusProvider.overrideWith((ref) => sync.stream),
-        ],
-        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
-      ),
-    );
-    await tester.pumpAndSettle();
+    await montarTela(tester, lista.id);
 
     expect(
       find.text(AppStrings.totalNoCarrinho(formatarReais(549), 1)),
@@ -2227,9 +1675,9 @@ void main() {
     tester,
   ) async {
     final repo = ListasRepository(db);
-    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'user-a');
-    await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
-    await abrirListaF7t07(tester, listaId: atual.id);
+    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'local');
+    await repo.criarLista(titulo: 'Outra', donoId: 'local');
+    await abrirListaComItem(tester, listaId: atual.id);
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
@@ -2243,11 +1691,11 @@ void main() {
 
   testWidgets('deve_adicionar_selecionados_quando_confirma', (tester) async {
     final repo = ListasRepository(db);
-    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'user-a');
-    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
+    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'local');
+    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'local');
     await repo.adicionarItem(listaId: origem.id, nome: 'Arroz', quantidade: 2);
     await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
-    await abrirListaF7t07(tester, listaId: atual.id);
+    await abrirListaComItem(tester, listaId: atual.id);
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
@@ -2280,28 +1728,13 @@ void main() {
     await fechar(tester);
   });
 
-  testWidgets('nao_deve_mostrar_adicionar_de_outra_lista_para_leitor', (
-    tester,
-  ) async {
-    await listaComItens(tester, papel: Papel.leitor);
-
-    await tester.tap(find.byIcon(Icons.more_vert));
-    await tester.pumpAndSettle();
-
-    expect(find.text(AppStrings.adicionarDeOutraLista), findsNothing);
-    // O menu do leitor segue com o que lhe cabe (navegação a membros).
-    expect(find.text(AppStrings.membros), findsOneWidget);
-
-    await fechar(tester);
-  });
-
   testWidgets('deve_selecionar_todos_quando_toca', (tester) async {
     final repo = ListasRepository(db);
-    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'user-a');
-    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
+    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'local');
+    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'local');
     await repo.adicionarItem(listaId: origem.id, nome: 'Arroz', quantidade: 2);
     await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
-    await abrirListaF7t07(tester, listaId: atual.id);
+    await abrirListaComItem(tester, listaId: atual.id);
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
@@ -2330,10 +1763,10 @@ void main() {
     tester,
   ) async {
     final repo = ListasRepository(db);
-    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'user-a');
-    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
+    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'local');
+    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'local');
     await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
-    await abrirListaF7t07(tester, listaId: atual.id);
+    await abrirListaComItem(tester, listaId: atual.id);
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
@@ -2361,10 +1794,10 @@ void main() {
 
   testWidgets('nao_de_listar_a_propria_lista_como_origem', (tester) async {
     final repo = ListasRepository(db);
-    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'user-a');
-    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
+    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'local');
+    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'local');
     await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
-    await abrirListaF7t07(tester, listaId: atual.id);
+    await abrirListaComItem(tester, listaId: atual.id);
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
@@ -2388,11 +1821,11 @@ void main() {
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
     final repo = ListasRepository(db);
-    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'user-a');
-    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
+    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'local');
+    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'local');
     await repo.adicionarItem(listaId: origem.id, nome: 'Arroz', quantidade: 2);
     await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
-    await abrirListaF7t07(tester, listaId: atual.id);
+    await abrirListaComItem(tester, listaId: atual.id);
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
@@ -2406,10 +1839,10 @@ void main() {
 
   testWidgets('deve_rotular_origem_arquivada_quando_escolhe', (tester) async {
     final repo = ListasRepository(db);
-    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'user-a');
-    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
+    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'local');
+    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'local');
     await repo.definirArquivada(origem.id, arquivada: true);
-    await abrirListaF7t07(tester, listaId: atual.id);
+    await abrirListaComItem(tester, listaId: atual.id);
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
@@ -2435,15 +1868,15 @@ void main() {
     tester,
   ) async {
     final repo = ListasRepository(db);
-    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'user-a');
-    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'user-a');
+    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'local');
+    final origem = await repo.criarLista(titulo: 'Outra', donoId: 'local');
     await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
     final detergente = await repo.adicionarItem(
       listaId: origem.id,
       nome: 'Detergente',
     );
     await repo.editarItem(detergente.id, concluido: true);
-    await abrirListaF7t07(tester, listaId: atual.id);
+    await abrirListaComItem(tester, listaId: atual.id);
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
@@ -2470,15 +1903,12 @@ void main() {
 
   testWidgets('deve_limpar_selecao_quando_troca_a_origem', (tester) async {
     final repo = ListasRepository(db);
-    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'user-a');
-    final primeira = await repo.criarLista(
-      titulo: 'Primeira',
-      donoId: 'user-a',
-    );
+    final atual = await repo.criarLista(titulo: 'Atual', donoId: 'local');
+    final primeira = await repo.criarLista(titulo: 'Primeira', donoId: 'local');
     await repo.adicionarItem(listaId: primeira.id, nome: 'Feijão');
-    final segunda = await repo.criarLista(titulo: 'Segunda', donoId: 'user-a');
+    final segunda = await repo.criarLista(titulo: 'Segunda', donoId: 'local');
     await repo.adicionarItem(listaId: segunda.id, nome: 'Leite');
-    await abrirListaF7t07(tester, listaId: atual.id);
+    await abrirListaComItem(tester, listaId: atual.id);
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
@@ -2508,7 +1938,7 @@ void main() {
 
   testWidgets('deve_preencher_campo_quando_reconhece', (tester) async {
     final fake = FakeReconhecimentoVoz();
-    await abrirListaF7t07(tester, reconhecimento: fake);
+    await abrirListaComItem(tester, reconhecimento: fake);
 
     await tester.tap(find.byTooltip(AppStrings.ditarItem));
     await tester.pump();
@@ -2529,7 +1959,7 @@ void main() {
 
   testWidgets('deve_mostrar_snackbar_quando_indisponivel', (tester) async {
     final fake = FakeReconhecimentoVoz(disponivel: false);
-    await abrirListaF7t07(tester, reconhecimento: fake);
+    await abrirListaComItem(tester, reconhecimento: fake);
 
     await tester.tap(find.byTooltip(AppStrings.ditarItem));
     await tester.pumpAndSettle();
@@ -2540,7 +1970,7 @@ void main() {
 
   testWidgets('deve_parar_quando_toca_de_novo', (tester) async {
     final fake = FakeReconhecimentoVoz();
-    await abrirListaF7t07(tester, reconhecimento: fake);
+    await abrirListaComItem(tester, reconhecimento: fake);
 
     await tester.tap(find.byTooltip(AppStrings.ditarItem));
     await tester.pump();
@@ -2551,17 +1981,11 @@ void main() {
     await fechar(tester);
   });
 
-  testWidgets('nao_deve_mostrar_microfone_quando_leitor', (tester) async {
-    await listaComItens(tester, papel: Papel.leitor);
-    expect(find.byTooltip(AppStrings.ditarItem), findsNothing);
-    await fechar(tester);
-  });
-
   testWidgets('deve_cancelar_quando_sai_da_tela_durante_ditado', (
     tester,
   ) async {
     final fake = FakeReconhecimentoVoz();
-    await abrirListaF7t07(tester, reconhecimento: fake);
+    await abrirListaComItem(tester, reconhecimento: fake);
 
     await tester.tap(find.byTooltip(AppStrings.ditarItem));
     await tester.pump();
@@ -2577,7 +2001,7 @@ void main() {
     tester,
   ) async {
     final fake = FakeReconhecimentoVoz()..adiarInicio = Completer<void>();
-    await abrirListaF7t07(tester, reconhecimento: fake);
+    await abrirListaComItem(tester, reconhecimento: fake);
 
     // `iniciar` fica pendente: a tela ainda não está `ouvindo`.
     await tester.tap(find.byTooltip(AppStrings.ditarItem));
@@ -2593,7 +2017,7 @@ void main() {
 
   testWidgets('deve_confirmar_item_quando_enter_apos_ditar', (tester) async {
     final fake = FakeReconhecimentoVoz();
-    final (_, listaId) = await abrirListaF7t07(tester, reconhecimento: fake);
+    final listaId = await abrirListaComItem(tester, reconhecimento: fake);
 
     await tester.tap(find.byTooltip(AppStrings.ditarItem));
     await tester.pump();

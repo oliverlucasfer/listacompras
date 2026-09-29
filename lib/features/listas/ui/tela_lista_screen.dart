@@ -4,13 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/config/app_modo.dart';
 import '../../../core/importacao/parser_lista_local.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/navigation/voltar_para_inicio.dart';
 import '../../../core/texto/busca.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
-import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_cabecalho_secao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
@@ -21,15 +19,8 @@ import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_snack_bar.dart';
-import '../../auth/providers/auth_providers.dart';
-import '../../convites/data/papel_repository.dart';
-import '../../convites/domain/papel.dart';
-import '../../convites/providers/convites_providers.dart';
-import '../../convites/providers/papel_providers.dart';
-import '../../convites/ui/sheet_convidar.dart';
 import '../../importacao/ui/modal_importar.dart';
 import '../../importacao/ui/modal_previsao_importacao.dart';
-import '../../sync/ui/indicador_sync.dart';
 import '../../tour/tour_controller.dart';
 import '../../tour/tour_keys.dart';
 import '../../tour/ui/tour_loader.dart';
@@ -61,54 +52,12 @@ class TelaListaScreen extends ConsumerStatefulWidget {
 }
 
 class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
-  PapelRepository? _papelRepo;
-  ValueNotifier<String?>? _membroEntrou;
-  ValueNotifier<String?>? _donoTransferido;
   final _busca = TextEditingController();
   bool _buscando = false;
-
-  /// Papel efetivo na lista (F7-T03 + correção): o dono é derivado da própria
-  /// lista local antes do papel do servidor (editável offline/após reinício).
-  Papel _papelNaLista(String listaId) =>
-      ref.watch(papelEfetivoProvider(listaId));
-
-  /// Feedback "membro entrou" (doc 08 §7, F7-T07): realtime INSERT de
-  /// outro membro sinaliza o notifier — só a tela aberta da mesma lista
-  /// mostra o SnackBar (sem nome, o RLS não expõe outros perfis).
-  void _aoMembroEntrar() {
-    final listaId = _membroEntrou?.value;
-    if (listaId == null || listaId != widget.listaId || !mounted) return;
-    _papelRepo?.consumirEntrada();
-    mostrarSnackBar(context, AppStrings.membroEntrou);
-  }
-
-  /// Feedback "você agora é dono" (RF-14): UPDATE de `lista_membros` que
-  /// promove o usuário a dono sinaliza o notifier — sem nome, o RLS não
-  /// expõe perfis.
-  void _aoVirarDono() {
-    final listaId = _donoTransferido?.value;
-    if (listaId == null || listaId != widget.listaId || !mounted) return;
-    _papelRepo?.consumirDono();
-    mostrarSnackBar(context, AppStrings.voceAgoraDono);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _papelRepo = ref.read(capacidadesProvider).colaboracao
-        ? ref.read(papelRepositoryProvider)
-        : null;
-    _membroEntrou = _papelRepo?.membroEntrou;
-    _membroEntrou?.addListener(_aoMembroEntrar);
-    _donoTransferido = _papelRepo?.donoTransferido;
-    _donoTransferido?.addListener(_aoVirarDono);
-  }
 
   @override
   void dispose() {
     _busca.dispose();
-    _membroEntrou?.removeListener(_aoMembroEntrar);
-    _donoTransferido?.removeListener(_aoVirarDono);
     super.dispose();
   }
 
@@ -150,14 +99,6 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
         _abrirDialogoOrcamento(context, ref, idLista);
       case 'excluir':
         _confirmarExcluirLista(context, ref, idLista);
-      case 'convidar':
-        if (ref.read(capacidadesProvider).colaboracao) {
-          abrirSheetConvidar(context, ref, idLista);
-        }
-      case 'membros':
-        if (ref.read(capacidadesProvider).colaboracao) {
-          context.push('/membros/$idLista');
-        }
       case 'outraLista':
         _adicionarDeOutraLista(context, ref, idLista);
     }
@@ -265,18 +206,10 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
   ) async {
     final titulo = ref.read(listaPorIdProvider(idLista)).value?.titulo ?? '';
     final nItens = ref.read(itensDaListaProvider(idLista)).value?.length ?? 0;
-    final membros = ref.read(capacidadesProvider).colaboracao
-        ? ref.read(membrosDaListaProvider(idLista)).value
-        : null;
     final confirmou = await AppDialog.confirmarDestrutivo(
       context,
       titulo: AppStrings.excluirListaTitulo(titulo),
-      mensagem: AppStrings.excluirListaMensagem(
-        nItens,
-        // Best-effort: se os membros ainda não foram carregados, assume só o
-        // dono (não bloqueia a exclusão).
-        temMembros: (membros?.length ?? 0) > 1,
-      ),
+      mensagem: AppStrings.excluirListaMensagem(nItens, temMembros: false),
     );
     if (!confirmou) return;
     await ref.read(listasRepositoryProvider).excluirLista(idLista);
@@ -338,9 +271,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
             ),
           );
         }
-        final cap = ref.watch(capacidadesProvider);
-        final ehDono = lista.donoId == ref.watch(donoAtualIdProvider);
-        final inicio = inicioDaLista(ehDono: ehDono);
+        final inicio = inicioDaLista(ehDono: true);
         return PopScopeVoltarInicio(
           inicio: inicio,
           child: Scaffold(
@@ -348,14 +279,12 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
               leading: botaoVoltarInicio(context, inicio),
               title: Text(lista.titulo),
               actions: [
-                if (_papelNaLista(lista.id) == Papel.dono ||
-                    _papelNaLista(lista.id) == Papel.editor)
-                  IconButton(
-                    key: TourKeys.botaoMercado,
-                    tooltip: AppStrings.modoMercado,
-                    icon: const Icon(Icons.shopping_cart_checkout),
-                    onPressed: () => context.push('/mercado/${lista.id}'),
-                  ),
+                IconButton(
+                  key: TourKeys.botaoMercado,
+                  tooltip: AppStrings.modoMercado,
+                  icon: const Icon(Icons.shopping_cart_checkout),
+                  onPressed: () => context.push('/mercado/${lista.id}'),
+                ),
                 if (_buscando)
                   IconButton(
                     tooltip: AppStrings.limparBusca,
@@ -372,71 +301,42 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                   key: TourKeys.menuMais,
                   tooltip: AppStrings.menu,
                   onSelected: (acao) => _acaoMenu(context, ref, lista.id, acao),
-                  itemBuilder: (context) {
-                    // Papel (doc 08 §1, F7-T04): editor escreve itens, dono
-                    // além disso exclui lista e convida; leitor só navega a
-                    // membros. Papel reativo (F7-T03); loading/null = leitor.
-                    final papel = _papelNaLista(lista.id);
-                    final podeEscrever =
-                        papel == Papel.dono || papel == Papel.editor;
-                    final ehDono = papel == Papel.dono;
-                    return [
-                      if (podeEscrever)
-                        const PopupMenuItem(
-                          value: 'desmarcar',
-                          child: Text(AppStrings.desmarcarTodos),
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'desmarcar',
+                      child: Text(AppStrings.desmarcarTodos),
+                    ),
+                    const PopupMenuItem(
+                      value: 'limpar',
+                      child: Text(AppStrings.limparConcluidos),
+                    ),
+                    const PopupMenuItem(
+                      value: 'renomear',
+                      child: Text(AppStrings.renomearLista),
+                    ),
+                    const PopupMenuItem(
+                      value: 'orcamento',
+                      child: Text(AppStrings.orcamento),
+                    ),
+                    const PopupMenuItem(
+                      value: 'outraLista',
+                      child: Text(AppStrings.adicionarDeOutraLista),
+                    ),
+                    PopupMenuItem(
+                      value: 'excluir',
+                      child: Text(
+                        AppStrings.excluirLista,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
                         ),
-                      if (podeEscrever)
-                        const PopupMenuItem(
-                          value: 'limpar',
-                          child: Text(AppStrings.limparConcluidos),
-                        ),
-                      if (podeEscrever)
-                        const PopupMenuItem(
-                          value: 'renomear',
-                          child: Text(AppStrings.renomearLista),
-                        ),
-                      if (podeEscrever)
-                        const PopupMenuItem(
-                          value: 'orcamento',
-                          child: Text(AppStrings.orcamento),
-                        ),
-                      if (podeEscrever)
-                        const PopupMenuItem(
-                          value: 'outraLista',
-                          child: Text(AppStrings.adicionarDeOutraLista),
-                        ),
-                      // Membros (doc 08 §8) todos veem; navegação inclui
-                      // "Sair da lista" para não-donos.
-                      if (cap.colaboracao)
-                        const PopupMenuItem(
-                          value: 'membros',
-                          child: Text(AppStrings.membros),
-                        ),
-                      if (ehDono && cap.colaboracao)
-                        PopupMenuItem(
-                          key: TourKeys.acaoConvite,
-                          value: 'convidar',
-                          child: const Text(AppStrings.convidar),
-                        ),
-                      if (ehDono)
-                        PopupMenuItem(
-                          value: 'excluir',
-                          child: Text(
-                            AppStrings.excluirLista,
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                        ),
-                    ];
-                  },
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
             body: Column(
               children: [
-                if (cap.nuvem) const IndicadorSync(),
                 if (_buscando)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
@@ -453,13 +353,10 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                       onChanged: (_) => setState(() {}),
                     ),
                   ),
-                if (_papelNaLista(lista.id) == Papel.leitor)
-                  const _BannerSomenteLeitura(),
-                if (_papelNaLista(lista.id) != Papel.leitor)
-                  _CampoAdicionar(
-                    listaId: listaId,
-                    onItemAdicionado: _buscando ? _fecharBusca : null,
-                  ),
+                _CampoAdicionar(
+                  listaId: listaId,
+                  onItemAdicionado: _buscando ? _fecharBusca : null,
+                ),
                 Expanded(
                   child: _ListaItens(
                     listaId: listaId,
@@ -468,49 +365,29 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                   ),
                 ),
                 TotalCarrinho(listaId: listaId),
-                if (_papelNaLista(lista.id) != Papel.leitor)
-                  SafeArea(
-                    top: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg,
-                        AppSpacing.xs,
-                        AppSpacing.lg,
-                        AppSpacing.xl,
-                      ),
-                      child: AppBotao(
-                        key: TourKeys.botaoImportar,
-                        rotulo: AppStrings.importarLista,
-                        variante: AppBotaoVariante.outlined,
-                        icone: Icons.playlist_add,
-                        onPressed: () => _importarLista(context, ref, listaId),
-                      ),
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      AppSpacing.xs,
+                      AppSpacing.lg,
+                      AppSpacing.xl,
+                    ),
+                    child: AppBotao(
+                      key: TourKeys.botaoImportar,
+                      rotulo: AppStrings.importarLista,
+                      variante: AppBotaoVariante.outlined,
+                      icone: Icons.playlist_add,
+                      onPressed: () => _importarLista(context, ref, listaId),
                     ),
                   ),
+                ),
               ],
             ),
           ),
         );
       },
-    );
-  }
-}
-
-class _BannerSomenteLeitura extends StatelessWidget {
-  const _BannerSomenteLeitura();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.sm,
-      ),
-      child: AppBanner(
-        tipo: AppBannerTipo.leitura,
-        mensagem:
-            '${AppStrings.somenteLeitura}: ${AppStrings.somenteLeituraDica}',
-      ),
     );
   }
 }
@@ -803,8 +680,6 @@ class _ListaItens extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final papel = ref.watch(papelEfetivoProvider(listaId));
-    final podeEscrever = papel != Papel.leitor;
     final itensAsync = ref.watch(itensDaListaProvider(listaId));
     return itensAsync.when(
       loading: () => const AppEsqueleto(linhas: 5),
@@ -814,14 +689,10 @@ class _ListaItens extends ConsumerWidget {
       ),
       data: (itens) {
         if (itens.isEmpty) {
-          return AppEstadoVazio(
+          return const AppEstadoVazio(
             icone: Icons.shopping_basket_outlined,
-            titulo: podeEscrever
-                ? AppStrings.nenhumItem
-                : AppStrings.listaVazia,
-            descricao: podeEscrever
-                ? AppStrings.nenhumItemDica
-                : AppStrings.listaVaziaDica,
+            titulo: AppStrings.nenhumItem,
+            descricao: AppStrings.nenhumItemDica,
           );
         }
         final pendentes = itens.where((i) => !i.concluido && _casa(i)).toList();
@@ -880,7 +751,7 @@ class _ListaItens extends ConsumerWidget {
               ),
             )
             ..add(
-              podeEscrever && !filtrando
+              !filtrando
                   ? SliverReorderableList(
                       itemCount: grupo.length,
                       onReorderItem: (oldIndex, newIndex) => _reordenarGrupo(
@@ -906,7 +777,6 @@ class _ListaItens extends ConsumerWidget {
                           listaId: listaId,
                           item: grupo[index],
                           index: -1,
-                          podeEscrever: podeEscrever,
                           tourAlvo: grupo[index].id == alvoTourId,
                         ),
                         childCount: grupo.length,
@@ -929,7 +799,6 @@ class _ListaItens extends ConsumerWidget {
                       listaId: listaId,
                       item: item,
                       index: -1,
-                      podeEscrever: podeEscrever,
                     ),
                 ],
               ),
@@ -951,7 +820,6 @@ class _LinhaItem extends ConsumerWidget {
     required this.listaId,
     required this.item,
     required this.index,
-    this.podeEscrever = true,
     this.tourAlvo = false,
   });
 
@@ -961,9 +829,6 @@ class _LinhaItem extends ConsumerWidget {
   /// Posição na seção reordenável; concluídos não participam (-1).
   final int index;
 
-  /// Leitor (doc 08 §1, F7-T04): sem checkbox, sem swipe, sem alça.
-  final bool podeEscrever;
-
   /// Primeira linha ativa: ancora o passo do tour (RF-27, F46).
   final bool tourAlvo;
 
@@ -971,26 +836,21 @@ class _LinhaItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final linha = ListTile(
       key: tourAlvo ? TourKeys.itemLista : null,
-      // Tocar no item abre o editor (F12-T06) — o swipe continua disponível;
-      // o leitor recebe a dica do papel ao tocar (doc 10 §3.3, G-36).
-      onTap: podeEscrever
-          ? () => _abrirSheetEditar(context, ref)
-          : () => mostrarSnackBar(context, AppStrings.somenteLeitorDica),
-      leading: podeEscrever
-          // O checkbox recebe o nome do item como rótulo (doc 15 §4): sem isso
-          // o leitor de tela anuncia uma caixa de seleção sem contexto.
-          ? MergeSemantics(
-              child: Semantics(
-                label: item.nome,
-                child: Checkbox(
-                  value: item.concluido,
-                  onChanged: (_) => ref
-                      .read(listasRepositoryProvider)
-                      .editarItem(item.id, concluido: !item.concluido),
-                ),
-              ),
-            )
-          : const SizedBox(width: 40),
+      // Tocar no item abre o editor (F12-T06) — o swipe continua disponível.
+      onTap: () => _abrirSheetEditar(context, ref),
+      // O checkbox recebe o nome do item como rótulo (doc 15 §4): sem isso o
+      // leitor de tela anuncia uma caixa de seleção sem contexto.
+      leading: MergeSemantics(
+        child: Semantics(
+          label: item.nome,
+          child: Checkbox(
+            value: item.concluido,
+            onChanged: (_) => ref
+                .read(listasRepositoryProvider)
+                .editarItem(item.id, concluido: !item.concluido),
+          ),
+        ),
+      ),
       title: Text(
         item.nome,
         style: item.concluido
@@ -1001,7 +861,7 @@ class _LinhaItem extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text('${formatarQuantidade(item.quantidade)} ${item.unidade.valor}'),
-          if (podeEscrever && index >= 0)
+          if (index >= 0)
             ReorderableDragStartListener(
               index: index,
               child: Padding(
@@ -1016,7 +876,6 @@ class _LinhaItem extends ConsumerWidget {
         ],
       ),
     );
-    if (!podeEscrever) return linha;
     return Dismissible(
       key: key!,
       background: _FundoSwipe(

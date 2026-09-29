@@ -9,9 +9,9 @@ import 'tokens/app_typography.dart';
 
 /// Tema do app (doc 15 §2): Material 3 Expressive, claro/escuro com paridade.
 abstract final class AppTheme {
-  static ThemeData get claro => claroDe(IdentidadeVisual.colaborativo);
+  static ThemeData get claro => claroDe(IdentidadeVisual.lite);
 
-  static ThemeData get escuro => escuroDe(IdentidadeVisual.colaborativo);
+  static ThemeData get escuro => escuroDe(IdentidadeVisual.lite);
 
   static ThemeData claroDe(IdentidadeVisual identidade) =>
       _base(Brightness.light, AppSemanticColors.claro, identidade.seed);

@@ -4,16 +4,10 @@ import 'package:lista_compras/core/theme/app_theme.dart';
 import 'package:lista_compras/core/theme/identidade_visual.dart';
 
 void main() {
-  test('deve_gerar_paleta_distinta_quando_identidade_lite', () {
-    final lite = AppTheme.claroDe(IdentidadeVisual.lite);
-    final prod = AppTheme.claroDe(IdentidadeVisual.colaborativo);
-    expect(lite.colorScheme.primary, isNot(equals(prod.colorScheme.primary)));
-  });
-
-  test('deve_manter_prod_verde_quando_getter_padrao', () {
+  test('deve_usar_a_mesma_paleta_quando_getter_padrao', () {
     expect(
       AppTheme.claro.colorScheme.primary,
-      AppTheme.claroDe(IdentidadeVisual.colaborativo).colorScheme.primary,
+      AppTheme.claroDe(IdentidadeVisual.lite).colorScheme.primary,
     );
   });
 

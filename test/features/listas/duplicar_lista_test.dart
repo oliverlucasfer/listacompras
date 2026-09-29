@@ -116,26 +116,22 @@ void main() {
     ]);
   });
 
-  test(
-    'deve_enfileirar_mutacao_de_lista_e_de_cada_item_quando_duplica',
-    () async {
-      final origem = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-      await repo.adicionarItem(listaId: origem.id, nome: 'Arroz');
-      await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
+  test('deve_nao_enfileirar_mutacoes_quando_duplica_app_local', () async {
+    final origem = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    await repo.adicionarItem(listaId: origem.id, nome: 'Arroz');
+    await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
 
-      final nova = await repo.duplicarLista(
-        origemId: origem.id,
-        titulo: 'Y',
-        donoId: 'user-a',
-      );
+    final nova = await repo.duplicarLista(
+      origemId: origem.id,
+      titulo: 'Y',
+      donoId: 'user-a',
+    );
 
-      final novas = (await db.select(db.mutacaoPendente).get())
-          .where((m) => m.listaId == nova.id)
-          .toList();
-      expect(novas.where((m) => m.tabela == 'listas'), hasLength(1));
-      expect(novas.where((m) => m.tabela == 'itens_lista'), hasLength(2));
-    },
-  );
+    final novas = (await db.select(db.mutacaoPendente).get())
+        .where((m) => m.listaId == nova.id)
+        .toList();
+    expect(novas, isEmpty);
+  });
 
   test('deve_deixar_a_lista_original_intacta_quando_duplica', () async {
     final origem = await repo.criarLista(titulo: 'X', donoId: 'user-a');

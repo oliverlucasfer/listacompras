@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/config/app_modo.dart';
+import '../../../core/config/usuario_local.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/texto/busca.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
@@ -16,30 +16,15 @@ import '../../../core/widgets/app_esqueleto.dart';
 import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_logo.dart';
-import '../../sync/ui/indicador_sync.dart';
 import '../../../core/widgets/app_snack_bar.dart';
-import '../../auth/providers/auth_providers.dart';
-import '../../convites/domain/convite.dart';
-import '../../convites/domain/papel.dart';
-import '../../convites/providers/convites_providers.dart';
-import '../../convites/providers/papel_providers.dart';
-import '../../convites/ui/acao_sair_da_lista.dart';
-import '../../convites/ui/convites_pendentes_secao.dart';
-import '../../notificacoes/providers/notificacoes_providers.dart';
 import '../../tour/tour_keys.dart';
 import '../domain/lista_com_contagem.dart';
 import '../providers/listas_providers.dart';
 import 'sheet_titulo_lista.dart';
 
-/// Filtro do painel de listas (doc 05 §6.2, F10): as listas em que o usuário
-/// é dono vs. aquelas em que participa como membro.
-enum FiltroListas { minhas, compartilhadas }
-
-/// Painel de listas reutilizável (Minhas × Compartilhadas).
+/// Painel "Minhas Listas" (doc 05 §6.2, F10): todas as listas do aparelho.
 class PainelListas extends ConsumerStatefulWidget {
-  const PainelListas({super.key, required this.filtro});
-
-  final FiltroListas filtro;
+  const PainelListas({super.key});
 
   @override
   ConsumerState<PainelListas> createState() => _PainelListasState();
@@ -49,8 +34,6 @@ class _PainelListasState extends ConsumerState<PainelListas> {
   final _busca = TextEditingController();
   bool _buscando = false;
   bool _mostrarArquivadas = false;
-
-  bool get _compartilhadas => widget.filtro == FiltroListas.compartilhadas;
 
   @override
   void dispose() {
@@ -68,18 +51,12 @@ class _PainelListasState extends ConsumerState<PainelListas> {
 
   @override
   Widget build(BuildContext context) {
-    final cap = ref.watch(capacidadesProvider);
-    final usuario = ref.watch(donoAtualIdProvider);
     final consulta = _busca.text.trim();
     final listasAsync = ref
         .watch(listasComContagemProvider)
         .whenData(
           (todas) => todas
-              .where(
-                (c) => _compartilhadas
-                    ? c.lista.donoId != usuario
-                    : c.lista.donoId == usuario,
-              )
+              .where((c) => c.lista.donoId == idLocal)
               .where((c) => _mostrarArquivadas || c.lista.arquivadaEm == null)
               .where(
                 (c) =>
@@ -94,13 +71,7 @@ class _PainelListasState extends ConsumerState<PainelListas> {
           children: [
             const AppLogo(),
             const SizedBox(width: AppSpacing.sm),
-            Flexible(
-              child: Text(
-                _compartilhadas
-                    ? AppStrings.compartilhadas
-                    : AppStrings.minhasListas,
-              ),
-            ),
+            const Flexible(child: Text(AppStrings.minhasListas)),
           ],
         ),
         actions: [
@@ -122,27 +93,16 @@ class _PainelListasState extends ConsumerState<PainelListas> {
                   setState(() => _mostrarArquivadas = !_mostrarArquivadas),
             ),
             IconButton(
-              key: _compartilhadas ? null : TourKeys.lupa,
+              key: TourKeys.lupa,
               tooltip: AppStrings.buscar,
               icon: const Icon(Icons.search),
               onPressed: _abrirBusca,
             ),
-            if (_compartilhadas && cap.colaboracao)
-              IconButton(
-                tooltip: AppStrings.conviteComCodigo,
-                icon: const Icon(Icons.person_add),
-                onPressed: () => abrirDialogoEntrarComCodigo(context, ref),
-              ),
           ],
         ],
       ),
       body: Column(
         children: [
-          if (cap.nuvem)
-            const Padding(
-              padding: EdgeInsets.only(top: AppSpacing.sm),
-              child: IndicadorSync(),
-            ),
           if (_buscando)
             Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -159,8 +119,6 @@ class _PainelListasState extends ConsumerState<PainelListas> {
                 onChanged: (_) => setState(() {}),
               ),
             ),
-          if (!_compartilhadas && cap.colaboracao)
-            const ConvitesPendentesSecao(),
           Expanded(
             child: listasAsync.when(
               loading: () => const AppEsqueleto(linhas: 4),
@@ -195,32 +153,17 @@ class _PainelListasState extends ConsumerState<PainelListas> {
           ),
         ],
       ),
-      floatingActionButton: _compartilhadas
-          ? null
-          : FloatingActionButton.extended(
-              key: TourKeys.novaLista,
-              heroTag: 'fab-nova-lista',
-              onPressed: () => abrirSheetNovaLista(context, ref),
-              icon: const Icon(Icons.add),
-              label: const Text(AppStrings.novaLista),
-            ),
+      floatingActionButton: FloatingActionButton.extended(
+        key: TourKeys.novaLista,
+        heroTag: 'fab-nova-lista',
+        onPressed: () => abrirSheetNovaLista(context, ref),
+        icon: const Icon(Icons.add),
+        label: const Text(AppStrings.novaLista),
+      ),
     );
   }
 
   Widget _vazio(BuildContext context, WidgetRef ref) {
-    if (_compartilhadas) {
-      return AppEstadoVazio(
-        icone: Icons.group_outlined,
-        titulo: AppStrings.nenhumaCompartilhada,
-        descricao: AppStrings.nenhumaCompartilhadaDica,
-        acao: AppBotao(
-          rotulo: AppStrings.conviteComCodigo,
-          icone: Icons.person_add,
-          expandido: false,
-          onPressed: () => abrirDialogoEntrarComCodigo(context, ref),
-        ),
-      );
-    }
     return AppEstadoVazio(
       icone: Icons.sticky_note_2_outlined,
       titulo: AppStrings.nenhumaLista,
@@ -250,7 +193,6 @@ class _CardListaState extends ConsumerState<_CardLista> {
   @override
   Widget build(BuildContext context) {
     final lista = widget.contagem.lista;
-    final ehDono = lista.donoId == ref.watch(donoAtualIdProvider);
     return AppCard(
       padding: EdgeInsets.zero,
       child: ListTile(
@@ -282,8 +224,7 @@ class _CardListaState extends ConsumerState<_CardLista> {
           tooltip: AppStrings.menu,
           icon: const Icon(Icons.more_vert),
           onSelected: _acaoMenu,
-          itemBuilder: (context) =>
-              ehDono ? _itensDono(context) : _itensMembro(),
+          itemBuilder: (context) => _itens(context),
         ),
       ),
     );
@@ -291,7 +232,7 @@ class _CardListaState extends ConsumerState<_CardLista> {
 
   int get _pendentes => widget.contagem.totalItens - widget.contagem.concluidos;
 
-  List<PopupMenuEntry<String>> _itensDono(BuildContext context) => [
+  List<PopupMenuEntry<String>> _itens(BuildContext context) => [
     if (widget.contagem.lista.arquivadaEm == null)
       const PopupMenuItem(value: 'arquivar', child: Text(AppStrings.arquivar))
     else
@@ -314,18 +255,7 @@ class _CardListaState extends ConsumerState<_CardLista> {
     ),
   ];
 
-  List<PopupMenuEntry<String>> _itensMembro() => [
-    if (_pendentes > 0)
-      const PopupMenuItem(
-        value: 'duplicar',
-        child: Text(AppStrings.comprarDeNovo),
-      ),
-    const PopupMenuItem(value: 'membros', child: Text(AppStrings.membros)),
-    const PopupMenuItem(value: 'sair', child: Text(AppStrings.sairDaLista)),
-  ];
-
   void _acaoMenu(String acao) {
-    final listaId = widget.contagem.lista.id;
     switch (acao) {
       case 'duplicar':
         _duplicar();
@@ -337,10 +267,6 @@ class _CardListaState extends ConsumerState<_CardLista> {
         _definirArquivada(false);
       case 'excluir':
         _confirmarExclusao();
-      case 'membros':
-        context.push('/membros/$listaId');
-      case 'sair':
-        confirmarSairDaLista(context, ref, listaId);
     }
   }
 
@@ -357,14 +283,7 @@ class _CardListaState extends ConsumerState<_CardLista> {
       onSalvar: (nome) async {
         final nova = await ref
             .read(listasRepositoryProvider)
-            .duplicarLista(
-              origemId: lista.id,
-              titulo: nome,
-              donoId: ref.read(donoAtualIdProvider),
-            );
-        if (ref.read(capacidadesProvider).colaboracao) {
-          ref.read(papelRepositoryProvider).atualizar(nova.id, Papel.dono);
-        }
+            .duplicarLista(origemId: lista.id, titulo: nome, donoId: idLocal);
         criadoId = nova.id;
       },
     );
@@ -418,87 +337,6 @@ class _CardListaState extends ConsumerState<_CardLista> {
   }
 }
 
-/// Diálogo "Entrar com código" (doc 08 §1.1, RF-13): colar token cru →
-/// aceita o convite e navega para a lista; erro vira SnackBar amigável.
-void abrirDialogoEntrarComCodigo(BuildContext context, WidgetRef ref) {
-  showDialog<void>(
-    context: context,
-    builder: (dialogContext) => const _DialogoEntrarComCodigo(),
-  ).then((_) {
-    ref.invalidate(listasComContagemProvider);
-  });
-}
-
-class _DialogoEntrarComCodigo extends ConsumerStatefulWidget {
-  const _DialogoEntrarComCodigo();
-
-  @override
-  ConsumerState<_DialogoEntrarComCodigo> createState() =>
-      _DialogoEntrarComCodigoState();
-}
-
-class _DialogoEntrarComCodigoState
-    extends ConsumerState<_DialogoEntrarComCodigo> {
-  final _token = TextEditingController();
-  bool _carregando = false;
-
-  @override
-  void dispose() {
-    _token.dispose();
-    super.dispose();
-  }
-
-  Future<void> _entrar(BuildContext dialogContext) async {
-    final token = _token.text.trim();
-    if (token.isEmpty) {
-      mostrarSnackBar(dialogContext, AppStrings.conviteInvalido);
-      return;
-    }
-    setState(() => _carregando = true);
-    try {
-      final listaId = await ref.read(convitesRepositoryProvider).aceitar(token);
-      if (dialogContext.mounted) Navigator.pop(dialogContext);
-      if (mounted) context.go('/lista/$listaId');
-    } on ErroConvite catch (e) {
-      if (dialogContext.mounted) Navigator.pop(dialogContext);
-      if (mounted) {
-        mostrarSnackBar(context, e.message);
-      }
-    } catch (_) {
-      if (dialogContext.mounted) Navigator.pop(dialogContext);
-      if (mounted) {
-        mostrarSnackBar(context, AppStrings.conviteInesperado);
-      }
-    } finally {
-      if (mounted) setState(() => _carregando = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text(AppStrings.conviteComCodigo),
-      content: AppCampoTexto(
-        controller: _token,
-        label: AppStrings.conviteCampoCodigo,
-        onSubmitted: () => _entrar(context),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text(AppStrings.cancelar),
-        ),
-        AppBotao(
-          rotulo: AppStrings.conviteConvidadoEntrar,
-          carregando: _carregando,
-          expandido: false,
-          onPressed: () => _entrar(context),
-        ),
-      ],
-    );
-  }
-}
-
 Future<void> abrirSheetNovaLista(BuildContext context, WidgetRef ref) {
   return abrirSheetTitulo(
     context,
@@ -506,17 +344,9 @@ Future<void> abrirSheetNovaLista(BuildContext context, WidgetRef ref) {
     rotuloBotao: AppStrings.criarLista,
     mensagemSucesso: AppStrings.listaCriada,
     onSalvar: (nome) async {
-      final lista = await ref
+      await ref
           .read(listasRepositoryProvider)
-          .criarLista(titulo: nome, donoId: ref.read(donoAtualIdProvider));
-      // Papel local imediato (funciona offline): o criador é dono. O servidor
-      // confirma a associação em `lista_membros` na migration 0010.
-      if (ref.read(capacidadesProvider).colaboracao) {
-        ref.read(papelRepositoryProvider).atualizar(lista.id, Papel.dono);
-      }
-      if (ref.read(capacidadesProvider).notificacoes) {
-        await ref.read(notificacoesServiceProvider).talvezPedirPermissao();
-      }
+          .criarLista(titulo: nome, donoId: idLocal);
     },
   );
 }

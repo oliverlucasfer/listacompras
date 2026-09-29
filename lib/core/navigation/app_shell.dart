@@ -3,15 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/tour/tour_keys.dart';
-import '../config/app_modo.dart';
 import '../l10n/app_strings.dart';
 
 /// Casca de navegação (doc 05 §4, F10): `NavigationBar` inferior em telas
 /// estreitas e `NavigationRail` em telas largas (Web/desktop). Preserva o
 /// estado de cada aba via `StatefulShellRoute.indexedStack`.
 ///
-/// As abas seguem as capacidades (RF-31): no modo Lite (sem colaboração)
-/// sobram "Minhas listas" e "Configurações", na mesma ordem dos branches.
+/// As duas abas do app local (RF-31) são "Minhas listas" e "Configurações",
+/// na mesma ordem dos branches.
 class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.navigationShell});
 
@@ -19,17 +18,11 @@ class AppShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colaboracao = ref.watch(capacidadesProvider).colaboracao;
     final icones = [
       (normal: Icons.checklist_outlined, selecionado: Icons.checklist),
-      if (colaboracao) (normal: Icons.group_outlined, selecionado: Icons.group),
       (normal: Icons.settings_outlined, selecionado: Icons.settings),
     ];
-    final rotulos = [
-      AppStrings.abaMinhas,
-      if (colaboracao) AppStrings.compartilhadas,
-      AppStrings.configuracoes,
-    ];
+    final rotulos = [AppStrings.abaMinhas, AppStrings.configuracoes];
     // Aba Configurações é o alvo do passo "Configurações e backup" (F46).
     final indiceConfig = rotulos.length - 1;
     final largura = MediaQuery.sizeOf(context).width;
