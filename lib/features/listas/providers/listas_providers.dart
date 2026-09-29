@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/categorias/sugestao_categorias.dart';
-import '../../../core/config/app_modo.dart';
 import '../../../drift/database.dart';
 import '../data/historico_precos_repository.dart';
 import '../data/listas_repository.dart';
@@ -18,10 +17,7 @@ final appDatabaseProvider = Provider<AppDatabase>((ref) {
 });
 
 final listasRepositoryProvider = Provider<ListasRepository>(
-  (ref) => ListasRepository(
-    ref.watch(appDatabaseProvider),
-    enfileirarMutacoes: ref.watch(capacidadesProvider).nuvem,
-  ),
+  (ref) => ListasRepository(ref.watch(appDatabaseProvider)),
 );
 
 final sugestaoCategoriasProvider = Provider<SugestaoCategorias>(

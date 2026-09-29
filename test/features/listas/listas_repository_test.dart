@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,38 +6,7 @@ import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/features/listas/domain/item.dart';
 import 'package:lista_compras/features/listas/domain/resultado_dedup.dart';
 import 'package:lista_compras/core/dominio/unidade.dart';
-import 'package:lista_compras/features/sync/data/outbox_mutacoes.dart';
 import 'package:lista_compras/drift/database.dart';
-
-class _OutboxFalhaNoEnfileiramento extends OutboxMutacoes {
-  _OutboxFalhaNoEnfileiramento(super.db, {this.falhaNaChamada = 1});
-
-  final int falhaNaChamada;
-  int chamadas = 0;
-
-  @override
-  Future<void> enfileirar({
-    required String tabela,
-    required String operacao,
-    required String registroId,
-    required String listaId,
-    required DateTime tsLocal,
-    required Map<String, Object?> payload,
-  }) async {
-    chamadas++;
-    if (chamadas >= falhaNaChamada) {
-      throw StateError('fila indisponível');
-    }
-    await super.enfileirar(
-      tabela: tabela,
-      operacao: operacao,
-      registroId: registroId,
-      listaId: listaId,
-      tsLocal: tsLocal,
-      payload: payload,
-    );
-  }
-}
 
 void main() {
   late AppDatabase db;
@@ -54,45 +21,16 @@ void main() {
     await db.close();
   });
 
-  Future<List<Map<String, Object?>>> fila() async {
-    final mutacoes = await db.select(db.mutacaoPendente).get();
-    return mutacoes
-        .map(
-          (m) => {
-            'tabela': m.tabela,
-            'operacao': m.operacao,
-            'registro_id': m.registroId,
-            'payload': jsonDecode(m.payload) as Map<String, Object?>,
-            'lista_id': m.listaId,
-          },
-        )
-        .toList();
-  }
+  test('deve_criar_lista_local_quando_criar_lista', () async {
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
 
-  test(
-    'deve_criar_lista_local_e_enfileirar_insert_quando_criar_lista',
-    () async {
-      final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
-
-      final local = await (db.select(
-        db.listaLocal,
-      )..where((l) => l.id.equals(lista.id))).getSingle();
-      expect(local.titulo, 'Compras');
-      expect(local.donoId, 'user-a');
-      expect(local.deletadoEm, isNull);
-
-      final mutacoes = await fila();
-      expect(mutacoes, hasLength(1));
-      expect(mutacoes.single['tabela'], 'listas');
-      expect(mutacoes.single['operacao'], 'INSERT');
-      expect(mutacoes.single['registro_id'], lista.id);
-      expect(mutacoes.single['lista_id'], lista.id);
-      final payload = mutacoes.single['payload'] as Map<String, Object?>;
-      expect(payload['titulo'], 'Compras');
-      expect(payload['dono_id'], 'user-a');
-      expect(payload['updated_at'], isA<String>());
-    },
-  );
+    final local = await (db.select(
+      db.listaLocal,
+    )..where((l) => l.id.equals(lista.id))).getSingle();
+    expect(local.titulo, 'Compras');
+    expect(local.donoId, 'user-a');
+    expect(local.deletadoEm, isNull);
+  });
 
   test('deve_gerar_id_uuid_v4_quando_criar_lista', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
@@ -102,49 +40,31 @@ void main() {
     expect(uuidV4.hasMatch(lista.id), isTrue);
   });
 
-  test(
-    'deve_renomear_localmente_e_enfileirar_update_quando_renomear',
-    () async {
-      final lista = await repo.criarLista(titulo: 'Antigo', donoId: 'user-a');
+  test('deve_renomear_localmente_quando_renomear', () async {
+    final lista = await repo.criarLista(titulo: 'Antigo', donoId: 'user-a');
 
-      await repo.renomearLista(id: lista.id, titulo: 'Novo');
+    await repo.renomearLista(id: lista.id, titulo: 'Novo');
 
-      final local = await (db.select(
-        db.listaLocal,
-      )..where((l) => l.id.equals(lista.id))).getSingle();
-      expect(local.titulo, 'Novo');
+    final local = await (db.select(
+      db.listaLocal,
+    )..where((l) => l.id.equals(lista.id))).getSingle();
+    expect(local.titulo, 'Novo');
+  });
 
-      final mutacoes = await fila();
-      expect(mutacoes, hasLength(2));
-      expect(mutacoes.last['operacao'], 'UPDATE');
-      final payload = mutacoes.last['payload'] as Map<String, Object?>;
-      expect(payload['titulo'], 'Novo');
-      expect(payload['dono_id'], 'user-a');
-    },
-  );
+  test('deve_soft_delete_quando_excluir_lista', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
 
-  test(
-    'deve_soft_delete_e_enfileirar_delete_soft_quando_excluir_lista',
-    () async {
-      final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    await repo.excluirLista(lista.id);
 
-      await repo.excluirLista(lista.id);
-
-      final local = await (db.select(
-        db.listaLocal,
-      )..where((l) => l.id.equals(lista.id))).getSingle();
-      expect(local.deletadoEm, isNotNull);
-      final ativas = await (db.select(
-        db.listaLocal,
-      )..where((l) => l.deletadoEm.isNull())).get();
-      expect(ativas, isEmpty);
-
-      final mutacoes = await fila();
-      expect(mutacoes.last['operacao'], 'DELETE_SOFT');
-      final payload = mutacoes.last['payload'] as Map<String, Object?>;
-      expect(payload['deletado_em'], isNotNull);
-    },
-  );
+    final local = await (db.select(
+      db.listaLocal,
+    )..where((l) => l.id.equals(lista.id))).getSingle();
+    expect(local.deletadoEm, isNotNull);
+    final ativas = await (db.select(
+      db.listaLocal,
+    )..where((l) => l.deletadoEm.isNull())).get();
+    expect(ativas, isEmpty);
+  });
 
   test('deve_notificar_stream_quando_criar_lista', () async {
     final fut = repo.watchListas().firstWhere((l) => l.isNotEmpty);
@@ -203,13 +123,12 @@ void main() {
 
   test('deve_rejeitar_quantidade_nao_positiva_quando_adicionar_item', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final antes = await fila();
 
     expect(
       () => repo.adicionarItem(listaId: lista.id, nome: 'Arroz', quantidade: 0),
       throwsArgumentError,
     );
-    expect(await fila(), hasLength(antes.length));
+    expect(await db.select(db.itemLocal).get(), isEmpty);
   });
 
   test('deve_rejeitar_unidade_fora_do_enum_quando_converter_valor', () {
@@ -235,7 +154,7 @@ void main() {
     expect(Unidade.fromValor(gravado.unidade), Unidade.pt);
   });
 
-  test('deve_editar_campos_e_enfileirar_update_quando_editar_item', () async {
+  test('deve_editar_campos_quando_editar_item', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
     final item = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
 
@@ -252,32 +171,19 @@ void main() {
     expect(local.nome, 'Arroz integral');
     expect(local.quantidade, 5);
     expect(local.unidade, 'kg');
-
-    final mutacoes = await fila();
-    expect(mutacoes, hasLength(3));
-    expect(mutacoes.last['operacao'], 'UPDATE');
-    expect(mutacoes.last['tabela'], 'itens_lista');
-    final payload = mutacoes.last['payload'] as Map<String, Object?>;
-    expect(payload['nome'], 'Arroz integral');
-    expect(payload['lista_id'], lista.id);
-    expect(payload['unidade'], 'kg');
   });
 
-  test(
-    'deve_marcar_concluido_e_enfileirar_update_quando_alternar_item',
-    () async {
-      final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-      final item = await repo.adicionarItem(listaId: lista.id, nome: 'Café');
+  test('deve_marcar_concluido_quando_alternar_item', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Café');
 
-      await repo.editarItem(item.id, concluido: true);
+    await repo.editarItem(item.id, concluido: true);
 
-      final local = await (db.select(
-        db.itemLocal,
-      )..where((i) => i.id.equals(item.id))).getSingle();
-      expect(local.concluido, isTrue);
-      expect((await fila()).last['operacao'], 'UPDATE');
-    },
-  );
+    final local = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals(item.id))).getSingle();
+    expect(local.concluido, isTrue);
+  });
 
   test(
     'deve_soft_delete_item_e_remover_do_stream_quando_remover_item',
@@ -297,14 +203,10 @@ void main() {
           .first
           .timeout(const Duration(seconds: 2));
       expect(ativos, isEmpty);
-
-      final mutacoes = await fila();
-      expect(mutacoes.last['operacao'], 'DELETE_SOFT');
-      expect(mutacoes.last['tabela'], 'itens_lista');
     },
   );
 
-  test('deve_restaurar_item_e_enfileirar_update_quando_undo', () async {
+  test('deve_restaurar_item_quando_undo', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
     final item = await repo.adicionarItem(listaId: lista.id, nome: 'Café');
     await repo.removerItem(item.id);
@@ -321,11 +223,6 @@ void main() {
         .first
         .timeout(const Duration(seconds: 2));
     expect(ativos, hasLength(1));
-
-    final mutacoes = await fila();
-    expect(mutacoes.last['operacao'], 'UPDATE');
-    final payload = mutacoes.last['payload'] as Map<String, Object?>;
-    expect(payload['deletado_em'], isNull);
   });
 
   test(
@@ -337,7 +234,6 @@ void main() {
       final i3 = await repo.adicionarItem(listaId: lista.id, nome: 'Leite');
       await repo.editarItem(i1.id, concluido: true);
       await repo.editarItem(i3.id, concluido: true);
-      final antes = await fila();
 
       await repo.desmarcarTodos(lista.id);
 
@@ -346,11 +242,6 @@ void main() {
       )..where((i) => i.listaId.equals(lista.id))).get();
       expect(itens.where((i) => i.concluido), isEmpty);
       expect(itens, hasLength(3));
-
-      final novas = (await fila()).skip(antes.length).toList();
-      expect(novas, hasLength(2));
-      expect(novas.every((m) => m['operacao'] == 'UPDATE'), isTrue);
-      expect(novas.map((m) => m['registro_id']).toSet(), {i1.id, i3.id});
     },
   );
 
@@ -368,13 +259,6 @@ void main() {
       db.itemLocal,
     )..where((i) => i.listaId.equals(lista.id) & i.deletadoEm.isNull())).get();
     expect(ativos.single.id, i1.id);
-
-    final mutacoes = await fila();
-    final deletes = mutacoes
-        .where((m) => m['operacao'] == 'DELETE_SOFT')
-        .toList();
-    expect(deletes, hasLength(2));
-    expect(deletes.map((m) => m['registro_id']).toSet(), {i2.id, i3.id});
   });
 
   test('deve_devolver_itens_removidos_quando_limpar_concluidos', () async {
@@ -414,7 +298,7 @@ void main() {
     expect(ordens, {i1.id: i1.ordem, i2.id: i2.ordem, i3.id: i3.ordem});
   });
 
-  test('deve_reordenar_e_enfileirar_apenas_mudancas_quando_drag', () async {
+  test('deve_reordenar_apenas_mudancas_quando_drag', () async {
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
     final arroz = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
     final leite = await repo.adicionarItem(listaId: lista.id, nome: 'Leite');
@@ -428,18 +312,6 @@ void main() {
     )..where((i) => i.listaId.equals(lista.id) & i.deletadoEm.isNull())).get();
     final ordens = {for (final i in itens) i.id: i.ordem};
     expect(ordens, {leite.id: 0, arroz.id: 1, cafe.id: 2});
-
-    final mutacoes = await fila();
-    final updates = mutacoes
-        .where((m) => m['operacao'] == 'UPDATE' && m['tabela'] == 'itens_lista')
-        .toList();
-    expect(updates, hasLength(2)); // Café mantém a ordem → sem mutação
-    final ids = updates.map((m) => m['registro_id']).toSet();
-    expect(ids, {leite.id, arroz.id});
-    final leitePayload = updates
-        .map((m) => m['payload'] as Map<String, Object?>)
-        .firstWhere((p) => p['id'] == leite.id);
-    expect(leitePayload['ordem'], 0);
   });
 
   test('deve_gravar_categoria_informada_quando_adicionar_item_f6t02', () async {
@@ -469,85 +341,33 @@ void main() {
     },
   );
 
-  test(
-    'deve_incluir_categoria_no_payload_quando_enfileirar_item_f6t02',
-    () async {
-      final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-      final item = await repo.adicionarItem(
-        listaId: lista.id,
-        nome: 'Leite',
-        categoria: CategoriaItem.laticinios,
-      );
+  test('deve_gravar_preco_quando_adicionar_item_com_preco', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    final item = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      precoCentavos: 549,
+    );
 
-      final mutacoes = await fila();
-      final inserts = mutacoes
-          .where(
-            (m) => m['tabela'] == 'itens_lista' && m['operacao'] == 'INSERT',
-          )
-          .toList();
-      final payload = inserts.single['payload'] as Map<String, Object?>;
-      expect(payload['categoria'], 'laticinios');
+    final local = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals(item.id))).getSingle();
+    expect(local.precoCentavos, 549);
+  });
 
-      await repo.editarItem(item.id, categoria: CategoriaItem.frios);
+  test('deve_gravar_preco_zero_quando_adicionar_item_com_preco_zero', () async {
+    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
+    final item = await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      precoCentavos: 0,
+    );
 
-      final local = await (db.select(
-        db.itemLocal,
-      )..where((i) => i.id.equals(item.id))).getSingle();
-      expect(local.categoria, 'frios');
-
-      final updates = (await fila())
-          .where(
-            (m) => m['tabela'] == 'itens_lista' && m['operacao'] == 'UPDATE',
-          )
-          .toList();
-      expect(updates, hasLength(1));
-      expect(
-        (updates.single['payload'] as Map<String, Object?>)['categoria'],
-        'frios',
-      );
-    },
-  );
-
-  test(
-    'deve_gravar_e_enfileirar_preco_quando_adicionar_item_com_preco',
-    () async {
-      final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-      final item = await repo.adicionarItem(
-        listaId: lista.id,
-        nome: 'Arroz',
-        precoCentavos: 549,
-      );
-
-      final local = await (db.select(
-        db.itemLocal,
-      )..where((i) => i.id.equals(item.id))).getSingle();
-      expect(local.precoCentavos, 549);
-
-      final mutacoes = await fila();
-      final payload = mutacoes.last['payload'] as Map<String, Object?>;
-      expect(payload['preco_centavos'], 549);
-    },
-  );
-
-  test(
-    'deve_gravar_e_enfileirar_preco_quando_adicionar_item_com_preco_zero',
-    () async {
-      final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-      final item = await repo.adicionarItem(
-        listaId: lista.id,
-        nome: 'Arroz',
-        precoCentavos: 0,
-      );
-
-      final local = await (db.select(
-        db.itemLocal,
-      )..where((i) => i.id.equals(item.id))).getSingle();
-      expect(local.precoCentavos, 0);
-
-      final payload = (await fila()).last['payload'] as Map<String, Object?>;
-      expect(payload['preco_centavos'], 0);
-    },
-  );
+    final local = await (db.select(
+      db.itemLocal,
+    )..where((i) => i.id.equals(item.id))).getSingle();
+    expect(local.precoCentavos, 0);
+  });
 
   test('deve_preservar_preco_quando_editar_outro_campo', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
@@ -579,8 +399,6 @@ void main() {
       db.itemLocal,
     )..where((i) => i.id.equals(item.id))).getSingle();
     expect(local.precoCentavos, isNull);
-    final payload = (await fila()).last['payload'] as Map<String, Object?>;
-    expect(payload['preco_centavos'], isNull);
   });
 
   test('deve_preferir_preco_quando_presente_e_limparPreco_ambos', () async {
@@ -597,11 +415,9 @@ void main() {
       db.itemLocal,
     )..where((i) => i.id.equals(item.id))).getSingle();
     expect(local.precoCentavos, 0);
-    final payload = (await fila()).last['payload'] as Map<String, Object?>;
-    expect(payload['preco_centavos'], 0);
   });
 
-  test('deve_gravar_e_enfileirar_arquivo_quando_arquivar', () async {
+  test('deve_gravar_arquivo_quando_arquivar', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
     final antes = DateTime.now().toUtc();
 
@@ -619,11 +435,6 @@ void main() {
       local.arquivadaEm!.toUtc().difference(DateTime.now().toUtc()).abs(),
       lessThan(const Duration(minutes: 1)),
     );
-    final payload = (await fila()).last['payload'] as Map<String, Object?>;
-    expect(
-      payload['arquivada_em'],
-      local.arquivadaEm!.toUtc().toIso8601String(),
-    );
   });
 
   test('deve_limpar_arquivo_quando_desarquivar', () async {
@@ -640,11 +451,9 @@ void main() {
       db.listaLocal,
     )..where((l) => l.id.equals(lista.id))).getSingle();
     expect(local.arquivadaEm, isNull);
-    final payload = (await fila()).last['payload'] as Map<String, Object?>;
-    expect(payload['arquivada_em'], isNull);
   });
 
-  test('deve_gravar_e_enfileirar_orcamento_quando_definir', () async {
+  test('deve_gravar_orcamento_quando_definir', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
 
     await repo.definirOrcamento(lista.id, centavos: 25000);
@@ -653,11 +462,6 @@ void main() {
       db.listaLocal,
     )..where((l) => l.id.equals(lista.id))).getSingle();
     expect(local.orcamentoCentavos, 25000);
-    final mutacoes = await fila();
-    expect(mutacoes.last['operacao'], 'UPDATE');
-    expect(mutacoes.last['tabela'], 'listas');
-    final payload = mutacoes.last['payload'] as Map<String, Object?>;
-    expect(payload['orcamento_centavos'], 25000);
   });
 
   test('deve_limpar_orcamento_quando_definir_null', () async {
@@ -670,8 +474,6 @@ void main() {
       db.listaLocal,
     )..where((l) => l.id.equals(lista.id))).getSingle();
     expect(local.orcamentoCentavos, isNull);
-    final payload = (await fila()).last['payload'] as Map<String, Object?>;
-    expect(payload['orcamento_centavos'], isNull);
   });
 
   test('deve_gravar_orcamento_zero_quando_definir_zero', () async {
@@ -683,8 +485,6 @@ void main() {
       db.listaLocal,
     )..where((l) => l.id.equals(lista.id))).getSingle();
     expect(local.orcamentoCentavos, 0);
-    final payload = (await fila()).last['payload'] as Map<String, Object?>;
-    expect(payload['orcamento_centavos'], 0);
   });
 
   test('deve_rejeitar_orcamento_negativo_quando_definir', () async {
@@ -715,14 +515,6 @@ void main() {
     expect(local.orcamentoCentavos, isNull);
   });
 
-  test('deve_incluir_orcamento_nulo_no_payload_quando_criar_lista', () async {
-    await repo.criarLista(titulo: 'X', donoId: 'user-a');
-
-    final payload = (await fila()).single['payload'] as Map<String, Object?>;
-    expect(payload.containsKey('orcamento_centavos'), isTrue);
-    expect(payload['orcamento_centavos'], isNull);
-  });
-
   test('deve_expor_orcamento_no_stream_quando_definir', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
     await repo.definirOrcamento(lista.id, centavos: 12345);
@@ -732,25 +524,6 @@ void main() {
         .first
         .timeout(const Duration(seconds: 2));
     expect(lida?.orcamentoCentavos, 12345);
-  });
-
-  test('nao_deve_enviar_arquivo_quando_renomear', () async {
-    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-
-    await repo.renomearLista(id: lista.id, titulo: 'Y');
-
-    final rename = (await fila()).last['payload'] as Map<String, Object?>;
-    expect(rename.containsKey('arquivada_em'), isFalse);
-
-    await repo.definirArquivada(lista.id, arquivada: true);
-    final arquivar = (await fila()).last['payload'] as Map<String, Object?>;
-    expect(arquivar.containsKey('arquivada_em'), isTrue);
-    expect(arquivar['arquivada_em'], isA<String>());
-
-    await repo.definirArquivada(lista.id, arquivada: false);
-    final desarquivar = (await fila()).last['payload'] as Map<String, Object?>;
-    expect(desarquivar.containsKey('arquivada_em'), isTrue);
-    expect(desarquivar['arquivada_em'], isNull);
   });
 
   test('nao_deve_arquivar_lista_nova_quando_duplicar', () async {
@@ -906,30 +679,23 @@ void main() {
 
   test('deve_registrar_historico_quando_concluir_item_com_preco', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final item = await repo.adicionarItem(
+    await repo.adicionarItem(
       listaId: lista.id,
       nome: 'Café',
       unidade: Unidade.pacote,
       precoCentavos: 1850,
     );
+    final item = (await (db.select(
+      db.itemLocal,
+    )..where((i) => i.nome.equals('Café'))).getSingle()).id;
 
-    final antes = await fila();
-
-    await repo.editarItem(item.id, concluido: true);
+    await repo.editarItem(item, concluido: true);
 
     final rows = await db.select(db.historicoPrecoLocal).get();
     expect(rows, hasLength(1));
     expect(rows.single.nomeNormalizado, 'cafe');
     expect(rows.single.precoCentavos, 1850);
     expect(rows.single.unidade, 'pacote');
-
-    // Local-only: o registro de histórico não enfileira nada — a única
-    // mutação nova é o UPDATE do próprio item.
-    final depois = await fila();
-    expect(depois.length, antes.length + 1);
-    expect(depois.last['tabela'], 'itens_lista');
-    expect(depois.last['operacao'], 'UPDATE');
-    expect(depois.last['registro_id'], item.id);
   });
 
   test('deve_nao_registrar_historico_quando_concluir_item_sem_preco', () async {
@@ -1001,57 +767,4 @@ void main() {
       expect(rows.single.precoCentavos, 2000);
     },
   );
-
-  test('deve_reverter_write_local_quando_enfileirar_falha', () async {
-    final repoFalha = ListasRepository(
-      db,
-      outbox: _OutboxFalhaNoEnfileiramento(db),
-    );
-
-    await expectLater(
-      () => repoFalha.criarLista(titulo: 'Compras', donoId: 'user-a'),
-      throwsA(isA<StateError>()),
-    );
-
-    expect(await db.select(db.listaLocal).get(), isEmpty);
-    expect(await db.select(db.mutacaoPendente).get(), isEmpty);
-  });
-
-  test('deve_reverter_item_quando_enfileirar_falha', () async {
-    final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final repoFalha = ListasRepository(
-      db,
-      outbox: _OutboxFalhaNoEnfileiramento(db),
-    );
-
-    await expectLater(
-      () => repoFalha.adicionarItem(listaId: lista.id, nome: 'Arroz'),
-      throwsA(isA<StateError>()),
-    );
-
-    expect(await db.select(db.itemLocal).get(), isEmpty);
-  });
-
-  test('deve_reverter_duplicacao_quando_enfileirar_falha_no_meio', () async {
-    final origem = await repo.criarLista(titulo: 'Origem', donoId: 'user-a');
-    await repo.adicionarItem(listaId: origem.id, nome: 'Arroz');
-    final repoFalha = ListasRepository(
-      db,
-      outbox: _OutboxFalhaNoEnfileiramento(db, falhaNaChamada: 2),
-    );
-
-    await expectLater(
-      () => repoFalha.duplicarLista(
-        origemId: origem.id,
-        titulo: 'Copia',
-        donoId: 'user-a',
-      ),
-      throwsA(isA<StateError>()),
-    );
-
-    final listas = await db.select(db.listaLocal).get();
-    expect(listas, hasLength(1));
-    expect(listas.single.id, origem.id);
-    expect(await db.select(db.itemLocal).get(), hasLength(1));
-  });
 }

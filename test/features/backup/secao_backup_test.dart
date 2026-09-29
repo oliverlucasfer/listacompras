@@ -19,9 +19,6 @@ class _BackupRepositoryFake implements BackupRepository {
   Object? erroImportacao;
 
   @override
-  final bool donoLocal = true;
-
-  @override
   Future<String> exportarJson() async {
     exportou = true;
     return '{"versao":1,"listas":[],"itens":[],"historicoPrecos":[]}';

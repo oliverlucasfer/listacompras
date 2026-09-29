@@ -55,7 +55,7 @@ void main() {
     expect(await db.select(db.listaLocal).get(), isEmpty);
   });
 
-  test('deve_forcar_dono_local_quando_donoLocal', () async {
+  test('deve_forcar_dono_local_quando_importar', () async {
     final origem = AppDatabase(NativeDatabase.memory());
     addTearDown(origem.close);
     await ListasRepository(
@@ -65,7 +65,7 @@ void main() {
 
     final destino = AppDatabase(NativeDatabase.memory());
     addTearDown(destino.close);
-    await BackupRepository(destino, donoLocal: true).importarJson(json);
+    await BackupRepository(destino).importarJson(json);
 
     final listas = await destino.select(destino.listaLocal).get();
     expect(listas, hasLength(1));
@@ -134,22 +134,6 @@ void main() {
       'ItemNovo',
       reason: 'backup mais novo deve sobrescrever o local',
     );
-  });
-
-  test('deve_preservar_dono_estrangeiro_quando_donoLocal_false', () async {
-    final origem = AppDatabase(NativeDatabase.memory());
-    addTearDown(origem.close);
-    await ListasRepository(
-      origem,
-    ).criarLista(titulo: 'Mercado', donoId: 'user-x');
-    final json = await BackupRepository(origem).exportarJson();
-
-    final destino = AppDatabase(NativeDatabase.memory());
-    addTearDown(destino.close);
-    await BackupRepository(destino).importarJson(json);
-
-    final listas = await destino.select(destino.listaLocal).get();
-    expect(listas.single.donoId, 'user-x');
   });
 
   test(

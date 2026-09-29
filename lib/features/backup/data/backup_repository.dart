@@ -4,7 +4,6 @@ import 'package:drift/drift.dart';
 
 import '../../../core/config/usuario_local.dart';
 import '../../../drift/database.dart';
-import '../../sync/data/outbox_mutacoes.dart';
 import '../domain/backup_arquivo.dart';
 
 /// Backup inválido (JSON malformado ou versão desconhecida). O banco **não** é
@@ -26,25 +25,9 @@ class BackupRestauracaoException implements Exception {
 }
 
 class BackupRepository {
-  BackupRepository(
-    this._db, {
-    this.donoLocal = false,
-    this._enfileirar = false,
-  });
+  BackupRepository(this._db);
 
   final AppDatabase _db;
-
-  /// No modo Lite (RF-31) o app é single-user: ao importar, toda lista passa a
-  /// pertencer ao usuário local, descartando qualquer `dono_id` estrangeiro de
-  /// um backup colaborativo (que tornaria alcançáveis caminhos "de membro"
-  /// dependentes de `Supabase.instance`, não inicializado no Lite).
-  final bool donoLocal;
-
-  /// Modo colaborativo: cada registro restaurado alimenta a fila de mutações
-  /// (doc 03 §3), para propagar ao Supabase sem esperar a próxima edição. No
-  /// Lite permanece desligado (`enfileirar: false`), como o `ListasRepository`.
-  final bool _enfileirar;
-  late final OutboxMutacoes _outbox = OutboxMutacoes(_db, ativa: _enfileirar);
 
   String _iso(DateTime d) => d.toUtc().toIso8601String();
 
@@ -143,26 +126,12 @@ class BackupRepository {
                   createdAt: DateTime.parse(l['created_at'] as String),
                   updatedAt: atualizadoEm,
                   titulo: l['titulo'] as String,
-                  donoId: donoLocal ? idLocal : l['dono_id'] as String,
+                  donoId: idLocal,
                   deletadoEm: Value(_parseOpt(l['deletado_em'])),
                   arquivadaEm: Value(_parseOpt(l['arquivada_em'])),
                   orcamentoCentavos: Value(l['orcamento_centavos'] as int?),
                 ),
               );
-          // Alimenta a fila (só no modo colaborativo — ver `enfileirar`): o
-          // registro importado passa a subir para o Supabase. `INSERT` porque
-          // o envio remoto decide insert × update sozinho e esse caminho mantém
-          // o dedup de item por nome (03 §3). Fica **dentro** da transação: um
-          // import que falha não enfileira nada. O `ts_local` é agora; quem
-          // decide o LWW no servidor é o `updated_at` do payload (o importado).
-          await _outbox.enfileirar(
-            tabela: 'listas',
-            operacao: 'INSERT',
-            registroId: id,
-            listaId: id,
-            tsLocal: DateTime.now().toUtc(),
-            payload: await _outbox.payloadLista(id, incluirArquivo: true),
-          );
         }
 
         for (final i in arquivo.itens) {
@@ -192,19 +161,9 @@ class BackupRepository {
                   deletadoEm: Value(_parseOpt(i['deletado_em'])),
                 ),
               );
-          // Mesma regra da lista (03 §3); o `lista_id` agrupa o dreno por lista.
-          await _outbox.enfileirar(
-            tabela: 'itens_lista',
-            operacao: 'INSERT',
-            registroId: id,
-            listaId: i['lista_id'] as String,
-            tsLocal: DateTime.now().toUtc(),
-            payload: await _outbox.payloadItem(id),
-          );
         }
 
-        // Histórico de preços é local-only (05 §6.3): importa, mas **nunca**
-        // entra na fila.
+        // Histórico de preços é local-only (05 §6.3): importa como está.
         for (final h in arquivo.historicoPrecos) {
           final nome = h['nome_normalizado'] as String;
           final registradoEm = DateTime.parse(h['registrado_em'] as String);
