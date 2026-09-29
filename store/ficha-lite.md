@@ -27,7 +27,7 @@ Sem conta, sem anúncios e **sem rastreamento**. Seus dados ficam com você.
 ## Contato e privacidade
 
 - **Política de privacidade:** `site/privacidade.html`, publicada em `https://<usuario>.github.io/ListaCompras/privacidade.html` ([06 §3.3.2](../docs/06-mvp-entregas.md)).
-- **Pendência do dono (antes de publicar):** o contato `contatoPrivacidadeEmail` e o HTML público ainda usam o sentinela **`SEU_EMAIL_AQUI`**; substituir pelo e-mail da conta de desenvolvedor.
+- **Contato:** `oliverlucasfer@gmail.com` (`contatoPrivacidadeEmail`, interpolado nas duas versões da política e no HTML público).
 - **Segurança de dados:** nenhum dado coletado, exceto **Áudio** (recurso de voz, processado pelo reconhecedor do sistema); sem conta, sem analytics, sem crash logs, sem anúncios ([09 §2.10](../docs/09-runbook-operacoes.md)).
 - **Classificação de conteúdo / público-alvo:** 16+ (não direcionado a menores). **Anúncios: não.**
 

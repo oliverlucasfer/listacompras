@@ -2,7 +2,7 @@ import '../config/app_modo.dart';
 
 /// Canal de contato/encarregado (doc 06 §3.3.2). Preenchido pelo dono com o
 /// e-mail da conta de desenvolvedor no momento do PR de publicação.
-const contatoPrivacidadeEmail = 'SEU_EMAIL_AQUI';
+const contatoPrivacidadeEmail = 'oliverlucasfer@gmail.com';
 
 /// Política de Privacidade do app (doc 06 §3.3): texto único e simples,
 /// exibido in-app no cadastro ("Ver política") e em Configurações (F21-T04).
