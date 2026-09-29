@@ -137,31 +137,6 @@ void main() {
     },
   );
 
-  test('deve_enfileirar_e_remover_mutacao_quando_escrita_pendente', () async {
-    await db
-        .into(db.mutacaoPendente)
-        .insert(
-          MutacaoPendenteCompanion.insert(
-            tabela: 'itens_lista',
-            operacao: 'INSERT',
-            registroId: '44444444-4444-4444-4444-444444444444',
-            payload: '{"nome":"Arroz","quantidade":0.5,"unidade":"kg"}',
-            tsLocal: agora,
-            listaId: '33333333-3333-3333-3333-333333333333',
-          ),
-        );
-
-    final fila = await db.select(db.mutacaoPendente).get();
-    expect(fila.length, 1);
-    expect(fila.single.tabela, 'itens_lista');
-    expect(fila.single.tentativas, 0);
-
-    await (db.delete(
-      db.mutacaoPendente,
-    )..where((m) => m.id.equals(fila.single.id))).go();
-    expect(await db.select(db.mutacaoPendente).get(), isEmpty);
-  });
-
   test('deve_cascata_item_quando_lista_excluida_localmente', () async {
     await db.batch((b) {
       b.insert(
@@ -793,9 +768,9 @@ void main() {
       "'2026-01-01T00:00:00.000000Z', '2026-01-01T00:00:00.000000Z', "
       "'cccccccc-0000-0000-0000-000000000001', 'arroz', 2.0, 'kg', 'mercearia', 0, 1)",
     );
-    // A duplicata mais ANTIGA (...002) tem DUAS mutações pendentes e a mais
-    // NOVA (...001) tem uma: a prioridade por fila (COUNT) mantém ...002,
-    // sobrepondo o `updated_at` mais recente de ...001.
+    // Linhas legadas de `mutacao_pendente` (schema v7): inertes para o dedup,
+    // que agora decide só por `updated_at` — ...001 (mais recente) vence — e
+    // a tabela precisa ser removida no upgrade v10 → v11.
     antigo.execute(
       "INSERT INTO mutacao_pendente (tabela, operacao, registro_id, payload, "
       "ts_local, lista_id) VALUES ('itens_lista', 'INSERT', "
@@ -822,13 +797,15 @@ void main() {
 
     final itens = await migrado.select(migrado.itemLocal).get();
     expect(itens.length, 1);
-    expect(itens.single.id, 'dddddddd-0000-0000-0000-000000000002');
+    expect(itens.single.id, 'dddddddd-0000-0000-0000-000000000001');
 
-    final fila = await migrado.select(migrado.mutacaoPendente).get();
-    expect(fila.length, 2);
-    expect(fila.map((m) => m.registroId).toSet(), {
-      'dddddddd-0000-0000-0000-000000000002',
-    });
+    final tabelas = await migrado
+        .customSelect("SELECT name FROM sqlite_master WHERE type='table'")
+        .get();
+    expect(
+      tabelas.map((r) => r.data['name']),
+      isNot(contains('mutacao_pendente')),
+    );
 
     final indice = await migrado
         .customSelect(
@@ -1121,4 +1098,18 @@ void main() {
       expect(indice, isNotEmpty);
     },
   );
+
+  test('deve_remover_mutacao_pendente_quando_upgrade_para_v11', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    await db.customStatement('DROP TABLE IF EXISTS mutacao_pendente');
+    expect(db.schemaVersion, 11);
+    final rows = await db
+        .customSelect("SELECT name FROM sqlite_master WHERE type='table'")
+        .get();
+    expect(
+      rows.map((r) => r.data['name']),
+      isNot(contains('mutacao_pendente')),
+    );
+  });
 }

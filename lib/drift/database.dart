@@ -4,20 +4,17 @@ import 'conexao/conexao.dart';
 import 'tables/historico_preco_local.dart';
 import 'tables/item_local.dart';
 import 'tables/lista_local.dart';
-import 'tables/mutacao_pendente.dart';
 
 part 'database.g.dart';
 
 /// Fonte de verdade local (doc 03 §1). Espelha o schema Postgres (doc 01).
 /// Testes injetam um executor (ex.: NativeDatabase.memory()).
-@DriftDatabase(
-  tables: [ListaLocal, ItemLocal, MutacaoPendente, HistoricoPrecoLocal],
-)
+@DriftDatabase(tables: [ListaLocal, ItemLocal, HistoricoPrecoLocal])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   /// Paridade com o índice único parcial `uq_item_ativo` do Postgres
   /// (`0001_init.sql:57-59`): parcial não é expressável no `@TableIndex`.
@@ -26,9 +23,8 @@ class AppDatabase extends _$AppDatabase {
       'ON item_local (lista_id, lower(nome)) WHERE deletado_em IS NULL';
 
   /// Dedup defensivo antes de criar `uq_item_ativo` (F39): mantém 1 item ativo
-  /// por `(lista_id, lower(nome))`; prefere a linha com mutação pendente,
-  /// depois a de `updated_at` mais recente, depois o maior `rowid`. Remove as
-  /// perdedoras **e** suas mutações (o remoto reenvia a verdade ativa).
+  /// por `(lista_id, lower(nome))`; prefere a linha de `updated_at` mais
+  /// recente, depois o maior `rowid`. Remove as perdedoras.
   Future<void> _dedupItensAtivos() async {
     await customStatement('''
       CREATE TEMP TABLE _dups_grupos AS
@@ -50,18 +46,10 @@ class AppDatabase extends _$AppDatabase {
           WHERE j.lista_id = i.lista_id
             AND lower(j.nome) = g.nome_lower
             AND j.deletado_em IS NULL
-          ORDER BY
-            (SELECT COUNT(*) FROM mutacao_pendente mp
-              WHERE mp.registro_id = j.id) DESC,
-            j.updated_at DESC,
-            j.rowid DESC
+          ORDER BY j.updated_at DESC, j.rowid DESC
           LIMIT 1
         )
     ''');
-    await customStatement(
-      'DELETE FROM mutacao_pendente WHERE registro_id IN '
-      '(SELECT id FROM _dups_remover)',
-    );
     await customStatement(
       'DELETE FROM item_local WHERE id IN (SELECT id FROM _dups_remover)',
     );
@@ -148,6 +136,10 @@ class AppDatabase extends _$AppDatabase {
         // (doc 01 §3.1, F45-T01) — `alterTable` recria a tabela.
         await m.alterTable(TableMigration(itemLocal));
         await customStatement(_criarIndiceItemAtivo);
+      }
+      if (de < 11) {
+        // v10 → v11: sem sync não há fila de mutações (F48/RF-31).
+        await m.deleteTable('mutacao_pendente');
       }
     },
     beforeOpen: (details) async {
