@@ -79,9 +79,10 @@ Uma fase só está "pronta" quando:
 
 ### 3.3.2. Política de privacidade
 
-* Texto único e simples (1 página) cobrindo: dados coletados, finalidade, subprocessadores (3.2), retenção (até exclusão da conta), direitos do titular e contato do encarregado.
-* **Onde:** texto in-app (cadastro e Configurações), a partir de `politicaPrivacidadeTexto`. A antiga página estática `/privacidade` do web foi **removida** em 18/09/2026, junto com o resto dos artefatos de hosting (ADR-013).
-* **Contato do encarregado:** por decisão do dono (17/09/2026) o texto permanece genérico ("canal informado na página do aplicativo"); preencher com um e-mail dedicado é pendência do lançamento público (F5-T06).
+* Texto simples (1 página) cobrindo: dados coletados, finalidade, subprocessadores (3.2), retenção, direitos do titular e contato do encarregado.
+* **Por modo (F47/RF-32):** a política segue as capacidades ([05 §2.3](05-app-flutter.md)). No **Lite** (`politicaPrivacidadeTextoLite`) descreve um app 100% local, sem conta nem nuvem, mencionando voz do dispositivo e backup local; no **colaborativo** (`politicaPrivacidadeTexto`) mantém o texto com Supabase/Sentry e retenção até exclusão da conta. Seleção por `politicaPrivacidadePara(AppCapacidades)`.
+* **Onde:** texto in-app (cadastro e Configurações). A antiga página estática `/privacidade` do web foi **removida** em 18/09/2026, junto com o resto dos artefatos de hosting (ADR-013).
+* **Contato do encarregado:** a constante `contatoPrivacidadeEmail` (sentinela `SEU_EMAIL_AQUI`) é interpolada nas **duas** versões; o dono substitui pelo e-mail dedicado no PR de publicação (F5-T06). URL pública da política (ver F47-T07).
 * **Obrigatória para publicação** na Play Store e App Store (seção "Segurança de dados" do Play Console exige declaração de coleta).
 
 ### 3.4. Menores e consentimento

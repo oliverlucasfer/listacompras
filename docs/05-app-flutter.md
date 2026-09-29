@@ -123,6 +123,8 @@ O modo Lite tem **identidade visual própria** (índigo `#4F46E5`, símbolo de c
 
 **Sentry no Lite (F47):** desligado por capacidades (`sentryDeveIniciar`) — nenhum dado de erro sai do aparelho, mesmo com `SENTRY_DSN` no build.
 
+**Política de privacidade por capacidades (F47/RF-32):** o texto exibido pela sheet segue as capacidades — `politicaPrivacidadePara(cap)` devolve a versão Lite (sem conta/nuvem, com voz e backup local) quando `!cap.nuvem`, e a colaborativa (Supabase/Sentry) quando há nuvem ([06 §3.3.2](06-mvp-entregas.md)).
+
 ---
 
 ## 3. Providers Riverpod (por feature)
