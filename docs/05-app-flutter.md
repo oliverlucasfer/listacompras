@@ -125,6 +125,8 @@ O modo Lite tem **identidade visual própria** (índigo `#4F46E5`, símbolo de c
 
 **Política de privacidade por capacidades (F47/RF-32):** o texto exibido pela sheet segue as capacidades — `politicaPrivacidadePara(cap)` devolve a versão Lite (sem conta/nuvem, com voz e backup local) quando `!cap.nuvem`, e a colaborativa (Supabase/Sentry) quando há nuvem ([06 §3.3.2](06-mvp-entregas.md)).
 
+**Manifest de release do Lite (F47/RF-32):** o source set `android/app/src/liteRelease/` aplica-se **só** ao artefato `liteRelease`. Ele remove `INTERNET`, `POST_NOTIFICATIONS`, `c2dm`/`ACCESS_NETWORK_STATE`/`WAKE_LOCK` e todos os componentes `com.google.firebase.*` do manifest mergeado (as libs seguem empacotadas, porém inertes), preservando `RECORD_AUDIO` (voz, RF-26). O Auto Backup também é desligado (`android:allowBackup="false"` + `res/xml/data_extraction_rules.xml` excluindo todos os domínios). O `prod` e o `liteDebug` **não** são afetados.
+
 ---
 
 ## 3. Providers Riverpod (por feature)

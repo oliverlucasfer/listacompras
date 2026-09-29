@@ -1,0 +1,29 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Lite é 100% local: sem rede, sem push e sem Firebase (F47/RF-32).
+         As libs continuam empacotadas, porém inertes. RECORD_AUDIO é mantido
+         para o recurso de voz. -->
+
+    <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" tools:node="remove" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" tools:node="remove" />
+
+    <application
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules">
+
+        <service android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingBackgroundService" tools:node="remove" />
+        <service android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingService" tools:node="remove" />
+        <service android:name="com.google.firebase.components.ComponentDiscoveryService" tools:node="remove" />
+        <service android:name="com.google.firebase.messaging.FirebaseMessagingService" tools:node="remove" />
+
+        <receiver android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingReceiver" tools:node="remove" />
+        <receiver android:name="com.google.firebase.iid.FirebaseInstanceIdReceiver" tools:node="remove" />
+
+        <provider android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingInitProvider" tools:node="remove" />
+        <provider android:name="com.google.firebase.provider.FirebaseInitProvider" tools:node="remove" />
+    </application>
+</manifest>
