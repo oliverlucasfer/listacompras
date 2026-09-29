@@ -21,17 +21,28 @@ class TourLoader extends ConsumerStatefulWidget {
 }
 
 class _TourLoaderState extends ConsumerState<TourLoader> {
+  static const _maxTentativas = 12;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _talvezIniciar());
   }
 
+  /// Tenta iniciar a etapa até os alvos ficarem visíveis. A home monta o loader
+  /// no mesmo frame em que acabou de construir os alvos (pós-boas-vindas), e a
+  /// etapa 2 depende de dados assíncronos; uma única tentativa corria antes dos
+  /// alvos e o tour nunca abria.
   Future<void> _talvezIniciar() async {
-    if (!mounted) return;
     final vista = await ref.read(tourEtapaVistaProvider(widget.etapa).future);
-    if (vista || !mounted) return;
-    ref.read(tourControllerProvider.notifier).iniciar(widget.etapa);
+    if (vista) return;
+    for (var i = 0; i < _maxTentativas; i++) {
+      if (!mounted) return;
+      if (ref.read(tourControllerProvider.notifier).iniciar(widget.etapa)) {
+        return;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
   }
 
   @override

@@ -18,8 +18,6 @@ class MinhasListasScreen extends ConsumerStatefulWidget {
 }
 
 class _MinhasListasScreenState extends ConsumerState<MinhasListasScreen> {
-  bool _onboardingResolvido = false;
-
   @override
   void initState() {
     super.initState();
@@ -28,21 +26,28 @@ class _MinhasListasScreenState extends ConsumerState<MinhasListasScreen> {
 
   Future<void> _resolverOnboarding() async {
     if (!mounted) return;
-    final visto = await ref.read(onboardingVistoProvider.future);
+    var visto = await ref.read(onboardingVistoProvider.future);
     if (!mounted) return;
     if (!visto) {
       // Espera o usuário concluir as boas-vindas para só então iniciar o tour.
+      // Ao voltar (por `go` ou `pop`), reconfere a flag: o usuário pode ter
+      // navegado de outra forma e a tela ser remontada.
       await context.push('/boas-vindas');
       if (!mounted) return;
+      visto = await ref.read(onboardingVistoProvider.future);
+      if (!mounted) return;
     }
-    setState(() => _onboardingResolvido = true);
   }
 
   @override
-  Widget build(BuildContext context) => Stack(
-    children: [
-      const PainelListas(filtro: FiltroListas.minhas),
-      if (_onboardingResolvido) const TourLoader(etapa: TourEtapa.primeira),
-    ],
-  );
+  Widget build(BuildContext context) {
+    // O tour só monta quando o onboarding já foi visto.
+    final onboardingVisto = ref.watch(onboardingVistoProvider).value ?? false;
+    return Stack(
+      children: [
+        const PainelListas(filtro: FiltroListas.minhas),
+        if (onboardingVisto) const TourLoader(etapa: TourEtapa.primeira),
+      ],
+    );
+  }
 }
