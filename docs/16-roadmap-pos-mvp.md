@@ -68,6 +68,7 @@ Foco: confiabilidade e preparação para publicação séria.
 | E2 | i18n (en/es) | novo | 05, 15 | Médio | G | Infra de localização; hoje pt-BR único |
 | E3 | Widget Android / quick-add no lançador | novo | 05 | Médio | G | Atalho para adicionar item sem abrir o app |
 | E4 | Lite no iOS | RF-31 | 05, 09 | Baixo | P | **adiado por decisão (F42, 24/09/2026):** (a) não há runner macOS para verificar a config nativa e o CI não compila iOS; (b) o Lite hoje **não tem caminho de distribuição no iOS** (o Firebase App Distribution em uso é Android). Escrever flavor/bundle id `.lite`/ícone sem poder compilar só transferiria o risco para quem tem Mac. Retomar quando o iOS entrar na distribuição |
+| E5 | Publicação do Lite na Play (produção) | RF-32 | 06, 09 | Alto | M | em execução (F47) — gate F5-T06 (prod) permanece separado |
 
 ## Dívidas técnicas registradas
 

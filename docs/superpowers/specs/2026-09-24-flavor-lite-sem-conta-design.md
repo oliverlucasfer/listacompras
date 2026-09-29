@@ -118,7 +118,7 @@ Hoje o tipo `Session` do Supabase vaza para o router (`router.dart:41`). Extrair
 
 ## 5. Nativo, identidade e builds
 
-- **Android** (`android/app/build.gradle.kts`): `productFlavors { prod; lite }`. `prod` mantém `applicationId = "br.com.oliverlucas.listacompras"` (`:31`); `lite` usa `applicationId = "br.com.oliverlucas.listacompras.lite"`, `resValue app_name = "Lista de Compras Lite"` e ícone próprio em `android/app/src/lite/res/`. Ambos assinados (release) como hoje (`:40-58`).
+- **Android** (`android/app/build.gradle.kts`): `productFlavors { prod; lite }`. `prod` mantém `applicationId = "br.com.oliverlucas.listacompras"` (`:31`); `lite` usa `applicationId = "br.com.oliverlucas.listacompras.lite"`, `resValue app_name = "Minhas Listas"` e ícone próprio em `android/app/src/lite/res/`. Ambos assinados (release) como hoje (`:40-58`).
 - **iOS:** flavor/scheme equivalente com bundle id `.lite` e nome/ícone distintos.
 - **Consequência obrigatória:** com flavors definidos, **todo build passa a exigir `--flavor`** — `flutter build apk --flavor prod` (o caminho do APK vira `app-prod-release.apk`). Comandos de CI e do [09](../09-runbook-operacoes.md) são atualizados no mesmo PR.
 - **Web:** o build web continua sendo o do app **colaborativo**; o Lite **não** é publicado na web (§2). Logo, `web/version.json` e o teste de paridade (`version_json_test.dart`) **não mudam**.
@@ -130,7 +130,7 @@ Novo `lib/features/backup/` — **sem** tocar o backend.
 
 - **Arquivo:** `{ "versao": 1, "exportadoEm": <ISO-8601>, "listas": [...], "itens": [...], "historicoPrecos": [...] }`. **Não** inclui `mutacao_pendente` (outbox é transporte, não dado).
 - **Exportar:** serializa o **estado atual** — `listas`, `itens` e `historicoPrecos` com `deletado_em IS NULL` (arquivadas **incluídas**; registros deletados ficam de fora). Arquivo `.json` enviado pelo `share_plus` (já é dependência).
-- **Importar:** lê o arquivo com **`file_picker`** (nova dependência), valida `versao`, e faz **merge por `id`** com **LWW por `updated_at`** (mesma regra do sync, `03 §5`): mantém o registro de `updated_at` maior; cria o que não existe.
+- **Importar:** lê o arquivo com **`file_selector`** (nova dependência), valida `versao`, e faz **merge por `id`** com **LWW por `updated_at`** (mesma regra do sync, `03 §5`): mantém o registro de `updated_at` maior; cria o que não existe.
 - **Validação/erros:** versão desconhecida, JSON inválido ou campos faltando → mensagem clara, **sem** alterar o banco (transação).
 - **Onde fica:** tela de **Configurações**, seção "Backup".
 - **Privacidade:** o arquivo é local, sob controle do usuário; no Lite o dono é `'local'` (sem PII de terceiros).

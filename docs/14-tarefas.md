@@ -988,6 +988,19 @@ Spec: [superpowers/specs/2026-09-28-tour-guiado-primeiro-uso-design.md](superpow
 
 Nota: *(motor próprio, sem dependência nova; sem migration/schema/sync; passos sem alvo montado são pulados — a etapa 1 cobre criar/busca/configurações na home e a etapa 2 cobre nome/adicionar/unidade/importar/marcar/mercado/orçamento/convite na lista, disparando na primeira lista com itens pendentes)*
 
+## Fase 47 — Publicação do Lite na Play (RF-32)
+
+Spec: [superpowers/specs/2026-09-29-publicacao-lite-play-design.md](superpowers/specs/2026-09-29-publicacao-lite-play-design.md) · Plano: [superpowers/plans/2026-09-29-publicacao-lite-play.md](superpowers/plans/2026-09-29-publicacao-lite-play.md) · Relatório: [relatorio-revisao-lite-play.md](relatorio-revisao-lite-play.md) · Requisito: RF-32 (Lite publicável na Play, produção). · Docs donos: 06, 09, 12, 14, 05, 07.
+
+- [ ] **F47-T01** — Planejamento: RF-32, Fase 47 e docs de roadmap
+- [ ] **F47-T02** — Sentry desligado no Lite por capacidades
+- [ ] **F47-T03** — Trava flavor×modo também no release (tela bloqueante)
+- [ ] **F47-T04** — Política de privacidade por capacidades + contato
+- [ ] **F47-T05** — Manifest `liteRelease`: sem rede/push/Firebase + Auto Backup off
+- [ ] **F47-T06** — CI: AAB release do Lite + verificação do manifest mergeado
+- [ ] **F47-T07** — Página pública da política + GitHub Pages
+- [ ] **F47-T08** — Runbook de publicação, checklist do Lite e ficha da loja
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -1036,7 +1049,8 @@ Nota: *(motor próprio, sem dependência nova; sem migration/schema/sync; passos
 | F44 Identidade visual do Lite | 4 | 4 |
 | F45 Unidade `pt` (pote) | 1 | 1 |
 | F46 Tour guiado do 1º uso | 5 | 5 |
-| **Total** | **248** | **246** |
+| F47 Publicação do Lite | 8 | 0 |
+| **Total** | **256** | **246** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
