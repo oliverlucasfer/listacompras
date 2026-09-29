@@ -52,7 +52,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-29 | Comparação de preços entre idas: "Última compra: R$ X (dd/mm)" + variação no editor, a partir do histórico **local por dispositivo (não sincronizado)** | 05 §6.3 + 10 §3.1 + 03 | F37 | [05 §8](05-app-flutter.md) |
 | RF-30 | Notificação push (Android) de convite por e-mail recebido e de novo membro numa lista sua | 08 §7 + 01 §4.5 + 09 §2 | F38 | [08 §7](08-compartilhamento-colaborativo.md) |
 | RF-31 | Versão Lite: uso sem conta, 100% no aparelho (sem login, sem convites, sem notificações), com backup local exportar/importar; identidade visual própria (índigo/cesta, nome Minhas Listas) | 05 §2.3 + 05 §6.10 | F41 | [05 §2.3](05-app-flutter.md) |
-| RF-32 | Publicação do Lite ("Minhas Listas") na Google Play em produção: app 100% local (sem rede/push/Firebase), AAB assinado, política de privacidade pública e Declaração de Dados | 06 §4 + 09 §2.9 + 05 §2.3 | F47 | [06 §4](06-mvp-entregas.md) |
+| RF-32 | Publicação do Lite ("Minhas Listas") na Google Play em produção: app 100% local (sem rede/push/Firebase), AAB assinado, política de privacidade pública e Declaração de Dados | 06 §4 + 09 §2.9/§2.10 + 05 §2.3 | F47 | [06 §4](06-mvp-entregas.md) |
 
 ## 3. Requisitos Não-Funcionais
 

@@ -44,7 +44,7 @@ Novo `android/app/src/liteRelease/AndroidManifest.xml` (source set do **variant 
 As bibliotecas continuam empacotadas (tamanho), porém inertes; a garantia de "sem rede" vale para o **artefato publicado** (release). O `prod` e o debug do Lite não mudam.
 
 ### 3.3 Backup e Auto Backup (L-06)
-No mesmo manifest de `liteRelease`: `android:allowBackup="false"` (`tools:replace`), `android:fullBackupContent="false"` e `android:dataExtractionRules` apontando para um XML que exclui backup em nuvem e transferência entre aparelhos — o banco Drift e `shared_preferences` **não saem do aparelho**. O backup JSON manual (exportar/importar, já existente) continua sendo o canal do usuário.
+No mesmo manifest de `liteRelease`: `android:allowBackup="false"` e `android:dataExtractionRules` apontando para um XML que exclui backup em nuvem e transferência entre aparelhos — o banco Drift e `shared_preferences` **não saem do aparelho**. Entregue apenas isso, **sem** `tools:replace` e **sem** `android:fullBackupContent`: não há conflito de merge a resolver e a transferência direta entre aparelhos já é coberta pelas `dataExtractionRules`. O backup JSON manual (exportar/importar, já existente) continua sendo o canal do usuário.
 
 ### 3.4 Voz (L-12)
 Voz **mantida** (decisão do dono) com `onDevice: true` (já existente). Como o SO pode usar o reconhecedor de rede, o app **divulga** isso (texto informativo no fluxo de voz) e a **política** passa a cobrir áudio. A Declaração de Dados declara **Áudio**.

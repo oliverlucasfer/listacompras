@@ -57,7 +57,7 @@ Revisão de leitura do código e da configuração nativa no commit `d4b92db` (b
 - **Isolamento do Lite por capacidades** (`AppCapacidades.lite`: nuvem/colaboração/notificações `false`): Supabase/Firebase **não** inicializados no Dart; rotas de conta/convite ausentes; `AuthLocalRepository` com dono `'local'`.
 - **Outbox realmente desligada no Lite** (`OutboxMutacoes.ativa=false`); nenhuma escrita gera `mutacao_pendente`.
 - **Backup local íntegro** (merge por `id`, LWW por `updated_at`, transação, `dono_id` reescrito para `'local'`); sem upload remoto; compartilhamento iniciado pelo usuário.
-- **Sem analytics/crash SDK além do Sentry**, sem `dio`, sem `url_launcher`; `http` só para tipos de exceção.
+- **Sem analytics/crash SDK além do Sentry**, sem `dio`, sem uso de `url_launcher` no código (empacotado transitivamente, sem chamadas); `http` só para tipos de exceção.
 - **Sem deep link no Lite** (o `src/prod/AndroidManifest.xml` com `intent-filter` não é mesclado no flavor `lite`).
 
 ## 5. Documentos relacionados

@@ -121,11 +121,11 @@ Builds: `flutter build apk --flavor prod` / `--flavor lite` (com flavors, `--fla
 O modo Lite tem **identidade visual própria** (índigo `#4F46E5`, símbolo de cesta, nome **"Minhas Listas"**), escolhida por `IdentidadeVisual` a partir de `AppCapacidades` — nunca por `AppModo` — para o tema, o `AppLogo` e o título do app; o `prod` segue verde, com carrinho e "Lista de Compras". Spec e decisões em
 [superpowers/specs/2026-09-28-identidade-visual-lite-design.md](superpowers/specs/2026-09-28-identidade-visual-lite-design.md); tokens em [15 §1/§6](15-design-system.md).
 
-**Sentry no Lite (F47):** desligado por capacidades (`sentryDeveIniciar`) — nenhum dado de erro sai do aparelho, mesmo com `SENTRY_DSN` no build.
+**Sentry no Lite (F47):** desligado por capacidades (`sentryDeveIniciar`) — nenhum dado de erro sai do aparelho, mesmo com `SENTRY_DSN` no build. Os provedores nativos `io.sentry.*` seguem no manifest do Lite, porém inertes: `SentryFlutter.init` nunca é chamado lá.
 
 **Política de privacidade por capacidades (F47/RF-32):** o texto exibido pela sheet segue as capacidades — `politicaPrivacidadePara(cap)` devolve a versão Lite (sem conta/nuvem, com voz e backup local) quando `!cap.nuvem`, e a colaborativa (Supabase/Sentry) quando há nuvem ([06 §3.3.2](06-mvp-entregas.md)).
 
-**Manifest de release do Lite (F47/RF-32):** o source set `android/app/src/liteRelease/` aplica-se **só** ao artefato `liteRelease`. Ele remove `INTERNET`, `POST_NOTIFICATIONS`, `c2dm`/`ACCESS_NETWORK_STATE`/`WAKE_LOCK` e todos os componentes `com.google.firebase.*` do manifest mergeado (as libs seguem empacotadas, porém inertes), preservando `RECORD_AUDIO` (voz, RF-26). O Auto Backup também é desligado (`android:allowBackup="false"` + `res/xml/data_extraction_rules.xml` excluindo todos os domínios). O `prod` e o `liteDebug` **não** são afetados.
+**Manifest de release do Lite (F47/RF-32):** o source set `android/app/src/liteRelease/` aplica-se **só** ao artefato `liteRelease`. Ele remove `INTERNET`, `POST_NOTIFICATIONS`, `c2dm`/`ACCESS_NETWORK_STATE`/`WAKE_LOCK` e os componentes de Firebase/Messaging (`com.google.firebase.*` e `io.flutter.plugins.firebase.*`) do manifest mergeado, preservando `RECORD_AUDIO` (voz, RF-26). As libs seguem empacotadas, porém inertes; os `com.google.android.gms.*`/`com.google.android.datatransport.*` que restam no manifest (ex.: `GoogleApiActivity`, `com.google.android.gms.version`, serviços do datatransport) também são inertes porque `INTERNET` é removida. O Auto Backup também é desligado (`android:allowBackup="false"` + `res/xml/data_extraction_rules.xml` excluindo todos os domínios). O `prod` e o `liteDebug` **não** são afetados.
 
 ---
 

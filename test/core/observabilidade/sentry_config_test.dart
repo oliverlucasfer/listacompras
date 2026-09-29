@@ -17,4 +17,8 @@ void main() {
   test('nao_deve_iniciar_sentry_quando_sem_dsn', () {
     expect(sentryDeveIniciar(AppCapacidades.colaborativo, ''), isFalse);
   });
+
+  test('nao_deve_iniciar_sentry_quando_dsn_so_espacos', () {
+    expect(sentryDeveIniciar(AppCapacidades.colaborativo, '   '), isFalse);
+  });
 }

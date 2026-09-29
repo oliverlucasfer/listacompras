@@ -5,5 +5,9 @@ void main() {
   testWidgets('deve_mostrar_aviso_quando_build_incorreto', (tester) async {
     await tester.pumpWidget(const TelaBuildIncorreto());
     expect(find.text(telaBuildIncorretoTexto), findsOneWidget);
+    expect(
+      find.textContaining('Instale a versão correta na loja'),
+      findsOneWidget,
+    );
   });
 }

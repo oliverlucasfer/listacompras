@@ -13,6 +13,7 @@ void main() {
   test('deve_descrever_colaborativo_quando_com_nuvem', () {
     final texto = politicaPrivacidadePara(AppCapacidades.colaborativo);
     expect(texto, contains('Supabase'));
+    expect(texto, isNot(contains('no seu aparelho')));
   });
 
   test('deve_ter_o_mesmo_contato_nas_duas_versoes', () {
