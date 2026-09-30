@@ -1,7 +1,11 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/dominio/categoria.dart';
+import '../../../core/dominio/unidade.dart';
+import '../../../core/texto/normalizar.dart';
 import '../../../drift/database.dart';
+import '../domain/estatisticas.dart';
 import '../domain/ida.dart';
 
 class HistoricoComprasRepository {
@@ -113,5 +117,121 @@ class HistoricoComprasRepository {
       ticketMedioCentavos: n == 0 ? 0 : (total / n).round(),
       nIdas: n,
     );
+  }
+
+  Future<List<GastoPorMes>> gastoPorMes() async {
+    final idas = await _db.select(_db.idaCompra).get();
+    final mapa = <String, int>{};
+    final meses = <String, DateTime>{};
+    for (final i in idas) {
+      final m = DateTime.utc(i.finalizadaEm.year, i.finalizadaEm.month, 1);
+      final chave = '${m.year}-${m.month}';
+      mapa[chave] = (mapa[chave] ?? 0) + i.totalCentavos;
+      meses[chave] = m;
+    }
+    final lista = [
+      for (final e in mapa.entries)
+        GastoPorMes(mes: meses[e.key]!, totalCentavos: e.value),
+    ]..sort((a, b) => a.mes.compareTo(b.mes));
+    return lista;
+  }
+
+  Future<List<GastoPorCategoria>> gastoPorCategoria() async {
+    final itens = await _db.select(_db.itemIda).get();
+    final mapa = <String, int>{};
+    for (final i in itens) {
+      final preco = i.precoCentavos;
+      if (preco == null) continue;
+      final subtotal = (i.quantidade * preco).round();
+      mapa[i.categoria] = (mapa[i.categoria] ?? 0) + subtotal;
+    }
+    final lista = [
+      for (final e in mapa.entries)
+        GastoPorCategoria(
+          categoria: CategoriaItem.fromValor(e.key),
+          totalCentavos: e.value,
+        ),
+    ]..sort((a, b) => b.totalCentavos.compareTo(a.totalCentavos));
+    return lista;
+  }
+
+  Future<List<ItemFrequente>> itensMaisComprados({int limite = 10}) async {
+    final itens = await _db.select(_db.itemIda).get();
+    final vezes = <String, int>{};
+    final totais = <String, int>{};
+    final nomes = <String, String>{};
+    for (final i in itens) {
+      final chave = normalizarTexto(i.nome);
+      nomes.putIfAbsent(chave, () => i.nome);
+      vezes[chave] = (vezes[chave] ?? 0) + 1;
+      final preco = i.precoCentavos;
+      if (preco != null) {
+        totais[chave] = (totais[chave] ?? 0) + (i.quantidade * preco).round();
+      }
+    }
+    final lista =
+        [
+          for (final chave in vezes.keys)
+            ItemFrequente(
+              nome: nomes[chave]!,
+              vezes: vezes[chave]!,
+              totalCentavos: totais[chave] ?? 0,
+            ),
+        ]..sort((a, b) {
+          final c = b.vezes.compareTo(a.vezes);
+          return c != 0 ? c : a.nome.compareTo(b.nome);
+        });
+    return lista.take(limite).toList();
+  }
+
+  Future<List<String>> nomesComprados() async {
+    final itens = await _db.select(_db.itemIda).get();
+    final chaves = {for (final i in itens) normalizarTexto(i.nome)};
+    final lista = chaves.toList()..sort();
+    return lista;
+  }
+
+  Future<List<PontoPreco>> evolucaoPreco(
+    String nomeNormalizado,
+    Unidade unidade,
+  ) async {
+    final consulta = _db.select(_db.itemIda).join([
+      innerJoin(_db.idaCompra, _db.idaCompra.id.equalsExp(_db.itemIda.idaId)),
+    ]);
+    final linhas = await consulta.get();
+    final pontos = <PontoPreco>[];
+    for (final linha in linhas) {
+      final i = linha.readTable(_db.itemIda);
+      final ida = linha.readTable(_db.idaCompra);
+      if (normalizarTexto(i.nome) != nomeNormalizado) continue;
+      if (i.unidade != unidade.valor) continue;
+      final preco = i.precoCentavos;
+      if (preco == null) continue;
+      pontos.add(
+        PontoPreco(
+          data: ida.finalizadaEm,
+          precoCentavos: preco,
+          unidade: unidade,
+        ),
+      );
+    }
+    pontos.sort((a, b) => a.data.compareTo(b.data));
+    return pontos;
+  }
+
+  Future<Unidade?> unidadeRecenteComprada(String nomeNormalizado) async {
+    final consulta = _db.select(_db.itemIda).join([
+      innerJoin(_db.idaCompra, _db.idaCompra.id.equalsExp(_db.itemIda.idaId)),
+    ]);
+    final linhas = await consulta.get();
+    final pontos = <(DateTime, String)>[];
+    for (final linha in linhas) {
+      final i = linha.readTable(_db.itemIda);
+      if (normalizarTexto(i.nome) != nomeNormalizado) continue;
+      pontos.add((linha.readTable(_db.idaCompra).finalizadaEm, i.unidade));
+    }
+    if (pontos.isEmpty) return null;
+    pontos.sort((a, b) => a.$1.compareTo(b.$1));
+    return Unidade.fromValor(pontos.last.$2);
   }
 }
