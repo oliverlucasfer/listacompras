@@ -1099,4 +1099,108 @@ void main() {
       expect(indice, isNotEmpty);
     },
   );
+
+  test('deve_criar_tabelas_de_ida_quando_migrar_v11_para_v12', () async {
+    // Banco real na versão v11 (sem ida_compra/item_ida e sem
+    // mutacao_pendente): DDL espelhando o schema v11 gerado + índice manual
+    // `uq_item_ativo`, dados gravados e user_version = 11.
+    final arquivo = File(
+      '${Directory.systemTemp.path}/v11_para_v12_${DateTime.now().microsecondsSinceEpoch}.sqlite',
+    );
+    addTearDown(() {
+      if (arquivo.existsSync()) arquivo.deleteSync();
+    });
+
+    final antigo = sq3.sqlite3.open(arquivo.path);
+    antigo.execute('''
+        CREATE TABLE lista_local (
+          id TEXT NOT NULL PRIMARY KEY,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          titulo TEXT NOT NULL,
+          dono_id TEXT NOT NULL,
+          deletado_em TEXT NULL,
+          arquivada_em TEXT NULL,
+          orcamento_centavos INTEGER NULL,
+          FOREIGN KEY (dono_id) REFERENCES lista_local (id) ON DELETE CASCADE
+        );
+        CREATE TABLE item_local (
+          id TEXT NOT NULL PRIMARY KEY,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          lista_id TEXT NOT NULL REFERENCES lista_local (id) ON DELETE CASCADE,
+          nome TEXT NOT NULL,
+          quantidade REAL NOT NULL DEFAULT 1.0,
+          unidade TEXT NOT NULL DEFAULT 'un',
+          categoria TEXT NOT NULL DEFAULT 'outros',
+          concluido INTEGER NOT NULL DEFAULT 0,
+          ordem INTEGER NOT NULL DEFAULT 0,
+          deletado_em TEXT NULL,
+          preco_centavos INTEGER NULL,
+          CHECK (quantidade > 0),
+          CHECK (quantidade <= 1000000),
+          CHECK (unidade IN ('un','kg','g','l','ml','caixa','pacote','pct','pt','dz')),
+          CHECK (categoria IN ('hortifruti','mercearia','frios','laticinios',
+            'congelados','padaria','bebidas','pet','limpeza','higiene','outros')),
+          CHECK (preco_centavos IS NULL OR
+            (preco_centavos >= 0 AND preco_centavos <= 99999999))
+        );
+        CREATE TABLE historico_preco_local (
+          nome_normalizado TEXT NOT NULL PRIMARY KEY,
+          preco_centavos INTEGER NOT NULL,
+          unidade TEXT NOT NULL,
+          registrado_em TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX uq_item_ativo
+          ON item_local (lista_id, lower(nome)) WHERE deletado_em IS NULL;
+        PRAGMA user_version = 11;
+      ''');
+    antigo.execute(
+      "INSERT INTO lista_local (id, created_at, updated_at, titulo, dono_id) "
+      "VALUES ('dddddddd-0000-0000-0000-000000000001', "
+      "'2026-01-01T00:00:00.000000Z', '2026-01-01T00:00:00.000000Z', "
+      "'Antiga v11', 'user-a')",
+    );
+    antigo.close();
+
+    final migrado = AppDatabase(NativeDatabase(arquivo));
+    addTearDown(migrado.close);
+
+    final lista =
+        await (migrado.select(migrado.listaLocal)..where(
+              (l) => l.id.equals('dddddddd-0000-0000-0000-000000000001'),
+            ))
+            .getSingle();
+    expect(lista.titulo, 'Antiga v11');
+
+    // Tabelas novas existem e aceitam escrita/leitura após a migração.
+    await migrado
+        .into(migrado.idaCompra)
+        .insert(
+          IdaCompraCompanion.insert(
+            id: 'dddddddd-0000-0000-0000-000000000010',
+            titulo: 'Semana',
+            finalizadaEm: DateTime.utc(2026, 9, 30),
+          ),
+        );
+    await migrado
+        .into(migrado.itemIda)
+        .insert(
+          ItemIdaCompanion.insert(
+            id: 'dddddddd-0000-0000-0000-000000000011',
+            idaId: 'dddddddd-0000-0000-0000-000000000010',
+            nome: 'Arroz',
+            precoCentavos: const Value(549),
+          ),
+        );
+    final itens = await migrado.select(migrado.itemIda).get();
+    expect(itens.single.nome, 'Arroz');
+    expect(itens.single.quantidade, 1.0);
+
+    // Excluir a ida apaga os itens (FK ON DELETE CASCADE).
+    await (migrado.delete(
+      migrado.idaCompra,
+    )..where((t) => t.id.equals('dddddddd-0000-0000-0000-000000000010'))).go();
+    expect(await migrado.select(migrado.itemIda).get(), isEmpty);
+  });
 }
