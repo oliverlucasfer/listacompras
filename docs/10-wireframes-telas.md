@@ -498,12 +498,14 @@ Nada é removido sem a escolha "Limpar concluídos" (reusa `limparConcluidos`); 
 ```
 ┌─────────────────────────────────┐
 │  Histórico                      │ ← mesma tela da §8.1
+│  Total gasto  Ticket    Idas    │ ← resumo (acima do TabBar,
+│  R$ 120,00    R$ 40,00  3       │    visível nas duas abas)
 │  [ Idas ] [ Estatísticas ]      │ ← TabBar (F51); aba ativa
 ├─────────────────────────────────┤
 │  Gasto por período              │ ← GraficoGastoMensal (fl_chart):
 │  ▁ ▃ ▂ ▅ ▄ ▆ ▃ ▇ ▅ █ ▆ ▅        │    barras dos últimos 12 meses
 │  10/25      …        09/26      │    (MM/yy no eixo X)
-│  R$ 42,90                R$ 78,10│   valor no topo da barra
+│  Total no período: R$ 120,00    │    total dos meses exibidos
 │ ─────────────────────────────── │
 │  Gasto por categoria            │ ← lista: categoria · total · %
 │  Mercearia          R$ 68,40 61%│
@@ -511,6 +513,7 @@ Nada é removido sem a escolha "Limpar concluídos" (reusa `limparConcluidos`); 
 │  Limpeza            R$ 13,20 12%│
 │ ─────────────────────────────── │
 │  Itens mais comprados           │ ← top 10 (nome normalizado)
+│  [ Frequência ] [ Gasto ]       │ ← ordena por frequência ou gasto
 │  Arroz              5x   R$ 24,50│   frequência · gasto
 │  Leite              4x   R$ 19,60│
 │ ─────────────────────────────── │
@@ -523,7 +526,7 @@ Nada é removido sem a escolha "Limpar concluídos" (reusa `limparConcluidos`); 
 │  30/09/2026 · R$ 6,10           │
 └─────────────────────────────────┘
 ```
-Cada seção tem estado vazio próprio ("Sem dados ainda.") e usa `AppEsqueleto`/`AppEstadoErro` no carregamento/erro. A evolução compara **só a mesma unidade** (regra do RF-29): o item é escolhido pelo nome e a unidade vem da compra mais recente; item sem compras comparáveis → vazio.
+Cada seção tem estado vazio próprio ("Sem dados ainda.") e usa `AppEsqueleto`/`AppEstadoErro` no carregamento/erro. O **total do período** soma os meses exibidos; a barra mais alta recebe o rótulo `formatarReais` (as demais usam o tooltip de toque). A **evolução** compara **só a mesma unidade** (regra do RF-29): o item é escolhido pelo nome e a unidade vem da compra **com preço** mais recente; item sem compras comparáveis → vazio. Os gráficos expõem um **rótulo de acessibilidade** resumido (RNF-06).
 
 ---
 

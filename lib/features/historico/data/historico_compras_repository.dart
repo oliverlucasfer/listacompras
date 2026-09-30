@@ -228,6 +228,7 @@ class HistoricoComprasRepository {
     for (final linha in linhas) {
       final i = linha.readTable(_db.itemIda);
       if (normalizarTexto(i.nome) != nomeNormalizado) continue;
+      if (i.precoCentavos == null) continue;
       pontos.add((linha.readTable(_db.idaCompra).finalizadaEm, i.unidade));
     }
     if (pontos.isEmpty) return null;

@@ -7,6 +7,7 @@ import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/core/dominio/unidade.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/historico/data/historico_compras_repository.dart';
+import 'package:lista_compras/features/historico/ui/estatisticas_tab.dart';
 import 'package:lista_compras/features/historico/ui/historico_screen.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
@@ -19,6 +20,19 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));
   }
+
+  Finder scrollEstatisticas() => find
+      .descendant(
+        of: find.byType(EstatisticasTab),
+        matching: find.byType(Scrollable),
+      )
+      .first;
+
+  List<String> nomesItensMaisComprados(WidgetTester tester) => tester
+      .widgetList<ListTile>(find.byType(ListTile))
+      .map((t) => (t.title as Text).data!)
+      .where((n) => n == 'Arroz' || n == 'Leite')
+      .toList();
 
   testWidgets('deve_mostrar_estatisticas_quando_ha_idas', (tester) async {
     final db = AppDatabase(NativeDatabase.memory());
@@ -59,10 +73,85 @@ void main() {
       findsWidgets,
       reason: '2 kg × R\$ 5,00 = R\$ 10,00 agregado nas seções',
     );
+    expect(
+      find.text('Total no período: R\$ 10,00'),
+      findsOneWidget,
+      reason: 'total do período somado às barras exibidas',
+    );
+    expect(
+      find.text('Total gasto'),
+      findsOneWidget,
+      reason: 'resumo visível também na aba Estatísticas (acima do TabBar)',
+    );
     await fechar(tester);
   });
 
+  testWidgets(
+    'deve_reordenar_mais_comprados_por_gasto_quando_troca_ordenacao',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      final listas = ListasRepository(db);
+      final historico = HistoricoComprasRepository(db);
+
+      Future<void> finalizarIda(
+        String titulo,
+        String nome,
+        int centavos,
+      ) async {
+        final l = await listas.criarLista(titulo: titulo, donoId: 'local');
+        final i = await listas.adicionarItem(
+          listaId: l.id,
+          nome: nome,
+          quantidade: 1,
+          unidade: Unidade.kg,
+          categoria: CategoriaItem.mercearia,
+          precoCentavos: centavos,
+        );
+        await listas.editarItem(i.id, concluido: true);
+        await historico.finalizar(l.id);
+      }
+
+      // Arroz: 2 compras baratas (frequência alta, gasto baixo).
+      // Leite: 1 compra cara (frequência baixa, gasto alto).
+      await finalizarIda('A', 'Arroz', 100);
+      await finalizarIda('B', 'Arroz', 100);
+      await finalizarIda('C', 'Leite', 5000);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [appDatabaseProvider.overrideWithValue(db)],
+          child: const MaterialApp(home: HistoricoScreen()),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Estatísticas'));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('Gasto'),
+        200,
+        scrollable: scrollEstatisticas(),
+      );
+      await tester.pumpAndSettle();
+      expect(nomesItensMaisComprados(tester), [
+        'Arroz',
+        'Leite',
+      ], reason: 'ordenação padrão por frequência');
+
+      await tester.tap(find.text('Gasto'));
+      await tester.pumpAndSettle();
+
+      expect(nomesItensMaisComprados(tester), [
+        'Leite',
+        'Arroz',
+      ], reason: 'ordenação por gasto acumulado');
+      await fechar(tester);
+    },
+  );
+
   testWidgets('deve_mostrar_grafico_quando_item_tem_2_compras', (tester) async {
+    final handle = tester.ensureSemantics();
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
     final listas = ListasRepository(db);
@@ -96,7 +185,11 @@ void main() {
     await tester.pumpAndSettle();
 
     final dropdown = find.byType(DropdownButtonFormField<String?>);
-    await tester.ensureVisible(dropdown);
+    await tester.scrollUntilVisible(
+      dropdown,
+      200,
+      scrollable: scrollEstatisticas(),
+    );
     await tester.pumpAndSettle();
     await tester.tap(dropdown);
     await tester.pumpAndSettle();
@@ -106,6 +199,14 @@ void main() {
     expect(find.byType(LineChart), findsOneWidget);
     expect(find.textContaining('R\$ 5,00'), findsWidgets);
     expect(find.textContaining('R\$ 7,00'), findsWidgets);
+    await tester.ensureVisible(find.byType(LineChart));
+    await tester.pumpAndSettle();
+    expect(
+      find.bySemanticsLabel(RegExp(r'Evolução de preço: último R\$ 7,00')),
+      findsOneWidget,
+      reason: 'resumo de acessibilidade do mini gráfico de evolução',
+    );
+    handle.dispose();
     await fechar(tester);
   });
 }

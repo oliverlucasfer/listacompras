@@ -287,6 +287,12 @@ abstract final class AppStrings {
   static const itensMaisComprados = 'Itens mais comprados';
   static const evolucaoDePreco = 'Evolução de preço';
   static const semDadosAinda = 'Sem dados ainda.';
+  static String totalNoPeriodo(String v) => 'Total no período: $v';
+  static const porFrequencia = 'Frequência';
+  static const porGasto = 'Gasto';
+  static String semanticaGastoMensal(String v) => 'Gasto mensal: $v';
+  static String semanticaEvolucaoPreco(String v) =>
+      'Evolução de preço: último $v';
 
   // Boas-vindas (RF-27, F31-T02)
   static const boasVindasTitulo = 'Bem-vindo(a)';

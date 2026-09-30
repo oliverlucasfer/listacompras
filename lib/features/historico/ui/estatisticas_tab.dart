@@ -66,7 +66,20 @@ class _SecaoGastoPorPeriodo extends ConsumerWidget {
             ? meses.sublist(meses.length - maxMeses)
             : meses;
         if (ultimos.isEmpty) return const _SemDados();
-        return GraficoGastoMensal(dados: ultimos);
+        final total = ultimos.fold<int>(0, (s, m) => s + m.totalCentavos);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GraficoGastoMensal(dados: ultimos),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Text(
+                AppStrings.totalNoPeriodo(formatarReais(total)),
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ),
+          ],
+        );
       },
     );
   }
@@ -108,11 +121,20 @@ class _SecaoGastoPorCategoria extends ConsumerWidget {
   }
 }
 
-class _SecaoItensMaisComprados extends ConsumerWidget {
+class _SecaoItensMaisComprados extends ConsumerStatefulWidget {
   const _SecaoItensMaisComprados();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_SecaoItensMaisComprados> createState() =>
+      _SecaoItensMaisCompradosState();
+}
+
+class _SecaoItensMaisCompradosState
+    extends ConsumerState<_SecaoItensMaisComprados> {
+  _OrdemItens _ordem = _OrdemItens.frequencia;
+
+  @override
+  Widget build(BuildContext context) {
     final dados = ref.watch(itensMaisCompradosProvider);
     return dados.when(
       loading: () => const AppEsqueleto(linhas: 2, altura: 40),
@@ -122,9 +144,37 @@ class _SecaoItensMaisComprados extends ConsumerWidget {
       ),
       data: (itens) {
         if (itens.isEmpty) return const _SemDados();
+        final ordenados = [...itens]
+          ..sort((a, b) {
+            if (_ordem == _OrdemItens.gasto) {
+              final c = b.totalCentavos.compareTo(a.totalCentavos);
+              return c != 0 ? c : a.nome.compareTo(b.nome);
+            }
+            final c = b.vezes.compareTo(a.vezes);
+            return c != 0 ? c : a.nome.compareTo(b.nome);
+          });
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            for (final item in itens)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: SegmentedButton<_OrdemItens>(
+                segments: const [
+                  ButtonSegment(
+                    value: _OrdemItens.frequencia,
+                    label: Text(AppStrings.porFrequencia),
+                  ),
+                  ButtonSegment(
+                    value: _OrdemItens.gasto,
+                    label: Text(AppStrings.porGasto),
+                  ),
+                ],
+                selected: {_ordem},
+                onSelectionChanged: (selecao) =>
+                    setState(() => _ordem = selecao.first),
+              ),
+            ),
+            for (final item in ordenados)
               ListTile(
                 dense: true,
                 title: Text(item.nome),
@@ -138,6 +188,8 @@ class _SecaoItensMaisComprados extends ConsumerWidget {
     );
   }
 }
+
+enum _OrdemItens { frequencia, gasto }
 
 class _SecaoEvolucaoPreco extends ConsumerWidget {
   const _SecaoEvolucaoPreco({
@@ -258,37 +310,43 @@ class _MiniGraficoPreco extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
-    return LineChart(
-      LineChartData(
-        minY: 0,
-        lineBarsData: [
-          LineChartBarData(
-            spots: [
-              for (var i = 0; i < pontos.length; i++)
-                FlSpot(i.toDouble(), pontos[i].precoCentavos.toDouble()),
-            ],
-            isCurved: false,
-            color: tema.colorScheme.primary,
-            barWidth: 2,
-            dotData: const FlDotData(show: true),
-          ),
-        ],
-        titlesData: const FlTitlesData(show: false),
-        gridData: const FlGridData(show: false),
-        borderData: FlBorderData(show: false),
-        lineTouchData: LineTouchData(
-          touchTooltipData: LineTouchTooltipData(
-            getTooltipColor: (_) => tema.colorScheme.inverseSurface,
-            getTooltipItems: (tocados) => [
-              for (final toque in tocados)
-                LineTooltipItem(
-                  '${_formatarData(pontos[toque.x.toInt()].data)} · '
-                  '${formatarReais(toque.y.round())}',
-                  (tema.textTheme.labelMedium ?? const TextStyle()).copyWith(
-                    color: tema.colorScheme.onInverseSurface,
+    return Semantics(
+      label: AppStrings.semanticaEvolucaoPreco(
+        formatarReais(pontos.last.precoCentavos),
+      ),
+      excludeSemantics: true,
+      child: LineChart(
+        LineChartData(
+          minY: 0,
+          lineBarsData: [
+            LineChartBarData(
+              spots: [
+                for (var i = 0; i < pontos.length; i++)
+                  FlSpot(i.toDouble(), pontos[i].precoCentavos.toDouble()),
+              ],
+              isCurved: false,
+              color: tema.colorScheme.primary,
+              barWidth: 2,
+              dotData: const FlDotData(show: true),
+            ),
+          ],
+          titlesData: const FlTitlesData(show: false),
+          gridData: const FlGridData(show: false),
+          borderData: FlBorderData(show: false),
+          lineTouchData: LineTouchData(
+            touchTooltipData: LineTouchTooltipData(
+              getTooltipColor: (_) => tema.colorScheme.inverseSurface,
+              getTooltipItems: (tocados) => [
+                for (final toque in tocados)
+                  LineTooltipItem(
+                    '${_formatarData(pontos[toque.x.toInt()].data)} · '
+                    '${formatarReais(toque.y.round())}',
+                    (tema.textTheme.labelMedium ?? const TextStyle()).copyWith(
+                      color: tema.colorScheme.onInverseSurface,
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

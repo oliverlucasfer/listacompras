@@ -85,10 +85,25 @@ void main() {
     expect(await historico.nomesComprados(), ['arroz']);
   });
 
-  test('deve_retornar_unidade_mais_recente_quando_ha_compras', () async {
+  test('deve_usar_unidade_da_compra_com_preco_mais_recente', () async {
     await idaCom([('Arroz', 1, Unidade.kg, CategoriaItem.mercearia, 500)]);
     await idaCom([('Arroz', 1, Unidade.un, CategoriaItem.mercearia, 900)]);
-    expect(await historico.unidadeRecenteComprada('arroz'), Unidade.un);
+    await idaCom([('Arroz', 1, Unidade.un, CategoriaItem.mercearia, null)]);
+    expect(
+      await historico.unidadeRecenteComprada('arroz'),
+      Unidade.un,
+      reason: 'ignora a compra sem preço mais recente, usa a com preço',
+    );
     expect(await historico.unidadeRecenteComprada('inexistente'), isNull);
+  });
+
+  test('deve_ignorar_compra_sem_preco_quando_resolve_unidade', () async {
+    await idaCom([('Arroz', 1, Unidade.kg, CategoriaItem.mercearia, 500)]);
+    await idaCom([('Arroz', 1, Unidade.un, CategoriaItem.mercearia, null)]);
+    expect(
+      await historico.unidadeRecenteComprada('arroz'),
+      Unidade.kg,
+      reason: 'compra sem preço é ignorada; resolve a kg antiga com preço',
+    );
   });
 }

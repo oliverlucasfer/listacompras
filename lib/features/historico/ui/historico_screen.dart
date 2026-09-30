@@ -23,16 +23,22 @@ class HistoricoScreen extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text(AppStrings.historico),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: AppStrings.abaIdas),
-              Tab(text: AppStrings.estatisticas),
-            ],
-          ),
+        appBar: AppBar(title: const Text(AppStrings.historico)),
+        body: const Column(
+          children: [
+            _Resumo(),
+            Divider(height: 1),
+            TabBar(
+              tabs: [
+                Tab(text: AppStrings.abaIdas),
+                Tab(text: AppStrings.estatisticas),
+              ],
+            ),
+            Expanded(
+              child: TabBarView(children: [_AbaIdas(), EstatisticasTab()]),
+            ),
+          ],
         ),
-        body: const TabBarView(children: [_AbaIdas(), EstatisticasTab()]),
       ),
     );
   }
@@ -44,47 +50,37 @@ class _AbaIdas extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final idasAsync = ref.watch(idasProvider);
-    final resumoAsync = ref.watch(resumoHistoricoProvider);
-    return Column(
-      children: [
-        _Resumo(resumo: resumoAsync),
-        const Divider(height: 1),
-        Expanded(
-          child: idasAsync.when(
-            loading: () => const AppEsqueleto(linhas: 4),
-            error: (_, _) => AppEstadoErro(
-              mensagem: AppStrings.erroGenerico,
-              onRetentar: () => ref.invalidate(idasProvider),
-            ),
-            data: (idas) {
-              if (idas.isEmpty) {
-                return const AppEstadoVazio(
-                  icone: Icons.history,
-                  titulo: AppStrings.historicoVazio,
-                  descricao: AppStrings.historicoVazioDica,
-                );
-              }
-              return ListView.separated(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                itemCount: idas.length,
-                separatorBuilder: (_, _) => const Divider(height: 1),
-                itemBuilder: (context, i) => _ItemIda(ida: idas[i]),
-              );
-            },
-          ),
-        ),
-      ],
+    return idasAsync.when(
+      loading: () => const AppEsqueleto(linhas: 4),
+      error: (_, _) => AppEstadoErro(
+        mensagem: AppStrings.erroGenerico,
+        onRetentar: () => ref.invalidate(idasProvider),
+      ),
+      data: (idas) {
+        if (idas.isEmpty) {
+          return const AppEstadoVazio(
+            icone: Icons.history,
+            titulo: AppStrings.historicoVazio,
+            descricao: AppStrings.historicoVazioDica,
+          );
+        }
+        return ListView.separated(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+          itemCount: idas.length,
+          separatorBuilder: (_, _) => const Divider(height: 1),
+          itemBuilder: (context, i) => _ItemIda(ida: idas[i]),
+        );
+      },
     );
   }
 }
 
-class _Resumo extends StatelessWidget {
-  const _Resumo({required this.resumo});
-
-  final AsyncValue<ResumoHistorico> resumo;
+class _Resumo extends ConsumerWidget {
+  const _Resumo();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final resumo = ref.watch(resumoHistoricoProvider);
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
