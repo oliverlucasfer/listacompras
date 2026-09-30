@@ -9,6 +9,7 @@ import 'package:lista_compras/core/categorias/sugestao_categorias.dart';
 import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/core/dominio/unidade.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
+import 'package:lista_compras/core/widgets/app_botao.dart';
 import 'package:lista_compras/core/widgets/app_campo_texto.dart';
 import 'package:lista_compras/core/widgets/app_dropdown.dart';
 import 'package:lista_compras/core/widgets/app_esqueleto.dart';
@@ -2036,6 +2037,32 @@ void main() {
     final arroz = itens.singleWhere((i) => i.nome == 'Arroz');
     expect(arroz.quantidade, 2);
     expect(arroz.unidade, 'kg');
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_finalizar_compra_quando_tem_item_concluido', (
+    tester,
+  ) async {
+    await listaComItens(tester, comConcluido: true);
+
+    expect(
+      find.widgetWithText(AppBotao, AppStrings.finalizarCompra),
+      findsOneWidget,
+    );
+
+    await fechar(tester);
+  });
+
+  testWidgets('nao_deve_mostrar_finalizar_compra_quando_sem_concluido', (
+    tester,
+  ) async {
+    await listaComItens(tester);
+
+    expect(
+      find.widgetWithText(AppBotao, AppStrings.finalizarCompra),
+      findsNothing,
+    );
 
     await fechar(tester);
   });

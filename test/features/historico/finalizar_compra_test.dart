@@ -8,7 +8,10 @@ import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 
 void main() {
-  testWidgets('deve_finalizar_e_registrar_quando_confirmado', (tester) async {
+  /// Cria uma lista com 1 item concluído e monta um botão que abre o modal.
+  /// O `ref.watch` imita a tela real (botão de rodapé): sem ele o stream do
+  /// Drift não emite sob o pump do teste.
+  Future<({AppDatabase db, String listaId})> subir(WidgetTester tester) async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
     final listas = ListasRepository(db);
@@ -24,8 +27,6 @@ void main() {
             builder: (context) => Scaffold(
               body: Consumer(
                 builder: (context, ref, _) {
-                  // A tela real observa o provider (botão de rodapé); sem o
-                  // watch o stream do Drift não emite sob o pump do teste.
                   ref.watch(itensDaListaProvider(l.id));
                   return TextButton(
                     onPressed: () => abrirFinalizarCompra(context, ref, l.id),
@@ -42,15 +43,46 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Finalizar compra'));
     await tester.pumpAndSettle();
+    return (db: db, listaId: l.id);
+  }
+
+  /// Desmonta para cancelar o timer do snackbar (padrão dos testes da tela).
+  Future<void> fechar(WidgetTester tester) async {
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(milliseconds: 1));
+  }
+
+  testWidgets('deve_finalizar_e_registrar_quando_confirmado', (tester) async {
+    final r = await subir(tester);
+
     // Dialogo pos-finalizar: manter a lista.
     await tester.tap(find.text('Manter a lista'));
     await tester.pumpAndSettle();
 
-    expect((await db.select(db.idaCompra).get()), hasLength(1));
-    expect((await db.select(db.itemIda).get()), hasLength(1));
+    expect((await r.db.select(r.db.idaCompra).get()), hasLength(1));
+    expect((await r.db.select(r.db.itemIda).get()), hasLength(1));
 
-    // Desmonta para cancelar o timer do snackbar (padrão dos testes da tela).
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(milliseconds: 1));
+    await fechar(tester);
+  });
+
+  testWidgets('deve_limpar_concluidos_quando_escolhe_limpar', (tester) async {
+    final r = await subir(tester);
+
+    await tester.tap(find.text('Limpar concluídos'));
+    await tester.pumpAndSettle();
+
+    // A ida é registrada antes de limpar a lista.
+    expect((await r.db.select(r.db.idaCompra).get()), hasLength(1));
+    expect((await r.db.select(r.db.itemIda).get()), hasLength(1));
+
+    // `limparConcluidos` faz soft delete: nenhum item ativo (deletado_em NULL)
+    // resta na lista.
+    final linhas = await r.db.select(r.db.itemLocal).get();
+    final ativos = linhas.where(
+      (i) => i.listaId == r.listaId && i.deletadoEm == null,
+    );
+    expect(ativos, isEmpty);
+
+    await fechar(tester);
   });
 }
