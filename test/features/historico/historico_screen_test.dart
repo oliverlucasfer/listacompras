@@ -49,6 +49,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('Semana'), findsOneWidget);
+    expect(find.textContaining(RegExp(r'· 1 item$')), findsOneWidget);
     await fechar(tester);
   });
 }

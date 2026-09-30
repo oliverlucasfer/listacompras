@@ -273,6 +273,8 @@ abstract final class AppStrings {
   static const historicoVazio = 'Nenhuma compra finalizada ainda.';
   static const historicoVazioDica =
       'Marque itens e use "Finalizar compra" para registrar uma ida.';
+  static const idaNaoEncontrada = 'Compra não encontrada.';
+  static String nItens(int n) => n == 1 ? '1 item' : '$n itens';
   static const totalGasto = 'Total gasto';
   static const ticketMedio = 'Ticket médio';
   static const numeroIdas = 'Idas';

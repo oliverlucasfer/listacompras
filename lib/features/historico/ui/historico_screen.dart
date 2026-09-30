@@ -131,7 +131,7 @@ class _ItemIda extends StatelessWidget {
     return ListTile(
       title: Text(ida.titulo),
       subtitle: Text(
-        '${_formatarData(ida.finalizadaEm)} · ${ida.itensCount} itens',
+        '${_formatarData(ida.finalizadaEm)} · ${AppStrings.nItens(ida.itensCount)}',
       ),
       trailing: Text(formatarReais(ida.totalCentavos)),
       onTap: () => context.push('/historico/ida/${ida.id}'),

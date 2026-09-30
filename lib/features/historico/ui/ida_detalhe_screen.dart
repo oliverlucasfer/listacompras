@@ -35,7 +35,7 @@ class IdaDetalheScreen extends ConsumerWidget {
           if (ida == null) {
             return const AppEstadoVazio(
               icone: Icons.search_off,
-              titulo: AppStrings.listaNaoEncontrada,
+              titulo: AppStrings.idaNaoEncontrada,
             );
           }
           return Column(
