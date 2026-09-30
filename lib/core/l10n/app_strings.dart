@@ -251,6 +251,7 @@ abstract final class AppStrings {
   static const listaCompartilhada = 'Lista compartilhada';
   static const compartilharIndisponivelLista =
       'Compartilhamento indisponível aqui.';
+  static const escanearQr = 'Escanear QR';
 
   // Boas-vindas (RF-27, F31-T02)
   static const boasVindasTitulo = 'Bem-vindo(a)';

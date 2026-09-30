@@ -26,6 +26,8 @@
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
+		<key>NSCameraUsageDescription</key>
+		<string>Usar a câmera para ler o código de uma lista compartilhada.</string>
 		<key>NSMicrophoneUsageDescription</key>
 		<string>Usamos o microfone para você ditar itens da lista.</string>
 		<key>NSSpeechRecognitionUsageDescription</key>
