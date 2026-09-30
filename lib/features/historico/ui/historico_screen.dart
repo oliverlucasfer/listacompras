@@ -10,48 +10,70 @@ import '../../../core/widgets/app_estado_vazio.dart';
 import '../../listas/domain/preco.dart';
 import '../domain/ida.dart';
 import '../providers/historico_providers.dart';
+import 'estatisticas_tab.dart';
 
-/// Aba Histórico de compras (RF-34, F50): resumo das idas finalizadas e a
-/// lista de idas, em ordem da mais recente para a mais antiga.
-class HistoricoScreen extends ConsumerWidget {
+/// Aba Histórico de compras (RF-34, F50/F51): resumo das idas finalizadas e a
+/// lista de idas, em ordem da mais recente para a mais antiga, além de uma
+/// segunda aba com as estatísticas (RF-34, F51).
+class HistoricoScreen extends StatelessWidget {
   const HistoricoScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text(AppStrings.historico),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: AppStrings.abaIdas),
+              Tab(text: AppStrings.estatisticas),
+            ],
+          ),
+        ),
+        body: const TabBarView(children: [_AbaIdas(), EstatisticasTab()]),
+      ),
+    );
+  }
+}
+
+class _AbaIdas extends ConsumerWidget {
+  const _AbaIdas();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final idasAsync = ref.watch(idasProvider);
     final resumoAsync = ref.watch(resumoHistoricoProvider);
-    return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.historico)),
-      body: Column(
-        children: [
-          _Resumo(resumo: resumoAsync),
-          const Divider(height: 1),
-          Expanded(
-            child: idasAsync.when(
-              loading: () => const AppEsqueleto(linhas: 4),
-              error: (_, _) => AppEstadoErro(
-                mensagem: AppStrings.erroGenerico,
-                onRetentar: () => ref.invalidate(idasProvider),
-              ),
-              data: (idas) {
-                if (idas.isEmpty) {
-                  return const AppEstadoVazio(
-                    icone: Icons.history,
-                    titulo: AppStrings.historicoVazio,
-                    descricao: AppStrings.historicoVazioDica,
-                  );
-                }
-                return ListView.separated(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                  itemCount: idas.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (context, i) => _ItemIda(ida: idas[i]),
-                );
-              },
+    return Column(
+      children: [
+        _Resumo(resumo: resumoAsync),
+        const Divider(height: 1),
+        Expanded(
+          child: idasAsync.when(
+            loading: () => const AppEsqueleto(linhas: 4),
+            error: (_, _) => AppEstadoErro(
+              mensagem: AppStrings.erroGenerico,
+              onRetentar: () => ref.invalidate(idasProvider),
             ),
+            data: (idas) {
+              if (idas.isEmpty) {
+                return const AppEstadoVazio(
+                  icone: Icons.history,
+                  titulo: AppStrings.historicoVazio,
+                  descricao: AppStrings.historicoVazioDica,
+                );
+              }
+              return ListView.separated(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                itemCount: idas.length,
+                separatorBuilder: (_, _) => const Divider(height: 1),
+                itemBuilder: (context, i) => _ItemIda(ida: idas[i]),
+              );
+            },
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
