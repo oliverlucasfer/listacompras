@@ -1586,6 +1586,889 @@ class HistoricoPrecoLocalCompanion
   }
 }
 
+class $IdaCompraTable extends IdaCompra
+    with TableInfo<$IdaCompraTable, IdaCompraData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $IdaCompraTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _listaIdMeta = const VerificationMeta(
+    'listaId',
+  );
+  @override
+  late final GeneratedColumn<String> listaId = GeneratedColumn<String>(
+    'lista_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _tituloMeta = const VerificationMeta('titulo');
+  @override
+  late final GeneratedColumn<String> titulo = GeneratedColumn<String>(
+    'titulo',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _finalizadaEmMeta = const VerificationMeta(
+    'finalizadaEm',
+  );
+  @override
+  late final GeneratedColumn<DateTime> finalizadaEm = GeneratedColumn<DateTime>(
+    'finalizada_em',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _totalCentavosMeta = const VerificationMeta(
+    'totalCentavos',
+  );
+  @override
+  late final GeneratedColumn<int> totalCentavos = GeneratedColumn<int>(
+    'total_centavos',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _itensCountMeta = const VerificationMeta(
+    'itensCount',
+  );
+  @override
+  late final GeneratedColumn<int> itensCount = GeneratedColumn<int>(
+    'itens_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    listaId,
+    titulo,
+    finalizadaEm,
+    totalCentavos,
+    itensCount,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ida_compra';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<IdaCompraData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('lista_id')) {
+      context.handle(
+        _listaIdMeta,
+        listaId.isAcceptableOrUnknown(data['lista_id']!, _listaIdMeta),
+      );
+    }
+    if (data.containsKey('titulo')) {
+      context.handle(
+        _tituloMeta,
+        titulo.isAcceptableOrUnknown(data['titulo']!, _tituloMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tituloMeta);
+    }
+    if (data.containsKey('finalizada_em')) {
+      context.handle(
+        _finalizadaEmMeta,
+        finalizadaEm.isAcceptableOrUnknown(
+          data['finalizada_em']!,
+          _finalizadaEmMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_finalizadaEmMeta);
+    }
+    if (data.containsKey('total_centavos')) {
+      context.handle(
+        _totalCentavosMeta,
+        totalCentavos.isAcceptableOrUnknown(
+          data['total_centavos']!,
+          _totalCentavosMeta,
+        ),
+      );
+    }
+    if (data.containsKey('itens_count')) {
+      context.handle(
+        _itensCountMeta,
+        itensCount.isAcceptableOrUnknown(data['itens_count']!, _itensCountMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  IdaCompraData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return IdaCompraData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      listaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}lista_id'],
+      ),
+      titulo: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}titulo'],
+      )!,
+      finalizadaEm: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}finalizada_em'],
+      )!,
+      totalCentavos: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_centavos'],
+      )!,
+      itensCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}itens_count'],
+      )!,
+    );
+  }
+
+  @override
+  $IdaCompraTable createAlias(String alias) {
+    return $IdaCompraTable(attachedDatabase, alias);
+  }
+}
+
+class IdaCompraData extends DataClass implements Insertable<IdaCompraData> {
+  final String id;
+  final String? listaId;
+  final String titulo;
+  final DateTime finalizadaEm;
+  final int totalCentavos;
+  final int itensCount;
+  const IdaCompraData({
+    required this.id,
+    this.listaId,
+    required this.titulo,
+    required this.finalizadaEm,
+    required this.totalCentavos,
+    required this.itensCount,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || listaId != null) {
+      map['lista_id'] = Variable<String>(listaId);
+    }
+    map['titulo'] = Variable<String>(titulo);
+    map['finalizada_em'] = Variable<DateTime>(finalizadaEm);
+    map['total_centavos'] = Variable<int>(totalCentavos);
+    map['itens_count'] = Variable<int>(itensCount);
+    return map;
+  }
+
+  IdaCompraCompanion toCompanion(bool nullToAbsent) {
+    return IdaCompraCompanion(
+      id: Value(id),
+      listaId: listaId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(listaId),
+      titulo: Value(titulo),
+      finalizadaEm: Value(finalizadaEm),
+      totalCentavos: Value(totalCentavos),
+      itensCount: Value(itensCount),
+    );
+  }
+
+  factory IdaCompraData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return IdaCompraData(
+      id: serializer.fromJson<String>(json['id']),
+      listaId: serializer.fromJson<String?>(json['listaId']),
+      titulo: serializer.fromJson<String>(json['titulo']),
+      finalizadaEm: serializer.fromJson<DateTime>(json['finalizadaEm']),
+      totalCentavos: serializer.fromJson<int>(json['totalCentavos']),
+      itensCount: serializer.fromJson<int>(json['itensCount']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'listaId': serializer.toJson<String?>(listaId),
+      'titulo': serializer.toJson<String>(titulo),
+      'finalizadaEm': serializer.toJson<DateTime>(finalizadaEm),
+      'totalCentavos': serializer.toJson<int>(totalCentavos),
+      'itensCount': serializer.toJson<int>(itensCount),
+    };
+  }
+
+  IdaCompraData copyWith({
+    String? id,
+    Value<String?> listaId = const Value.absent(),
+    String? titulo,
+    DateTime? finalizadaEm,
+    int? totalCentavos,
+    int? itensCount,
+  }) => IdaCompraData(
+    id: id ?? this.id,
+    listaId: listaId.present ? listaId.value : this.listaId,
+    titulo: titulo ?? this.titulo,
+    finalizadaEm: finalizadaEm ?? this.finalizadaEm,
+    totalCentavos: totalCentavos ?? this.totalCentavos,
+    itensCount: itensCount ?? this.itensCount,
+  );
+  IdaCompraData copyWithCompanion(IdaCompraCompanion data) {
+    return IdaCompraData(
+      id: data.id.present ? data.id.value : this.id,
+      listaId: data.listaId.present ? data.listaId.value : this.listaId,
+      titulo: data.titulo.present ? data.titulo.value : this.titulo,
+      finalizadaEm: data.finalizadaEm.present
+          ? data.finalizadaEm.value
+          : this.finalizadaEm,
+      totalCentavos: data.totalCentavos.present
+          ? data.totalCentavos.value
+          : this.totalCentavos,
+      itensCount: data.itensCount.present
+          ? data.itensCount.value
+          : this.itensCount,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IdaCompraData(')
+          ..write('id: $id, ')
+          ..write('listaId: $listaId, ')
+          ..write('titulo: $titulo, ')
+          ..write('finalizadaEm: $finalizadaEm, ')
+          ..write('totalCentavos: $totalCentavos, ')
+          ..write('itensCount: $itensCount')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, listaId, titulo, finalizadaEm, totalCentavos, itensCount);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is IdaCompraData &&
+          other.id == this.id &&
+          other.listaId == this.listaId &&
+          other.titulo == this.titulo &&
+          other.finalizadaEm == this.finalizadaEm &&
+          other.totalCentavos == this.totalCentavos &&
+          other.itensCount == this.itensCount);
+}
+
+class IdaCompraCompanion extends UpdateCompanion<IdaCompraData> {
+  final Value<String> id;
+  final Value<String?> listaId;
+  final Value<String> titulo;
+  final Value<DateTime> finalizadaEm;
+  final Value<int> totalCentavos;
+  final Value<int> itensCount;
+  final Value<int> rowid;
+  const IdaCompraCompanion({
+    this.id = const Value.absent(),
+    this.listaId = const Value.absent(),
+    this.titulo = const Value.absent(),
+    this.finalizadaEm = const Value.absent(),
+    this.totalCentavos = const Value.absent(),
+    this.itensCount = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  IdaCompraCompanion.insert({
+    required String id,
+    this.listaId = const Value.absent(),
+    required String titulo,
+    required DateTime finalizadaEm,
+    this.totalCentavos = const Value.absent(),
+    this.itensCount = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       titulo = Value(titulo),
+       finalizadaEm = Value(finalizadaEm);
+  static Insertable<IdaCompraData> custom({
+    Expression<String>? id,
+    Expression<String>? listaId,
+    Expression<String>? titulo,
+    Expression<DateTime>? finalizadaEm,
+    Expression<int>? totalCentavos,
+    Expression<int>? itensCount,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (listaId != null) 'lista_id': listaId,
+      if (titulo != null) 'titulo': titulo,
+      if (finalizadaEm != null) 'finalizada_em': finalizadaEm,
+      if (totalCentavos != null) 'total_centavos': totalCentavos,
+      if (itensCount != null) 'itens_count': itensCount,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  IdaCompraCompanion copyWith({
+    Value<String>? id,
+    Value<String?>? listaId,
+    Value<String>? titulo,
+    Value<DateTime>? finalizadaEm,
+    Value<int>? totalCentavos,
+    Value<int>? itensCount,
+    Value<int>? rowid,
+  }) {
+    return IdaCompraCompanion(
+      id: id ?? this.id,
+      listaId: listaId ?? this.listaId,
+      titulo: titulo ?? this.titulo,
+      finalizadaEm: finalizadaEm ?? this.finalizadaEm,
+      totalCentavos: totalCentavos ?? this.totalCentavos,
+      itensCount: itensCount ?? this.itensCount,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (listaId.present) {
+      map['lista_id'] = Variable<String>(listaId.value);
+    }
+    if (titulo.present) {
+      map['titulo'] = Variable<String>(titulo.value);
+    }
+    if (finalizadaEm.present) {
+      map['finalizada_em'] = Variable<DateTime>(finalizadaEm.value);
+    }
+    if (totalCentavos.present) {
+      map['total_centavos'] = Variable<int>(totalCentavos.value);
+    }
+    if (itensCount.present) {
+      map['itens_count'] = Variable<int>(itensCount.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('IdaCompraCompanion(')
+          ..write('id: $id, ')
+          ..write('listaId: $listaId, ')
+          ..write('titulo: $titulo, ')
+          ..write('finalizadaEm: $finalizadaEm, ')
+          ..write('totalCentavos: $totalCentavos, ')
+          ..write('itensCount: $itensCount, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ItemIdaTable extends ItemIda with TableInfo<$ItemIdaTable, ItemIdaData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ItemIdaTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _idaIdMeta = const VerificationMeta('idaId');
+  @override
+  late final GeneratedColumn<String> idaId = GeneratedColumn<String>(
+    'ida_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES ida_compra (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _nomeMeta = const VerificationMeta('nome');
+  @override
+  late final GeneratedColumn<String> nome = GeneratedColumn<String>(
+    'nome',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quantidadeMeta = const VerificationMeta(
+    'quantidade',
+  );
+  @override
+  late final GeneratedColumn<double> quantidade = GeneratedColumn<double>(
+    'quantidade',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1.0),
+  );
+  static const VerificationMeta _unidadeMeta = const VerificationMeta(
+    'unidade',
+  );
+  @override
+  late final GeneratedColumn<String> unidade = GeneratedColumn<String>(
+    'unidade',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('un'),
+  );
+  static const VerificationMeta _categoriaMeta = const VerificationMeta(
+    'categoria',
+  );
+  @override
+  late final GeneratedColumn<String> categoria = GeneratedColumn<String>(
+    'categoria',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('outros'),
+  );
+  static const VerificationMeta _precoCentavosMeta = const VerificationMeta(
+    'precoCentavos',
+  );
+  @override
+  late final GeneratedColumn<int> precoCentavos = GeneratedColumn<int>(
+    'preco_centavos',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    idaId,
+    nome,
+    quantidade,
+    unidade,
+    categoria,
+    precoCentavos,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'item_ida';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ItemIdaData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('ida_id')) {
+      context.handle(
+        _idaIdMeta,
+        idaId.isAcceptableOrUnknown(data['ida_id']!, _idaIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_idaIdMeta);
+    }
+    if (data.containsKey('nome')) {
+      context.handle(
+        _nomeMeta,
+        nome.isAcceptableOrUnknown(data['nome']!, _nomeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nomeMeta);
+    }
+    if (data.containsKey('quantidade')) {
+      context.handle(
+        _quantidadeMeta,
+        quantidade.isAcceptableOrUnknown(data['quantidade']!, _quantidadeMeta),
+      );
+    }
+    if (data.containsKey('unidade')) {
+      context.handle(
+        _unidadeMeta,
+        unidade.isAcceptableOrUnknown(data['unidade']!, _unidadeMeta),
+      );
+    }
+    if (data.containsKey('categoria')) {
+      context.handle(
+        _categoriaMeta,
+        categoria.isAcceptableOrUnknown(data['categoria']!, _categoriaMeta),
+      );
+    }
+    if (data.containsKey('preco_centavos')) {
+      context.handle(
+        _precoCentavosMeta,
+        precoCentavos.isAcceptableOrUnknown(
+          data['preco_centavos']!,
+          _precoCentavosMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ItemIdaData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ItemIdaData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      idaId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ida_id'],
+      )!,
+      nome: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}nome'],
+      )!,
+      quantidade: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}quantidade'],
+      )!,
+      unidade: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unidade'],
+      )!,
+      categoria: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}categoria'],
+      )!,
+      precoCentavos: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}preco_centavos'],
+      ),
+    );
+  }
+
+  @override
+  $ItemIdaTable createAlias(String alias) {
+    return $ItemIdaTable(attachedDatabase, alias);
+  }
+}
+
+class ItemIdaData extends DataClass implements Insertable<ItemIdaData> {
+  final String id;
+  final String idaId;
+  final String nome;
+  final double quantidade;
+  final String unidade;
+  final String categoria;
+  final int? precoCentavos;
+  const ItemIdaData({
+    required this.id,
+    required this.idaId,
+    required this.nome,
+    required this.quantidade,
+    required this.unidade,
+    required this.categoria,
+    this.precoCentavos,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['ida_id'] = Variable<String>(idaId);
+    map['nome'] = Variable<String>(nome);
+    map['quantidade'] = Variable<double>(quantidade);
+    map['unidade'] = Variable<String>(unidade);
+    map['categoria'] = Variable<String>(categoria);
+    if (!nullToAbsent || precoCentavos != null) {
+      map['preco_centavos'] = Variable<int>(precoCentavos);
+    }
+    return map;
+  }
+
+  ItemIdaCompanion toCompanion(bool nullToAbsent) {
+    return ItemIdaCompanion(
+      id: Value(id),
+      idaId: Value(idaId),
+      nome: Value(nome),
+      quantidade: Value(quantidade),
+      unidade: Value(unidade),
+      categoria: Value(categoria),
+      precoCentavos: precoCentavos == null && nullToAbsent
+          ? const Value.absent()
+          : Value(precoCentavos),
+    );
+  }
+
+  factory ItemIdaData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ItemIdaData(
+      id: serializer.fromJson<String>(json['id']),
+      idaId: serializer.fromJson<String>(json['idaId']),
+      nome: serializer.fromJson<String>(json['nome']),
+      quantidade: serializer.fromJson<double>(json['quantidade']),
+      unidade: serializer.fromJson<String>(json['unidade']),
+      categoria: serializer.fromJson<String>(json['categoria']),
+      precoCentavos: serializer.fromJson<int?>(json['precoCentavos']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'idaId': serializer.toJson<String>(idaId),
+      'nome': serializer.toJson<String>(nome),
+      'quantidade': serializer.toJson<double>(quantidade),
+      'unidade': serializer.toJson<String>(unidade),
+      'categoria': serializer.toJson<String>(categoria),
+      'precoCentavos': serializer.toJson<int?>(precoCentavos),
+    };
+  }
+
+  ItemIdaData copyWith({
+    String? id,
+    String? idaId,
+    String? nome,
+    double? quantidade,
+    String? unidade,
+    String? categoria,
+    Value<int?> precoCentavos = const Value.absent(),
+  }) => ItemIdaData(
+    id: id ?? this.id,
+    idaId: idaId ?? this.idaId,
+    nome: nome ?? this.nome,
+    quantidade: quantidade ?? this.quantidade,
+    unidade: unidade ?? this.unidade,
+    categoria: categoria ?? this.categoria,
+    precoCentavos: precoCentavos.present
+        ? precoCentavos.value
+        : this.precoCentavos,
+  );
+  ItemIdaData copyWithCompanion(ItemIdaCompanion data) {
+    return ItemIdaData(
+      id: data.id.present ? data.id.value : this.id,
+      idaId: data.idaId.present ? data.idaId.value : this.idaId,
+      nome: data.nome.present ? data.nome.value : this.nome,
+      quantidade: data.quantidade.present
+          ? data.quantidade.value
+          : this.quantidade,
+      unidade: data.unidade.present ? data.unidade.value : this.unidade,
+      categoria: data.categoria.present ? data.categoria.value : this.categoria,
+      precoCentavos: data.precoCentavos.present
+          ? data.precoCentavos.value
+          : this.precoCentavos,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemIdaData(')
+          ..write('id: $id, ')
+          ..write('idaId: $idaId, ')
+          ..write('nome: $nome, ')
+          ..write('quantidade: $quantidade, ')
+          ..write('unidade: $unidade, ')
+          ..write('categoria: $categoria, ')
+          ..write('precoCentavos: $precoCentavos')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    idaId,
+    nome,
+    quantidade,
+    unidade,
+    categoria,
+    precoCentavos,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ItemIdaData &&
+          other.id == this.id &&
+          other.idaId == this.idaId &&
+          other.nome == this.nome &&
+          other.quantidade == this.quantidade &&
+          other.unidade == this.unidade &&
+          other.categoria == this.categoria &&
+          other.precoCentavos == this.precoCentavos);
+}
+
+class ItemIdaCompanion extends UpdateCompanion<ItemIdaData> {
+  final Value<String> id;
+  final Value<String> idaId;
+  final Value<String> nome;
+  final Value<double> quantidade;
+  final Value<String> unidade;
+  final Value<String> categoria;
+  final Value<int?> precoCentavos;
+  final Value<int> rowid;
+  const ItemIdaCompanion({
+    this.id = const Value.absent(),
+    this.idaId = const Value.absent(),
+    this.nome = const Value.absent(),
+    this.quantidade = const Value.absent(),
+    this.unidade = const Value.absent(),
+    this.categoria = const Value.absent(),
+    this.precoCentavos = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ItemIdaCompanion.insert({
+    required String id,
+    required String idaId,
+    required String nome,
+    this.quantidade = const Value.absent(),
+    this.unidade = const Value.absent(),
+    this.categoria = const Value.absent(),
+    this.precoCentavos = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       idaId = Value(idaId),
+       nome = Value(nome);
+  static Insertable<ItemIdaData> custom({
+    Expression<String>? id,
+    Expression<String>? idaId,
+    Expression<String>? nome,
+    Expression<double>? quantidade,
+    Expression<String>? unidade,
+    Expression<String>? categoria,
+    Expression<int>? precoCentavos,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (idaId != null) 'ida_id': idaId,
+      if (nome != null) 'nome': nome,
+      if (quantidade != null) 'quantidade': quantidade,
+      if (unidade != null) 'unidade': unidade,
+      if (categoria != null) 'categoria': categoria,
+      if (precoCentavos != null) 'preco_centavos': precoCentavos,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ItemIdaCompanion copyWith({
+    Value<String>? id,
+    Value<String>? idaId,
+    Value<String>? nome,
+    Value<double>? quantidade,
+    Value<String>? unidade,
+    Value<String>? categoria,
+    Value<int?>? precoCentavos,
+    Value<int>? rowid,
+  }) {
+    return ItemIdaCompanion(
+      id: id ?? this.id,
+      idaId: idaId ?? this.idaId,
+      nome: nome ?? this.nome,
+      quantidade: quantidade ?? this.quantidade,
+      unidade: unidade ?? this.unidade,
+      categoria: categoria ?? this.categoria,
+      precoCentavos: precoCentavos ?? this.precoCentavos,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (idaId.present) {
+      map['ida_id'] = Variable<String>(idaId.value);
+    }
+    if (nome.present) {
+      map['nome'] = Variable<String>(nome.value);
+    }
+    if (quantidade.present) {
+      map['quantidade'] = Variable<double>(quantidade.value);
+    }
+    if (unidade.present) {
+      map['unidade'] = Variable<String>(unidade.value);
+    }
+    if (categoria.present) {
+      map['categoria'] = Variable<String>(categoria.value);
+    }
+    if (precoCentavos.present) {
+      map['preco_centavos'] = Variable<int>(precoCentavos.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemIdaCompanion(')
+          ..write('id: $id, ')
+          ..write('idaId: $idaId, ')
+          ..write('nome: $nome, ')
+          ..write('quantidade: $quantidade, ')
+          ..write('unidade: $unidade, ')
+          ..write('categoria: $categoria, ')
+          ..write('precoCentavos: $precoCentavos, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1593,6 +2476,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ItemLocalTable itemLocal = $ItemLocalTable(this);
   late final $HistoricoPrecoLocalTable historicoPrecoLocal =
       $HistoricoPrecoLocalTable(this);
+  late final $IdaCompraTable idaCompra = $IdaCompraTable(this);
+  late final $ItemIdaTable itemIda = $ItemIdaTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1601,6 +2486,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     listaLocal,
     itemLocal,
     historicoPrecoLocal,
+    idaCompra,
+    itemIda,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -1610,6 +2497,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('item_local', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'ida_compra',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('item_ida', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -2637,6 +3531,687 @@ typedef $$HistoricoPrecoLocalTableProcessedTableManager =
       HistoricoPrecoLocalData,
       PrefetchHooks Function()
     >;
+typedef $$IdaCompraTableCreateCompanionBuilder =
+    IdaCompraCompanion Function({
+      required String id,
+      Value<String?> listaId,
+      required String titulo,
+      required DateTime finalizadaEm,
+      Value<int> totalCentavos,
+      Value<int> itensCount,
+      Value<int> rowid,
+    });
+typedef $$IdaCompraTableUpdateCompanionBuilder =
+    IdaCompraCompanion Function({
+      Value<String> id,
+      Value<String?> listaId,
+      Value<String> titulo,
+      Value<DateTime> finalizadaEm,
+      Value<int> totalCentavos,
+      Value<int> itensCount,
+      Value<int> rowid,
+    });
+
+final class $$IdaCompraTableReferences
+    extends BaseReferences<_$AppDatabase, $IdaCompraTable, IdaCompraData> {
+  $$IdaCompraTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$ItemIdaTable, List<ItemIdaData>>
+  _itemIdaRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.itemIda,
+    aliasName: 'ida_compra__id__item_ida__ida_id',
+  );
+
+  $$ItemIdaTableProcessedTableManager get itemIdaRefs {
+    final manager = $$ItemIdaTableTableManager(
+      $_db,
+      $_db.itemIda,
+    ).filter((f) => f.idaId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_itemIdaRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$IdaCompraTableFilterComposer
+    extends Composer<_$AppDatabase, $IdaCompraTable> {
+  $$IdaCompraTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get listaId => $composableBuilder(
+    column: $table.listaId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get titulo => $composableBuilder(
+    column: $table.titulo,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get finalizadaEm => $composableBuilder(
+    column: $table.finalizadaEm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalCentavos => $composableBuilder(
+    column: $table.totalCentavos,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get itensCount => $composableBuilder(
+    column: $table.itensCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> itemIdaRefs(
+    Expression<bool> Function($$ItemIdaTableFilterComposer f) f,
+  ) {
+    final $$ItemIdaTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.itemIda,
+      getReferencedColumn: (t) => t.idaId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ItemIdaTableFilterComposer(
+            $db: $db,
+            $table: $db.itemIda,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$IdaCompraTableOrderingComposer
+    extends Composer<_$AppDatabase, $IdaCompraTable> {
+  $$IdaCompraTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get listaId => $composableBuilder(
+    column: $table.listaId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get titulo => $composableBuilder(
+    column: $table.titulo,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get finalizadaEm => $composableBuilder(
+    column: $table.finalizadaEm,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get totalCentavos => $composableBuilder(
+    column: $table.totalCentavos,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get itensCount => $composableBuilder(
+    column: $table.itensCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$IdaCompraTableAnnotationComposer
+    extends Composer<_$AppDatabase, $IdaCompraTable> {
+  $$IdaCompraTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get listaId =>
+      $composableBuilder(column: $table.listaId, builder: (column) => column);
+
+  GeneratedColumn<String> get titulo =>
+      $composableBuilder(column: $table.titulo, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get finalizadaEm => $composableBuilder(
+    column: $table.finalizadaEm,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get totalCentavos => $composableBuilder(
+    column: $table.totalCentavos,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get itensCount => $composableBuilder(
+    column: $table.itensCount,
+    builder: (column) => column,
+  );
+
+  Expression<T> itemIdaRefs<T extends Object>(
+    Expression<T> Function($$ItemIdaTableAnnotationComposer a) f,
+  ) {
+    final $$ItemIdaTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.itemIda,
+      getReferencedColumn: (t) => t.idaId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ItemIdaTableAnnotationComposer(
+            $db: $db,
+            $table: $db.itemIda,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$IdaCompraTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $IdaCompraTable,
+          IdaCompraData,
+          $$IdaCompraTableFilterComposer,
+          $$IdaCompraTableOrderingComposer,
+          $$IdaCompraTableAnnotationComposer,
+          $$IdaCompraTableCreateCompanionBuilder,
+          $$IdaCompraTableUpdateCompanionBuilder,
+          (IdaCompraData, $$IdaCompraTableReferences),
+          IdaCompraData,
+          PrefetchHooks Function({bool itemIdaRefs})
+        > {
+  $$IdaCompraTableTableManager(_$AppDatabase db, $IdaCompraTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$IdaCompraTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$IdaCompraTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$IdaCompraTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String?> listaId = const Value.absent(),
+                Value<String> titulo = const Value.absent(),
+                Value<DateTime> finalizadaEm = const Value.absent(),
+                Value<int> totalCentavos = const Value.absent(),
+                Value<int> itensCount = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => IdaCompraCompanion(
+                id: id,
+                listaId: listaId,
+                titulo: titulo,
+                finalizadaEm: finalizadaEm,
+                totalCentavos: totalCentavos,
+                itensCount: itensCount,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String?> listaId = const Value.absent(),
+                required String titulo,
+                required DateTime finalizadaEm,
+                Value<int> totalCentavos = const Value.absent(),
+                Value<int> itensCount = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => IdaCompraCompanion.insert(
+                id: id,
+                listaId: listaId,
+                titulo: titulo,
+                finalizadaEm: finalizadaEm,
+                totalCentavos: totalCentavos,
+                itensCount: itensCount,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$IdaCompraTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({itemIdaRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (itemIdaRefs) db.itemIda],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (itemIdaRefs)
+                    await $_getPrefetchedData<
+                      IdaCompraData,
+                      $IdaCompraTable,
+                      ItemIdaData
+                    >(
+                      currentTable: table,
+                      referencedTable: $$IdaCompraTableReferences
+                          ._itemIdaRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$IdaCompraTableReferences(db, table, p0).itemIdaRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.idaId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$IdaCompraTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $IdaCompraTable,
+      IdaCompraData,
+      $$IdaCompraTableFilterComposer,
+      $$IdaCompraTableOrderingComposer,
+      $$IdaCompraTableAnnotationComposer,
+      $$IdaCompraTableCreateCompanionBuilder,
+      $$IdaCompraTableUpdateCompanionBuilder,
+      (IdaCompraData, $$IdaCompraTableReferences),
+      IdaCompraData,
+      PrefetchHooks Function({bool itemIdaRefs})
+    >;
+typedef $$ItemIdaTableCreateCompanionBuilder =
+    ItemIdaCompanion Function({
+      required String id,
+      required String idaId,
+      required String nome,
+      Value<double> quantidade,
+      Value<String> unidade,
+      Value<String> categoria,
+      Value<int?> precoCentavos,
+      Value<int> rowid,
+    });
+typedef $$ItemIdaTableUpdateCompanionBuilder =
+    ItemIdaCompanion Function({
+      Value<String> id,
+      Value<String> idaId,
+      Value<String> nome,
+      Value<double> quantidade,
+      Value<String> unidade,
+      Value<String> categoria,
+      Value<int?> precoCentavos,
+      Value<int> rowid,
+    });
+
+final class $$ItemIdaTableReferences
+    extends BaseReferences<_$AppDatabase, $ItemIdaTable, ItemIdaData> {
+  $$ItemIdaTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $IdaCompraTable _idaIdTable(_$AppDatabase db) =>
+      db.idaCompra.createAlias('item_ida__ida_id__ida_compra__id');
+
+  $$IdaCompraTableProcessedTableManager get idaId {
+    final $_column = $_itemColumn<String>('ida_id')!;
+
+    final manager = $$IdaCompraTableTableManager(
+      $_db,
+      $_db.idaCompra,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_idaIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ItemIdaTableFilterComposer
+    extends Composer<_$AppDatabase, $ItemIdaTable> {
+  $$ItemIdaTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get nome => $composableBuilder(
+    column: $table.nome,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get quantidade => $composableBuilder(
+    column: $table.quantidade,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unidade => $composableBuilder(
+    column: $table.unidade,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoria => $composableBuilder(
+    column: $table.categoria,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get precoCentavos => $composableBuilder(
+    column: $table.precoCentavos,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$IdaCompraTableFilterComposer get idaId {
+    final $$IdaCompraTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.idaId,
+      referencedTable: $db.idaCompra,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$IdaCompraTableFilterComposer(
+            $db: $db,
+            $table: $db.idaCompra,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ItemIdaTableOrderingComposer
+    extends Composer<_$AppDatabase, $ItemIdaTable> {
+  $$ItemIdaTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get nome => $composableBuilder(
+    column: $table.nome,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get quantidade => $composableBuilder(
+    column: $table.quantidade,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unidade => $composableBuilder(
+    column: $table.unidade,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get categoria => $composableBuilder(
+    column: $table.categoria,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get precoCentavos => $composableBuilder(
+    column: $table.precoCentavos,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$IdaCompraTableOrderingComposer get idaId {
+    final $$IdaCompraTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.idaId,
+      referencedTable: $db.idaCompra,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$IdaCompraTableOrderingComposer(
+            $db: $db,
+            $table: $db.idaCompra,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ItemIdaTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ItemIdaTable> {
+  $$ItemIdaTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get nome =>
+      $composableBuilder(column: $table.nome, builder: (column) => column);
+
+  GeneratedColumn<double> get quantidade => $composableBuilder(
+    column: $table.quantidade,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get unidade =>
+      $composableBuilder(column: $table.unidade, builder: (column) => column);
+
+  GeneratedColumn<String> get categoria =>
+      $composableBuilder(column: $table.categoria, builder: (column) => column);
+
+  GeneratedColumn<int> get precoCentavos => $composableBuilder(
+    column: $table.precoCentavos,
+    builder: (column) => column,
+  );
+
+  $$IdaCompraTableAnnotationComposer get idaId {
+    final $$IdaCompraTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.idaId,
+      referencedTable: $db.idaCompra,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$IdaCompraTableAnnotationComposer(
+            $db: $db,
+            $table: $db.idaCompra,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ItemIdaTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ItemIdaTable,
+          ItemIdaData,
+          $$ItemIdaTableFilterComposer,
+          $$ItemIdaTableOrderingComposer,
+          $$ItemIdaTableAnnotationComposer,
+          $$ItemIdaTableCreateCompanionBuilder,
+          $$ItemIdaTableUpdateCompanionBuilder,
+          (ItemIdaData, $$ItemIdaTableReferences),
+          ItemIdaData,
+          PrefetchHooks Function({bool idaId})
+        > {
+  $$ItemIdaTableTableManager(_$AppDatabase db, $ItemIdaTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ItemIdaTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ItemIdaTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ItemIdaTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> idaId = const Value.absent(),
+                Value<String> nome = const Value.absent(),
+                Value<double> quantidade = const Value.absent(),
+                Value<String> unidade = const Value.absent(),
+                Value<String> categoria = const Value.absent(),
+                Value<int?> precoCentavos = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ItemIdaCompanion(
+                id: id,
+                idaId: idaId,
+                nome: nome,
+                quantidade: quantidade,
+                unidade: unidade,
+                categoria: categoria,
+                precoCentavos: precoCentavos,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String idaId,
+                required String nome,
+                Value<double> quantidade = const Value.absent(),
+                Value<String> unidade = const Value.absent(),
+                Value<String> categoria = const Value.absent(),
+                Value<int?> precoCentavos = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ItemIdaCompanion.insert(
+                id: id,
+                idaId: idaId,
+                nome: nome,
+                quantidade: quantidade,
+                unidade: unidade,
+                categoria: categoria,
+                precoCentavos: precoCentavos,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ItemIdaTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({idaId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (idaId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.idaId,
+                                referencedTable: $$ItemIdaTableReferences
+                                    ._idaIdTable(db),
+                                referencedColumn: $$ItemIdaTableReferences
+                                    ._idaIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ItemIdaTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ItemIdaTable,
+      ItemIdaData,
+      $$ItemIdaTableFilterComposer,
+      $$ItemIdaTableOrderingComposer,
+      $$ItemIdaTableAnnotationComposer,
+      $$ItemIdaTableCreateCompanionBuilder,
+      $$ItemIdaTableUpdateCompanionBuilder,
+      (ItemIdaData, $$ItemIdaTableReferences),
+      ItemIdaData,
+      PrefetchHooks Function({bool idaId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2647,4 +4222,8 @@ class $AppDatabaseManager {
       $$ItemLocalTableTableManager(_db, _db.itemLocal);
   $$HistoricoPrecoLocalTableTableManager get historicoPrecoLocal =>
       $$HistoricoPrecoLocalTableTableManager(_db, _db.historicoPrecoLocal);
+  $$IdaCompraTableTableManager get idaCompra =>
+      $$IdaCompraTableTableManager(_db, _db.idaCompra);
+  $$ItemIdaTableTableManager get itemIda =>
+      $$ItemIdaTableTableManager(_db, _db.itemIda);
 }

@@ -2,6 +2,8 @@ import 'package:drift/drift.dart';
 
 import 'conexao/conexao.dart';
 import 'tables/historico_preco_local.dart';
+import 'tables/ida_compra.dart';
+import 'tables/item_ida.dart';
 import 'tables/item_local.dart';
 import 'tables/lista_local.dart';
 
@@ -9,12 +11,14 @@ part 'database.g.dart';
 
 /// Fonte de verdade local (doc 03 §1). Espelha o schema Postgres (doc 01).
 /// Testes injetam um executor (ex.: NativeDatabase.memory()).
-@DriftDatabase(tables: [ListaLocal, ItemLocal, HistoricoPrecoLocal])
+@DriftDatabase(
+  tables: [ListaLocal, ItemLocal, HistoricoPrecoLocal, IdaCompra, ItemIda],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   /// Paridade com o índice único parcial `uq_item_ativo` do Postgres
   /// (`0001_init.sql:57-59`): parcial não é expressável no `@TableIndex`.
@@ -140,6 +144,11 @@ class AppDatabase extends _$AppDatabase {
       if (de < 11) {
         // v10 → v11: sem sync não há fila de mutações (F48/RF-31).
         await m.deleteTable('mutacao_pendente');
+      }
+      if (de < 12) {
+        // v11 → v12: idas de compra (RF-34, F50). Local-only; sem sync.
+        await m.createTable(idaCompra);
+        await m.createTable(itemIda);
       }
     },
     beforeOpen: (details) async {
