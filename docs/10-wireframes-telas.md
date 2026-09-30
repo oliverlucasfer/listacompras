@@ -2,7 +2,7 @@
 
 > Navegação: [← 09 Runbook](09-runbook-operacoes.md) · [11 Usabilidade →](11-usabilidade-fase5.md)
 
-**Este documento é o dono do LAYOUT (visual/posição).** O comportamento de cada tela vive em [05 §6](05-app-flutter.md); os estados de sync em [03 §6](03-sincronizacao-offline.md). Wireframes em ASCII — referência para implementação e para os testes de usabilidade de [11](11-usabilidade-fase5.md).
+**Este documento é o dono do LAYOUT (visual/posição).** O comportamento de cada tela vive em [05 §6](05-app-flutter.md). Wireframes em ASCII — referência para implementação e para os testes de usabilidade de [11](11-usabilidade-fase5.md). O app é **único e local** ("Minhas Listas"): sem telas de conta, convites, membros, compartilhamento ou indicador de sync.
 
 Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` ícone · `▼/▸` seção aberta/fechada · `(...)` anotação de comportamento.
 
@@ -10,86 +10,27 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 
 ---
 
-## 1. Autenticação
-
-### 1.1. Login
-```
-┌─────────────────────────────────┐
-│                                 │
-│           🛒 Logo               │
-│     Lista de Compras            │
-│                                 │
-│  E-mail                         │
-│  [________________________ ]    │
-│                                 │
-│  Senha                          │
-│  [____________________ (👁) ]   │
-│                                 │
-│  (        Entrar          )     │ ← spinner no botão ao carregar
-│                                 │
-│  (     Criar minha conta   )    │
-│  Esqueci minha senha (link)     │
-│                                 │
-└─────────────────────────────────┘
-   (erro: mensagem inline em vermelho sob o campo correspondente)
-```
-
-### 1.2. Registro / Recuperar senha
-```
-┌─────────────────────────────────┐   ┌─────────────────────────────────┐
-│  ← Criar conta                  │   │  ← Recuperar senha              │
-│                                 │   │                                 │
-│  E-mail                         │   │  Informe seu e-mail:            │
-│  [________________________ ]    │   │  [________________________ ]    │
-│  Senha                          │   │                                 │
-│  [________________________ ]    │   │  (  Enviar link por e-mail  )   │
-│  Confirmar senha                │   │                                 │
-│  [________________________ ]    │   │  (link único, expira — Supabase)│
-│                                 │   └─────────────────────────────────┘
-│  ☐ Li a Política de Privacidade │
-│  (ver política)                 │
-│  (     Criar conta        )     │   Após registro: tela "Verifique
-│                                 │   seu e-mail" (reenviar link).
-└─────────────────────────────────┘
-```
-
-### 1.3. Definir nova senha (link de recuperação — F14-T03)
-```
-┌─────────────────────────────────┐
-│  ← Definir nova senha           │
-│                                 │
-│  Nova senha                     │
-│  [____________________ (👁) ]   │
-│                                 │
-│  Confirmar nova senha           │
-│  [____________________ (👁) ]   │
-│                                 │
-│  (     Salvar nova senha    )   │
-└─────────────────────────────────┘
-   (sucesso → SnackBar "Senha alterada" e volta às listas;
-    link expirado → erro amigável + "Pedir novo link")
-```
+## 1. Boas-vindas
 
 ### 1.4. Boas-vindas (primeiro acesso — F31/RF-27)
 ```
 ┌─────────────────────────────────┐
-│             🛒 Logo             │
-│   Bem-vindo ao Lista de Compras │
-│   Organize suas compras e       │
-│   compartilhe com quem quiser.  │
+│             🧺 Logo             │ ← identidade "Minhas Listas" (índigo)
+│   Bem-vindo ao Minhas Listas    │
+│   Organize suas compras, tudo   │
+│   no seu aparelho.              │
 │                                 │
 │   ☁ Funciona offline            │ ← destaques (ícone + texto);
-│     Suas listas ficam no        │   3 itens fixos (offline,
-│     aparelho e sincronizam...   │   compartilhar, importar) + 🎤
-│   👥 Compartilhe a lista         │   "Dite um item" só em Android/iOS
+│     Suas listas ficam no        │   "Importe por texto" e
+│     aparelho, sem conta.        │   "Dite um item" (só Android/iOS)
 │   ➕ Importe por texto           │
 │   🎤 Dite um item                │
 │                                 │
 │   (        Começar        )     │ ← grava a flag e vai p/ /listas
 └─────────────────────────────────┘
 ```
-   (página única, rolável; aparece **uma vez** no primeiro acesso
-    autenticado, via flag local `onboarding_visto` — RF-27; sem "Pular";
+   (página única, rolável; aparece **uma vez** no primeiro acesso,
+    via flag local `onboarding_visto` — RF-27; sem "Pular";
     a saída é só pelo "Começar" — o voltar do sistema não marca visto,
     então a tela reabre no próximo cold start)
 
@@ -97,20 +38,19 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 
 ## 2. Minhas Listas
 
-**Navegação (F10):** barra inferior (NavigationBar) com **Minhas**, **Compartilhadas** e **Configurações**; em telas largas vira NavigationRail. O painel abaixo é **Minhas Listas** (listas em que você é dono). A aba **Compartilhadas** usa o mesmo layout, **sem FAB** e com a ação "Entrar com código" no AppBar (o menu `⋮` do card abre Membros e Sair da lista; o long-press abre o mesmo menu). Abrir uma lista/membros é `push` sobre o shell: a tela é cheia (barra some) e o voltar retorna à aba de origem (doc [05 §4](05-app-flutter.md)).
+**Navegação (F10):** barra inferior (NavigationBar) com **2 destinos** — **Minhas** e **Configurações**; em telas largas vira NavigationRail. O painel abaixo é **Minhas Listas**. Abrir uma lista é `push` sobre o shell: a tela é cheia (barra some) e o voltar retorna à aba de origem (doc [05 §4](05-app-flutter.md)).
 
-**Busca (F16):** lupa na AppBar revela um campo no topo do corpo (rótulo "Buscar lista", hint de exemplo "Nome da lista"); campo com rótulo acessível (label) e hint de exemplo; a lista filtrada esconde os cards que não casam; sem resultado → vazio "Nenhuma lista encontrada".
+**Busca (F16):** lupa na AppBar revela um campo no topo do corpo (rótulo "Buscar lista", hint de exemplo "Nome da lista"); a lista filtrada esconde os cards que não casam; sem resultado → vazio "Nenhuma lista encontrada".
 
 ### 2.1. Estado preenchido
 ```
 ┌─────────────────────────────────┐
 │  [▣] Minhas Listas   [▤] [≡]    │ ← [▣] marca do app (F13-T02)
-│  ● Sincronizado            (1)  │ ← [03 §6] sync/pendente/offline;
 │                                 │   [▤] "Mostrar arquivadas" (RF-22)
 ├─────────────────────────────────┤
 │  ┌───────────────────────────┐  │
-│  │ Compras da Semana      [⋮] │  │ ← [⋮] (F14-T06): renomear/excluir
-│  │ 3/10 itens concluídos     │  │   (Compartilhadas: membros/sair);
+│  │ Compras da Semana      [⋮] │  │ ← [⋮] (F14-T06): renomear/excluir/
+│  │ 3/10 itens concluídos     │  │   comprar de novo/arquivar;
 │  │ atualizada há 5 min       │  │   long-press abre o mesmo menu
 │  └───────────────────────────┘  │
 │  ┌───────────────────────────┐  │
@@ -124,11 +64,11 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 ```
 Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardTheme` zera a margem do `Card`, então o espaçamento entre cards empilhados é responsabilidade do layout da lista (`ListView.separated`, F12-T05).
 
-**Tour — etapa 1 (RF-27/F46):** nesta tela (home de listas) ficam os spots `TourKeys` da etapa 1 — Fab "Nova lista" (`TourKeys.novaLista`), lupa (`TourKeys.lupa`, só no filtro Minhas) e a aba Configurações (`TourKeys.abaConfiguracoes`, na barra inferior/rail). Os recursos da tela da lista (nome, adicionar, unidade, importar) são da **etapa 2** (§3; [05 §6.11](05-app-flutter.md)).
+**Tour — etapa 1 (RF-27/F46):** nesta tela (home de listas) ficam os spots `TourKeys` da etapa 1 — Fab "Nova lista" (`TourKeys.novaLista`), lupa (`TourKeys.lupa`) e a aba Configurações (`TourKeys.abaConfiguracoes`, na barra inferior/rail). Os recursos da tela da lista são da **etapa 2** (§3; [05 §6.11](05-app-flutter.md)).
 
-**Marca no cabeçalho (F13-T02):** as telas de **topo** (Minhas Listas / Compartilhadas, sem botão voltar) mostram a marca do app (`AppLogo`, 28dp) à esquerda do título; telas internas (`push`: lista, membros, configurações, auth) mantêm apenas o texto. Título de tela em **24sp bold** (F13-T03, doc [15 §1](15-design-system.md)).
+**Marca no cabeçalho (F13-T02):** as telas de **topo** (Minhas Listas, sem botão voltar) mostram a marca do app (`AppLogo`, 28dp) à esquerda do título; telas internas (`push`: lista, configurações) mantêm apenas o texto. Título de tela em **24sp bold** (F13-T03, doc [15 §1](15-design-system.md)).
 
-**Arquivar listas (RF-22, F26):** o card de uma lista arquivada exibe o chip **"Arquivada"** no card (no subtítulo, junto da contagem e da atualização; só aparece com o toggle ligado, pois arquivadas ficam ocultas por padrão). O toggle `[▤]` "Mostrar arquivadas" fica na AppBar e vale para **Minhas** e **Compartilhadas**; o menu `⋮` do **dono** mostra "Arquivar" (ativa) ou "Desarquivar" (arquivada visível) — comportamento em [05 §6.2](05-app-flutter.md).
+**Arquivar listas (RF-22, F26):** o card de uma lista arquivada exibe o chip **"Arquivada"** no subtítulo (só aparece com o toggle ligado, pois arquivadas ficam ocultas por padrão). O toggle `[▤]` "Mostrar arquivadas" fica na AppBar; o menu `⋮` mostra "Arquivar" (ativa) ou "Desarquivar" (arquivada visível) — comportamento em [05 §6.2](05-app-flutter.md).
 
 ### 2.2. Estado vazio
 ```
@@ -155,33 +95,14 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 │  Nome da lista                  │
 │  [________________________ ]    │
 │                                 │
-│  (       Criar lista      )     │ ← salva local + fila [03 §4]
+│  (       Criar lista      )     │ ← salva local no Drift
 └─────────────────────────────────┘
 ```
 Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da etapa 2; como o sheet precisa estar aberto, o passo é pulado se o alvo não estiver montado ([05 §6.11](05-app-flutter.md)).
 
-### 2.4. Convites pendentes (RF-13, Fase 32 — [08 §4](08-compartilhamento-colaborativo.md))
-```
-┌─────────────────────────────────┐
-│  Minhas Listas                  │
-├─────────────────────────────────┤
-│  ── Convites pendentes ──       │
-│  ┌───────────────────────────┐  │
-│  │ Convite para              │  │
-│  │ "Compras da Semana"       │  │
-│  │ [editor]                  │  │ ← chip do papel ofertado
-│  │ expira em 7 dias          │  │ ← prazo restante
-│  │ (Aceitar)   (Recusar)     │  │
-│  └───────────────────────────┘  │
-│  ── Minhas listas ──            │
-│  ...                            │
-└─────────────────────────────────┘
-```
-A seção aparece no topo do filtro **Minhas** só quando há convites por e-mail pendentes dirigidos ao seu e-mail (RPC `meus_convites_pendentes()`, sem Drift); **Aceitar** reusa `aceitar_convite` e abre a lista, **Recusar** chama `recusar_convite`. A copy é neutra — **sem nome do convidante** (o RLS não expõe perfis). Comportamento em [05 §6.2](05-app-flutter.md).
-
 ### 2.5. Sheet "Comprar de novo" (F23/RF-20)
 
-**Entrada:** item "Comprar de novo" no menu `⋮` do card (dono e membro), **só quando há pendentes** (doc 10 §2.1).
+**Entrada:** item "Comprar de novo" no menu `⋮` do card, **só quando há pendentes** (doc 10 §2.1).
 
 ```
 ┌─────────────────────────────────┐
@@ -201,23 +122,23 @@ A seção aparece no topo do filtro **Minhas** só quando há convites por e-mai
 
 ## 3. Tela da Lista de Compras
 
-**Navegação (F10):** abre em tela cheia por cima da barra de abas, com seta de voltar (retorna à aba de origem); o AppBar mostra o título da lista (fallback "Lista" em carregando/erro/não encontrada). A tela de **Membros** usa `Membros · {título}` no AppBar.
+**Navegação (F10):** abre em tela cheia por cima da barra de abas, com seta de voltar (retorna à aba de origem); o AppBar mostra o título da lista (fallback "Lista" em carregando/erro/não encontrada).
 
-### 3.1. Uso normal (Fase 6: agrupamento por categoria, RF-15)
+### 3.1. Uso normal (agrupamento por categoria, RF-15)
 ```
 ┌─────────────────────────────────┐
 │  ← Compras da Semana      [⋮]   │ ← [⋮]: desmarcar todos, limpar
-│  ● Sincronizado                 │    concluídos, renomear, excluir lista
-├─────────────────────────────────┤
-│  [Café] [Pão] [Leite] ...       │ ← chips de itens frequentes (RF-19),
-│                                 │    só com o campo vazio; toque adiciona
-│  Adicionar item                 │
-│  [____________ un▾   (＋) ]     │ ← Enter salva já categorizado (§3 05);
+│                                 │    concluídos, renomear, adicionar
+├─────────────────────────────────┤    de outra lista, orçamento,
+│  [Café] [Pão] [Leite] ...       │    arquivar, excluir lista
+│                                 │
+│  Adicionar item                 │ ← chips de itens frequentes (RF-19),
+│  [____________ un▾   (＋) ]     │    só com o campo vazio; toque adiciona
 │                                 │    reconhece "1kg de banana" e a
 │                                 │    unidade vem do seletor (F12-T06)
 │                                 │
 │  HORTIFRÚTI (1)                 │ ← ordem dos grupos = ordem do enum
-│  ☐ Banana           1 dz    ≡   │    [01 §3.2]; contagem de pendentes
+│  ☐ Banana           1 dz    ≡   │    contagem de pendentes
 │  MERCEARIA (2)                  │
 │  ☐ Arroz            1 kg    ≡   │ ← tocar: editar; swipe ←/→:
 │  ☐ Café             1 pacote ≡  │    editar/remover (undo);
@@ -238,21 +159,21 @@ A seção aparece no topo do filtro **Minhas** só quando há convites por e-mai
 └─────────────────────────────────┘
 ```
 
-**Busca (F16):** lupa na AppBar revela um campo (rótulo "Buscar item", hint de exemplo "Nome do item"); campo com rótulo acessível (label) e hint de exemplo; os grupos de categoria permanecem (vazios somem) e o drag fica desabilitado; sem resultado → vazio "Nenhum item encontrado" + "Limpar busca".
+**Busca (F16):** lupa na AppBar revela um campo (rótulo "Buscar item", hint de exemplo "Nome do item"); os grupos de categoria permanecem (vazios somem) e o drag fica desabilitado; sem resultado → vazio "Nenhum item encontrado" + "Limpar busca".
 
-**Chips de itens frequentes (F22/RF-19):** faixa horizontal acima do campo "Adicionar item", exibida só quando o campo está vazio e há sugestões; toque adiciona o item (1 `un`, categoria pela cadeia local); o botão do modo mercado (`shopping_cart_checkout`) fica na AppBar, visível a dono/editor.
+**Chips de itens frequentes (F22/RF-19):** faixa horizontal acima do campo "Adicionar item", exibida só quando o campo está vazio e há sugestões; toque adiciona o item (1 `un`, categoria pela cadeia local); o botão do modo mercado (`shopping_cart_checkout`) fica na AppBar.
 
-**Estado vazio da lista (RF-27/F31):** sem itens, o dono/editor vê o `AppEstadoVazio` "Nenhum item ainda" com a dica **"Adicione no campo acima ou importe uma lista."** (aponta os caminhos existentes; não cita voz, pois o microfone só existe em Android/iOS); o leitor mantém o vazio instrucional que não aponta para um campo que ele não tem (F14-T04).
+**Estado vazio da lista (RF-27/F31):** sem itens, o `AppEstadoVazio` mostra "Nenhum item ainda" com a dica **"Adicione no campo acima ou importe uma lista."** (não cita voz, pois o microfone só existe em Android/iOS).
 
 **Quantidades em fração (RF-25/F29):** a linha do item e o editor exibem a quantidade com glifos comuns (`½ kg`, `1½ un`, `1¼`); decimais longos são cortados para ≤ 3 casas. A entrada aceita `1/2`, `½`, `1½` e decimais no editor; a mista espaçada (`1 1/2`) é aceita na entrada rápida e na importação (parser).
 
-**Adicionar por voz (RF-26/F30):** em Android/iOS, o campo "Adicionar item" (dono/editor) ganha um ícone de **microfone** à direita que **preenche o campo** com o texto reconhecido on-device (pt-BR); o usuário confirma (Enter). Ouvindo, o ícone muda (`mic`/`mic_none`); indisponível/permissão negada → SnackBar; ao sair da tela o ditado é cancelado. Web/Desktop não mostram o microfone.
+**Adicionar por voz (RF-26/F30):** em Android/iOS, o campo "Adicionar item" ganha um ícone de **microfone** à direita que **preenche o campo** com o texto reconhecido on-device (pt-BR); o usuário confirma (Enter). Ouvindo, o ícone muda (`mic`/`mic_none`); indisponível/permissão negada → SnackBar; ao sair da tela o ditado é cancelado. Web/Desktop não mostram o microfone.
 
 **Sufixo do campo de adicionar (G-39):** a área à direita (seletor de unidade + microfone + adicionar) é flexível — o rótulo da unidade cede largura (`Flexible`/elipse) antes de estourar quando a fonte é ampliada (2x) em telas estreitas.
 
 **Carregando da lista (G-07):** enquanto `listaPorIdProvider` carrega, o corpo inteiro vira `AppEsqueleto` (doc [15 §3](15-design-system.md)) — sem spinner cru.
 
-**Tour — etapa 2 (RF-27/F46):** dispara ao abrir a primeira lista com itens **pendentes**. Spots `TourKeys` na tela: campo do sheet de nome (`nomeLista`, 1º passo — pulado se o sheet não estiver aberto), campo "Adicionar item" (`campoAdicionar`), seletor de unidade (`seletorUnidade`), botão "Importar lista" (`botaoImportar`), checkbox/linha do item (`itemLista`), botão do modo mercado (`botaoMercado`), menu `⋮` (`menuMais`) e ação convidar (`acaoConvite`, só no colaborativo). Passos sem alvo montado são pulados ([05 §6.11](05-app-flutter.md)).
+**Tour — etapa 2 (RF-27/F46):** dispara ao abrir a primeira lista com itens **pendentes**. Spots `TourKeys` na tela: campo do sheet de nome (`nomeLista`, 1º passo — pulado se o sheet não estiver aberto), campo "Adicionar item" (`campoAdicionar`), seletor de unidade (`seletorUnidade`), botão "Importar lista" (`botaoImportar`), checkbox/linha do item (`itemLista`), botão do modo mercado (`botaoMercado`) e menu `⋮` (`menuMais`). Passos sem alvo montado são pulados ([05 §6.11](05-app-flutter.md)).
 
 **Sheet do item (F12-T06 + preço RF-21/F25 + última compra RF-29/F37):** aberto por `AppSheet.mostrar` (bottom sheet, [15 §3](15-design-system.md)), com os campos em blocos e rolagem própria; o teclado sobe o rodapé (`viewInsets`).
 ```
@@ -267,36 +188,12 @@ A seção aparece no topo do filtro **Minhas** só quando há convites por e-mai
 │                                 │    opcional; inválido → erro
 │  Última compra: R$ 4,99 (12/09) │ ← histórico local por dispositivo
 │  ↑ R$ 0,50                      │    (RF-29/F37); ↑/↓ só com a
-│                                 │    mesma unidade; não sincroniza
+│                                 │    mesma unidade
 │  (Remover) (Cancelar) (Salvar)  │ ← empilha quando não cabe
 └─────────────────────────────────┘    (fonte ampliada ou tela estreita; RNF-06)
 ```
 
-**Última compra (RF-29/F37):** abaixo do campo de preço, quando há histórico local para o nome, aparece "Última compra: R$ X (dd/mm)" e — se o preço atual existir **e** a unidade atual for a mesma do registro — a variação (`↑`/`↓ R$diferença` ou "Mesmo preço"); com unidade diferente ou sem preço atual, só a linha do último preço. O histórico é **local por dispositivo e não sincroniza** ([03 §3](03-sincronizacao-offline.md)).
-
-### 3.2. Estados do indicador de sync (AppBar, [03 §6](03-sincronizacao-offline.md))
-```
-● Sincronizado   ◌ Sincronizando   ● 3 pendentes   ○ Offline
-                                                     │
-   offline: banner discreto abaixo do AppBar ────────▼
-┌─────────────────────────────────┐
-│ ⚠ Sem conexão — alterações      │
-│   serão sincronizadas depois    │
-├─────────────────────────────────┤
-```
-
-### 3.3. Modo leitor (Fase 6, [08 §1](08-compartilhamento-colaborativo.md))
-```
-┌─────────────────────────────────┐
-│  ← Compras da Semana      [⋮]   │
-│  👁 Somente leitura              │
-├─────────────────────────────────┤
-│  ☐ Arroz            1 kg        │ ← sem steppers, sem swipe;
-│  ☐ Leite            2 un        │    toques mostram a dica do papel
-│                                 │    "Apenas o dono/editores editam."
-└─────────────────────────────────┘
-```
-O aviso usa `AppBannerTipo.leitura` ([15 §3](15-design-system.md)), não um `Container` manual (F14-T08). Sem editor próprio, o `onTap` do item, para o leitor, dispara a dica (`AppStrings.somenteLeitorDica`) via `mostrarSnackBar` (G-36).
+**Última compra (RF-29/F37):** abaixo do campo de preço, quando há histórico local para o nome, aparece "Última compra: R$ X (dd/mm)" e — se o preço atual existir **e** a unidade atual for a mesma do registro — a variação (`↑`/`↓ R$diferença` ou "Mesmo preço"); com unidade diferente ou sem preço atual, só a linha do último preço. O histórico é **local por dispositivo**.
 
 ### 3.4. Diálogo "Excluir lista"
 ```
@@ -304,19 +201,16 @@ O aviso usa `AppBannerTipo.leitura` ([15 §3](15-design-system.md)), não um `Co
 │  Excluir "Compras da Semana"?   │
 │                                 │
 │  Os 10 itens serão removidos    │
-│  para todos os participantes.   │ ← texto muda se houver membros
+│  permanentemente.               │
 │                                 │
 │  (Cancelar)        (Excluir)    │ ← Excluir em vermelho
 └─────────────────────────────────┘
 ```
 
-O trecho "para todos os participantes" aparece quando há membros conhecidos (best-effort); o painel assume lista sem membros e a tela da lista usa o que estiver em cache de `membrosDaListaProvider` (F14-T08).
-
 ### 3.5. Modo mercado (F22/RF-18 — [05 §6.5](05-app-flutter.md))
 ```
 ┌─────────────────────────────────┐
 │  ← Compras da Semana            │ ← sem menu/busca/drag/importação
-│  ● Sincronizado                 │
 ├─────────────────────────────────┤
 │  3 de 12                        │ ← marcados nesta sessão / total ativo
 │  No carrinho: R$ 15,98          │    (live region); faixa do total
@@ -332,48 +226,13 @@ O trecho "para todos os participantes" aparece quando há membros conhecidos (be
 │    ☑ Queijo prato   500 g       │
 └─────────────────────────────────┘
 ```
-Com 0 pendentes, a área principal dá lugar ao vazio "Tudo comprado" com CTA para voltar à lista. A seta de voltar retorna à tela da lista (push); sem pilha (deep link), vai para `/listas`. A faixa "Marcados" fica dentro de `SafeArea(top: false)`, sem encostar na área segura inferior (G-37).
+Com 0 pendentes, a área principal dá lugar ao vazio "Tudo comprado" com CTA para voltar à lista. A seta de voltar retorna à tela da lista (push); sem pilha, vai para `/listas`. A faixa "Marcados" fica dentro de `SafeArea(top: false)`, sem encostar na área segura inferior (G-37).
 
 ### 3.6. Chips de itens frequentes na lista (F22/RF-19)
 Acima do campo de adicionar, uma faixa horizontal rolável de `ActionChip` (alvo ≥48dp, com `Semantics` de ação "Adicionar <nome>") mostra até 8 sugestões quando o campo está vazio; tocar adiciona o item. O ranking vem do histórico local do Drift (peso 2 para a lista aberta, exclui pendentes, limiar ≥2) — nenhum dado de rede.
 
-### 3.7. Tela de Membros (RF-13/RF-14 — [05 §6.6](05-app-flutter.md))
-AppBar `Membros · {título}`; cada membro mostra o UUID prefixado, o chip de papel e — para o dono, em membros que **não** são ele — o menu `⋮` (papel editor↔leitor, remover e **transferir dono**).
-
-```
-┌─────────────────────────────────┐
-│  ← Membros · Compras da Semana  │
-├─────────────────────────────────┤
-│  d0a1b2c3 (Você)          dono  │
-│  e4f5a6b7               editor ⋮│
-│  a1b2c3d4               leitor ⋮│
-└─────────────────────────────────┘
-   (sem menu no próprio usuário; [⋮] só para o dono, alvo ≠ eu:
-    Editor / Leitor / Transferir dono / Remover)
-```
-
-**Confirmação dupla do "Transferir dono" (F24/RF-14):**
-```
-┌─────────────────────────────────┐
-│  Transferir dono?               │
-│  Você deixará de ser dono e     │ ← 1º passo
-│  passará a editor desta lista.  │
-│  (Cancelar)        (Continuar)  │
-└─────────────────────────────────┘
-                ▼
-┌─────────────────────────────────┐
-│  Transferir dono?               │
-│  Confirmar a transferência?     │ ← 2º passo
-│  Depois disso você poderá sair  │
-│  da lista.                      │
-│  (Cancelar)   (Transferir dono) │
-└─────────────────────────────────┘
-   (sucesso → SnackBar "Dono transferido." e "Sair da lista" aparece;
-    o novo dono recebe "Você agora é dono de uma lista" pelo Realtime)
-```
-
 ### 3.8. Modal "Adicionar de outra lista" (F27/RF-23 — [05 §6.3](05-app-flutter.md))
-**Entrada:** item "Adicionar de outra lista" no menu `⋮` da tela da lista, visível só a **dono/editor**.
+**Entrada:** item "Adicionar de outra lista" no menu `⋮` da tela da lista.
 
 ```
 ┌─────────────────────────────────┐
@@ -392,27 +251,6 @@ AppBar `Membros · {título}`; cada membro mostra o UUID prefixado, o chip de pa
     contagem; preço não é copiado)
    (origem sem pendentes → "Nenhum item pendente nesta lista.")
 ```
-
-### 3.9. Sheet "Convidar" — campo de e-mail (RF-13, F32 — [08 §4](08-compartilhamento-colaborativo.md))
-Abaixo do bloco de link, o sheet (dono) ganha a seção **"Convidar por e-mail"**: campo **"E-mail do convidado"** (teclado de e-mail, validação local) + botão **"( Enviar convite )"** e o aviso de que o convite aparece no app da pessoa — **não há e-mail automático** nesta rodada. O papel ofertado é o mesmo seletor de rádio do bloco de link.
-
-```
-┌─────────────────────────────────┐
-│  Convidar                    ✕  │
-├─────────────────────────────────┤
-│  (o) Editor    ( ) Leitor       │ ← papel ofertado
-│  (      Gerar link       )      │
-│  ──────────────────────────     │
-│  Convidar por e-mail            │
-│  E-mail do convidado            │
-│  [________________________ ]    │
-│  (     Enviar convite    )      │ ← outlined; sucesso → SnackBar
-│  O convite aparece no app da    │   "Convite criado..."
-│  pessoa; não enviamos e-mail    │
-│  automático.                    │
-└─────────────────────────────────┘
-```
-Comportamento em [05 §6.3](05-app-flutter.md). O campo do link gerado é somente leitura e tem rótulo acessível (`Copiar link`) e dica (`copiarLinkAjuda`) — G-09.
 
 ---
 
@@ -459,7 +297,7 @@ Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstad
 
 ---
 
-## 5. Configurações (Fase 5 — [06 §3.3](06-mvp-entregas.md))
+## 5. Configurações (RF-31 — [05 §6.7](05-app-flutter.md))
 ```
 ┌─────────────────────────────────┐
 │  ← Configurações                │
@@ -467,24 +305,18 @@ Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstad
 │  Aparência                      │
 │  [ Claro | Sistema | Escuro ]   │ ← tema manual (doc 15)
 │  Ordenar categorias      (→)    │ ← corredores; arrastar-e-soltar (RF-24)
-│  Conta                          │
-│  oliveira@exemplo.com           │
-│  Sair                    (→)    │ ← logout (F10)
+│                                 │
+│  Dados                          │
+│  Backup: exportar / importar    │ ← .json local (RF-31)
 │                                 │
 │  Sobre                          │
 │  Política de Privacidade (link) │
+│  Ver tutorial            (→)    │
 │  Versão 1.0.0                   │
-│                                 │
-│  ──────────────────────────     │
-│  ( Excluir minha conta )        │ ← vermelho; confirmação dupla
-│    "Apaga TODAS as suas listas  │    (senha + diálogo); cascade [06 §3.3.1]
-│     permanentemente."           │
 └─────────────────────────────────┘
 ```
 
-**Sair** pede confirmação destrutiva antes de encerrar a sessão (F14-T05).
-
-**Tour (RF-27/F46):** a seção "Sobre" ganha o item **"Ver tutorial"** (`AppStrings.tourAbrir`, ícone `school_outlined`, à esquerda de "Backup"): tocar reabre o tour ignorando as flags — **navega para a home de listas** e inicia a etapa 1 lá (3 passos; os alvos montam no próximo frame). A etapa 2 segue o fluxo normal: volta a disparar sozinha ao abrir uma lista com itens pendentes, **enquanto a flag dela ainda for falsa** ([05 §6.11](05-app-flutter.md)).
+**Tour (RF-27/F46):** a seção "Sobre" tem o item **"Ver tutorial"** (`AppStrings.tourAbrir`, ícone `school_outlined`): tocar reabre o tour ignorando as flags — **navega para a home de listas** e inicia a etapa 1 lá (os alvos montam no próximo frame). A etapa 2 segue o fluxo normal: volta a disparar sozinha ao abrir uma lista com itens pendentes, **enquanto a flag dela ainda for falsa** ([05 §6.11](05-app-flutter.md)).
 
 ### 5.1. Tela "Ordenar categorias" (RF-24, F28)
 ```
@@ -503,28 +335,19 @@ Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstad
 
 * Cada reordenação persiste na hora (preferência local, global); sem rede/schema.
 
-### 5.2. Notificações (RF-30, F38 — [05 §6.9](05-app-flutter.md))
-
-* **Toggle "Notificações"** na tela de Configurações (abaixo de Aparência), visível só no Android: ao ligar, o sistema pede a permissão e o toggle **só permanece ligado se concedida**; ao desligar, o token do dispositivo é removido.
-* **Permissão contextual (uma vez):** é o diálogo do sistema disparado no primeiro momento relevante — ao **criar a primeira lista** ou **aceitar o primeiro convite**; não é uma tela própria.
-
 ---
 
 ## 6. Mapa de estados por tela (transversal)
 
-| Tela | Carregando | Vazio | Erro | Offline |
-| :--- | :--- | :--- | :--- | :--- |
-| Minhas Listas | `AppEsqueleto` (F14-T09) | 2.2 | `AppEstadoErro` com retry | Banner global + lista local (usável) |
-| Tela da Lista | `AppEsqueleto` (F14-T09) | 3.1 — vazio instrui por papel (F14-T04) + caminhos (RF-27/F31) | `AppEstadoErro` com retry (F14-T04) | 3.2 — funcional |
-| Membros | `AppEsqueleto` (F14-T09) | `AppEstadoVazio` com orientação (F14-T04) | `AppEstadoErro` com retry | — |
-| Importar lista | Botão com spinner | "Nada foi reconhecido" (4.2, F14-T04) | Mensagem amigável (4.1) | Botão desabilitado c/ dica |
-| Login | Spinner no botão | — | Inline por campo | Banner |
-| Redefinir senha | Spinner no botão | — | Erro + "Pedir novo link" (1.3) | — |
+| Tela | Carregando | Vazio | Erro |
+| :--- | :--- | :--- | :--- |
+| Minhas Listas | `AppEsqueleto` (F14-T09) | 2.2 | `AppEstadoErro` com retry |
+| Tela da Lista | `AppEsqueleto` (F14-T09) | 3.1 — vazio com caminhos (RF-27/F31) | `AppEstadoErro` com retry (F14-T04) |
+| Importar lista | Botão com spinner | "Nada foi reconhecido" (4.2, F14-T04) | Mensagem amigável (4.1) |
 
 ---
 
 ## Documentos relacionados
 - [05 App Flutter](05-app-flutter.md) — comportamento e interações de cada tela
-- [03 Sincronização](03-sincronizacao-offline.md) — estados do indicador de sync
-- [08 Compartilhamento](08-compartilhamento-colaborativo.md) — telas de convite/membros
-- [06 MVP & Entregas](06-mvp-entregas.md) — exclusão de conta nas Configurações
+- [06 MVP & Entregas](06-mvp-entregas.md) — LGPD e publicação
+- [15 Design System](15-design-system.md) — tokens e componentes

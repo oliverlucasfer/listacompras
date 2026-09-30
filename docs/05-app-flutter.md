@@ -2,7 +2,7 @@
 
 > Navegação: [← 04 Importação](04-importacao-lista.md) · [06 MVP & Entregas →](06-mvp-entregas.md)
 
-**Este documento é o dono da arquitetura do app, da navegação/UX e do design system.** Regras de negócio de sync moram em [03](03-sincronizacao-offline.md); schema em [01](01-banco-de-dados.md).
+**Este documento é o dono da arquitetura do app, da navegação/UX e do design system.** O app é **único e local** ("Minhas Listas", RF-31): sem conta, sem nuvem e sem sincronização (ADR-015). O Drift é a fonte da verdade.
 
 ---
 
@@ -12,11 +12,8 @@
 | :--- | :--- |
 | `flutter_riverpod` / `riverpod_annotation` | State management (ADR-002) |
 | `drift` + `drift_dev` | Banco local (ADR-003) |
-| `supabase_flutter` | Auth, PostgREST, Realtime, Functions |
-| `go_router` | Navegação declarativa + deep links |
-| `connectivity_plus` | Detecção online/offline |
+| `go_router` | Navegação declarativa |
 | `uuid` | Geração de UUID v4 no cliente (ADR-006) |
-| `sentry_flutter` | Observabilidade ([07](07-qualidade-ci.md)) |
 | `sqlite3` | Dependência **direta** usada por `test/drift/database_test.dart` (abre o SQLite nativo para inspecionar o banco); **não** remover (G-53) |
 
 ---
@@ -26,106 +23,69 @@
 ```
 lib/
 ├── main.dart
-├── router.dart                      # go_router (rotas, guards de auth)
+├── router.dart                      # go_router (rotas)
 ├── core/
-│   ├── config/                      # links por plataforma (ADR-012)
 │   ├── dominio/                     # shared kernel: Unidade, CategoriaItem, quantidade (F39)
 │   ├── categorias/                  # dicionário + sugestão local de categoria
 │   ├── importacao/                  # parser local de lista (F11)
 │   ├── l10n/                        # strings (pt-BR) e política de privacidade
 │   ├── navigation/                  # shell de navegação e voltar-ao-início
-│   ├── observabilidade/             # privacidade do Sentry
-│   ├── rede/                        # tratamento de erro de rede (nativo/web)
 │   ├── texto/                       # normalização, busca e validação (F39)
 │   ├── theme/                       # tema, tokens (Seção 7)
-│   ├── utils/                       # deeplink, utilitários de tempo
+│   ├── utils/                       # utilitários de tempo
 │   ├── web/                         # URL strategy (web/nativa)
 │   └── widgets/                     # componentes compartilhados (App*)
 ├── features/
-│   ├── auth/                        # data/ providers/ ui/
-│   ├── configuracoes/               # ui/
-│   ├── convites/                    # domain/ data/ providers/ ui/
+│   ├── configuracoes/               # ui/ (inclui backup)
 │   ├── design_system/               # ui/ (catálogo, só em debug)
 │   ├── importacao/                  # ui/ (a lógica vive em core/importacao)
 │   ├── listas/                      # domain/ data/ providers/ ui/
-│   ├── notificacoes/                # domain/ data/ providers/ (F38)
 │   ├── onboarding/                  # providers/ ui/
-│   ├── sync/                        # domain/ data/ providers/ ui/
+│   ├── tour/                        # motor do tour guiado (F46)
 │   └── voz/                         # domain/ data/ providers/ (F30)
 └── drift/
-    ├── database.dart                # AppDatabase (tabelas locais, schemaVersion 10)
+    ├── database.dart                # AppDatabase (tabelas locais, schemaVersion 11)
     ├── conexao/                     # abrirBancoLocal (nativa/web, ADR-012)
-    └── tables/                      # ListaLocal, ItemLocal, MutacaoPendente, HistoricoPrecoLocal
+    └── tables/                      # ListaLocal, ItemLocal, HistoricoPrecoLocal
 ```
 
 **Regra:** `ui` só fala com `providers`; `providers` só falam com `data` (repositórios). Repositórios de leitura expõem **Streams do Drift** (UI reativa offline-first).
 
-### 2.2. Forma dos módulos e paridade de barreiras
+### 2.2. Forma dos módulos e barreiras locais
 
 * **Shared kernel (`core/dominio/`):** o vocabulário fechado (`Unidade`, `CategoriaItem` e os
-  helpers de `quantidade`) é compartilhado por Postgres, Dart e o parser local (ADR-005/ADR-011,
+  helpers de `quantidade`) é compartilhado pela UI, pelos repositórios e pelo parser local (ADR-005/ADR-011,
   [13 §3](13-premodelo-tecnico.md)). Ele **não** pertence a uma feature: fica em `core/dominio/`, e
   `core/` nunca importa `features/` (F39).
 * **Forma dos módulos:** o padrão é `domain/ data/ providers/ ui/`, mas nem todo módulo tem as
   quatro camadas — módulos sem entidade local (`configuracoes`, `importacao`, `design_system`) são
   só `ui/`, e `onboarding` não tem `domain/`/`data/`. O que é obrigatório é a direção da dependência:
   `ui → providers → data` (§2).
-* **Barreiras locais espelhando o Postgres:** o Drift replica os `CHECK`s e o índice único parcial
-  `uq_item_ativo` do Postgres (`itens_lista`: `quantidade > 0` e `quantidade <= 1000000`,
-  `unidade`/`categoria` no enum, `preco_centavos` em faixa; `listas`: `orcamento_centavos` em faixa).
-  Migração `schemaVersion 7 → 8` (F39) — a dedup de itens ativos é feita antes de criar o índice.
-  A `schemaVersion 8 → 9` (F43-T08) reaplica o teto de `quantidade` via `alterTable` e recria o
-  índice manual `uq_item_ativo` (que `alterTable` descarta junto da tabela antiga).
-  A `schemaVersion 9 → 10` (F45-T01) recria `item_local` para incluir a unidade `pt` no CHECK local
-  (espelho do enum do Postgres, [01 §3.1](01-banco-de-dados.md)) e recria o índice — sem a migração
-  o app rejeitaria gravações com `pt` (`SqliteException` no CHECK).
-* **`quantidade` é `real` no Drift e `numeric` no Postgres:** divergência aceita — o SQLite não tem
-  `DECIMAL`. A precisão efetiva da app é ≤ 3 casas decimais (tolerância 0,001, [05 §6.3]). Nenhuma
-  migração de valores.
+* **Barreiras locais no Drift:** o banco replica as regras dos dados (`itens_lista`: `quantidade > 0`
+  e `quantidade <= 1000000`, `unidade`/`categoria` no enum, `preco_centavos` em faixa; `listas`:
+  `orcamento_centavos` em faixa; índice único parcial `uq_item_ativo`). A migração **`schemaVersion 10 → 11`** (F48-T05)
+  dropa a tabela `mutacao_pendente` (a antiga fila de sincronização, que deixou de existir) e ajusta a
+  dedup de itens ativos para não referenciá-la (ordenação por `updated_at DESC, rowid DESC`). Os passos
+  históricos (`de < 2 … de < 10`) permanecem para quem vem de versões antigas.
+* **`quantidade` é `real` no Drift:** a precisão efetiva da app é ≤ 3 casas decimais (tolerância 0,001, [05 §6.3]).
 
-### 2.1. Banco e links por plataforma (ADR-012)
+### 2.1. Banco e plataformas (ADR-012)
 
-A partir da Fase 18 o app roda em **Android, iOS, Web e Desktop (Windows/Linux/macOS)** a partir do mesmo código Flutter. As diferenças ficam confinadas a imports condicionais — nenhuma regra de negócio muda por plataforma.
+O app roda em **Android, iOS, Web e Desktop (Windows/Linux/macOS)** a partir do mesmo código Flutter. As diferenças ficam confinadas a imports condicionais — nenhuma regra de negócio muda por plataforma.
 
-* **Banco local — fábrica `abrirBancoLocal()`:** `lib/drift/database.dart` não importa mais `dart:io`; a conexão vem de `lib/drift/conexao/conexao.dart`, que exporta condicionalmente:
+* **Banco local — fábrica `abrirBancoLocal()`:** `lib/drift/database.dart` não importa `dart:io`; a conexão vem de `lib/drift/conexao/conexao.dart`, que exporta condicionalmente:
   * `conexao_nativa.dart` (nativo/desktop): `NativeDatabase` em arquivo no diretório de documentos (`lista_compras.sqlite`).
   * `conexao_web.dart` (navegador): `WasmDatabase.open` com `sqlite3.wasm` + `drift_worker.js`; persistência em **OPFS** quando disponível, **IndexedDB** como fallback. `LazyDatabase` mantém a inicialização fora do caminho de build da UI.
-  * Offline-first inalterado: toda escrita vai ao Drift + fila ([03](03-sincronizacao-offline.md)); a UI nunca bloqueia em rede.
+  * Offline-first: toda escrita vai apenas ao Drift; a UI nunca bloqueia.
 * **Assets WASM no build web:** `web/sqlite3.wasm` e `web/drift_worker.js` são versionados no repositório (release `drift-2.34.4`) e precisam ser servidos junto do `build/web` — regeneração em [07 §3](07-qualidade-ci.md).
-* **URL strategy:** `usarPathUrlStrategy()` (import condicional em `core/web/`) usa path limpo no web (`/entrar?token=…`, `/login-callback`); no nativo/desktop é no-op. Chamada em `main.dart` antes do `Supabase.initialize`.
-* **Links (`core/config/links.dart`):**
-  * **Origem:** `origemWeb()` devolve `Uri.base.origin` no web e a constante `APP_WEB_URL` (`--dart-define=APP_WEB_URL=https://<domínio>`, default `http://localhost:8080`) no nativo.
-  * **Auth:** `redirectAuth()` devolve `<origem>/login-callback` no web (http em dev, https em produção) e `br.com.oliverlucas.listacompras://login-callback` no nativo — usado no cadastro (verificação de e-mail) e na recuperação de senha.
-  * **Convite:** `linkConviteDe(token)` devolve `https://<origem>/entrar?token=…` no web e `br.com.oliverlucas.listacompras://entrar?token=…` no nativo ([08 §1.1](08-compartilhamento-colaborativo.md)).
-  * No web o deep link de convite chega como URL normal ao `go_router`; a ponte `deeplinkConviteProvider` só escuta o `app_links` no nativo.
-* **Rota `/login-callback`:** rota pública que exibe um indicador de progresso enquanto o `supabase_flutter` processa o retorno do link (o redirect seguinte decide a tela). Registrada no `router.dart` para o web, onde o retorno do Supabase é uma URL https e não um deep link.
-* **Erros de rede:** `core/rede/erro_rede.dart` exporta por plataforma `erro_rede_nativa.dart` (`SocketException`/`TimeoutException`) e `erro_rede_web.dart` (`ClientException`), mantendo o mapeamento para "sem conexão" único para a UI.
-* **Voz (RF-26, F30):** permissões de plataforma do microfone — Android `RECORD_AUDIO` (`android/app/src/main/AndroidManifest.xml`; `INTERNET` já existe) e iOS `NSMicrophoneUsageDescription`/`NSSpeechRecognitionUsageDescription` (`ios/Runner/Info.plist`). O botão de ditar só aparece em **Android/iOS**; Web/Desktop ocultam (§6.3).
+* **URL strategy:** `usarPathUrlStrategy()` (import condicional em `core/web/`) usa path limpo no web; no nativo/desktop é no-op.
+* **Voz (RF-26, F30):** permissões de plataforma do microfone — Android `RECORD_AUDIO` (`android/app/src/main/AndroidManifest.xml`) e iOS `NSMicrophoneUsageDescription`/`NSSpeechRecognitionUsageDescription` (`ios/Runner/Info.plist`). O botão de ditar só aparece em **Android/iOS**; Web/Desktop ocultam (§6.3).
 
-### 2.3. Modos do app: colaborativo e Lite (RF-31, F41)
+### 2.3. App único (F48)
 
-O app tem dois flavors, com identidade própria e instaláveis ao mesmo tempo:
+Há **um único app** (`main.dart` → `bootstrap()`), 100% local, com a identidade **"Minhas Listas"**: índigo `#4F46E5`, símbolo de cesta, escolhida por `IdentidadeVisual` para o tema, o `AppLogo` e o título do app. Não há conta, nuvem, colaboração, sync nem push — o dono de toda lista é a constante `idLocal = 'local'` e o backup é sempre local (`BackupRepository(donoLocal: true, enfileirar: false)`). Decisões em [superpowers/specs/2026-09-29-app-unico-lite-sem-supabase-design.md](superpowers/specs/2026-09-29-app-unico-lite-sem-supabase-design.md).
 
-| | `prod` (colaborativo) | `lite` |
-| :--- | :--- | :--- |
-| Conta (Supabase Auth) | sim | **não** |
-| Sync/Realtime | sim | **não** |
-| Convites/compartilhamento | sim | **não** |
-| Push (FCM) | sim | **não** |
-| Backup JSON (exportar/importar) | sim | **sim** |
-
-O Lite usa o dono local `'local'` e nunca toca a rede. Decisões e costura completas em
-[superpowers/specs/2026-09-24-flavor-lite-sem-conta-design.md](superpowers/specs/2026-09-24-flavor-lite-sem-conta-design.md).
-Builds: `flutter build apk --flavor prod` / `--flavor lite` (com flavors, `--flavor` é obrigatório).
-
-O modo Lite tem **identidade visual própria** (índigo `#4F46E5`, símbolo de cesta, nome **"Minhas Listas"**), escolhida por `IdentidadeVisual` a partir de `AppCapacidades` — nunca por `AppModo` — para o tema, o `AppLogo` e o título do app; o `prod` segue verde, com carrinho e "Lista de Compras". Spec e decisões em
-[superpowers/specs/2026-09-28-identidade-visual-lite-design.md](superpowers/specs/2026-09-28-identidade-visual-lite-design.md); tokens em [15 §1/§6](15-design-system.md).
-
-**Sentry no Lite (F47):** desligado por capacidades (`sentryDeveIniciar`) — nenhum dado de erro sai do aparelho, mesmo com `SENTRY_DSN` no build. Os provedores nativos `io.sentry.*` seguem no manifest do Lite, porém inertes: `SentryFlutter.init` nunca é chamado lá.
-
-**Política de privacidade por capacidades (F47/RF-32):** o texto exibido pela sheet segue as capacidades — `politicaPrivacidadePara(cap)` devolve a versão Lite (sem conta/nuvem, com voz e backup local) quando `!cap.nuvem`, e a colaborativa (Supabase/Sentry) quando há nuvem ([06 §3.3.2](06-mvp-entregas.md)).
-
-**Manifest de release do Lite (F47/RF-32):** o source set `android/app/src/liteRelease/` aplica-se **só** ao artefato `liteRelease`. Ele remove `INTERNET`, `POST_NOTIFICATIONS`, `c2dm`/`ACCESS_NETWORK_STATE`/`WAKE_LOCK` e os componentes de Firebase/Messaging (`com.google.firebase.*` e `io.flutter.plugins.firebase.*`) do manifest mergeado, preservando `RECORD_AUDIO` (voz, RF-26). As libs seguem empacotadas, porém inertes; os `com.google.android.gms.*`/`com.google.android.datatransport.*` que restam no manifest (ex.: `GoogleApiActivity`, `com.google.android.gms.version`, serviços do datatransport) também são inertes porque `INTERNET` é removida. O Auto Backup também é desligado (`android:allowBackup="false"` + `res/xml/data_extraction_rules.xml` excluindo todos os domínios). O `prod` e o `liteDebug` **não** são afetados.
+**Política de privacidade (RF-31/RF-32):** o app exibe a versão Lite (sem conta/nuvem, com voz e backup local); a página pública (`site/privacidade.html`, publicada via GitHub Pages) tem o mesmo texto ([06 §3.3.2](06-mvp-entregas.md)).
 
 ---
 
@@ -133,21 +93,15 @@ O modo Lite tem **identidade visual própria** (índigo `#4F46E5`, símbolo de c
 
 | Provider | Tipo | Responsabilidade |
 | :--- | :--- | :--- |
-| `authStateProvider` | StreamProvider | Sessão atual (login/logout/refresh) |
 | `appDatabaseProvider` | Provider | Instância única do Drift |
-| `listasProvider` | StreamProvider | Listas ativas do usuário (Drift → UI) |
-| `itensDaListaProvider(listaId)` | StreamProvider.family | Itens ativos; ordenação de exibição por categoria e `ordem` (Fase 6) |
+| `listasProvider` | StreamProvider | Listas ativas (Drift → UI) |
+| `itensDaListaProvider(listaId)` | StreamProvider.family | Itens ativos; ordenação de exibição por categoria e `ordem` |
 | `itensFrequentesProvider(listaId)` | StreamProvider.family | Ranking de sugestões de itens frequentes derivado do Drift (F22/RF-19): agrupa por nome normalizado, peso 2 para ocorrências na lista aberta e 1 para as demais, exclui os **pendentes** da lista aberta, limiar ≥ 2 e limite de 8 |
-| `syncStatusProvider` | StreamProvider | Estado de sync ([03 §6](03-sincronizacao-offline.md)) |
-| `conectividadeProvider` | StreamProvider | Online/offline (dispara flush) |
-| `sugestaoCategoriasProvider` | Provider | Cadeia de sugestão local (Fase 6/RF-15) |
-| `redefinindoSenhaProvider` | NotifierProvider (bool) | true no evento `passwordRecovery`: força o redirect a `/redefinir-senha` até `concluir()` (F14-T03) — assinado antes do refresh do router (ordem de listeners) |
+| `sugestaoCategoriasProvider` | Provider | Cadeia de sugestão local (RF-15) |
 
-No modo Lite (`capacidadesProvider`), os providers de rede — `notificacoesPushProvider`/`pushTokensRepositoryProvider`, `convitesRepositoryProvider` e `papelRepositoryProvider` — não resolvem `Supabase.instance` no construtor: devolvem um no-op e só lançam se uma operação for de fato consumida (G-45).
+**Sugestão de categoria em camadas (ADR-011, spec §4)** — `SugestaoCategorias.sugerirCategoria(nome)`, zero rede:
 
-**Sugestão de categoria em camadas (Fase 6, ADR-011, spec §4)** — `SugestaoCategorias.sugerirCategoria(nome)`, zero rede:
-
-1. **Memória por nome:** categoria do item ativo mais recente com o mesmo nome (qualquer lista **ativa** do usuário no dispositivo — itens de listas com `deletado_em` não entram; comparação sem acento/caixa; `updated_at` DESC).
+1. **Memória por nome:** categoria do item ativo mais recente com o mesmo nome (qualquer lista **ativa** no dispositivo — itens de listas com `deletado_em` não entram; comparação sem acento/caixa; `updated_at` DESC).
 2. **Dicionário estático** (`core/categorias/dicionario_categorias.dart`, ~230 termos pt-BR versionados no repo): casa quando **todas** as palavras do termo aparecem no nome; multi-palavra casa antes de palavra única ("leite condensado" → Mercearia antes de "leite" → Laticínios), empate por ordem alfabética.
 3. **Fallback:** `outros`.
 
@@ -157,28 +111,21 @@ O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado
 
 ## 4. Rotas (go_router)
 
-| Rota | Tela | Guard |
-| :--- | :--- | :--- |
-| `/login` | Login (aceita `?next=` para voltar ao fluxo pós-login, ex. `/entrar?token=...`) | redirect se autenticado → `/listas` |
-| `/registro` | Registro (propaga `?next=` para o login na tela "Verifique seu e-mail") | idem |
-| `/recuperar-senha` | Recuperação de senha | público |
-| `/redefinir-senha` | Definir nova senha (destino do link de recuperação) | público (mesmo autenticado — exceção como `/entrar`) |
-| `/entrar` | Aceite de convite (doc [08 §3](08-compartilhamento-colaborativo.md)): lê `?token=`; sem sessão mostra contexto e vai ao login/registro com `?next=`; com sessão aceita (RPC idempotente) e navega à lista | público |
-| `/listas` | Minhas Listas (shell) — listas em que o usuário é dono | exige autenticação |
-| `/compartilhadas` | Compartilhadas (shell) — listas em que participa (não dono); AppBar "Entrar com código" (`person_add`): colar token → aceite → navega à lista | exige autenticação |
-| `/configuracoes` | Configurações (shell) — aparência, conta, logout, excluir conta | exige autenticação |
-| `/lista/:listaId` | Tela da Lista (fora do shell) | exige autenticação + pertencimento |
-| `/mercado/:listaId` | Modo mercado (fora do shell) — entrada pelo botão `shopping_cart_checkout` da AppBar da lista, visível só a dono/editor (F22/RF-18) | exige autenticação + pertencimento |
-| `/membros/:listaId` | Membros da lista (fora do shell) | exige autenticação + pertencimento |
-| `/boas-vindas` | Boas-vindas (primeiro acesso, aberta **uma vez** pela home autenticada — RF-27) | exige autenticação |
-| `/design` | Design System (só `kDebugMode`) | público em debug |
+Rotas finais do app único (spec §3): sem `/login`, `/registro`, `/recuperar-senha`, `/redefinir-senha`, `/login-callback`, `/entrar`, `/compartilhadas` nem `/membros/:listaId`. Não há `redirect` global nem `RouterRefreshStream`.
 
-* **Navegação por abas (F10):** `NavigationBar` inferior com 3 destinos (**Minhas**, **Compartilhadas**, **Configurações**) que vira `NavigationRail` a partir de ~600dp; o `StatefulShellRoute.indexedStack` preserva o estado de cada aba e o AppBar de cada aba usa o mesmo texto do destino.
-* **Abrir lista/membros (`push` sobre o shell):** a tela cobre a barra (tela cheia) e o voltar retorna à **aba de origem**. Sem pilha (deep link/aceite de convite), a seta e o voltar do sistema vão para `/listas` (dono) ou `/compartilhadas` (membro) — helper `core/navigation/voltar_para_inicio.dart`.
-* **Títulos:** painel segue o destino ("Minhas Listas"/"Compartilhadas"/"Configurações"); a tela da lista usa o título da lista (fallback "Lista" em carregando/erro/não encontrada); membros usa `Membros · {título}`. Título em **24sp bold** e, nas telas de topo, a **marca do app** (`AppLogo`, 28dp) à esquerda do texto (F13-T02/T03, doc [15 §1/§6](15-design-system.md)).
-* **Redirect global:** não autenticado → `/login`; autenticado em rota pública → `/listas`, **exceto `/entrar`** (permanece pública — a tela decide) **e `/redefinir-senha`** (o link de recuperação autentica o usuário, mas ele ainda precisa definir a senha).
-* **Recuperação de senha (F14-T03):** o link do Supabase volta pelo `deepLink` `...://login-callback` (o mesmo do cadastro). O app reage a `AuthChangeEvent.passwordRecovery`, marca a sessão como "redefinindo senha" e o `redirect` leva a `/redefinir-senha`; o sucesso limpa a marca e volta a `/listas`. Link expirado → erro amigável com "Pedir novo link".
-* Deep link de convite (`br.com.oliverlucas.listacompras://entrar?token=...`, intent-filter com host `entrar`): o supabase_flutter escuta os deep links via app_links mas só consome os que têm parâmetros de auth; links de convite são traduzidos para `/entrar?token=...` pela ponte `deeplinkConviteProvider` ([08 §1.1](08-compartilhamento-colaborativo.md)).
+| Rota | Tela | Observação |
+| :--- | :--- | :--- |
+| `/listas` | Minhas Listas (shell) | Aba inicial; todas as listas são locais |
+| `/configuracoes` | Configurações (shell) | Aparência, categorias, backup, sobre, tutorial |
+| `/lista/:listaId` | Tela da Lista (fora do shell) | Abre por `push` sobre o shell |
+| `/mercado/:listaId` | Modo mercado (fora do shell) | Entrada pelo botão `shopping_cart_checkout` da AppBar da lista (F22/RF-18) |
+| `/boas-vindas` | Boas-vindas (primeiro acesso — RF-27) | Aberta uma vez pela home |
+| `/categorias` | Ordenar categorias (fora do shell) | RF-24 |
+| `/design` | Design System (só `kDebugMode`) | Público em debug |
+
+* **Navegação por abas (F10):** `NavigationBar` inferior com **2 destinos** (**Minhas**, **Configurações**) que vira `NavigationRail` a partir de ~600dp; o `StatefulShellRoute.indexedStack` preserva o estado de cada aba e o AppBar de cada aba usa o mesmo texto do destino.
+* **Abrir lista/mercado (`push` sobre o shell):** a tela cobre a barra (tela cheia) e o voltar retorna à **aba de origem**. Sem pilha, a seta e o voltar do sistema vão para `/listas` — helper `core/navigation/voltar_para_inicio.dart`.
+* **Títulos:** painel segue o destino ("Minhas Listas"/"Configurações"); a tela da lista usa o título da lista (fallback "Lista" em carregando/erro/não encontrada). Título em **24sp bold** e, nas telas de topo, a **marca do app** (`AppLogo`, 28dp) à esquerda do texto (F13-T02/T03, doc [15 §1/§6](15-design-system.md)).
 * Wireframes (layout) de todas as telas: **[10 Wireframes](10-wireframes-telas.md)**.
 
 ---
@@ -186,9 +133,6 @@ O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado
 ## 5. Fluxo de Navegação e UX
 
 ```
-[ Tela de Autenticação ]
-          │
-          ▼
 [ Painel "Minhas Listas" ] ───► (Criar nova lista / Selecionar existente)
           │
           ▼
@@ -202,140 +146,108 @@ O dicionário não cobre produto incomum: cai em `outros` e passa a ser lembrado
           │     Abre Modal de Pré-visualização -> Confirma e insere na lista
           │
           └───► [Uso no Supermercado]:
-                Marca/Desmarca checkboxes com sincronização em tempo real
+                Marca/Desmarca checkboxes no modo mercado (100% local)
 ```
 
 ## 6. Especificação das telas
-
-### 6.1. Tela de Autenticação
-* E-mail + senha; botões: Entrar, Criar conta, Recuperar senha.
-* Provedores sociais (Google) — estrutura pronta, ativação opcional na Fase 5.
-* **Recuperação de senha e verificação de e-mail** obrigatórias no MVP (Fase 3).
-* **Nova senha (F14-T03):** o link de recuperação abre `/redefinir-senha` (nova senha + confirmação, ambas com toggle; mínimo de 6 e igualdade); sucesso → SnackBar "Senha alterada" + `/listas`; link expirado → erro amigável com CTA "Pedir novo link".
-* **Registro:** os dois campos de senha ganham toggle de mostrar/ocultar (paridade com o login; F14-T07) e "Reenviar link" passa a dar retorno (SnackBar) e a desabilitar durante o envio (F14-T05).
-* Estados: carregando (spinner no botão), erro (mensagem inline amigável).
 
 ### 6.2. Painel "Minhas Listas"
 * Lista de cards: título, contagem de itens pendentes/total, atualização relativa ("há 5 min"). A consulta do painel (`watchListasComContagem`/`ListaComContagem`) inclui `orcamento_centavos` da lista (G-43), exposto por `ListaComContagem.orcamentoCentavos`.
 * Cabeçalho das telas de topo exibe a marca (`AppLogo`) à esquerda do título (F13-T02).
 * FAB "Nova lista" → bottom sheet com campo de título. O título (novo ou renomeado) é limitado a **120 caracteres**, com limite aplicado no próprio campo e contador visível (F43-T11/G-50).
-* **Ações do card:** botão `⋮` com renomear / excluir (com confirmação) — nas Compartilhadas, membros / sair da lista; o **long-press abre o mesmo menu** (atalho, não mais o único caminho) (F14-T06).
-* Feedback: SnackBar curto "Lista criada" / "Lista renomeada" (F14-T05). As mensagens de exclusão usam **uma única** copy em `AppStrings` (`excluirListaTitulo`/`excluirListaMensagem(nItens, {temMembros})`: o trecho "para todos os participantes" aparece quando há membros conhecidos). A tela da lista consulta `membrosDaListaProvider` em best-effort (sem fetch extra; usa o que já estiver em cache) e o painel assume lista sem membros — F14-T08, [10 §3.4](10-wireframes-telas.md).
+* **Ações do card:** botão `⋮` com renomear / excluir / comprar de novo / arquivar (com confirmação); o **long-press abre o mesmo menu** (F14-T06).
+* Feedback: SnackBar curto "Lista criada" / "Lista renomeada" (F14-T05). As mensagens de exclusão usam **uma única** copy em `AppStrings` (`excluirListaTitulo`/`excluirListaMensagem(nItens)`).
 * Estado vazio: ilustração simples + CTA de criação.
 * Lista com `deletado_em` nunca aparece (tombstone invisível).
 * **Busca (F16, RF-17):** a lupa na AppBar revela um campo no topo do corpo que filtra os cards pelo **título** (offline, sem acento/caixa); sem resultado → `AppEstadoVazio` "Nenhuma lista encontrada" (sem CTA); ✕ limpa e fecha; campo com rótulo acessível (label) e hint de exemplo.
-* **Comprar de novo (RF-20, F23):** o menu `⋮` — dono **e** membro — ganha o item "Comprar de novo" quando a lista tem itens **pendentes**; abre o sheet de título (com a contagem de pendentes, título pré-preenchido com o da origem, editável) e cria uma lista nova copiando os pendentes — nome/quantidade/unidade/categoria, na ordem original, todos pendentes — com o usuário atual como dono; a lista nova abre em seguida. Escrita local + fila, sem rede (doc 03).
-* **Arquivar listas (RF-22, F26):** botão "Mostrar arquivadas" na AppBar do painel (ícone `inventory_2_outlined`, estado efêmero, acessível) — por padrão as listas arquivadas (`arquivadaEm != null`, [01 §4.1](01-banco-de-dados.md)) ficam **ocultas**, tanto em **Minhas** quanto em **Compartilhadas**; o menu `⋮` do **dono** ganha "Arquivar" (lista ativa) ou "Desarquivar" (arquivada e visível), via `definirArquivada(...)` com SnackBar "Lista arquivada."/"Lista desarquivada."; o card arquivado exibe o chip "Arquivada" ([15](15-design-system.md)); a busca (RF-17) respeita o toggle. A ação **não** aparece para membro/`leitor`.
-* **Convites pendentes (RF-13, F32):** quando houver convites por e-mail dirigidos ao seu e-mail, o topo de **Minhas Listas** mostra a seção **"Convites pendentes"** (`ConvitesPendentesSecao`, RPC `meus_convites_pendentes()` — sem Drift): um card por convite com `Convite para <título>`, **chip do papel** ofertado e o prazo ("expira em …"), mais **Aceitar** (reusa `aceitar_convite` e abre a lista) e **Recusar** (`recusar_convite`). Sem nome do convidante (o RLS não expõe perfis); a seção some quando não há pendentes. Wireframe em [10 §2.4](10-wireframes-telas.md).
+* **Comprar de novo (RF-20, F23):** o menu `⋮` ganha o item "Comprar de novo" quando a lista tem itens **pendentes**; abre o sheet de título (com a contagem de pendentes, título pré-preenchido com o da origem, editável) e cria uma lista nova copiando os pendentes — nome/quantidade/unidade/categoria, na ordem original, todos pendentes — com o dono `idLocal`; a lista nova abre em seguida. Escrita só no Drift.
+* **Arquivar listas (RF-22, F26):** botão "Mostrar arquivadas" na AppBar do painel (ícone `inventory_2_outlined`, estado efêmero, acessível) — por padrão as listas arquivadas (`arquivadaEm != null`) ficam **ocultas**; o menu `⋮` ganha "Arquivar" (lista ativa) ou "Desarquivar" (arquivada e visível), via `definirArquivada(...)` com SnackBar "Lista arquivada."/"Lista desarquivada."; o card arquivado exibe o chip "Arquivada" ([15](15-design-system.md)); a busca (RF-17) respeita o toggle.
 
 ### 6.3. Tela da Lista de Compras
 | Elemento | Comportamento |
 | :--- | :--- |
-| Campo "Adicionar item" | Fixo no topo; Enter salva imediatamente (escrita local + fila) com a categoria sugerida pelas camadas locais (§3, Fase 6). **Reconhece quantidade/unidade no texto** (`1kg de banana` → Banana, 1 kg) via parser local (RF-16); sem unidade no texto, usa a **unidade escolhida no seletor** do campo (menu com o enum, padrão `un`) — F12-T06; texto que o parser descarta (ex.: só pontuação) → erro inline "Não entendi o item" (F14-T07); aceita **frações** na quantidade (`1/2`, `½`, `1½`) e o **misto separado** (`1 1/2`, combinado pelo parser) — RF-25/F29; em Android/iOS (dono/editor) ganha um **microfone** que **preenche o campo** com o texto reconhecido **on-device** (pt-BR) — RF-26/F30 |
-| Itens pendentes | **Agrupados por categoria** na **ordem salva** pelo usuário ([01 §3.2](01-banco-de-dados.md), fallback: ordem do enum — RF-24); header por grupo: `Frios (3)` com contagem de pendentes; grupos vazios não renderizam (Fase 6, RF-15) |
-| Exibição | Ordenação determinística entre dispositivos: `(categoria na ordem salva, ordem, id)` |
+| Campo "Adicionar item" | Fixo no topo; Enter salva imediatamente (escrita no Drift) com a categoria sugerida pelas camadas locais (§3). **Reconhece quantidade/unidade no texto** (`1kg de banana` → Banana, 1 kg) via parser local (RF-16); sem unidade no texto, usa a **unidade escolhida no seletor** do campo (menu com o enum, padrão `un`) — F12-T06; texto que o parser descarta (ex.: só pontuação) → erro inline "Não entendi o item" (F14-T07); aceita **frações** na quantidade (`1/2`, `½`, `1½`) e o **misto separado** (`1 1/2`, combinado pelo parser) — RF-25/F29; em Android/iOS ganha um **microfone** que **preenche o campo** com o texto reconhecido **on-device** (pt-BR) — RF-26/F30 |
+| Itens pendentes | **Agrupados por categoria** na **ordem salva** pelo usuário (fallback: ordem do enum — RF-24); header por grupo: `Frios (3)` com contagem de pendentes; grupos vazios não renderizam (RF-15) |
+| Exibição | Ordenação determinística: `(categoria na ordem salva, ordem, id)` |
 | Item | Nome, quantidade + unidade, checkbox |
-| Checkbox marcada | Item move para seção dobrável "Itens Concluídos (n)" — **sem divisão por categoria** (Fase 6) |
+| Checkbox marcada | Item move para seção dobrável "Itens Concluídos (n)" — **sem divisão por categoria** |
 | Tocar no item | Abre o editor em **bottom sheet** (mesmo do swipe): nome, quantidade, unidade, categoria, **Preço (R$)** e ação **Remover** com undo (F12-T06/F25); a quantidade aceita decimal pt-BR (`1,5`), fração (`1/2`) e glifos (`½`, `1½`) via `parseQuantidade` — RF-25/F29 (o misto separado `1 1/2` é combinado pelo parser, não pelo editor); nome vazio/quantidade inválida/preço inválido geram erro inline no campo (F14-T07) |
-| Swipe direita/esquerda | Editar / Remover (com undo via SnackBar); edição inclui **dropdown de categoria** ao lado das unidades (Fase 6); o dropdown mantém a **ordem do enum**, não a ordem custom (RF-24) |
+| Swipe direita/esquerda | Editar / Remover (com undo via SnackBar); edição inclui **dropdown de categoria** ao lado das unidades; o dropdown mantém a **ordem do enum**, não a ordem custom (RF-24) |
 | Botão de importação | Abre modal (6.4) |
-| Menu (⋮) | Ordem renderizada: "Desmarcar todos", "Limpar concluídos", "Renomear lista", "Adicionar de outra lista" (dono/editor), "Membros", "Convidar" (dono), "Excluir lista" (dono) |
+| Menu (⋮) | Ordem renderizada: "Desmarcar todos", "Limpar concluídos", "Renomear lista", "Adicionar de outra lista", "Orçamento", "Arquivar/Desarquivar", "Excluir lista" |
 | Ações em massa | Reaproveitar lista (desmarcar todos) e limpar concluídos — confirmação para destrutivas; "desmarcar" devolve o item ao seu grupo; **limpar concluídos tem undo** (SnackBar 3s, restaura `id`/`ordem` originais — F14-T05) |
-| Indicador de sync | Estado de [03 §6](03-sincronizacao-offline.md) no **topo da tela da lista** e no **topo do painel de listas** (Minhas Listas e Compartilhadas — F21-T01, alinhado ao wireframe [10 §3.2](10-wireframes-telas.md)) |
 | Chips de itens frequentes | Acima do campo "Adicionar item", em rolagem horizontal, quando o campo está **vazio** e há sugestões (`itensFrequentesProvider`, RF-19): toque adiciona o item com quantidade 1, unidade `un` e categoria pela cadeia local (§3); somem ao digitar o primeiro caractere e voltam ao limpar o campo |
-| Botão do modo mercado | Ícone `shopping_cart_checkout` na AppBar (`tooltip` "Modo mercado"), **antes da lupa**; abre `/mercado/:listaId` via `push`. Visível apenas para dono/editor (papel efetivo com escrita); para `leitor` o botão não existe (RF-18) |
+| Botão do modo mercado | Ícone `shopping_cart_checkout` na AppBar (`tooltip` "Modo mercado"), **antes da lupa**; abre `/mercado/:listaId` via `push` (RF-18) |
 | Faixa do total | Componente `TotalCarrinho` no **rodapé** da tela da lista e no **modo mercado** (§6.5): "No carrinho: R$ …" somando **itens marcados com preço**; se houver marcados sem preço, acrescenta "· N sem preço". Com **orçamento** (RF-28, F36): "No carrinho: R$ X de R$ Y" + barra de progresso; ao ultrapassar, alerta. Oculta quando não há nenhum item marcado (RF-21, F25) |
 
-* **Reordenar (Fase 6):** drag-and-drop restrito **ao grupo da categoria** — reordena só os itens do grupo (grava `ordem` local + fila); mudar de categoria é pelo dropdown do editar. Exibição continua `(categoria na ordem salva, ordem, id)` — sem coluna nova. Falha de escrita ao reordenar exibe SnackBar genérico de erro, sem reordenar a exibição (F43-T11/G-47).
-* **Quantidades e frações (RF-25, F29):** stepper + input direto; a **entrada rápida** e a **importação** aceitam decimal pt-BR (`1,5`), fração (`1/2`), glifos (`½`, `1½`) e **misto separado** (`1 1/2`, combinado pelo parser); o **editor** aceita os mesmos formatos **menos o misto separado** — lê a quantidade com `parseQuantidade`, que trata **um token único** (digitar `1 1/2` no editor gera erro inline). Unidades restritas ao enum ([01 §3.1](01-banco-de-dados.md)). A exibição usa `formatarQuantidade` (`lib/core/dominio/quantidade.dart`): glifos comuns (`½ ¼ ¾ ⅓ ⅔`, mistos como `1½`, `1¼`) e, fora deles, arredonda para ≤ 3 casas (`1.2`, `0.143`).
-* **Adicionar por voz (RF-26, F30):** o campo "Adicionar item" ganha um **microfone** (dono/editor, Android/iOS) que **preenche o campo** com o texto reconhecido **on-device** (pt-BR) via `ReconhecimentoVoz`/`reconhecimentoVozProvider`; o usuário confirma (Enter) e o parser local cuida do resto — a voz **não** adiciona item sozinha. O app **pede** on-device (`onDevice: true`) e nunca inicia chamada de rede própria, mas o `speech_to_text` **não expõe** forma de verificar/forçar, então no Android o **SO** pode usar o reconhecedor de rede quando não há modelo on-device (limitação do plugin/SO). Toque de novo para; ao sair da tela o ditado é cancelado; indisponível/permissão negada → SnackBar "Reconhecimento de voz indisponível neste aparelho."; Web/Desktop ocultam o botão.
-* **Preço do item (RF-21, F25):** campo **"Preço (R$)"** opcional no editor; aceita `5,49`, `5.49`, `5`; vazio → sem preço (`null`); inválido/negativo → erro inline. Gravado em centavos (`preco_centavos`, [01 §4.3](01-banco-de-dados.md)) via `editarItem(..., precoCentavos, limparPreco)`; o payload de sync inclui a coluna ([03 §3](03-sincronizacao-offline.md)) e `duplicarLista` copia o preço (RF-20).
-* **Última compra (RF-29, F37):** quando há histórico local para o nome do item, o editor mostra uma linha **"Última compra: R$ X (dd/mm)"** abaixo do campo de preço; se o preço atual existir **e** a unidade atual for a mesma do registro, mostra também a **variação** — `↑ R$<diferença>`, `↓ R$<diferença>` ou "Mesmo preço"; com **unidade diferente** ou **sem preço atual**, exibe só a linha do último preço. O histórico (`HistoricoPrecoLocal`, Drift) é **local por dispositivo e não sincroniza** (`03` §3) — é gravado ao **marcar o item como comprado com preço** e nunca apagado ao desmarcar.
+* **Reordenar:** drag-and-drop restrito **ao grupo da categoria** — reordena só os itens do grupo (grava `ordem`); mudar de categoria é pelo dropdown do editar. Exibição continua `(categoria na ordem salva, ordem, id)` — sem coluna nova. Falha de escrita ao reordenar exibe SnackBar genérico de erro, sem reordenar a exibição (F43-T11/G-47).
+* **Quantidades e frações (RF-25, F29):** stepper + input direto; a **entrada rápida** e a **importação** aceitam decimal pt-BR (`1,5`), fração (`1/2`), glifos (`½`, `1½`) e **misto separado** (`1 1/2`, combinado pelo parser); o **editor** aceita os mesmos formatos **menos o misto separado** — lê a quantidade com `parseQuantidade`, que trata **um token único** (digitar `1 1/2` no editor gera erro inline). Unidades restritas ao enum (`lib/core/dominio/unidade.dart`). A exibição usa `formatarQuantidade` (`lib/core/dominio/quantidade.dart`): glifos comuns (`½ ¼ ¾ ⅓ ⅔`, mistos como `1½`, `1¼`) e, fora deles, arredonda para ≤ 3 casas (`1.2`, `0.143`).
+* **Adicionar por voz (RF-26, F30):** o campo "Adicionar item" ganha um **microfone** (Android/iOS) que **preenche o campo** com o texto reconhecido **on-device** (pt-BR) via `ReconhecimentoVoz`/`reconhecimentoVozProvider`; o usuário confirma (Enter) e o parser local cuida do resto — a voz **não** adiciona item sozinha. O app **pede** on-device (`onDevice: true`) e nunca inicia chamada de rede própria, mas o `speech_to_text` **não expõe** forma de verificar/forçar, então no Android o **SO** pode usar o reconhecedor de rede quando não há modelo on-device (limitação do plugin/SO). Toque de novo para; ao sair da tela o ditado é cancelado; indisponível/permissão negada → SnackBar "Reconhecimento de voz indisponível neste aparelho."; Web/Desktop ocultam o botão.
+* **Preço do item (RF-21, F25):** campo **"Preço (R$)"** opcional no editor; aceita `5,49`, `5.49`, `5`; vazio → sem preço (`null`); inválido/negativo → erro inline. Gravado em centavos (`preco_centavos`) via `editarItem(..., precoCentavos, limparPreco)`; `duplicarLista` copia o preço (RF-20).
+* **Última compra (RF-29, F37):** quando há histórico local para o nome do item, o editor mostra uma linha **"Última compra: R$ X (dd/mm)"** abaixo do campo de preço; se o preço atual existir **e** a unidade atual for a mesma do registro, mostra também a **variação** — `↑ R$<diferença>`, `↓ R$<diferença>` ou "Mesmo preço"; com **unidade diferente** ou **sem preço atual**, exibe só a linha do último preço. O histórico (`HistoricoPrecoLocal`, Drift) é **local por dispositivo** — é gravado ao **marcar o item como comprado com preço** e nunca apagado ao desmarcar.
 * **Faixa do total (RF-21, F25):** `TotalCarrinho` (`lib/features/listas/ui/total_carrinho.dart`, `Semantics` live region) deriva de `itensDaListaProvider` e mostra "No carrinho: R$ …" no rodapé da lista e no modo mercado; soma `round(quantidade × precoCentavos)` apenas de itens **marcados com preço**, com sufixo "· N sem preço" quando aplicável. Oculta sem marcados.
 * **Orçamento na faixa do total (RF-28, F36):** quando `Lista.orcamentoCentavos` está definido (via `listaPorIdProvider`), `TotalCarrinho` passa a "No carrinho: R$ X de R$ **Y**" + `LinearProgressIndicator` (`total / Y`, limitado a 1); com `total > Y` o texto/progresso usam a **cor de erro**, um ícone de alerta e o rótulo "Acima do orçamento". `Y == 0` → qualquer total > 0 já está acima (sem barra). Sem orçamento, o comportamento é o do RF-21. Sem bloqueio de compra. `definirOrcamento` valida a faixa local `0..99999999` centavos e lança `ArgumentError` fora dela (F43-T11/G-49).
-* Item duplicado (mesmo nome ativo, comparação normalizada): **mesma unidade → soma** a quantidade; **unidade diferente → atualiza** o item para a nova quantidade/unidade — nunca duplica o nome ativo (unique parcial no servidor) (F12-T06).
+* Item duplicado (mesmo nome ativo, comparação normalizada): **mesma unidade → soma** a quantidade; **unidade diferente → atualiza** o item para a nova quantidade/unidade — nunca duplica o nome ativo (índice único parcial).
 * **Rótulo do campo de nome (F14-T06):** no editor, o campo usa "Nome do item" — "Adicionar item" vale só para a entrada rápida.
-* **Erro e vazio (F14-T04):** falha de carga usa `AppEstadoErro` **com retry** (não texto puro, como fazia); "Lista não encontrada" ganha CTA para `/listas`; o vazio do leitor **instrui** ("Peça a um editor para adicionar") em vez de apontar para um campo que ele não tem.
-* **Vazio da lista explicativo (RF-27, F31):** para dono/editor a lista sem itens não diz só "vazio" — a dica aponta os caminhos existentes: `Adicione no campo acima ou importe uma lista.` (adicionar no campo ou botão "Importar lista" no rodapé; a copy fica só em `AppStrings` e não cita voz, pois o microfone só existe onde `plataformaComVoz()` é verdadeiro). O vazio do leitor segue instrucional (F14-T04).
-* **Banner de leitura (F14-T08):** usa `AppBannerTipo.leitura` ([15 §3](15-design-system.md)), não um `Container` manual.
-* **Busca (F16, RF-17):** a lupa na AppBar (todas as roles) revela um campo que filtra os itens pelo **nome** (offline, sem acento/caixa); mantém os grupos de categoria (escondendo vazios) e a seção de concluídos (contagens filtradas); **drag desabilitado** enquanto filtra; ao **adicionar** um item a busca é limpa; sem resultado → `AppEstadoVazio` "Nenhum item encontrado" com "Limpar busca"; campo com rótulo acessível (label) e hint de exemplo.
-* **Adicionar de outra lista (RF-23, F27):** item no menu `⋮` (dono/editor) abre o modal "Adicionar de outra lista" — seletor da lista de origem (todas as listas do usuário menos a atual; arquivadas rotuladas "Arquivada") e os **pendentes** da origem em multi-seleção com "Selecionar todos"; a ação "Adicionar" (estática; desabilitada com 0 selecionados) insere com a **dedup do app** (`adicionarItensDedup`, soma/replace) e a tela mostra um SnackBar com a contagem (`AppStrings.itensAdicionadosDeOutra`); **preço não é copiado**. Tudo local + fila ([03](03-sincronizacao-offline.md)).
-* **Convidar por e-mail (RF-13, F32):** o sheet "Convidar" (dono) ganha, abaixo do bloco de link, a seção "Convidar por e-mail" com o campo **"E-mail do convidado"** (teclado de e-mail + validação local de formato, mesmo regex do cadastro) + **"Enviar convite"**; o papel ofertado é o mesmo seletor do bloco de link. Sucesso → SnackBar "Convite criado. A pessoa verá no app ao entrar."; o sheet avisa que **não há e-mail automático** nesta rodada ([08 §4](08-compartilhamento-colaborativo.md)). A criação é **online-only** (`criarConviteEmail`, reusa pendente não expirado do mesmo e-mail ou insere) — não vai ao Drift. Wireframe em [10 §3.9](10-wireframes-telas.md).
+* **Erro e vazio (F14-T04):** falha de carga usa `AppEstadoErro` **com retry**; "Lista não encontrada" ganha CTA para `/listas`.
+* **Vazio da lista explicativo (RF-27, F31):** a lista sem itens não diz só "vazio" — a dica aponta os caminhos existentes: `Adicione no campo acima ou importe uma lista.` (adicionar no campo ou botão "Importar lista" no rodapé; a copy fica só em `AppStrings` e não cita voz, pois o microfone só existe onde `plataformaComVoz()` é verdadeiro).
+* **Busca (F16, RF-17):** a lupa na AppBar revela um campo que filtra os itens pelo **nome** (offline, sem acento/caixa); mantém os grupos de categoria (escondendo vazios) e a seção de concluídos (contagens filtradas); **drag desabilitado** enquanto filtra; ao **adicionar** um item a busca é limpa; sem resultado → `AppEstadoVazio` "Nenhum item encontrado" com "Limpar busca"; campo com rótulo acessível (label) e hint de exemplo.
+* **Adicionar de outra lista (RF-23, F27):** item no menu `⋮` abre o modal "Adicionar de outra lista" — seletor da lista de origem (todas as listas menos a atual; arquivadas rotuladas "Arquivada") e os **pendentes** da origem em multi-seleção com "Selecionar todos"; a ação "Adicionar" (estática; desabilitada com 0 selecionados) insere com a **dedup do app** (`adicionarItensDedup`, soma/replace) e a tela mostra um SnackBar com a contagem (`AppStrings.itensAdicionadosDeOutra`); **preço não é copiado**. Tudo local no Drift.
 
 ### 6.4. Modal "Importar lista" (RF-16)
 
-Um único modal de importação local (modo único, offline, RF-16):
+Um único modal de importação local (offline, RF-16):
 
 1. Textarea + contador de caracteres (≤ 10.000 — [04 §2](04-importacao-lista.md)).
 2. Botão "Extrair itens": parser local puro (`lib/core/importacao/parser_lista_local.dart`), sem rede; categoria pela cadeia local (memória → dicionário → `outros`, [§3](05-app-flutter.md)); disponível offline.
-3. **Modal de pré-visualização:** checkboxes para incluir/excluir cada item; edição inline de nome/quantidade/unidade/**categoria** (dropdown com o enum [01 §3.2](01-banco-de-dados.md)), com erro inline de nome/quantidade (F14-T07); `aviso` exibido como nota.
-4. "Adicionar N itens à lista" → grava localmente (fila de INSERTs).
+3. **Modal de pré-visualização:** checkboxes para incluir/excluir cada item; edição inline de nome/quantidade/unidade/**categoria** (dropdown com o enum), com erro inline de nome/quantidade (F14-T07); `aviso` exibido como nota.
+4. "Adicionar N itens à lista" → grava localmente no Drift.
 5. Erros do parser exibidos com as mensagens amigáveis do contrato ([04 §2](04-importacao-lista.md)); falha genérica (ex.: Drift) também é capturada, mostra mensagem amigável e **sempre** libera o botão `_carregando` (F43-T11/G-52).
 
 ### 6.5. Modo mercado (RF-18)
 
 Tela dedicada `/mercado/:listaId` para usar o celular no mercado, sem a densidade da tela da lista (wireframe [10 §3.5](10-wireframes-telas.md)):
 
-* **AppBar** com título da lista e seta de voltar (sem menu); `IndicadorSync` no topo apenas no estado carregado — em carregando/erro/não encontrada o título é "Modo mercado" e o indicador não renderiza.
+* **AppBar** com título da lista e seta de voltar (sem menu).
 * **Contador** `mercadoProgresso(marcados, total)` (ex.: "3 de 12"): marcados **nesta sessão** / total de itens ativos; é uma live region.
 * **Faixa do total (RF-21):** `TotalCarrinho` logo abaixo do contador — "No carrinho: R$ …" dos itens marcados com preço (§6.3); com orçamento (RF-28), "de R$ Y" + progresso + alerta ao ultrapassar; oculta sem marcados.
 * **Pendentes** em lista de altura generosa, com checkbox de alvo ≥48dp e toque na linha para marcar (`editarItem(concluido: true)`). **Sem** grupos de categoria, busca, drag, swipe, menu ou importação. Se a gravação falhar, a marcação da sessão é revertida e um SnackBar genérico de erro aparece (F43-T11/G-47).
 * **Faixa "Marcados (n)"** recolhível no rodapé — é o undo do toque acidental: ao marcar, o item sai da área principal e entra na faixa, que abre automaticamente na primeira marcação da sessão; tocar num item da faixa desmarca e o devolve aos pendentes.
-* **Estados:** carregando (`AppEsqueleto`), erro (`AppEstadoErro` com retry em `itensDaListaProvider`), lista não encontrada e "tudo comprado" (0 pendentes) com CTA para voltar; enquanto o papel não carrega, o default é leitor (somente leitura).
-* O botão de entrada fica na AppBar da tela da lista e é **escondido para leitor** (§6.3).
-
-### 6.6. Tela de Membros (RF-13/RF-14)
-
-Rota `/membros/:listaId` (AppBar `Membros · {título}`). Lista os membros (UUID prefixado), o chip de papel e o menu `⋮` das ações do dono (mudar papel editor↔leitor, remover, **transferir dono**). Fluxo em [08 §8](08-compartilhamento-colaborativo.md); layout em [10 §3.7](10-wireframes-telas.md).
-
-* **Transferir dono (RF-14, F24):** item "Transferir dono" no menu `⋮` de cada membro — visível **só para o dono** e **nunca no próprio usuário**. Abre **confirmação dupla** (a primeira explica que o dono deixará de ser dono e passará a `editor`; a segunda confirma). No sucesso, o papel local vira `editor` (o botão "Sair da lista" passa a aparecer), a lista de membros é recarregada e um SnackBar "Dono transferido." confirma. Operação **online-only** (papel não vive no Drift); offline → erro amigável.
-* **Aviso ao novo dono (Realtime):** quem recebe a lista vê o SnackBar genérico "Você agora é dono de uma lista" na tela da lista (sem nome — o RLS não expõe perfis).
+* **Estados:** carregando (`AppEsqueleto`), erro (`AppEstadoErro` com retry em `itensDaListaProvider`), lista não encontrada e "tudo comprado" (0 pendentes) com CTA para voltar.
 
 ### 6.7. Configurações — Aparência e Ordenar categorias (RF-24)
 
 * **Aparência:** seletor de tema Claro/Escuro/Sistema (`SeletorTema`, doc [15 §2](15-design-system.md)).
-* **Ordenar categorias (RF-24, F28):** item abaixo do seletor abre `/categorias` (fora do shell), a `TelaOrdenarCategorias` — lista arrastável das 11 categorias com ação **"Restaurar padrão"** (volta à ordem do enum, com confirmação). A preferência é **global** e **local** (SharedPreferences, chave `ordem_categorias`, como o tema); sem schema/RLS/sync. Detalhe em [10 §5.1](10-wireframes-telas.md).
-* **Excluir conta (LGPD, [06 §3.3.1](06-entregas-lgpd.md)):** a confirmação por senha captura `AuthException` (senha incorreta, erro inline) **e** falha genérica (ex.: rede) — exibindo erro inline amigável e **sempre** liberando o botão de continuar, sem spinner preso (F43-T11/G-06).
+* **Ordenar categorias (RF-24, F28):** item abaixo do seletor abre `/categorias` (fora do shell), a `TelaOrdenarCategorias` — lista arrastável das 11 categorias com ação **"Restaurar padrão"** (volta à ordem do enum, com confirmação). A preferência é **global** e **local** (SharedPreferences, chave `ordem_categorias`, como o tema). Detalhe em [10 §5.1](10-wireframes-telas.md).
+* **Backup:** exportar/importar JSON local (§6.10).
+* **Sobre:** política de privacidade, versão, "Ver tutorial".
 
 ### 6.8. Tela de boas-vindas (RF-27, F31)
 
-Primeiro acesso ao app **autenticado** — apresenta o valor em **uma** página (rolável, escala de fonte respeitada, RNF-06) e sai de cena depois:
+Primeiro acesso ao app — apresenta o valor em **uma** página (rolável, escala de fonte respeitada, RNF-06) e sai de cena depois:
 
-* **Rota:** `/boas-vindas` (top-level, **protegida**; não está na lista de rotas públicas). O guard fica na home autenticada (`MinhasListasScreen`): quando `onboardingVistoProvider` resolve **falso**, faz `context.push('/boas-vindas')` **uma única vez**; não mexe no `redirect` do `go_router`.
+* **Rota:** `/boas-vindas` (top-level; não está na lista de rotas públicas). O guard fica na home (`MinhasListasScreen`): quando `onboardingVistoProvider` resolve **falso**, faz `context.push('/boas-vindas')` **uma única vez**; não mexe no `redirect` do `go_router`.
 * **Flag local (F31-T01):** `onboardingVistoProvider` (`AsyncNotifierProvider<OnboardingNotifier, bool>`) lê/grava `SharedPreferences` (chave `onboarding_visto`), como o tema — sem rede/Drift/schema. `marcarVisto()` grava e nunca mais reabre.
-* **Conteúdo:** marca (`AppLogo`) + título (`boasVindasTitulo`) e subtítulo; **4 destaques** com ícone (offline, compartilhar, importar por texto, ditar um item) e o botão **"Começar"** (`AppBotao`) → `marcarVisto()` + `context.go('/listas')`. Sem "Pular" (página única). O destaque **"Dite um item"** só aparece quando `plataformaComVoz()` é verdadeiro (Android/iOS); em Web/Desktop, onde o microfone é oculto (§6.3), ficam os outros **3 destaques**. Wireframe em [10 §1.4](10-wireframes-telas.md).
-* **Saída da tela:** a tela é dispensada/confirmada **apenas pelo "Começar"** (único caminho que grava `onboarding_visto` e vai para `/listas`). O **voltar do sistema Android** (`Navigator.pop`) retorna ao painel de listas **sem** marcar como visto — a flag continua falsa, então a tela **reabre no próximo cold start** (comportamento esperado; a tela aparece uma vez até que "Começar" seja tocado).
+* **Conteúdo:** marca (`AppLogo`) + título (`boasVindasTitulo`) e subtítulo; destaques com ícone (offline, importar por texto, ditar um item) e o botão **"Começar"** (`AppBotao`) → `marcarVisto()` + `context.go('/listas')`. Sem "Pular" (página única). O destaque **"Dite um item"** só aparece quando `plataformaComVoz()` é verdadeiro (Android/iOS); em Web/Desktop ficam os outros destaques. Wireframe em [10 §1.4](10-wireframes-telas.md).
+* **Saída da tela:** a tela é dispensada/confirmada **apenas pelo "Começar"** (único caminho que grava `onboarding_visto` e vai para `/listas`). O **voltar do sistema Android** (`Navigator.pop`) retorna ao painel de listas **sem** marcar como visto — a flag continua falsa, então a tela **reabre no próximo cold start**.
 
-### 6.9. Notificações push (RF-30, F38)
-
-Push só no **Android** (iOS na Onda E; Web/Desktop nunca tocam o plugin — `plataformaComPush()`, `features/notificacoes/domain/plataforma_push.dart`). Arquitetura server-side e eventos em [08 §11](08-compartilhamento-colaborativo.md); layout em [10 §5](10-wireframes-telas.md).
-
-* **Toggle "Notificações" (Configurações):** `SwitchListTile` (abaixo de Aparência) ligado ao `notificacoesAtivasProvider`; só aparece onde `plataformaComPush()` é verdadeiro. Ligar pede a permissão do sistema e **só fica ligado se concedida** (`definirAtivas` devolve o resultado real); desligar remove o token do dispositivo (RPC e `deleteToken`) e desativa a flag local — o **opt-out é final**: `definirAtivas` marca o pedido como consumido (G-44), então `talvezPedirPermissao` não religa; só o switch volta a ativar.
-* **Permissão contextual (uma vez):** `talvezPedirPermissao()` é chamado no **primeiro momento relevante** — primeira lista criada (painel de listas) ou primeiro convite aceito (`/entrar` e seção de convites pendentes). O pedido é marcado como consumido apenas quando o plugin responde; falha de plugin não consome (tenta de novo depois). Se concedido, ativa a flag e registra o token.
-* **Registro/limpeza do token:** `PushTokensRepository` chama o RPC `registrar_push_token` (device handoff; [02 §4.8](02-seguranca-rls.md)) — reafirmado no start logado (`registrarSeAtivo`) e no `onTokenRefresh` do FCM (ponte no `syncBootstrapProvider`). No **fim da sessão** (`aoSair`) o token é removido e apagado do dispositivo — vale para o logout manual **e** para a sessão encerrada detectada pelo bootstrap (G-51), inclusive expiração/revogação. Em Lite os providers de rede não resolvem `Supabase.instance` (G-45).
-* **Toque na notificação (deep link):** `pushNavegacaoProvider` liga o push ao `go_router`: convite → `/entrar?token=…`; novo membro → `/lista/:id`. Cobre app aberto e *cold start* (`toqueInicial`). Só no Android.
-* **Primeiro plano:** `notificacoesForegroundProvider` alimenta um `SnackBar` quando a notificação chega com o app aberto (payload → toque abre a tela certa).
-
-### 6.10. Backup local (RF-31, F41)
+### 6.10. Backup local (RF-31)
 
 Em Configurações → "Backup": **Exportar backup** gera um `.json` (versão + listas + itens + histórico de preços)
-e **Importar backup** restaura com merge por `id` e LWW por `updated_at`. Disponível nos dois modos.
+e **Importar backup** restaura com merge por `id` e LWW por `updated_at` (comparação de timestamps local).
 
 O export é **fiel ao banco**: inclui listas e itens com `deletado_em` preenchido (soft delete), para que
 a restauração nunca encontre item órfão de lista e viole a FK. A UI separa **arquivo inválido**
 (`BackupInvalidoException` → `AppStrings.backupInvalido`) de **falha ao restaurar**
 (`BackupRestauracaoException`, ex.: FK/CHECK → `AppStrings.backupRestauracaoErro`).
 
-> **Modo colaborativo (RF-31/F41):** a importação também alimenta a fila de mutações
-> ([03 §3](03-sincronizacao-offline.md)): cada registro efetivamente gravado (os descartados
-> pelo LWW não contam) propaga ao Supabase sem exigir uma edição posterior. No modo Lite não
-> há sync — a importação permanece local-only — e o histórico de preços nunca propaga.
+> A importação é **somente local** (grava no Drift); o histórico de preços não é propagado (não há sync).
 
 ### 6.11. Tour guiado do primeiro uso (RF-27, F46)
 
 Motor próprio em `lib/features/tour/` (sem dependência nova): `tour_step.dart`/`tour_keys.dart`/`tour_roteiro.dart`/`tour_controller.dart` + `ui/tour_overlay.dart` e `ui/tour_loader.dart`. O overlay vive na **raiz** (`MaterialApp.router.builder` em `app.dart`) — não dentro do `Scaffold.body` — porque o `Spotlight` lê coordenadas globais (`localToGlobal`); ancorado no corpo, o recorte desalinharia pela AppBar/safe area. Spec: [2026-09-28-tour-guiado-primeiro-uso-design.md](superpowers/specs/2026-09-28-tour-guiado-primeiro-uso-design.md).
 
-* **Duas etapas:** a **etapa 1** (3 passos, na home de listas — criar lista, busca e configurações) começa **após as boas-vindas**; a **etapa 2** (8 passos, na tela da lista — nome, adicionar item, unidade, importar, marcar/editar, modo mercado, orçamento no menu `⋮` e convite) dispara ao abrir a **primeira lista com itens pendentes**. O passo de convite só existe no colaborativo (`elegivel` filtra por `AppCapacidades.colaboracao`); no Lite ele é pulado.
+* **Duas etapas:** a **etapa 1** (3 passos, na home de listas — criar lista, busca e configurações) começa **após as boas-vindas**; a **etapa 2** (8 passos, na tela da lista — nome, adicionar item, unidade, importar, marcar/editar, modo mercado, orçamento no menu `⋮` e convite) dispara ao abrir a **primeira lista com itens pendentes**. No app único, o passo de convite é pulado.
 * **Alvo visível é pré-requisito:** `TourController.iniciar` só enfileira passos cujo alvo está **de fato visível** — rejeita `Offstage`/`Visibility` invisível, tamanho zero ou fora da tela (no `IndexedStack` do shell as abas ocultas seguem montadas). Assim, passos cujo alvo não está montado na tela corrente (ex.: o sheet de nome, que precisa estar aberto) são pulados; se nenhum passo sobra, a etapa não inicia.
 * **Flags:** `tour_etapa1_visto` e `tour_etapa2_visto` (`SharedPreferences`, `TourVistoNotifier`, espelho do onboarding). `Pular` e `Concluir` (no último passo) marcam a etapa vista; `Pular` na etapa 1 **não** impede a etapa 2.
 * **Gatilhos:** `TourLoader(etapa: primeira)` na `MinhasListasScreen` (após `onboardingVistoProvider` resolver) e `TourLoader(etapa: recursos)` na tela da lista; cada loader inicia a etapa **uma vez**, só se a flag respectiva ainda for falsa.
@@ -348,7 +260,7 @@ Motor próprio em `lib/features/tour/` (sem dependência nova): `tour_step.dart`
 
 O design system (tokens, tipografia, componentes, motion, acessibilidade) é
 propriedade do **[doc 15](15-design-system.md)**. Resumo: Material 3 Expressive
-com seed verde, claro/escuro com paridade, modo Claro/Escuro/Sistema e fonte
+com seed índigo do Lite, claro/escuro com paridade, modo Claro/Escuro/Sistema e fonte
 Plus Jakarta Sans bundlada. Aqui ficam apenas os estados transversais:
 
 | Estado | Componente padrão (doc 15) |
@@ -357,28 +269,27 @@ Plus Jakarta Sans bundlada. Aqui ficam apenas os estados transversais:
 | Carregando (listas) | `AppEsqueleto` — placeholder estático (F14-T09) |
 | Vazio | `AppEstadoVazio` |
 | Erro | `AppEstadoErro` (com retry) |
-| Offline | `AppBanner.offline` ([03 §6](03-sincronizacao-offline.md)) |
 
 * **Acessibilidade (RNF-06):** semântica/live region, alvos ≥48dp e escala de texto — regras e verificação por teste em [15 §4](15-design-system.md) (F14-T01/T02).
-* i18n: pt-BR no MVP — strings centralizadas em `core/l10n/app_strings.dart` e **Material localizado** via `flutter_localizations` (`app.dart` com `Locale('pt','BR')`, `supportedLocales` e delegados `GlobalMaterial/Widgets/Cupertino`, F43-T09). String de UI fora do `AppStrings` é considerada bug (F14-T08).
+* i18n: pt-BR — strings centralizadas em `core/l10n/app_strings.dart` e **Material localizado** via `flutter_localizations` (`app.dart` com `Locale('pt','BR')`, `supportedLocales` e delegados `GlobalMaterial/Widgets/Cupertino`, F43-T09). String de UI fora do `AppStrings` é considerada bug (F14-T08).
 
 ---
 
-## 8. Checklist de validação (Fases 3–4)
+## 8. Checklist de validação
 
-- [ ] Guard de rotas redireciona corretamente (autenticado/não autenticado).
-- [ ] CRUD manual funciona offline (avião) e reflete ao reconectar.
+- [ ] App abre direto em `/listas`, sem rotas de conta (`/login` etc. ausentes).
+- [ ] CRUD manual funciona 100% local (modo avião) e persiste após reiniciar.
 - [ ] Checkbox concluída move item para seção dobrável; "Desmarcar todos" reaproveita lista.
 - [ ] Importação de lista: pré-visualização editável; cancelar não grava nada.
 - [ ] Tema escuro aplicado em todas as telas (sem tela esquecida).
 - [ ] Estados vazio/erro/carregando implementados em todas as telas.
 - [ ] Acessibilidade (RNF-06): semântica/live region, alvos ≥48dp e escala de texto verificados por teste ([15 §4](15-design-system.md)).
-- [ ] Recuperação de senha conclui o ciclo (link → `/redefinir-senha` → login).
+- [ ] Backup exportar/importar funcionando (inclusive lista soft-deletada).
 - [ ] Widget tests das telas críticas ([07](07-qualidade-ci.md)).
 
 ---
 
 ## Documentos relacionados
-- [03 Sincronização Offline-First](03-sincronizacao-offline.md) — engine que os repositórios implementam
 - [04 Importação](04-importacao-lista.md) — contrato do parser local consumido pelo modal de importação
 - [06 MVP & Entregas](06-mvp-entregas.md) — critérios de aceite destas telas
+- [10 Wireframes](10-wireframes-telas.md) — layout de cada tela

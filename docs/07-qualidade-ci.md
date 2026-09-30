@@ -1,8 +1,8 @@
-# 07 — Qualidade, Testes, CI e Observabilidade
+# 07 — Qualidade, Testes e CI
 
 > Navegação: [← 06 MVP & Entregas](06-mvp-entregas.md) · [← Índice](../planejamento_lista_compras.md)
 
-**Este documento é o dono da estratégia de qualidade.** Princípio: **cobertura por risco, não por percentual** — os componentes mais arriscados (Sync Engine, RLS) recebem os testes mais pesados.
+**Este documento é o dono da estratégia de qualidade.** Princípio: **cobertura por risco, não por percentual** — os componentes mais arriscados (repositórios/Drift, parser local e fluxos críticos) recebem os testes mais pesados. O app é **único e local**, sem Supabase/RLS/Realtime/Sentry (F48).
 
 ---
 
@@ -10,33 +10,31 @@
 
 | Camada | Ferramenta | O quê | Prioridade |
 | :--- | :--- | :--- | :--- |
-| **Sync Engine** (unit) | `flutter_test` | LWW, coalescing, tombstones, retry, casos-limite de [03 §5](03-sincronizacao-offline.md) | **Máxima** (RF-08) |
-| **RLS** (integração SQL) | Testes com 2 usuários reais em Supabase dev | Casos N-01…N-26 e P-01…P-14 de [02 §5](02-seguranca-rls.md) | **Máxima** (RNF-03) |
-| **Repositórios** (unit) | `flutter_test` + Drift in-memory | CRUD local + enfileiramento de mutações | Alta (RF-03) |
-| **Widgets** | `flutter_test` + `golden_toolkit` (opcional) | Telas críticas: lista, importação local, auth | Média (RF-01…RF-05, RF-16) |
-| **Fluxos críticos** (E2E no widget) | `flutter_test` + router real + Drift in-memory | Caminhos criar/adicionar/marcar/limpar, importar, entrar por código e offline — roda no CI | Alta (RNF-08) |
-| **E2E** (integração app) | `integration_test` (opcional, pós-MVP) | Fluxo completo offline→online | Baixa (RNF-02) |
-| **Edge Function `enviar-push`** (unit, Deno) | `deno test` | `mensagem.ts`/`fcm.ts` com `fetch` fake; sem FCM real | Alta (RF-30) |
+| **Repositórios** (unit) | `flutter_test` + Drift in-memory | CRUD local, dedup, arquivo, orçamento, histórico de preços | **Máxima** (RF-03) |
+| **Parser local** (unit) | `flutter_test` | Casos da [04 §3](04-importacao-lista.md) (vírgula decimal, frações, glifos, limites) | **Máxima** (RF-16) |
+| **Widgets** | `flutter_test` + `golden_toolkit` (opcional) | Telas críticas: painel, lista, importação, editor, modo mercado, configurações | Alta (RF-02…RF-05, RF-16) |
+| **Fluxos críticos** (E2E no widget) | `flutter_test` + router real + Drift in-memory | Caminhos criar/adicionar/marcar/limpar, importar e backup — roda no CI | Alta (RNF-08) |
+| **Voz** (unit) | `flutter_test` | `ReconhecimentoVoz` com fake; plugin real é smoke em device | Média (RF-26) |
+| **E2E** (integração app) | `integration_test` (opcional, pós-MVP) | Fluxo completo do app | Baixa |
 
 **Convenções:**
-* Nomes: `deve_<resultado>_quando_<condição>` (ex.: `deve_manter_item_removido_offline_ao_receber_edicao_remota_antiga`).
-* Sync Engine testado com fake de conectividade + fake do Supabase (determinístico, sem rede real no CI).
-* Fila de mutações testada com cenários do checklist [03 §8](03-sincronizacao-offline.md).
-* **Fluxos críticos (E2E no widget, F33, RNF-08):** rodam no CI via `flutter test` — o harness `test/fluxos/fluxo_harness.dart` monta o app real (router + Drift in-memory, sessão/sync/convites fake) e cobre criar/adicionar/marcar/limpar/desfazer, importar por texto, entrar por código e offline (item local + fila).
+* Nomes: `deve_<resultado>_quando_<condição>` (ex.: `deve_somar_quantidade_quando_item_duplicado_mesma_unidade`).
+* Repositórios testados com Drift in-memory (determinístico, sem rede).
+* **Fluxos críticos (E2E no widget):** rodam no CI via `flutter test` — o harness `test/fluxos/fluxo_harness.dart` monta o app real (router + Drift in-memory) e cobre criar/adicionar/marcar/limpar/desfazer, importar por texto e backup.
 
-**Adiados (não rodam no CI atual):** **goldens** são sensíveis à plataforma — o dev gera no Windows e o CI roda Linux; revisitar quando houver runner Linux dedicado. **`integration_test` (device/emulador)** exige device; é validado por smoke manual, como o deep link físico. Nenhum dos dois bloqueia o merge.
+**Adiados (não rodam no CI atual):** **goldens** são sensíveis à plataforma — o dev gera no Windows e o CI roda Linux; revisitar quando houver runner Linux dedicado. **`integration_test` (device/emulador)** exige device; é validado por smoke manual. Nenhum dos dois bloqueia o merge.
 
 ## 2. O que é testado vs. aceito sem teste
 
 | Testado | Aceito sem teste (MVP) |
 | :--- | :--- |
-| Sync Engine, RLS, repositórios, widgets críticos | UI de detalhe (animações), theming visual, i18n (pt-BR único), performance fino |
+| Repositórios, parser local, widgets críticos, fluxos críticos | UI de detalhe (animações), theming visual, i18n (pt-BR único), performance fino |
 
-**Notificação push (RF-30):** o mapeamento de evento→mensagem e o envio ao FCM da Edge Function `enviar-push` são testados com `fetch` fake (sem rede). O **envio real ao FCM** (credencial da service account, entrega no device) é **smoke manual em device**, não roda no CI — como o deep link físico e o `integration_test`.
+**Voz (RF-26):** a abstração `ReconhecimentoVoz` é testada com fake; o **reconhecimento real no device** é smoke manual, não roda no CI.
 
 ---
 
-## 3. CI — GitHub Actions (desde a Fase 1)
+## 3. CI — GitHub Actions
 
 Pipeline único `.github/workflows/ci.yml`, disparado em PR e push em `main`:
 
@@ -47,14 +45,9 @@ Pipeline único `.github/workflows/ci.yml`, disparado em PR e push em `main`:
 │  2. flutter analyze                            │
 │  3. flutter test (unit + widget)               │
 │  4. flutter build web --release                │
-│  5. flutter build apk --debug --flavor prod    │
-│  6. build apk lite -t lib/main_lite.dart       │
-│  7. build aab lite -t lib/main_lite.dart       │
-│  8. manifest lite: sem INTERNET/Firebase       │
-├────────────────────────────────────────────────┤
-│ job: supabase (paralelo)                       │
-│  1. supabase db reset (aplica migrations)      │
-│  2. testes SQL de negação/positivos RLS        │
+│  5. flutter build apk --debug                  │
+│  6. flutter build appbundle --release          │
+│  7. manifest release: sem INTERNET/Firebase    │
 ├────────────────────────────────────────────────┤
 │ job: desktop (matriz, paralelo)                │
 │  Linux: deps (clang/cmake/ninja/gtk) + build   │
@@ -63,16 +56,16 @@ Pipeline único `.github/workflows/ci.yml`, disparado em PR e push em `main`:
 ```
 
 * PR só mergea com CI verde (branch protection).
-* **Builds de plataforma (F18-T05, ADR-012; apk F38; flavors F41-T13):** o job `flutter` compila o Web (`flutter build web --release`) e o **apk Android em debug dos dois flavors** — `flutter build apk --debug --flavor prod` e `flutter build apk --debug --flavor lite -t lib/main_lite.dart` (RF-31); o flavor `lite` só seleciona o modo local com o entrypoint `-t lib/main_lite.dart` (sem ele o apk sai como o app colaborativo — F41/F42); o flavor `prod` é o único alvo do push (RF-30/F38). A suíte de testes roda **uma vez** e cobre os dois modos (o gating é de runtime, não de código separado). **Publicação do Lite (F47-T06, RF-32):** além do apk debug, o job compila o **AAB release do flavor lite** (`flutter build appbundle --release --flavor lite -t lib/main_lite.dart`, assinado com a debug key — o CI não usa keystore) para exercitar R8/empacotamento e, na sequência, **verifica o manifest mergeado** (`build/app/intermediates/merged_manifests/liteRelease/processLiteReleaseManifest/AndroidManifest.xml`): o passo falha se `INTERNET`, `com.google.firebase`, `com.google.android.c2dm` ou os componentes `io.flutter.plugins.firebase.*`/`FirebaseInitProvider`/`FlutterFirebaseMessagingInitProvider` voltarem ao Lite, se `allowBackup` não for `false` ou se `RECORD_AUDIO` sumir. O job `desktop` valida `flutter build linux` (ubuntu-latest, instala `clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libcurl4-openssl-dev libssl-dev` — as duas últimas são exigidas pelo `sentry-native` via `FindCURL`) e `flutter build windows` (windows-latest) numa matriz com `fail-fast: false`. Os builds usam **valores fictícios** de `--dart-define` (`SUPABASE_URL=https://exemplo.supabase.co`, `SUPABASE_ANON_KEY=teste`) — nenhum segredo real entra no CI.
-* **Assets WASM do Drift versionados (F18-T01):** `web/drift_worker.js` e `web/sqlite3.wasm` são cópias fiéis da release oficial `drift-2.34.4` (mesma versão pinada em `pubspec.lock`), necessárias ao banco no navegador (`WasmDatabase`/OPFS-IndexedDB, [05 §2](05-app-flutter.md), ADR-012). Para regenerar (ex.: subir o Drift), baixar da release correspondente e substituir os dois arquivos:
+* **Builds (F18-T05, ADR-012; F48):** o job `flutter` compila o Web (`flutter build web --release`), o **apk Android em debug** e o **AAB release** — **sem `--flavor` e sem `--dart-define`** (o app é único). Em seguida **verifica o manifest mergeado** (`build/app/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml`): o passo falha se `INTERNET`, `com.google.firebase`, `com.google.android.c2dm` ou os componentes `io.flutter.plugins.firebase.*`/`FirebaseInitProvider` aparecerem, se `allowBackup` não for `false` ou se `RECORD_AUDIO` sumir (voz, RF-26). O job `desktop` valida `flutter build linux` (ubuntu-latest, instala `clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev`) e `flutter build windows` (windows-latest) numa matriz com `fail-fast: false`.
+* **Assets WASM do Drift versionados (F18-T01):** `web/drift_worker.js` e `web/sqlite3.wasm` são cópias fiéis da release oficial `drift-2.34.4` (mesma versão pinada em `pubspec.lock`), necessárias ao banco no navegador (`WasmDatabase`/OPFS-IndexedDB, [05 §2.1](05-app-flutter.md), ADR-012). Para regenerar (ex.: subir o Drift), baixar da release correspondente e substituir os dois arquivos:
   ```bash
   curl -L -o web/drift_worker.js https://github.com/simolus3/drift/releases/download/drift-2.34.4/drift_worker.js
   curl -L -o web/sqlite3.wasm    https://github.com/simolus3/drift/releases/download/drift-2.34.4/sqlite3.wasm
   ```
   A versão do Drift em `pubspec.lock` e os assets devem andar juntos; `flutter build web --release` valida a **compilação** — a corretude dos assets WASM é de **runtime**, não de build.
-* Segurança no CI: secrets do Supabase de **ambiente de teste**, nunca produção; JWTs de teste criados na hora.
-* Flutter **e** CLI do Supabase do CI **pinados** às versões usadas pelo dev (`flutter-version` no `flutter-action`, `version` no `setup-cli`) — o formatter do Dart muda entre versões (quebraria `dart format --set-exit-if-changed`) e o CLI fica pinado ao do dev para paridade.
-* Tempo alvo do pipeline: < 10 min **sem** o passo de AAB release do Lite (F47/RF-32). O job `flutter` passou a compilar o AAB release (`Build AAB release do Lite`, com R8/empacotamento) e a verificar o manifest — isso **acrescenta alguns minutos** ao alvo, então os 10 min deixam de valer estritamente para o pipeline completo.
+* **Nenhum segredo no CI:** o app não tem backend nem chaves; os builds são reprodutíveis sem `--dart-define`. Arquivos realmente secretos (`android/key.properties`) ficam fora do git.
+* Flutter **pinado** à versão usada pelo dev (`flutter-version` no `flutter-action`) — o formatter do Dart muda entre versões (quebraria `dart format --set-exit-if-changed`).
+* Tempo alvo do pipeline: < 10 min.
 
 ### Esqueleto de referência
 
@@ -93,26 +86,21 @@ jobs:
       - run: dart format --set-exit-if-changed .
       - run: flutter analyze
       - run: flutter test
-      - run: >-   # valores fictícios (nunca segredos reais)
-          flutter build web --release
-          --dart-define=SUPABASE_URL=https://exemplo.supabase.co
-          --dart-define=SUPABASE_ANON_KEY=teste
-      - run: flutter build apk --debug --flavor prod   # alvo do push (RF-30, F38)
-      - run: flutter build apk --debug --flavor lite -t lib/main_lite.dart
-      - run: flutter build appbundle --release --flavor lite -t lib/main_lite.dart   # F47/RF-32: R8/empacotamento (debug key)
-      - name: Manifest do Lite sem INTERNET nem Firebase   # F47/RF-32
+      - run: flutter build web --release
+      - run: flutter build apk --debug
+      - run: flutter build appbundle --release
+      - name: Manifest release sem INTERNET nem Firebase   # F48
         run: |
-          MANIFEST=build/app/intermediates/merged_manifests/liteRelease/processLiteReleaseManifest/AndroidManifest.xml
-          test -f "$MANIFEST" || { echo "manifest mergeado do Lite não encontrado"; exit 1; }
+          MANIFEST=build/app/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml
+          test -f "$MANIFEST" || { echo "manifest mergeado não encontrado"; exit 1; }
           falhou=0
-          grep -q 'android.permission.INTERNET' "$MANIFEST" && { echo "INTERNET vazou no Lite"; falhou=1; }
-          grep -q 'com.google.firebase' "$MANIFEST" && { echo "Firebase vazou no Lite"; falhou=1; }
-          grep -q 'com.google.android.c2dm' "$MANIFEST" && { echo "c2dm vazou no Lite"; falhou=1; }
-          grep -q 'io.flutter.plugins.firebase' "$MANIFEST" && { echo "io.flutter.plugins.firebase vazou no Lite"; falhou=1; }
-          grep -qi 'firebaseinitprovider' "$MANIFEST" && { echo "FirebaseInitProvider vazou no Lite"; falhou=1; }
-          grep -qi 'flutterfirebasemessaginginitprovider' "$MANIFEST" && { echo "FlutterFirebaseMessagingInitProvider vazou no Lite"; falhou=1; }
-          grep -q 'android:allowBackup="false"' "$MANIFEST" || { echo "allowBackup não desligado no Lite"; falhou=1; }
-          grep -q 'android.permission.RECORD_AUDIO' "$MANIFEST" || { echo "RECORD_AUDIO sumiu do Lite"; falhou=1; }
+          grep -q 'android.permission.INTERNET' "$MANIFEST" && { echo "INTERNET no manifest"; falhou=1; }
+          grep -q 'com.google.firebase' "$MANIFEST" && { echo "Firebase no manifest"; falhou=1; }
+          grep -q 'com.google.android.c2dm' "$MANIFEST" && { echo "c2dm no manifest"; falhou=1; }
+          grep -q 'io.flutter.plugins.firebase' "$MANIFEST" && { echo "io.flutter.plugins.firebase no manifest"; falhou=1; }
+          grep -qi 'firebaseinitprovider' "$MANIFEST" && { echo "FirebaseInitProvider no manifest"; falhou=1; }
+          grep -q 'android:allowBackup="false"' "$MANIFEST" || { echo "allowBackup não desligado"; falhou=1; }
+          grep -q 'android.permission.RECORD_AUDIO' "$MANIFEST" || { echo "RECORD_AUDIO sumiu"; falhou=1; }
           exit $falhou
 
   desktop:
@@ -128,93 +116,31 @@ jobs:
       - uses: subosito/flutter-action@v2
         with: { channel: stable, flutter-version: 3.44.5 }
       - if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libcurl4-openssl-dev libssl-dev
-      - run: ${{ matrix.comando }} --dart-define=SUPABASE_URL=https://exemplo.supabase.co --dart-define=SUPABASE_ANON_KEY=teste
-
-  supabase:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: supabase/setup-cli@v3
-        with: { version: 2.116.0 }   # pinado ao CLI do dev
-      - run: supabase start -x studio -x mailpit -x logflare -x vector -x imgproxy -x storage-api
-      - run: supabase db reset   # valida migrations (desde 0001 até a última)
-      - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/rls_tests.sql
-      - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/excluir_conta_tests.sql
-      - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/aceitar_convite_tests.sql
-      - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/transferir_dono_tests.sql
-      - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/preco_item_tests.sql
-      - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/orcamento_lista_tests.sql
-      - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/arquivar_listas_tests.sql
-      - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/convites_email_tests.sql
-      - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/push_tokens_tests.sql
-      - run: psql "$DB" -v ON_ERROR_STOP=1 -f supabase/tests/notificar_push_tests.sql
-      - uses: denoland/setup-deno@v2
-        with: { deno-version: v2.x }
-      - name: Testes da Edge Function enviar-push (07 §1)
-        working-directory: supabase/functions/enviar-push
-        run: deno test --allow-env
-      - name: Teste de Realtime (01 §7, 02 §5 P-05)
-        working-directory: supabase/tests
-        run: |
-          # Chaves do stack local (export no próprio shell — `>> $GITHUB_ENV`
-          # só vale a partir do próximo step).
-          set -a
-          eval "$(supabase status -o env | sed 's/^/export /; s/"//g')"
-          set +a
-          npm ci
-          # O tenant do Realtime reconecta ao banco por alguns segundos após o
-          # `supabase start`/reset — a 1ª roda cai com CLOSED (R-23, infra do
-          # stack local, não do app). Aguarda e tenta 2 vezes.
-          for i in 1 2; do
-            sleep $((i * 15))
-            npm test && break
-            if [ "$i" = "2" ]; then echo "Realtime falhou 2x"; exit 1; fi
-          done
+        run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+      - run: ${{ matrix.comando }}
 ```
-
-> `$DB` = `postgresql://postgres:postgres@127.0.0.1:54322/postgres` (stack local do CI); os dez scripts rodam com `ON_ERROR_STOP=1` e falham o job em qualquer negação indevida.
->
-> **Teste de Realtime (`supabase/tests/realtime_test.mjs`, F20-T07):** `npm ci && npm test` no mesmo job, com as chaves do stack exportadas (`supabase status -o env`). O step tenta o teste **2 vezes**: logo após `supabase start`/`db reset` o tenant do Realtime ainda está reconectando ao banco e a 1ª execução cai com `CLOSED` (flake de infraestrutura local, R-23 — não do app). Falha só se as duas tentativas caírem.
 
 ---
 
 ## 4. Observabilidade
 
-* **Sentry (plano free)** no Flutter (ADR-009):
-  * Crash nativos, erros não tratados, `syncStatus = Erro` persistente.
-  * **Regra de privacidade:** logs **nunca** contêm nomes de itens nem conteúdo de listas ([06 §3.1](06-mvp-entregas.md)); apenas IDs técnicos. No app, `sendDefaultPii = false` e o `beforeSend` (`limparDadosDoSentry`, `lib/core/observabilidade/`, com teste unitário) limpa **breadcrumbs, `extra` e `contexts`** antes do envio (R-13/F21-T02) — nada de payload de Drift/PostgREST sai do dispositivo.
-* Eventos mínimos monitorados:
-  1. Falha de flush com fila > 10 mutações ou mutação com > 5 tentativas.
-  2. Divergência grosseira de relógio (`ts_local` vs `now()` do servidor — RPC `agora_servidor`, ver [03 §5](03-sincronizacao-offline.md)).
-* Dashboards: Sentry issues + métricas da Seção 5 de [06](06-mvp-entregas.md) (manual no MVP).
-
-### Regras de alerta (Sentry)
-
-Os três eventos abaixo **já são emitidos** pelo Sync Engine (apenas códigos + tags de contexto, nunca conteúdo de listas) via `Sentry.captureMessage` + `setTag` em `lib/features/sync/providers/sync_providers.dart`; falta cadastrar a **regra de alerta** no dashboard:
-
-| Regra (Issue Alert) | Evento/tag | Condição | Severidade |
-| :--- | :--- | :--- | :--- |
-| Fila travada | `sync_falha_fila_grande` (`fila`) | `fila > 10` | Error |
-| Muitas tentativas | `sync_falha_tentativas_altas` (`tentativas`) | `tentativas > 5` | Error |
-| Relógio divergente | `sync_relogio_adiantado` (`atraso_horas`) | `atraso_horas >= 24` | Warning |
-
-**Configuração (dashboard Sentry):** *Alerts* → *Create Alert* → *Issues*; filtrar pela **mensagem** (`sync_*`) ou pela **tag** de contexto (`fila`/`tentativas`/`atraso_horas`) com a condição e a severidade da tabela; canal = **e-mail** do dono do projeto.
-
-**Follow-up:** `sync_falha_tentativas_altas` é o único dos três **sem teste unitário** hoje (`test/features/sync/sync_engine_test.dart` cobre fila grande e relógio adiantado) — adicionar teste quando o caminho for tocado.
+* **Sem telemetria remota.** Não há Sentry nem envio de erros (decisão do dono, coerente com o app local — RF-31/F48).
+* Erros de UI são exibidos in-app (`AppEstadoErro`, SnackBars) e o diagnóstico depende do relato do usuário e de reprodução local.
+* Logs de desenvolvimento (`flutter run`) nunca contêm conteúdo de listas em serviços externos — nada sai do aparelho.
 
 ---
 
 ## 5. Checklist de qualidade por PR (disciplina leve)
 
 - [ ] `dart format` e `flutter analyze` sem queixas.
-- [ ] Novo comportamento de sync/RLS tem teste correspondente.
+- [ ] Novo comportamento local (repositório/parser/UI) tem teste correspondente.
 - [ ] CI verde antes do merge.
 - [ ] Sem segredo/chave em código ou logs.
+- [ ] Docs donos atualizados no mesmo PR quando o comportamento mudou.
 
 ---
 
 ## Documentos relacionados
-- [02 Segurança RLS](02-seguranca-rls.md) — testes de negação que rodam no CI
-- [03 Sincronização Offline-First](03-sincronizacao-offline.md) — prioridade máxima de testes
-- [06 MVP & Entregas](06-mvp-entregas.md) — DoD por fase e privacidade dos logs
+- [05 App Flutter](05-app-flutter.md) — telas e fluxos testados
+- [06 MVP & Entregas](06-mvp-entregas.md) — DoD por fase
+- [13 Pré-modelo Técnico](13-premodelo-tecnico.md) — contexto para executar qualquer tarefa

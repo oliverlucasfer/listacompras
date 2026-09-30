@@ -2,7 +2,7 @@
 
 > Navegação: [← 10 Wireframes](10-wireframes-telas.md) · [← Índice](../planejamento_lista_compras.md)
 
-**Este documento é o dono do roteiro de usabilidade** da Fase 5 ("testes de usabilidade" no cronograma [00 §6](00-visao-geral.md)). Objetivo: validar que um usuário real consegue usar o app sem ajuda antes da publicação do MVP.
+**Este documento é o dono do roteiro de usabilidade** da Fase 5 ("testes de usabilidade" no cronograma [00 §6](00-visao-geral.md)). Objetivo: validar que um usuário real consegue usar o app **local** ("Minhas Listas") sem ajuda antes da publicação.
 
 ---
 
@@ -11,9 +11,8 @@
 * **Formato:** testes moderados presenciais/remotos (chamada + compartilhamento de tela), um participante por vez, ~30 min.
 * **Participantes:** 3–5 pessoas, mix:
   * 1–2 que **nunca** viram o app (fresh eyes).
-  * 1 usuário Web no computador + 1 no celular (validar o "efeito Google Docs").
   * Pelo menos 1 usuário real de supermercado sem perfil técnico.
-* **Material:** 2 dispositivos preparados (Web + Android) com conta de teste criada; cenários e itens pré-definidos.
+* **Material:** 1 dispositivo (Android ou Web) com o app instalado; cenários e itens pré-definidos. Não há conta nem setup de servidor.
 * **Regra de ouro:** o moderador **não ajuda** — só registra. Perguntar "o que você esperaria que acontecesse?" quando houver hesitação.
 
 ## 2. Roteiro de sessão
@@ -23,8 +22,8 @@
 | 0 | 0–3 min | Contexto: "vamos ver você usando o app; pense em voz alta; não é você sendo avaliado" |
 | 1 | 5 min | Tarefa T1 |
 | 2 | 5 min | Tarefa T2 |
-| 3 | 8 min | Tarefa T3 (offline — intermediador desliga o wi-fi) |
-| 4 | 5 min | Tarefa T4 |
+| 3 | 5 min | Tarefa T3 (uso no mercado, sem sinal — moderador liga o modo avião) |
+| 4 | 5 min | Tarefa T4 (backup) |
 | 5 | 3 min | Impressões finais: "o que te confundiu? o que você mais gostou?" |
 | 6 | — | Preencher log de sessão (Seção 5) |
 
@@ -46,14 +45,15 @@ Cada tarefa registra: **sucesso (S/F/A-ajudado)**, **tempo**, **erros/hesitaçõ
 * Observar: descobre o botão **Importar lista** sozinho? Entende a pré-visualização? Corrige um item errado antes de confirmar?
 * Meta: sucesso sem ajuda; tempo < 90s do paste ao save (métrica de produto [06 §5](06-mvp-entregas.md) — alvo < 30s em uso maduro).
 
-### T3 — Uso offline e reconexão
-> "Agora imagine que está no supermercado sem sinal. Marque a Picanha como comprada e remova o Refrigerante." *(moderador desliga o wi-fi)* → depois: "O sinal voltou." *(religa)*
-* Observar: percebe que continua funcionando? Entende o banner/badge? Após reconectar, confere em outro dispositivo se sincronizou.
-* **Critério crítico:** 100% das ações offline sobrevivem à reconexão, sem duplicatas — é o critério de aceite do MVP ([06 §1](06-mvp-entregas.md)).
+### T3 — Uso no mercado (sem sinal)
+> "Agora imagine que está no supermercado sem sinal. Marque a Picanha como comprada e remova o Refrigerante." *(moderador liga o modo avião)*
+* Observar: percebe que continua funcionando sem internet? Consegue marcar/desmarcar normalmente?
+* **Critério crítico:** 100% das ações funcionam sem rede e persistem ao fechar/reabrir o app — é o coração do app local ([06 §1](06-mvp-entregas.md)).
 
-### T4 — Sincronização multi-dispositivo (2º participante/dispositivo)
-> "Marque um item no celular; agora veja no computador."
-* Meta: mudança visível < 1s sem refresh; usuário percebe o valor ("nossa, apareceu já").
+### T4 — Backup local (exportar/importar)
+> "Exporte um backup das suas listas e depois importe-o de volta."
+* Observar: encontra a seção Backup em Configurações? Entende que o arquivo fica com ele?
+* Meta: sucesso sem ajuda; entende que os dados ficam no aparelho.
 
 ### T5 — Ações em massa (quick win se sobrar tempo)
 > "A lista 'Churrasco' vai se repetir semana que vem. Prepare-a para reutilizar."
@@ -63,8 +63,8 @@ Cada tarefa registra: **sucesso (S/F/A-ajudado)**, **tempo**, **erros/hesitaçõ
 
 | Resultado | Decisão |
 | :--- | :--- |
-| ≥ 80% das tarefas principais (T1–T4) concluídas sem ajuda **e** T3 com 100% de sucesso | **Libera publicação** (critério de aceite [06 §1](06-mvp-entregas.md)) |
-| T3 falha em qualquer caso | **Bloqueia** publicação — sync é o coração do produto |
+| ≥ 80% das tarefas principais (T1–T3) concluídas sem ajuda **e** T3 com 100% de sucesso | **Libera publicação** (critério de aceite [06 §1](06-mvp-entregas.md)) |
+| T3 falha em qualquer caso | **Bloqueia** publicação — o uso offline é o coração do produto |
 | 2+ participantes travam no mesmo ponto | Entrada obrigatória na lista de ajustes da Fase 5 |
 | Ajustes cosméticos | Backlog pós-MVP |
 
@@ -72,7 +72,7 @@ Cada tarefa registra: **sucesso (S/F/A-ajudado)**, **tempo**, **erros/hesitaçõ
 
 - Nome/apelido, faixa etária.
 - Frequência de compras de supermercado (semanal/quinzenal/mensal).
-- Dispositivo principal: celular Android / iPhone (nota: iOS é Fase 6 — testar apenas o fluxo Web com estes) / computador.
+- Dispositivo principal: celular Android / computador (Web).
 - Já usou app de lista de compras? (sim/não, qual)
 - Conforto com tecnologia: 1–5.
 

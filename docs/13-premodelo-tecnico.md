@@ -10,7 +10,7 @@
 
 1. **Ordem de leitura:** este arquivo → [14 Tarefas](14-tarefas.md) → **doc dono** da tarefa → código.
 2. **Doc dono é autoridade:** se este resumo divergir do doc dono, vale o doc dono.
-3. **Proibido alterar comportamento** documentado (schema, sync, RLS) **sem atualizar o doc dono no mesmo PR**.
+3. **Proibido alterar comportamento** documentado (dados locais, parser, rotas) **sem atualizar o doc dono no mesmo PR**.
 4. Requisitos têm ID (`RF-xx`, [12 §2](12-prd.md)) — mencione o ID no commit/PR.
 5. Toda tarefa tem critério de pronto em [14](14-tarefas.md) — não marque concluído sem ele.
 6. Nenhuma chave/segredo em código; CI verde obrigatório ([07](07-qualidade-ci.md)).
@@ -19,50 +19,41 @@
 
 | Camada | Tecnologia | Papel |
 | :--- | :--- | :--- |
-| App | Flutter + Riverpod + go_router | UI reativa; UI nunca bloqueia em rede |
-| Cache local | Drift/SQLite | **Fonte de verdade local**; leitura via Streams |
-| Backend | Supabase (Postgres, Auth, Realtime, RLS) | Persistência, sync |
-| Ops | GitHub Actions + Sentry | CI obrigatório; erros sem conteúdo de listas |
+| App | Flutter + Riverpod + go_router | UI reativa; sem rede |
+| Persistência | Drift/SQLite | **Fonte de verdade local**; leitura via Streams |
+| Ops | GitHub Actions | CI obrigatório |
+
+> O app é **único e local** ("Minhas Listas", RF-31/ADR-015): sem Supabase, conta, sync, colaboração ou push.
 
 ## 3. Entidades e relacionamentos
 
 ```
-auth.users 1───N lista_membros N───1 listas 1───N itens_lista
-                                   │
-                                   └───N convites (Fase 6)
-App local (Drift): ListaLocal, ItemLocal, MutacaoPendente (fila)
+App local (Drift): ListaLocal 1───N ItemLocal
+                                 └───N HistoricoPrecoLocal (local, por nome)
 ```
 
 **Campos-chave (mínimo para raciocinar):**
 
 | Entidade | Campos essenciais | Detalhe |
 | :--- | :--- | :--- |
-| `listas` | id (uuid, cliente), titulo, dono_id, updated_at, deletado_em | [01 §4.1](01-banco-de-dados.md) |
-| `itens_lista` | id (uuid, cliente), lista_id, nome, quantidade>0, unidade (enum), categoria (enum), concluido, ordem, updated_at, deletado_em | unique parcial `(lista_id, lower(nome))` ativos |
-| `lista_membros` | lista_id, user_id, papel ∈ {dono, editor, leitor} | **1 dono por lista** (trigger `sync_dono`) |
-| `convites` (F6) | token, tipo link/email, papel_oferecido ≠ dono, estado, expira_em | [08 §2](08-compartilhamento-colaborativo.md) |
-| `mutacoes_pendentes` (local) | tabela, operacao, registro_id, payload JSON, ts_local, tentativas | [03 §3](03-sincronizacao-offline.md) |
+| `listas` (local) | id (uuid, cliente), titulo, arquivada_em, orcamento_centavos, updated_at, deletado_em | [05 §6.2](05-app-flutter.md) |
+| `itens_lista` (local) | id (uuid, cliente), lista_id, nome, quantidade>0, unidade (enum), categoria (enum), concluido, ordem, preco_centavos, updated_at, deletado_em | índice único parcial `uq_item_ativo` |
+| `historico_precos` (local) | nome, unidade, preco_centavos, registrado_em | local por dispositivo (RF-29) |
 
-**Enum de unidades (fechado):** `un, kg, g, l, ml, caixa, pacote, pct, pt, dz` — mesma lista no Postgres e no Dart.
+**Enum de unidades (fechado):** `un, kg, g, l, ml, caixa, pacote, pct, pt, dz` — fonte única `lib/core/dominio/unidade.dart` (usada pelo app e pelo parser local).
 
-**Enum de categorias (fechado, ADR-011):** `hortifruti, mercearia, frios, laticinios, congelados, padaria, bebidas, pet, limpeza, higiene, outros` — mesma lista no Postgres e no Dart; a ordem do enum define a ordem dos grupos na UI. Sugestão **local em camadas** (memória por nome → dicionário estático → `outros`).
+**Enum de categorias (fechado, ADR-011):** `hortifruti, mercearia, frios, laticinios, congelados, padaria, bebidas, pet, limpeza, higiene, outros` — fonte única `lib/core/dominio/categoria.dart`; a ordem do enum define a ordem dos grupos na UI. Sugestão **local em camadas** (memória por nome → dicionário estático → `outros`).
 
 ## 4. Fluxos essenciais
 
-### F1 — Escrita (sempre igual, online ou offline)
-UI → Repositório → **Drift aplica + enfileira mutação** → (online?) flush. Leitura: Stream do Drift → UI. [03 §2](03-sincronizacao-offline.md)
-
-### F2 — Flush da fila
-Drena por lista, em ordem; **coalescing** (múltiplas mutações do mesmo registro = envia só a última); upsert com comparação **LWW por `updated_at`**; empate → servidor; retry exponencial (máx 10 → estado `Erro` na UI). [03 §4–5](03-sincronizacao-offline.md)
+### F1 — Escrita local (sempre)
+UI → Repositório → **Drift** grava. Leitura: Stream do Drift → UI. A UI nunca bloqueia. [05 §2](05-app-flutter.md)
 
 ### F3 — Importação de lista (parser local)
-App → parser local determinístico (`lib/core/importacao/parser_lista_local.dart`, offline, sem rede) sobre o texto colado (≤ `maxCaracteresImportLocal`) → sugestão de categoria local em camadas (memória → dicionário → `outros`) → `{itens:[{nome,quantidade,unidade,categoria}], aviso}` → **pré-visualização editável** → grava local. Erros amigáveis ([04 §2](04-importacao-lista.md)). Item sem `categoria` → `outros`.
+App → parser local determinístico (`lib/core/importacao/parser_lista_local.dart`, offline) sobre o texto colado (≤ `maxCaracteresImportLocal`) → sugestão de categoria local em camadas (memória → dicionário → `outros`) → `{itens:[{nome,quantidade,unidade,categoria}], aviso}` → **pré-visualização editável** → grava local no Drift. Erros amigáveis ([04 §2](04-importacao-lista.md)). Item sem `categoria` → `outros`.
 
-### F4 — Realtime
-WebSocket Supabase → mudanças remotas → aplicar no Drift **se vencerem LWW** → Stream notifica UI (< 1s). RLS filtra o que cada usuário recebe. [03 §4](03-sincronizacao-offline.md)
-
-### F5 — Exclusão de conta
-Configurações → confirmação dupla → RPC `excluir_conta()` → `delete from auth.users` → CASCADEs apagam tudo → app limpa cache/fila. [06 §3.3.1](06-mvp-entregas.md)
+### F6 — Backup local
+Configurações → **Exportar backup** (`.json` fiel ao banco) → **Importar backup** (merge por `id` + LWW por `updated_at`). [05 §6.10](05-app-flutter.md)
 
 ## 5. Contratos rápidos
 
@@ -73,40 +64,38 @@ entrada: texto colado, até maxCaracteresImportLocal (10.000)
 saída: { "itens": [...], "aviso": null }
 ```
 
-**Estados de sync (UI):** `Sincronizado → Pendente(n) → Sincronizando → Sincronizado | Offline | Erro` ([03 §6](03-sincronizacao-offline.md)).
-
-**Papéis:** `dono` > `editor` (escreve) > `leitor` (só lê). Policies: [02 §4](02-seguranca-rls.md) · Matrix [02 §3](02-seguranca-rls.md).
+**Dono e sessão:** não há conta. O dono de toda lista é a constante `idLocal = 'local'` ([05 §2.3](05-app-flutter.md)).
 
 ## 6. Decisões vinculantes (ADR — 1 linha cada, detalhe em [00 §5](00-visao-geral.md))
 
 | ADR | Decisão |
 | :--- | :--- |
-| 001 | MVP = Android/iOS/Web; **Desktop suportado (F18)**; **Web de uso local (F19 suspensa, ADR-013)** |
+| 001 | MVP = Android/iOS/Web; **Desktop suportado (F18)**; **Web de uso local (ADR-013)** |
 | 002 | Riverpod |
 | 003 | Drift/SQLite local |
-| 004 | LWW + tombstones (sem modal de conflito) |
 | 005 | Enum fechado de unidades |
-| 011 | Categoria do item: enum fechado (11 valores) + sugestão local em camadas (memória → dicionário → outros) |
 | 006 | IDs UUID v4 gerados no cliente |
-| 007 | Free tier aceito; Supabase Pro = gatilho de lançamento público |
-| 008 | Exclusão de conta: delete físico em cascata (F5) |
-| 009 | Sentry free |
 | 010 | GitHub Actions desde a F1 |
-| 012 | Suporte a Web (Drift/WASM) e Desktop (F18); banco por fábrica com import condicional; auth/links por plataforma |
-| 013 | Web: **uso local** (publicação suspensa em 18/09/2026; Hosting desabilitado) |
+| 011 | Categoria do item: enum fechado (11 valores) + sugestão local em camadas (memória → dicionário → outros) |
+| 012 | Suporte a Web (Drift/WASM) e Desktop (F18); banco por fábrica com import condicional |
+| 013 | Web: **uso local** (publicação suspensa em 18/09/2026) |
+| **015** | **App único local "Minhas Listas" (F48): sem Supabase/conta/sync/colaboração/push** |
+| ~~004~~ | ~~LWW de sync~~ — superada (não há sync) |
+| ~~007~~ | ~~Free tier Supabase~~ — superada (não há backend) |
+| ~~008~~ | ~~Exclusão de conta~~ — superada (não há conta) |
+| ~~009~~ | ~~Sentry~~ — superada (nada sai do aparelho) |
+| ~~014~~ | ~~Notificações push~~ — superada (push removido) |
 
 ## 7. Comandos essenciais
 
 ```bash
 flutter test                          # testes (obrigatório verde)
 dart format . && flutter analyze      # estilo e lint
-supabase db reset                     # aplica migrations local
-supabase db push                      # aplica em produção
 ```
 
 ## 8. Design System (doc 15)
 
-Material 3 Expressive, seed verde `#2E7D32`, fonte Plus Jakarta Sans bundlada, claro/escuro com paridade, modo Claro/Escuro/Sistema (SharedPreferences) e a biblioteca `App*` em `lib/core/widgets/`. Tokens em `lib/core/theme/tokens/`. Detalhes: [15](15-design-system.md).
+Material 3 Expressive, seed índigo `#4F46E5` (identidade "Minhas Listas"), fonte Plus Jakarta Sans bundlada, claro/escuro com paridade, modo Claro/Escuro/Sistema (SharedPreferences) e a biblioteca `App*` em `lib/core/widgets/`. Tokens em `lib/core/theme/tokens/`. Detalhes: [15](15-design-system.md).
 
 ---
 

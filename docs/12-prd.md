@@ -4,7 +4,7 @@
 
 **Este documento é a fonte única de REQUISITOS** (o "o quê" e o "porquê"). O **como** vive nos documentos donos — aqui apenas apontamos. Regra: **nenhum requisito novo entra no código sem ID aqui**.
 
-Fluxo spec-driven: `13 pré-modelo` (contexto rápido) → `este doc` (o quê) → `14 tarefas` (o quê fazer) → **doc dono** (como) → `07` (como verificar).
+Fluxo spec-driven: `13 pré-modelo` (contexto rápido) → `este doc` (o quê) → `14 tarefas` (o que fazer) → **doc dono** (como) → `07` (como verificar).
 
 ---
 
@@ -13,7 +13,6 @@ Fluxo spec-driven: `13 pré-modelo` (contexto rápido) → `este doc` (o quê) �
 | ID | Persona | Contexto |
 | :--- | :--- | :--- |
 | P1 | **Comprador solo** | Faz compras sozinho, anota em qualquer lugar, usa o celular no mercado |
-| P2 | **Casal/família compartilhando** | Dois ou mais mantêm a mesma lista; quem sai compra, quem fica adiciona |
 | P3 | **Anotador caótico** | Anota listas em texto livre (WhatsApp, bloco de notas), quer que "a máquina organize" |
 
 ## 2. Requisitos Funcionais
@@ -22,49 +21,36 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 
 | ID | Requisito | Dono (doc) | Fase | Aceite |
 | :--- | :--- | :--- | :--- | :--- |
-| RF-01 | Autenticação: registro com verificação de e-mail, login, recuperação de senha | 05 §6.1 | F3 · F14 | [06 §1](06-mvp-entregas.md) |
 | RF-02 | Criar, renomear e excluir listas (delete lógico + confirmação) | 05 §6.2 | F3 | [06 §1](06-mvp-entregas.md) |
-| RF-03 | CRUD de itens com quantidade, unidade (enum [01 §3](01-banco-de-dados.md)) e checkbox | 05 §6.3 | F3 | [06 §1](06-mvp-entregas.md) |
+| RF-03 | CRUD de itens com quantidade, unidade (enum em `lib/core/dominio/unidade.dart`) e checkbox | 05 §6.3 | F3 | [06 §1](06-mvp-entregas.md) |
 | RF-04 | Item concluído move para seção dobrável; ações em massa (desmarcar todos, limpar concluídos) | 05 §6.3 | F3 | [06 §1](06-mvp-entregas.md) |
-| RF-05 | Reordenar itens via drag-and-drop (coluna `ordem`) | 05 §6.3 | F3–F4 | [05 §8](05-app-flutter.md) |
-| RF-07 | Sincronização em tempo real entre dispositivos (Realtime) | 03 §4 | F4 | [06 §1](06-mvp-entregas.md) |
-| RF-08 | Funcionamento 100% offline com sincronização automática ao reconectar | 03 | F4 | [06 §1](06-mvp-entregas.md) + [11 §3.1](11-usabilidade-fase5.md) (T3 bloqueante) |
-| RF-09 | Indicador de status de sincronização na UI | 03 §6 + 10 §3.2 | F4 | [03 §8](03-sincronizacao-offline.md) |
-| RF-10 | Deduplicação de itens (unique parcial + aumento de quantidade no sync) | 01 §4.3 + 03 §5 | F4 | [01 §8](01-banco-de-dados.md) |
-| RF-11 | Exclusão de conta com delete físico em cascata (LGPD) | 06 §3.3.1 | F5 | [06 §3.3.1](06-mvp-entregas.md) |
-| RF-12 | Observabilidade: Sentry com privacidade (sem conteúdo de listas em logs) | 07 §4 | F5 | [07](07-qualidade-ci.md) |
-| RF-13 | Compartilhamento por convite (link/e-mail) com papéis — fluxo **link** na F7; fluxo **e-mail** (criar + painel de pendentes + aceitar/recusar) entregue na **F32** ([08 §4](08-compartilhamento-colaborativo.md)) | 08 | F7 · F32 | [08 §4/§9](08-compartilhamento-colaborativo.md) |
-| RF-14 | Transferência de dono: o dono passa a lista para um membro e vira `editor`; novo dono avisado pelo Realtime | 08 §6 | F24 | [08 §6](08-compartilhamento-colaborativo.md) |
-| RF-15 | Agrupamento da lista por categoria (enum fechado [01 §3](01-banco-de-dados.md)) com sugestão local em camadas (memória por nome → dicionário estático → `outros`) | 05 §6.3 + 01 §4.3 | F6 | [05 §8](05-app-flutter.md) + [03 §8](03-sincronizacao-offline.md) |
+| RF-05 | Reordenar itens via drag-and-drop (coluna `ordem`) | 05 §6.3 | F3 | [05 §8](05-app-flutter.md) |
+| RF-15 | Agrupamento da lista por categoria (enum fechado em `lib/core/dominio/categoria.dart`) com sugestão local em camadas (memória por nome → dicionário estático → `outros`) | 05 §6.3 | F6 | [05 §8](05-app-flutter.md) |
 | RF-16 | Importação de lista por texto livre (parser local determinístico, offline) com pré-visualização editável | 05 §6.4 + 10 §4 | F11 | [05 §8](05-app-flutter.md) |
 | RF-17 | Busca/filtro **local (offline)** de listas pelo título (painel) e de itens pelo nome (tela da lista) | 05 §6.2 + §6.3 | F16 | [05 §8](05-app-flutter.md) |
 | RF-18 | Modo mercado: tela focada para comprar no corredor (pendentes em destaque, contador, faixa "Marcados") acessível por botão na tela da lista | 05 §6.5 + 10 §3.5 | F22 | [05 §8](05-app-flutter.md) |
 | RF-19 | Itens frequentes: chips de sugestão derivados do histórico local (offline), com peso por escopo | 05 §3 + §6.3 + 10 §3.1 | F22 | [05 §8](05-app-flutter.md) |
 | RF-20 | Duplicar lista ("comprar de novo"): cria uma lista nova a partir dos itens pendentes de uma lista existente | 05 §6.2 + 10 §2.5 | F23 | [05 §8](05-app-flutter.md) |
-| RF-21 | Preço unitário opcional por item + total ao vivo dos itens marcados ("no carrinho"), no rodapé da lista e no modo mercado | 05 §6.3/§6.5 + 10 §3.1/§3.5 + 01 §4.3 | F25 | [05 §8](05-app-flutter.md) |
-| RF-22 | Arquivar/desarquivar listas (estado global, só o dono) | 05 §6.2 + 10 §2 | F26 | [05 §8](05-app-flutter.md) |
+| RF-21 | Preço unitário opcional por item + total ao vivo dos itens marcados ("no carrinho"), no rodapé da lista e no modo mercado | 05 §6.3/§6.5 + 10 §3.1/§3.5 | F25 | [05 §8](05-app-flutter.md) |
+| RF-22 | Arquivar/desarquivar listas (estado global) | 05 §6.2 + 10 §2 | F26 | [05 §8](05-app-flutter.md) |
 | RF-23 | Adicionar itens de outra lista (pendentes, multi-seleção, dedup) | 05 §6.3 + 10 §3 | F27 | [05 §8](05-app-flutter.md) |
 | RF-24 | Ordem pessoal das categorias (global, local por dispositivo) | 05 §6 + 10 §5 | F28 | [05 §8](05-app-flutter.md) |
 | RF-25 | Quantidades em fração na entrada e exibição (½, 1/2, 1 1/2) | 04 §3 + 05 §6.3 | F29 | [05 §8](05-app-flutter.md) |
 | RF-26 | Adicionar item por voz (reconhecimento on-device, pt-BR, preenche o campo) | 05 §6.3 | F30 | [05 §8](05-app-flutter.md) |
 | RF-27 | Boas-vindas (uma vez) + estados vazios explicativos + **tour guiado interativo do primeiro uso** (2 etapas, spotlight sobre a UI real, reabrível em Configurações) | 05 §6.8/§6.11 + 10 §2/§3/§5 | F31 · F46 | [05 §8](05-app-flutter.md) |
-| RF-28 | Orçamento (limite de gasto) por lista, sincronizado, comparado ao total do carrinho (RF-21), editável por dono/editor | 05 §6.3/§6.5 + 10 §3.1/§3.5 + 01 §4.1 + 03 | F36 | [05 §8](05-app-flutter.md) |
-| RF-29 | Comparação de preços entre idas: "Última compra: R$ X (dd/mm)" + variação no editor, a partir do histórico **local por dispositivo (não sincronizado)** | 05 §6.3 + 10 §3.1 + 03 | F37 | [05 §8](05-app-flutter.md) |
-| RF-30 | Notificação push (Android) de convite por e-mail recebido e de novo membro numa lista sua | 08 §7 + 01 §4.5 + 09 §2 | F38 | [08 §7](08-compartilhamento-colaborativo.md) |
-| RF-31 | Versão Lite: uso sem conta, 100% no aparelho (sem login, sem convites, sem notificações), com backup local exportar/importar; identidade visual própria (índigo/cesta, nome Minhas Listas) | 05 §2.3 + 05 §6.10 | F41 | [05 §2.3](05-app-flutter.md) |
-| RF-32 | Publicação do Lite ("Minhas Listas") na Google Play em produção: app 100% local (sem rede/push/Firebase), AAB assinado, política de privacidade pública e Declaração de Dados | 06 §4 + 09 §2.9/§2.10 + 05 §2.3 | F47 | [06 §4](06-mvp-entregas.md) |
+| RF-28 | Orçamento (limite de gasto) por lista, comparado ao total do carrinho (RF-21), editável | 05 §6.3/§6.5 + 10 §3.1/§3.5 | F36 | [05 §8](05-app-flutter.md) |
+| RF-29 | Comparação de preços entre idas: "Última compra: R$ X (dd/mm)" + variação no editor, a partir do histórico **local por dispositivo** | 05 §6.3 + 10 §3.1 | F37 | [05 §8](05-app-flutter.md) |
+| RF-31 | **App único local "Minhas Listas" (Lite):** uso sem conta, 100% no aparelho (sem login, sem convites, sem notificações, sem sincronização), com backup local exportar/importar; identidade visual própria (índigo/cesta, nome "Minhas Listas") | 05 §2.3 + 05 §6.10 | F48 | [05 §2.3](05-app-flutter.md) |
+| RF-32 | Publicação do app ("Minhas Listas") na Google Play em produção: app 100% local (sem rede/push/Firebase), AAB assinado, política de privacidade pública e Declaração de Dados | 06 §4 + 09 §2.10 + 05 §2.3 | F47 | [06 §4](06-mvp-entregas.md) |
 
 ## 3. Requisitos Não-Funcionais
 
 | ID | Requisito | Meta | Verificação |
 | :--- | :--- | :--- | :--- |
-| RNF-01 | Latência de sync (online) | Mudança visível < 1s em outro dispositivo | Teste T4 de [11](11-usabilidade-fase5.md) |
-| RNF-02 | Offline completo | Leitura/escrita/marcação sem rede; zero perda ao reconectar | Checklist [03 §8](03-sincronizacao-offline.md) |
-| RNF-03 | Segurança | Usuário não acessa lista alheia (RLS) | Negações N-01…N-10 de [02 §5](02-seguranca-rls.md) |
-| RNF-05 | Privacidade (LGPD) | Exclusão de conta funcional; logs sem dados de conteúdo | [06 §3](06-mvp-entregas.md) |
-| RNF-06 | Acessibilidade | Alvos ≥ 48dp, contraste AA, escala de fonte respeitada | Testes de a11y ([15 §4](15-design-system.md)); área de respiro do indicador de sync (F40) |
-| RNF-07 | Custo | R$ 0 no MVP (free tiers) | Riscos R-01 com gatilho definido ([00 §4](00-visao-geral.md)) |
-| RNF-08 | Qualidade | CI verde obrigatório; sync e RLS com prioridade máxima de testes | [07 §1](07-qualidade-ci.md); consistência de camadas e paridade de barreiras local/remoto (F39) |
+| RNF-02 | Offline completo | Leitura/escrita/marcação sem rede; dados persistem ao fechar/reabrir (Drift é a fonte da verdade) | Testes de repositório + fluxo `T3` de [11](11-usabilidade-fase5.md) |
+| RNF-05 | Privacidade (LGPD) | Nada sai do aparelho; sem conta/telemetria; backup local e política pública | [06 §3](06-mvp-entregas.md) |
+| RNF-06 | Acessibilidade | Alvos ≥ 48dp, contraste AA, escala de fonte respeitada | Testes de a11y ([15 §4](15-design-system.md)) |
+| RNF-08 | Qualidade | CI verde obrigatório; repositórios, parser e fluxos críticos cobertos no CI | [07 §1](07-qualidade-ci.md) |
 
 ## 4. User Stories
 
@@ -82,23 +68,7 @@ Como P3, quero colar uma anotação bagunçada e receber itens estruturados, par
 
 **US-03 — Comprar sem sinal**
 Como P1, quero marcar itens no mercado sem internet, para não depender do sinal da loja.
-- Given estou offline com itens pendentes, when marco 3 itens e o sinal retorna, then as marcações aparecem no outro dispositivo sem duplicar nem perder nada.
-
-### Casal compartilhando (P2)
-
-**US-04 — Mesma lista em tempo real** *(Fase 6)*
-Como P2, quero que itens adicionados pelo meu parceiro apareçam na hora no meu celular, para decidirmos juntos.
-- Given ambos estamos na lista, when o parceiro adiciona "Pão", then ele aparece no meu app em < 1s.
-
-**US-05 — Convidar parceiro** *(Fase 6)*
-Como P2, quero enviar um link para meu parceiro acessar minha lista, para compartilharmos sem cadastro complicado.
-- Given sou dono, when gero convite por link e ele abre, then ele entra como editor e a lista aparece no painel dele.
-
-**US-06 — Papel leitor**
-Como P2, quero dar acesso só de leitura ao filho, para que ele acompanhe sem alterar.
-- Given um membro é `leitor`, when ele abre a lista, then vê banner de somente leitura e não consegue editar (UI bloqueia + RLS nega).
-
-### Comprador solo (P1) — agrupamento *(Fase 6)*
+- Given não tenho conexão com itens pendentes, when marco 3 itens e fecho/reabro o app, then as marcações continuam lá (os dados ficam no aparelho).
 
 **US-07 — Lista por setores**
 Como P1, quero os itens pendentes agrupados por categoria (Hortifrúti, Mercearia, Frios…), para comprar por setor sem voltar atrás na loja.
@@ -114,16 +84,12 @@ Como P1, quero que itens comuns já venham categorizados mesmo offline, para nã
 
 | Área do design | Doc dono | Resumo |
 | :--- | :--- | :--- |
-| Schema, migrations, triggers | [01](01-banco-de-dados.md) | Tabelas, enum de unidades, LWW cols, cascades |
-| Segurança de acesso | [02](02-seguranca-rls.md) | `is_member`, policies, testes de negação |
-| Sincronização e conflitos | [03](03-sincronizacao-offline.md) | Fila, flush, LWW, tombstones |
 | Importação de lista (parser local) | [04](04-importacao-lista.md) | Parser determinístico RF-16, limites, enum, sugestão de categoria |
 | Arquitetura do app e UX | [05](05-app-flutter.md) | Riverpod, rotas, telas, Material 3 |
 | Layout visual | [10](10-wireframes-telas.md) | Wireframes de todas as telas |
 | Design System (tokens, componentes) | [15](15-design-system.md) | Material 3 Expressive, componentes, acessibilidade |
-| Compartilhamento (F6) | [08](08-compartilhamento-colaborativo.md) | Convites, papéis, transferência |
-| Operação | [09](09-runbook-operacoes.md) | Runbook pós-lançamento |
-| Qualidade | [07](07-qualidade-ci.md) | Testes, CI, Sentry |
+| Operação | [09](09-runbook-operacoes.md) | Build, distribuição e publicação |
+| Qualidade | [07](07-qualidade-ci.md) | Testes, CI |
 
 ## 6. Matriz de Rastreabilidade
 
@@ -131,38 +97,32 @@ Cada requisito liga story → design → tarefas ([14](14-tarefas.md)) → verif
 
 | Requisito | US | Fase | Tarefas (14) | Testes (07) |
 | :--- | :--- | :--- | :--- | :--- |
-| RF-01 | — | F3 · F14 | F3-T04…T07; F14-T03 | Widget auth + fluxo de nova senha |
 | RF-02/03/04 | US-01 | F3 | F3-T08…T12 | Repositórios + widgets |
-| RF-05 | US-01 | F3–F4 | F4-T05 | Widget reordenar |
-| RF-07/08/09 | US-03, US-04 | F4 | F4-T03…T08 | Sync Engine (máxima) |
-| RF-10 | US-02 | F4 | F4-T06 | Sync + SQL |
-| RF-11 | — | F5 | F5-T02, F5-T03 | Integração RPC |
-| RF-12 | — | F5 | F5-T04 | Sentry smoke |
-| RF-13 | US-05, US-06 | F6 · F32 | F7 (link); F32-T01…T03 (e-mail) | N-11…N-14 + SQL CE-01…CE-04 + repo + widgets |
-| RF-14 | US-05 | F24 | F24-T01…T04 | SQL T-01…T-07 + unit/widget |
-| RF-15 | US-07, US-08 | F6 | F6-T01…T06 | Repo + sugestão + widgets + sync |
+| RF-05 | US-01 | F3 | F4-T05 | Widget reordenar |
+| RF-15 | US-07, US-08 | F6 | F6-T01…T06 | Repo + sugestão + widgets |
 | RF-16 | US-02 | F11 | F11-T01…T03; F17-T01…T03 | Unit parser + widgets |
 | RF-17 | US-01 | F16 | F16-T01…T03 | Unit busca + widgets |
-| RF-18 | US-01 | F22 | F22-T04, F22-T05 | Widget mercado (marcar/desmarcar, faixa, estados) + teste de gate |
-| RF-19 | US-01 | F22 | F22-T02, F22-T03 | Unit frequentes (peso, limiar, limite) + widgets de chips |
-| RF-20 | US-01 | F23 | F23-T01, F23-T02 | Unit duplicar (só pendentes, preserva campos/ordem) + widget do painel |
+| RF-18 | US-01 | F22 | F22-T04, F22-T05 | Widget mercado + teste de gate |
+| RF-19 | US-01 | F22 | F22-T02, F22-T03 | Unit frequentes + widgets de chips |
+| RF-20 | US-01 | F23 | F23-T01, F23-T02 | Unit duplicar + widget do painel |
 | RF-21 | US-01 | F25 | F25-T02…T04 | Unit preço/total + widgets |
-| RF-22 | US-01 | F26 | F26-T02, F26-T03 | Unit arquivo + widgets + SQL ARQ-01…ARQ-03 |
+| RF-22 | US-01 | F26 | F26-T02, F26-T03 | Unit arquivo + widgets |
 | RF-23 | US-01 | F27 | F27-T01, F27-T02 | Unit dedup/lote + widgets |
 | RF-24 | US-07 | F28 | F28-T01, F28-T02 | Unit ordem + provider + widgets |
 | RF-25 | US-01, US-02 | F29 | F29-T01, F29-T02 | Unit parse/format + parser + editor |
 | RF-26 | US-01 | F30 | F30-T01, F30-T02 | Unit fake + widgets (plugin real: smoke em device) |
-| RF-27 | US-01 | F31 · F46 | F31-T01, F31-T02; F46-T01…T05 | Unit provider/widgets (boas-vindas) + motor/roteiro/overlay do tour |
+| RF-27 | US-01 | F31 · F46 | F31-T01, F31-T02; F46-T01…T05 | Unit provider/widgets + motor/roteiro/overlay do tour |
 | RF-28 | US-01 | F36 | F36-T02…T04 | Unit repo/aplicador + widgets |
 | RF-29 | US-01 | F37 | F37-T01, F37-T02 | Unit repo/histórico + widgets |
-| RF-30 | US-01, US-03 | F38 | F38-T05, F38-T08 | Unit fake/roteamento + Deno/SQL + widgets |
-| RF-31 | US-01 | F41 | F41-T02…F41-T11 | Widget/unit (modo Lite + backup) + smoke em device |
-| RF-32 | US-01 | F47 | F47-T01…F47-T08 | Widget/unit + build AAB + teste de manifest + smoke em device |
+| RF-31 | US-01 | F48 | F48-T01…T08 | Widget/unit + smoke em device |
+| RF-32 | US-01 | F47 | F47-T01…T08 | Widget/unit + build AAB + teste de manifest + smoke em device |
+| RNF-02 | US-03 | F48 | F48-T02, F48-T04 | Testes de repositório + fluxo `T3` |
 | RNF-06 | — | F8 · F14 | F14-T01…T02 | Guidelines de a11y + escala de fonte |
+| RNF-08 | — | F33 · F39 | F33-T01…T03 | Fluxos críticos + consistência |
 
 ## 7. Fora de escopo (MVP)
 
-Receitas/menus (o **preço por item + total dos marcados** é o RF-21, entregue na F25; o **orçamento por lista** é o RF-28, entregue na F36; a **comparação entre idas** é o RF-29, entregue na F37), histórico de compras, cupons, scan de código de barras, importação de foto/nota fiscal, app iOS (F6), publicação de desktop (o suporte a Desktop — Windows/Linux/macOS — entra na Fase 18; a **publicação Web** entra na **Fase 19**), compartilhamento na UI (F6).
+Receitas/menus, histórico de compras, cupons, scan de código de barras, importação de foto/nota fiscal, app iOS na distribuição, publicação de desktop, **colaboração/compartilhamento** (removido na F48), **conta/nuvem/sync/push** (removidos na F48).
 
 ---
 

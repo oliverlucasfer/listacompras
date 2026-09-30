@@ -6,6 +6,8 @@
 
 Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência normativa · CP: critério de pronto.
 
+> **Histórico:** as fases anteriores à **Fase 48** são registro do que foi executado e ainda citam os docs `01`/`02`/`03`/`08` e o backend Supabase — **removidos na F48** (app único local). Elas **não** são normativas para o app atual; a partir da F48 valem os docs donos remanescentes (`00`, `04`, `05`, `06`, `07`, `09`–`16`).
+
 ---
 
 ## Fase 1 — Infraestrutura & Banco de Dados
@@ -1001,6 +1003,37 @@ Spec: [superpowers/specs/2026-09-29-publicacao-lite-play-design.md](superpowers/
 - [x] **F47-T07** — Página pública da política + GitHub Pages
 - [x] **F47-T08** — Runbook de publicação, checklist do Lite e ficha da loja
 
+## Fase 48 — App único Lite (remoção do Supabase) (RF-31)
+
+Spec: [superpowers/specs/2026-09-29-app-unico-lite-sem-supabase-design.md](superpowers/specs/2026-09-29-app-unico-lite-sem-supabase-design.md) · Plano: [superpowers/plans/2026-09-29-app-unico-lite-sem-supabase.md](superpowers/plans/2026-09-29-app-unico-lite-sem-supabase.md) · Requisito: RF-31 (app único local "Minhas Listas"). · Docs donos: 05, 06, 07, 09, 12, 14.
+
+- [x] **F48-T01** — Sessão única (`idLocal`) e backup local
+  Dep: — · Docs: [05 §2.3/§6.10](05-app-flutter.md), [12 §2](12-prd.md)
+  CP: `idLocal = 'local'` substitui `donoAtualIdProvider`/`emailUsuarioProvider`; `features/auth/` removida; `BackupRepository(donoLocal: true, enfileirar: false)`; backup exportar/importar verde.
+- [x] **F48-T02** — Remover outbox/sync
+  Dep: F48-T01 · Docs: [05 §2.2](05-app-flutter.md)
+  CP: `features/sync/` e `OutboxMutacoes` removidos; `ListasRepository` sem `_enfileirarMutacoes`; escritas só no Drift.
+- [x] **F48-T03** — Corte atômico: auth/sync/convites/push/modos
+  Dep: F48-T02 · Docs: [05 §2/§4](05-app-flutter.md)
+  CP: `AppModo`/`AppCapacidades`/`capacidadesProvider`/`compatibilidade_modo_pacote`/`tela_build_incorreto` removidos; rotas finais da spec §3; convites/push/notificações removidos; UI sem indicador de sync.
+- [x] **F48-T04** — Limpar arquivos mortos
+  Dep: F48-T03 · Docs: [05 §2](05-app-flutter.md)
+  CP: `core/rede/`, `core/observabilidade/`, `core/config/{supabase_config,links,app_modo}.dart`, deeplink e strings de conta/convite/sync removidos; `flutter analyze` limpo.
+- [x] **F48-T05** — Migration Drift v10 → v11
+  Dep: F48-T02 · Docs: [05 §2.2](05-app-flutter.md)
+  CP: tabela `mutacao_pendente` dropada (`deleteTable`); `_dedupItensAtivos` sem a fila; `database.g.dart` regenerado; teste de upgrade v10→v11 verde.
+- [x] **F48-T06** — Remover deps de nuvem do pubspec
+  Dep: F48-T03 · Docs: [05 §1](05-app-flutter.md)
+  CP: `supabase_flutter`, `firebase_core`, `firebase_messaging`, `app_links`, `http`, `connectivity_plus` e `sentry_flutter` fora do `pubspec`; `flutter test` verde.
+- [x] **F48-T07** — Android sem flavors/Firebase
+  Dep: F48-T06 · Docs: [09 §2.9](09-runbook-operacoes.md)
+  CP: `flavorDimensions`/`productFlavors` e o plugin google-services removidos; `applicationId`/`app_name` do Lite; manifest release único (sem INTERNET/Firebase, `allowBackup=false`, com `RECORD_AUDIO`); `google-services.json`/`src/prod`/`dart_defines_prod.json` removidos.
+- [x] **F48-T08** — Web, CI e docs donos
+  Dep: F48-T07 · Docs: [07 §3](07-qualidade-ci.md), [12](12-prd.md), [14](14-tarefas.md)
+  CP: job `supabase`/`backup.yml` removidos; builds sem flavor/define; web "Minhas Listas"; docs 00/04/05/06/07/09/10/11/12/13/14/15/16 + AGENTS + planejamento + README atualizados; Fase 48 na tabela de progresso.
+
+Nota: *(fase concluída com o app único `br.com.oliverlucas.listacompras.lite` ("Minhas Listas"). As fases **F41** (flavor Lite), **F42** (dívidas da F41) e **F47** (publicação do Lite) ficam como **histórico — superadas pela F48**; a base local e o endurecimento de publicação da F47 foram reaproveitados no app único.)*
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -1050,7 +1083,8 @@ Spec: [superpowers/specs/2026-09-29-publicacao-lite-play-design.md](superpowers/
 | F45 Unidade `pt` (pote) | 1 | 1 |
 | F46 Tour guiado do 1º uso | 5 | 5 |
 | F47 Publicação do Lite | 8 | 8 |
-| **Total** | **256** | **254** |
+| F48 App único Lite | 8 | 8 |
+| **Total** | **264** | **262** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

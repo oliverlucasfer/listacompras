@@ -2,9 +2,9 @@
 
 > Navegação: [← 14 Tarefas](14-tarefas.md) · [← Índice](../planejamento_lista_compras.md) · [16 Roadmap →](16-roadmap-pos-mvp.md)
 > Spec: [superpowers/specs/2026-09-11-revisao-visual-ux-design.md](superpowers/specs/2026-09-11-revisao-visual-ux-design.md)
-> Identidade Lite: [superpowers/specs/2026-09-28-identidade-visual-lite-design.md](superpowers/specs/2026-09-28-identidade-visual-lite-design.md)
+> Identidade do app: [superpowers/specs/2026-09-28-identidade-visual-lite-design.md](superpowers/specs/2026-09-28-identidade-visual-lite-design.md)
 
-**Este documento é o dono do design system** (tokens, tipografia, componentes, motion, acessibilidade). Fundação: Material 3 Expressive sobre seed verde `#2E7D32`. Comportamento/UX continua em [05 §6](05-app-flutter.md); layout de telas em [10](10-wireframes-telas.md); verificação de acessibilidade (RNF-06) em [12 §3](12-prd.md).
+**Este documento é o dono do design system** (tokens, tipografia, componentes, motion, acessibilidade). Fundação: Material 3 Expressive sobre seed índigo `#4F46E5` (identidade única "Minhas Listas", RF-31/ADR-015). Comportamento/UX continua em [05 §6](05-app-flutter.md); layout de telas em [10](10-wireframes-telas.md); verificação de acessibilidade (RNF-06) em [12 §3](12-prd.md).
 
 ## 1. Tokens
 
@@ -12,7 +12,7 @@ Fonte única em `lib/core/theme/tokens/` — proibido valor hardcoded na UI.
 
 | Arquivo | Tokens |
 | :--- | :--- |
-| `app_colors.dart` | seed + `seedLite=#4F46E5` (identidade do Lite, §6) + paleta semântica (success/warning/info) clara/escura |
+| `app_colors.dart` | seed `#4F46E5` (identidade "Minhas Listas") + paleta semântica (success/warning/info) clara/escura |
 | `app_spacing.dart` | `xs=4, sm=8, md=12, lg=16, xl=24, xxl=32, xxxl=48` |
 | `app_radius.dart` | `sm=8, md=12, lg=16, xl=24, xxl=28, full=999` |
 | `app_elevation.dart` | níveis M3 `0..3` |
@@ -21,11 +21,11 @@ Fonte única em `lib/core/theme/tokens/` — proibido valor hardcoded na UI.
 
 Título de tela (AppBar): **24sp bold** aplicado via `appBarTheme.titleTextStyle` (F13-T03). Precisa ser explícito — o `appBarTheme` não passa pela localização de tipografia do `Theme`, então um estilo só de cor deixaria o título sem tamanho (cairia no default).
 
-**Margens:** todo conteúdo fica a **16dp** (`AppSpacing.lg`) das bordas; o `ListTile` já traz esse valor por padrão. O `IndicadorSync` traz a própria margem horizontal (16dp) — não envolvê-lo em outro `Padding` horizontal (F40-T02).
+**Margens:** todo conteúdo fica a **16dp** (`AppSpacing.lg`) das bordas; o `ListTile` já traz esse valor por padrão.
 
 ## 2. Tema
 
-- `AppTheme.claroDe/escuroDe(IdentidadeVisual)` (`lib/core/theme/app_theme.dart`) geram o tema a partir do seed da identidade (F44-T01); os getters `AppTheme.claro`/`AppTheme.escuro` mantêm a identidade colaborativa como default (seed `#2E7D32`). O Lite usa seed índigo `#4F46E5` (`AppColors.seedLite`) — a UI lê a marca via `identidadeVisualProvider` (`lib/core/theme/identidade_visual.dart`), derivada de `AppCapacidades`, nunca de `AppModo`.
+- `AppTheme.claro`/`AppTheme.escuro` (`lib/core/theme/app_theme.dart`) geram o tema a partir do seed do app (índigo `#4F46E5`).
 - `ColorScheme.fromSeed` + component themes (appBar, card, input, botões, chip, sheet, dialog, snackbar, navigationBar, etc.).
 - Cores semânticas via `ThemeExtension<AppSemanticColors>` (`lib/core/theme/app_semantic_colors.dart`), lidas com `Theme.of(context).extension<AppSemanticColors>()!`.
 - `TextTheme` derivado do `ColorScheme`/brilho (`app_typography.dart`, F12-T01): o claro usa cores escuras (`onSurface`) e o escuro, claras — um `TextTheme` fixo em `.black` sobrepõe o default do `ThemeData` e deixa texto preto no fundo escuro (viola §4).
@@ -37,22 +37,22 @@ Título de tela (AppBar): **24sp bold** aplicado via `appBarTheme.titleTextStyle
 | :--- | :--- |
 | `AppBotao` | Ações (filled/tonal/outlined/texto/destrutivo), com `carregando` (progresso anunciado na semântica) |
 | `AppDialog.confirmarDestrutivo` | Confirmação de ação destrutiva |
-| `AppBanner` | info/aviso/erro/offline/leitura com contraste correto; `liveRegion` (Fase 14) |
+| `AppBanner` | info/aviso/erro com contraste correto; `liveRegion` (Fase 14) |
 | `AppCard` | Superfície padrão com padding/radius (sem margem; o espaçamento entre cards empilhados é do layout — ex.: `AppSpacing.sm`) |
-| `AppLogo` | Marca do app (carrinho de compras) no cabeçalho das telas de topo; 28dp, recortada com `AppRadius.sm` |
+| `AppLogo` | Marca do app (cesta) no cabeçalho das telas de topo; 28dp, recortada com `AppRadius.sm` |
 | `AppChip` | Chip com alvo ≥48dp |
-| `AppEsqueleto` | Placeholder estático de carregamento (blocos da cor de superfície, sem animação, sem pacote novo) — painel, itens da lista e membros (F14-T09) |
+| `AppEsqueleto` | Placeholder estático de carregamento (blocos da cor de superfície, sem animação, sem pacote novo) — painel e itens da lista (F14-T09) |
 | `AppCabecalhoSecao` | Cabeçalho de seção (`título (n)`) |
 | `AppEstadoVazio` | Vazio com ícone + texto + CTA; rótulo único (título + descrição) para o leitor de tela, com a ação em nó próprio (Fase 14) |
 | `AppEstadoErro` | Erro de carga com retry rotulado |
 | `AppCampoTexto` | Campo de formulário com erro inline; aceita `hint`, `maxLength`, `minLines`/`maxLines`, `textInputAction`, `readOnly` (Fase 14) e `inputFormatters` (F43) |
 | `AppDropdown<T>` | Dropdown de formulário padronizado (`label`/`valor`/`itens`/`onChanged`/`compacto`/`expandido`), mesma decoração dos campos; `expandido` ocupa a largura disponível (evita estouro em colunas estreitas) (Fase 14) |
 | `AppSheet.mostrar` | Bottom sheet padrão: `showModalBottomSheet` com `isScrollControlled`, drag handle, `SafeArea` e padding inferior que cresce com `viewInsets.bottom` (o teclado empurra o conteúdo para cima); usado pelo editor de item (F40) |
-| `mostrarSnackBar` | Snackbar (inclusive undo) com **duração curta**: 2s sem ação e 3s com ação (`duracao` sobrescreve — F12-T07); já anunciado por ser uma live region do próprio `SnackBar`; aceita `messenger` (`ScaffoldMessengerState?`) para quando não há `ScaffoldMessenger` no contexto (primeiro plano do app e falhas fora de tela — G-31/G-32) |
+| `mostrarSnackBar` | Snackbar (inclusive undo) com **duração curta**: 2s sem ação e 3s com ação (`duracao` sobrescreve — F12-T07); já anunciado por ser uma live region do próprio `SnackBar`; aceita `messenger` (`ScaffoldMessengerState?`) para quando não há `ScaffoldMessenger` no contexto (G-31/G-32) |
 
 **Uso de componentes existentes na F22:** os chips de itens frequentes usam o **`ActionChip`** do Material (faixa horizontal rolável, alvo ≥48dp, `Semantics` de ação "Adicionar <nome>" — RF-19); a faixa "Marcados" do modo mercado usa `Material` + `ListTile` com `Semantics(button/expanded)`, sem componente novo (RF-18). Nenhum `App*` novo foi necessário.
 
-**Aplicações transversais (F43-T10):** o `SeletorTema` usa `AppDropdown` no ramo estreito/fonte ampliada (G-41); a rota `/login-callback` usa `AppBotao` e um progresso com rótulo semântico (`carregando` — G-33); o `AppBotao` reduz o conteúdo com `FittedBox` antes de estourar com fonte 2x (G-39); o sufixo do campo "Adicionar item" cede largura (`Flexible`/elipse) na unidade (G-39).
+**Aplicações transversais (F43-T10):** o `SeletorTema` usa `AppDropdown` no ramo estreito/fonte ampliada (G-41); o `AppBotao` reduz o conteúdo com `FittedBox` antes de estourar com fonte 2x (G-39); o sufixo do campo "Adicionar item" cede largura (`Flexible`/elipse) na unidade (G-39).
 
 **Tour do primeiro uso (F46/RF-27):** `TourOverlay` + `Spotlight` (`lib/features/tour/ui/tour_overlay.dart`) são componentes do design system (feature-specific, montados na raiz do app). O `Spotlight` desenha o scrim (`colorScheme.scrim`) com recorte e halo (`colorScheme.primary`); a bolha é `Material` sobre `surfaceContainerHigh` com `AppElevation.nivel3`/`AppRadius.lg` e botões `AppBotao` — **tudo com tokens `App*` (`AppSpacing`/`AppRadius`/`AppElevation`/`AppMotion`) e `colorScheme`, sem cor literal**. A animação de troca de passo respeita `disableAnimations` (`AppMotion.media` ou `Duration.zero`). Spec: [tour-guiado](superpowers/specs/2026-09-28-tour-guiado-primeiro-uso-design.md).
 
@@ -63,7 +63,7 @@ Regras vinculantes (detalhe e evidência na [spec da Fase 14](superpowers/specs/
 - **Contraste ≥ AA** nos pares `container`/`on*`.
 - **Alvos de toque ≥ 48dp**.
 - **Semântica:** `tooltip` em todo `IconButton`/`PopupMenuButton`; ícones decorativos (logo, ícones de estado de 48–72dp) fora da árvore com `excludeSemantics`; controles com rótulo do contexto (ex.: `Checkbox` do item usa o nome do item).
-- **Live regions:** `AppBanner` (erro/offline/aviso), `mostrarSnackBar` e `IndicadorSync` são anunciados (`Semantics(liveRegion: true)`); a bolha do tour (`TourOverlay`) é live region anunciada **"Passo n de m"** (F46).
+- **Live regions:** `AppBanner` (erro/aviso), `mostrarSnackBar`, o `TotalCarrinho` e o contador do modo mercado são anunciados (`Semantics(liveRegion: true)`); a bolha do tour (`TourOverlay`) é live region anunciada **"Passo n de m"** (F46).
 - **Localização:** o Material é localizado em pt-BR via `flutter_localizations` (`app.dart` com `Locale('pt','BR')` e os delegados `Global*`, F43-T09) — rótulos e tooltips nativos (ex.: "Voltar") saem em português; strings do produto ficam em `AppStrings` ([05 §7](05-app-flutter.md)).
 - **Escala de texto:** as telas-chave não estouram com `textScaler` 1.3 e 2.0 (verificado com `textScaleFactor` 2.0 nos testes de tela).
 - **Verificação automatizada:** testes com `meetsGuideline(androidTapTargetGuideline)`, `labeledTapTargetGuideline` e `textContrastGuideline` (`test/core/widgets/acessibilidade_test.dart`) + os testes de semântica/estado nas telas — a acessibilidade é verificada por teste, não por inspeção.
@@ -74,14 +74,12 @@ Rota de debug `/design` (`kDebugMode`) renderiza tokens e componentes em claro/e
 
 ## 6. Identidade visual
 
-- **Duas marcas:** a escolha é feita por [`IdentidadeVisual`](../lib/core/theme/identidade_visual.dart) (`logoAsset`/`nomeApp`), **nunca** por `AppModo` diretamente. O flavor `prod` usa a marca colaborativa e o flavor `lite` (Minhas Listas) usa a marca Lite.
-- **Marca colaborativa (`prod`):** carrinho de compras, branco sobre o verde da marca `#2E7D32`. O glifo vem do Material Symbols `shopping_cart` (Apache-2.0), na mesma linguagem dos ícones do app.
-- **Marca Lite (`lite`):** cesta de compras (`shopping_basket`, Apache-2.0), branca sobre o índigo da marca `#4F46E5`.
-- **Masters vetoriais** (fonte de verdade, editáveis): `assets/branding/logo.svg` e `assets/branding/logo_glyph.svg` (colaborativa); `assets/branding/logo_lite.svg` (ícone cheio, fundo índigo) e `assets/branding/logo_glyph_lite.svg` (glifo transparente, dentro da área segura do ícone adaptativo) para o Lite.
-- **Bitmaps gerados** (commitados, 1024px): `assets/branding/logo.png` e `logo_glyph.png` (colaborativa); `assets/branding/logo_lite.png` e `logo_glyph_lite.png` (Lite) — usados em ícones/splash/cabeçalho (`AppLogo`).
-- **Usos:** ícone do app (Android/iOS/web), splash e cabeçalho das telas de topo (`AppLogo`, 28dp) — valem para as duas marcas. O ícone cheio vai full-bleed — as plataformas aplicam a máscara (squircle/círculo).
-- **Área de respiro / tamanho mínimo:** não encostar o glifo nas bordas (os masters `logo_glyph` e `logo_glyph_lite` já trazem ~19% de margem); não exibir o glifo abaixo de **24dp**, nos dois masters.
-- **Splash:** com o glifo centrado — `prod`: fundo verde `#2E7D32` (escuro `#1B5E20`); `lite`: fundo índigo `#4F46E5` (escuro `#3730A3`).
+- **Identidade única:** "Minhas Listas" — cesta de compras (`shopping_basket`, Apache-2.0), branca sobre o índigo da marca `#4F46E5`.
+- **Masters vetoriais** (fonte de verdade, editáveis): `assets/branding/logo_lite.svg` (ícone cheio, fundo índigo) e `assets/branding/logo_glyph_lite.svg` (glifo transparente, dentro da área segura do ícone adaptativo).
+- **Bitmaps gerados** (commitados, 1024px): `assets/branding/logo_lite.png` e `logo_glyph_lite.png` — usados em ícones/splash/cabeçalho (`AppLogo`).
+- **Usos:** ícone do app (Android/iOS/web), splash e cabeçalho das telas de topo (`AppLogo`, 28dp). O ícone cheio vai full-bleed — as plataformas aplicam a máscara (squircle/círculo).
+- **Área de respiro / tamanho mínimo:** não encostar o glifo nas bordas (o master `logo_glyph_lite` já traz ~19% de margem); não exibir o glifo abaixo de **24dp**.
+- **Splash:** com o glifo centrado — fundo índigo `#4F46E5` (escuro `#3730A3`).
 - **Regenerar** (após editar o SVG, re-renderizar o PNG de 1024 a partir dele — qualquer rasterizador serve; no dev usamos Chromium headless — e então):
   ```bash
   dart run flutter_launcher_icons

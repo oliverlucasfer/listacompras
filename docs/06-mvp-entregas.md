@@ -2,7 +2,7 @@
 
 > Navegação: [← 05 App Flutter](05-app-flutter.md) · [07 Qualidade & CI →](07-qualidade-ci.md)
 
-**Este documento é o dono dos critérios de aceite, da Definition of Done por fase e do compliance (LGPD/privacidade).** Cronograma detalhado em [00 §6](00-visao-geral.md).
+**Este documento é o dono dos critérios de aceite, da Definition of Done por fase e do compliance (LGPD/privacidade).** Cronograma detalhado em [00 §6](00-visao-geral.md). O app é **único e local** ("Minhas Listas", RF-31): sem conta, sem nuvem.
 
 ---
 
@@ -10,15 +10,12 @@
 
 > Cada critério rastreia requisitos de [12 PRD](12-prd.md) e tarefas de [14](14-tarefas.md).
 
-- [ ] Usuário consegue registrar, autenticar (com verificação de e-mail) e recuperar senha. *(RF-01)*
+- [ ] App abre direto em **Minhas Listas**, sem conta e sem rotas de login. *(RF-31)*
 - [ ] Criar, renomear e excluir listas. *(RF-02)*
 - [ ] Adicionar, editar, marcar como concluído, reordenar e remover itens com quantidade e unidade. *(RF-03, RF-04, RF-05)*
 - [ ] Importar lista via texto livre com pré-visualização e confirmação. *(RF-16)*
-- [ ] Alterações refletem em tempo real entre Web e Mobile (mesma conta). *(RF-07, RNF-01)*
-- [ ] App funciona 100% offline (leitura, escrita, marcação de itens) e sincroniza pendências ao reconectar, sem duplicar nem perder itens. *(RF-08, RNF-02)*
-- [ ] RLS validado: um usuário não consegue ler/escrever listas de outro (testes de negação N-01…N-10 de [02 §5](02-seguranca-rls.md)). *(RNF-03)*
-- [ ] **Exclusão de conta disponível no app** (ver Seção 3). *(RF-11, RNF-05)*
-- [ ] ~~Publicado: **Web acessível por URL pública**~~ — **cancelado** (18/09/2026): o Web fica para **uso local**; o Hosting foi desabilitado (ADR-013, [00 §5](00-visao-geral.md)).
+- [ ] App funciona **100% offline** (leitura, escrita, marcação de itens) — o Drift é a fonte da verdade e nada depende de rede. *(RNF-02)*
+- [ ] **Backup local** exportar/importar `.json`. *(RF-31)*
 - [ ] Publicado: **APK/AAB disponível para teste interno** na Play Console (F5-T06, gate do dono).
 
 ---
@@ -29,11 +26,10 @@ Uma fase só está "pronta" quando:
 
 | Fase | Definition of Done |
 | :--- | :--- |
-| **1 — Infra & BD** | Migrations aplicam em `supabase db reset` do zero; checklist de [01 §8](01-banco-de-dados.md) e testes de negação de [02 §5](02-seguranca-rls.md) passam; Realtime ativo |
-| **3 — App Core** | CRUD manual funciona online; telas de auth completas (login/registro/recuperação/verificação); widget tests do core no CI ([07](07-qualidade-ci.md)) |
-| **4 — Sincronização** | Checklists de [03 §8](03-sincronizacao-offline.md) e [05 §8](05-app-flutter.md) passam; sync validado com 2 dispositivos simultâneos |
-| **5 — Publicação** | Critérios de aceite da Seção 1 deste doc 100%; **testes de usabilidade aprovados** (roteiro e critério em [11](11-usabilidade-fase5.md)); política de privacidade publicada; exclusão de conta funcionando; Sentry sem erros críticos abertos |
-| **6 — Pós-MVP** | Cada item definido com DoD próprio na época (compartilhamento — planejamento em [08](08-compartilhamento-colaborativo.md); iOS, desktop) |
+| **App Core** | CRUD manual funciona 100% local; widget tests do core no CI ([07](07-qualidade-ci.md)) |
+| **Importação** | Contrato do parser local ([04](04-importacao-lista.md)) verde; modal e pré-visualização com testes |
+| **Publicação** | Critérios de aceite da Seção 1 deste doc 100%; **testes de usabilidade aprovados** (roteiro e critério em [11](11-usabilidade-fase5.md)); política de privacidade publicada |
+| **App único (F48)** | Remoção do Supabase (cliente + backend) com um único `main.dart`; docs donos atualizados; CI verde |
 
 ---
 
@@ -41,60 +37,46 @@ Uma fase só está "pronta" quando:
 
 ### 3.1. Dados tratados
 
-| Dado | Finalidade | Base legal |
+| Dado | Finalidade | Onde fica |
 | :--- | :--- | :--- |
-| E-mail + hash de senha | Autenticação | Execução de contrato (uso do app) |
-| Conteúdo das listas | Funcionalidade central | Execução de contrato |
-| Timestamps de uso (updated_at) | Sincronização | Legítimo interesse técnico |
-| Erros/analytics (Sentry) | Estabilidade | Legítimo interesse — **sem conteúdo das listas em logs** |
+| Conteúdo das listas/itens | Funcionalidade central | **No aparelho** (Drift) |
+| Histórico de preços | Comparação entre idas | **No aparelho** (Drift) |
+| Áudio do microfone (voz) | Ditado de item, quando o usuário pede | Processado pelo reconhecedor do sistema; **não persiste no app** |
 
-**Não há dado pessoal sensível.** Não há venda/compartilhamento com terceiros além dos processadores listados na Seção 3.2.
+**Nada sai do aparelho por ação do app.** Não há conta, telemetria, analytics nem envio de erros. O app não coleta dados pessoais identificáveis.
 
 ### 3.2. Processadores de dados (subprocessadores)
 
-| Serviço | Dado exposto | Local |
+| Serviço | Dado exposto | Observação |
 | :--- | :--- | :--- |
-| Supabase (AWS) | Todos os dados do app | A definir na criação do projeto (preferir região `sa-east-1` — São Paulo) |
-| Sentry | Stack traces e contexto técnico de erros | Conforme plano |
+| Reconhecedor de voz do sistema (Android/iOS) | Áudio do ditado | Acionado só quando o usuário toca o microfone; pode usar a nuvem do fabricante (limitação do SO) — declarado na ficha da loja |
 
 ### 3.3. Direitos do titular — implementação
 
 | Direito | Como atendemos |
 | :--- | :--- |
-| Acesso aos dados | O app **é** a visão dos dados (listas/itens do próprio usuário) |
+| Acesso aos dados | O app **é** a visão dos dados (listas/itens no aparelho) |
 | Correção | Edição direta no app |
-| **Exclusão (conta)** | Botão "Excluir minha conta" em Configurações — **escopo da Fase 5, obrigatório para publicar** |
-| Portabilidade | Exportar lista em texto (via copiar/compartilhar) — pós-MVP |
-
-### 3.3.1. Exclusão de conta (Fase 5)
-
-* Fluxo: Configurações → "Excluir conta" → confirmação dupla (senha + diálogo) → execução.
-* **Estratégia: delete físico em cascata** (ADR-008):
-  1. RPC `excluir_conta()` (SECURITY DEFINER, executável só por `authenticated`) executa: apaga os `convites` endereçados ao e-mail do titular (`lower(email) = lower(e-mail)`) e, em seguida, `delete from auth.users where id = auth.uid()`.
-  2. Cascades propagam: `lista_membros` (participações), `listas` onde `dono_id`, `itens_lista` por CASCADE de lista, `convites` por CASCADE de lista e `convites` por `criado_por` (migration `0016`, R-17) — o ex-dono de uma lista transferida não fica preso por convites que criou.
-  3. Sessão invalidada; app limpa cache local e fila de pendências.
-* **PII de convites (G-04, migration `0024`):** o cascade por `criado_por`/lista **não** remove convites que **terceiros** criaram endereçados ao e-mail do titular; por isso o passo 1 apaga explicitamente `public.convites` com `lower(email) = lower(e-mail do titular)` antes do `delete` — não sobra PII do titular em convites ([01 §4.2](01-banco-de-dados.md)/[01 §4.4](01-banco-de-dados.md)).
-* Listas compartilhadas onde o usuário era apenas membro: sua participação some; a lista do outro dono permanece (dados do titular removidos das membresias).
-* Confirmação final para o usuário: "Esta ação é permanente e apaga todas as suas listas."
+| **Exclusão** | Apagar a lista ou os dados do app (desinstalar); não há conta a excluir |
+| Portabilidade | **Exportar backup** em `.json` (Configurações → Backup) |
 
 ### 3.3.2. Política de privacidade
 
-* Texto simples (1 página) cobrindo: dados coletados, finalidade, subprocessadores (3.2), retenção, direitos do titular e contato do encarregado.
-* **Por modo (F47/RF-32):** a política segue as capacidades ([05 §2.3](05-app-flutter.md)). No **Lite** (`politicaPrivacidadeTextoLite`) descreve um app 100% local, sem conta nem nuvem, mencionando voz do dispositivo e backup local; no **colaborativo** (`politicaPrivacidadeTexto`) mantém o texto com Supabase/Sentry e retenção até exclusão da conta. Seleção por `politicaPrivacidadePara(AppCapacidades)`.
-* **Onde:** texto in-app (cadastro e Configurações). A antiga página estática `/privacidade` do web foi **removida** em 18/09/2026, junto com o resto dos artefatos de hosting (ADR-013). A **URL pública** exigida pela Play é retomada na F47/RF-32 por uma página estática versionada em `site/privacidade.html`, publicada via GitHub Pages (workflow `.github/workflows/pages.yml`) em **https://oliverlucasfer.github.io/listacompras/privacidade.html**.
-* **Contato do encarregado:** `contatoPrivacidadeEmail` = **`oliverlucasfer@gmail.com`**, interpolado nas **duas** versões e no HTML público. Um teste de paridade (`test/site/privacidade_html_test.dart`) garante que a página contém as frases-chave do texto Lite (`no seu aparelho`, `voz`) e o mesmo contato.
-* **Requisito externo:** a URL pública só existe depois de habilitar Pages em *Settings → Pages → Source: GitHub Actions*. Em repo privado no plano free, Pages não está disponível — publicar de um repositório público dedicado (o texto segue versionado aqui).
-* **Obrigatória para publicação** na Play Store e App Store (seção "Segurança de dados" do Play Console exige declaração de coleta).
+* Texto simples (1 página) cobrindo: dados tratados (tudo local), ausência de conta/nuvem, voz do dispositivo, backup local, retenção e contato do encarregado.
+* **Versão única (Lite):** o app exibe a política do Lite (sem conta/nuvem, com voz e backup local).
+* **Onde:** texto in-app (Configurações) e página estática versionada em `site/privacidade.html`, publicada via GitHub Pages (workflow `.github/workflows/pages.yml`) em **https://oliverlucasfer.github.io/listacompras/privacidade.html**.
+* **Contato do encarregado:** `contatoPrivacidadeEmail` = **`oliverlucasfer@gmail.com`**, interpolado no app e no HTML público. Um teste de paridade (`test/site/privacidade_html_test.dart`) garante que a página contém as frases-chave do texto Lite (`no seu aparelho`, `voz`) e o mesmo contato.
+* **Requisito externo:** a URL pública só existe depois de habilitar Pages em *Settings → Pages → Source: GitHub Actions*.
+* **Obrigatória para publicação** na Play Store (seção "Segurança de dados" do Play Console exige declaração de coleta).
 
 ### 3.4. Menores e consentimento
 
-* Não direcionado a menores de 16 (texto na política). Sem rastreamento publicitário; sem consentimento de cookies no Web MVP (sem cookies de marketing).
+* Não direcionado a menores de 16 (texto na política). Sem rastreamento publicitário; sem consentimento de cookies no Web (sem cookies de marketing).
 
 ### 3.4.1. Cabeçalhos de segurança no Web
 
-* Os cabeçalhos **COOP `same-origin` + COEP `require-corp`** (exigidos pelo Drift/WASM, que usa SharedArrayBuffer) e o `robots.txt`/`noindex` existiram enquanto o Web era servido pelo Firebase Hosting — **removidos em 18/09/2026** junto com os artefatos de publicação (ADR-013).
-* Em **uso local** os cabeçalhos não são aplicados pelo app: quem serve `build/web` (dev server do `flutter run` ou um static server próprio) deve configurá-los se quiser exercitar os caminhos de WASM/OPFS. O `flutter run -d chrome` já funciona sem configuração extra.
-* **CSP recomendada (R-21)** — aplicar **quando o Web for servido por um static server ou a publicação for retomada** (não se aplica ao `flutter run -d chrome`, que já funciona sem configuração extra). Prefira **header HTTP**: em `<meta>`, `frame-ancestors`, `report-uri`/`report-to` e `sandbox` são ignorados.
+* Os cabeçalhos **COOP `same-origin` + COEP `require-corp`** (exigidos pelo Drift/WASM, que usa SharedArrayBuffer) não são aplicados pelo app: quem serve `build/web` (dev server do `flutter run` ou um static server próprio) deve configurá-los se quiser exercitar os caminhos de WASM/OPFS. O `flutter run -d chrome` já funciona sem configuração extra.
+* **CSP recomendada (R-21)** — aplicar **quando o Web for servido por um static server**. Prefira **header HTTP**: em `<meta>`, `frame-ancestors`, `report-uri`/`report-to` e `sandbox` são ignorados.
 
   ```
   Content-Security-Policy:
@@ -103,7 +85,7 @@ Uma fase só está "pronta" quando:
     style-src 'self' 'unsafe-inline';
     img-src 'self' data: blob:;
     font-src 'self' data: https://fonts.gstatic.com;
-    connect-src 'self' https://SEU-PROJETO.supabase.co wss://SEU-PROJETO.supabase.co https://www.gstatic.com;
+    connect-src 'self' https://www.gstatic.com;
     worker-src 'self' blob:;
     object-src 'none';
     base-uri 'self';
@@ -111,7 +93,7 @@ Uma fase só está "pronta" quando:
     frame-ancestors 'none'
   ```
 
-  > **CanvasKit (CDN por padrão):** `flutter build web` usa `--web-resources-cdn` por padrão, então o CanvasKit é carregado de `https://www.gstatic.com/flutter-canvaskit/<rev>/`. O `canvaskit.js` é buscado por `import()` dinâmico (→ `script-src`) e o `canvaskit.wasm` por fetch (→ `connect-src`) — por isso `https://www.gstatic.com` aparece nas duas diretivas. **Alternativa mais restrita:** compilar com `flutter build web --no-web-resources-cdn` empacota o CanvasKit em `build/web`; aí `script-src 'self' 'wasm-unsafe-eval'` (sem gstatic) é exato e o `connect-src` pode dispensar a origem do gstatic. Recomendado se você quer a política `'self'`-only mais apertada.
+  > O app não faz chamadas de rede (`connect-src 'self'`), exceto o carregamento do CanvasKit/`sqlite3.wasm` quando servido do CDN (por isso `https://www.gstatic.com`). Para a política `'self'`-only mais apertada, compile com `flutter build web --no-web-resources-cdn`.
 
   Cabeçalhos de isolamento (SharedArrayBuffer/OPFS do Drift WASM):
 
@@ -122,11 +104,9 @@ Uma fase só está "pronta" quando:
 
   Notas:
   - `script-src 'wasm-unsafe-eval'` cobre o CanvasKit/skwasm; `style-src 'unsafe-inline'` é exigido pelos estilos inline do Flutter.
-  - `worker-src 'self' blob:` cobre o `drift_worker.js` (`sqlite3.wasm`/`drift_worker.js` vêm do próprio `build/web` — ou do CDN junto com o CanvasKit no build padrão).
-  - `connect-src` precisa das origens **https e wss** do projeto Supabase (ajuste `SEU-PROJETO`) e, no build padrão, de `https://www.gstatic.com` (fetch do `canvaskit.wasm`).
+  - `worker-src 'self' blob:` cobre o `drift_worker.js` (`sqlite3.wasm`/`drift_worker.js` vêm do próprio `build/web`).
   - `font-src` inclui `https://fonts.gstatic.com` para a fonte de fallback que o Flutter baixa.
-  - Se `SENTRY_DSN` estiver definido no build Web (o init do Sentry só roda com DSN não vazio), inclua também a origem de ingest do Sentry (ex.: `https://o*.ingest.sentry.io`) em `connect-src`.
-  - Com COEP `require-corp`, recursos cross-origin exigem CORP — os assets locais do `build/web` são same-origin e, no build padrão, o próprio gstatic serve o CanvasKit com CORP. Fetches cross-origin por **CORS** (Supabase REST) e **WebSocket** (Realtime) **não** são governados por CORP, então funcionam sem header CORP.
+  - Com COEP `require-corp`, recursos cross-origin exigem CORP; os assets locais do `build/web` são same-origin e o gstatic serve o CanvasKit com CORP.
 
 ---
 
@@ -134,22 +114,20 @@ Uma fase só está "pronta" quando:
 
 | Canal | Requisito | Observação |
 | :--- | :--- | :--- |
-| Web — **uso local** (Fase 19 cancelada) | Build `flutter build web` servido localmente | **Sem publicação** (18/09/2026, ADR-013): Hosting desabilitado e **artefatos removidos do repo**. Rode com `flutter run -d chrome` ou sirva `build/web` |
-| Desktop — Windows/Linux/macOS (Fase 18) | Builds `flutter build windows`/`linux`/`macos` | Suportado desde a Fase 18 (ADR-012); builds Windows/Linux validados no CI ([07 §3](07-qualidade-ci.md)); publicação segue o gate do dono (Fase 5 / F5-T06) |
-| Android — teste interno (Fase 5) | APK/AAB na Play Console (closed testing) | Política de privacidade + Declaração de Dados preenchidas |
-| Android — produção | Publicação pública | Depende de validação do MVP; pode ficar para após Fase 5 |
-| iOS (Fase 6) | App Store Connect | Conta Apple Developer; revisão da Apple |
+| Web — **uso local** | Build `flutter build web` servido localmente | **Sem publicação** (ADR-013): rode com `flutter run -d chrome` ou sirva `build/web` |
+| Desktop — Windows/Linux/macOS | Builds `flutter build windows`/`linux`/`macos` | Suportado desde a Fase 18 (ADR-012); builds Windows/Linux validados no CI ([07 §3](07-qualidade-ci.md)) |
+| Android — teste interno | APK/AAB na Play Console (closed testing) | Política de privacidade + Declaração de Dados preenchidas |
+| Android — produção | Publicação pública | Depende de validação do MVP; gate F5-T06 |
+| iOS | App Store Connect | Conta Apple Developer; revisão da Apple |
 
-**Antes de lançamento público:** revisar R-01 — avaliar upgrade Supabase Pro (gatilho documentado em [00 §4](00-visao-geral.md)).
-
-**Nota do dono do projeto:** a publicação na Play (teste interno) está **adiada** — será executada apenas sob solicitação explícita, junto com a F5-T05 ([14-tarefas](14-tarefas.md)). **O Web não será publicado em URL pública** (decisão de 18/09/2026, ADR-013): fica para execução local. Canal provisório de distribuição de builds de teste: Firebase App Distribution (F5-T05b). Os critérios do DoD (§2) permanecem válidos para o dia do lançamento.
+**Nota do dono do projeto:** a publicação na Play (teste interno) está **adiada** — será executada apenas sob solicitação explícita, junto com a F5-T05. Canal provisório de distribuição de builds de teste: Firebase App Distribution (F5-T05b, externo ao app). Os critérios do DoD (§2) permanecem válidos para o dia do lançamento.
 
 ### 4.1. Checklist de publicação do Lite (RF-32, F47)
 
 Publicação do Lite ("Minhas Listas") em produção — app 100% local, sem conta. Passos externos no runbook [09 §2.10](09-runbook-operacoes.md); textos e arte em [`store/ficha-lite.md`](../store/ficha-lite.md).
 
 - [ ] AAB release assinado com a upload key (não debug key)
-- [ ] Manifest do Lite sem `INTERNET`/push/Firebase; Auto Backup desligado
+- [ ] Manifest sem `INTERNET`/push/Firebase; Auto Backup desligado
 - [ ] Política de privacidade com URL pública (site/privacidade.html)
 - [ ] Declaração de Dados preenchida (nenhum dado, exceto Áudio)
 - [ ] Ficha da loja completa (ícone 512, feature graphic, screenshots, descrições)
@@ -160,13 +138,12 @@ Publicação do Lite ("Minhas Listas") em produção — app 100% local, sem con
 
 ## 5. Métricas de sucesso (pós-lançamento, opcional)
 
-* Taxa de sincronização sem conflitos > 99% das sessões.
 * Tempo médio de criação de lista via importação por texto < 30s (do paste ao save).
 * Retenção semanal (listas criadas por semana por usuário ativo).
 
 ---
 
 ## Documentos relacionados
-- [00 Visão Geral](00-visao-geral.md) — cronograma, riscos (R-01, R-06), ADRs
-- [01 Banco de Dados](01-banco-de-dados.md) — CASCADEs que sustentam a exclusão de conta
-- [07 Qualidade & CI](07-qualidade-ci.md) — Sentry e validação dos critérios
+- [00 Visão Geral](00-visao-geral.md) — cronograma, riscos, ADRs
+- [07 Qualidade & CI](07-qualidade-ci.md) — validação dos critérios
+- [09 Runbook de Operações](09-runbook-operacoes.md) — publicação e build

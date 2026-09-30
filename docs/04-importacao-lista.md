@@ -1,6 +1,6 @@
 # 04 — Importação de lista (parser local)
 
-> Navegação: [← 03 Sincronização](03-sincronizacao-offline.md) · [05 App Flutter →](05-app-flutter.md)
+> Navegação: [← 00 Visão Geral](00-visao-geral.md) · [05 App Flutter →](05-app-flutter.md)
 
 **Este documento é o dono do contrato da importação de lista por texto (RF-16): parser local determinístico, limites de entrada, enums e sugestão de categoria.** O app é offline-first: a extração acontece inteiramente no dispositivo, sem rede e sem IA.
 
@@ -14,7 +14,7 @@ Texto colado ou digitado ─► analisarListaLocal()  (lib/core/importacao/parse
                           ▼
                     Sugestão de categoria (memória → dicionário → outros)
                           │
-                    Pré-visualização editável ─► confirmação ─► gravação local (fila)
+                    Pré-visualização editável ─► confirmação ─► gravação local (Drift)
 ```
 
 Fluxo de UX completo (modal, pré-visualização, confirmação) está em [05 §6.4](05-app-flutter.md) e [10 §4](10-wireframes-telas.md).
@@ -43,8 +43,8 @@ Fluxo de UX completo (modal, pré-visualização, confirmação) está em [05 §
 
 ## 4. Enums
 
-- **Unidades** (fonte única [01 §3.1](01-banco-de-dados.md)): `un, kg, g, l, ml, caixa, pacote, pct, pt, dz` — replicado em `lib/core/dominio/unidade.dart`. O parser reconhece `pt`, `pote` e `potes` como `Unidade.pt` (F45-T01).
-- **Categorias** (fonte única [01 §3.2](01-banco-de-dados.md)): `hortifruti, mercearia, frios, laticinios, congelados, padaria, bebidas, pet, limpeza, higiene, outros`.
+- **Unidades** (fonte única `lib/core/dominio/unidade.dart`): `un, kg, g, l, ml, caixa, pacote, pct, pt, dz` — o parser local reconhece `pt`, `pote` e `potes` como `Unidade.pt` (F45-T01).
+- **Categorias** (fonte única `lib/core/dominio/categoria.dart`): `hortifruti, mercearia, frios, laticinios, congelados, padaria, bebidas, pet, limpeza, higiene, outros`.
 
 As frações (RF-25) **não alteram** os enums: a quantidade continua `numeric` e a unidade segue esta mesma lista.
 
@@ -75,6 +75,6 @@ test/features/importacao/modal_importar_test.dart
 ---
 
 ## Documentos relacionados
-- [01 Banco de Dados](01-banco-de-dados.md) — enums (fonte única)
 - [05 App Flutter](05-app-flutter.md) — modal de importação e pré-visualização
 - [12 PRD](12-prd.md) — RF-16
+- `lib/core/dominio/unidade.dart` / `lib/core/dominio/categoria.dart` — enums (fonte única no código)
