@@ -129,35 +129,35 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/branding/logo.png
-  adaptive_icon_background: "#2E7D32"
-  adaptive_icon_foreground: assets/branding/logo_glyph.png
+  image_path: assets/branding/logo_lite.png
+  adaptive_icon_background: "#4F46E5"
+  adaptive_icon_foreground: assets/branding/logo_glyph_lite.png
   remove_alpha_ios: true
   web:
     generate: true
-    image_path: assets/branding/logo.png
-    background_color: "#2E7D32"
-    theme_color: "#2E7D32"
+    image_path: assets/branding/logo_lite.png
+    background_color: "#4F46E5"
+    theme_color: "#4F46E5"
   windows:
     generate: true
-    image_path: assets/branding/logo.png
+    image_path: assets/branding/logo_lite.png
     icon_size: 256
   macos:
     generate: true
-    image_path: assets/branding/logo.png
+    image_path: assets/branding/logo_lite.png
 
 # Splash nativo (doc 15 §6): `dart run flutter_native_splash:create`.
 flutter_native_splash:
-  color: "#2E7D32"
-  image: assets/branding/logo_glyph.png
-  color_dark: "#1B5E20"
-  image_dark: assets/branding/logo_glyph.png
+  color: "#4F46E5"
+  image: assets/branding/logo_glyph_lite.png
+  color_dark: "#3730A3"
+  image_dark: assets/branding/logo_glyph_lite.png
   android: true
   ios: true
   web: false
   android_12:
-    color: "#2E7D32"
-    image: assets/branding/logo_glyph.png
-    color_dark: "#1B5E20"
-    image_dark: assets/branding/logo_glyph.png
+    color: "#4F46E5"
+    image: assets/branding/logo_glyph_lite.png
+    color_dark: "#3730A3"
+    image_dark: assets/branding/logo_glyph_lite.png
 

@@ -1,6 +1,6 @@
 # Ficha da loja — Minhas Listas (Lite)
 
-Textos e especificação de arte da ficha da Google Play para o flavor **Lite** ("Minhas Listas"). O Lite é o app **100% local, sem conta**: os dados ficam só no aparelho e o backup é manual (exportar/importar). Requisito [RF-32](../docs/12-prd.md); passos de publicação no runbook [09 §2.10](../docs/09-runbook-operacoes.md).
+Textos e especificação de arte da ficha da Google Play para o app **Minhas Listas**. O **Minhas Listas** é o app **100% local, sem conta**: os dados ficam só no aparelho e o backup é manual (exportar/importar). Requisito [RF-32](../docs/12-prd.md); passos de publicação no runbook [09 §2.10](../docs/09-runbook-operacoes.md).
 
 - **Título (≤30):** Minhas Listas
 - **Descrição curta (≤80):** Lista de compras simples, sem conta e 100% no seu aparelho.

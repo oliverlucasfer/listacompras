@@ -783,7 +783,7 @@ void main() {
       "'dddddddd-0000-0000-0000-000000000002', '{}', "
       "'2026-01-01T01:00:00.000000Z', 'cccccccc-0000-0000-0000-000000000001')",
     );
-    // A perdedora também tem fila: ela precisa ser apagada junto do item.
+    // A vencedora também tem fila: ela precisa ser apagada junto do item.
     antigo.execute(
       "INSERT INTO mutacao_pendente (tabela, operacao, registro_id, payload, "
       "ts_local, lista_id) VALUES ('itens_lista', 'INSERT', "

@@ -56,7 +56,7 @@ Pipeline único `.github/workflows/ci.yml`, disparado em PR e push em `main`:
 ```
 
 * PR só mergea com CI verde (branch protection).
-* **Builds (F18-T05, ADR-012; F48):** o job `flutter` compila o Web (`flutter build web --release`), o **apk Android em debug** e o **AAB release** — **sem `--flavor` e sem `--dart-define`** (o app é único). Em seguida **verifica o manifest mergeado** (`build/app/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml`): o passo falha se `INTERNET`, `com.google.firebase`, `com.google.android.c2dm` ou os componentes `io.flutter.plugins.firebase.*`/`FirebaseInitProvider` aparecerem, se `allowBackup` não for `false` ou se `RECORD_AUDIO` sumir (voz, RF-26). O job `desktop` valida `flutter build linux` (ubuntu-latest, instala `clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev`) e `flutter build windows` (windows-latest) numa matriz com `fail-fast: false`.
+* **Builds (F18-T05, ADR-012; F48):** o job `flutter` compila o Web (`flutter build web --release`), o **apk Android em debug** e o **AAB release** — **sem `--flavor` e sem `--dart-define`** (o app é único). Em seguida **verifica o manifest mergeado** (`build/app/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml`): o passo falha se `INTERNET`, `com.google.firebase`, `com.google.android.c2dm` ou os componentes `io.flutter.plugins.firebase.*`/`FirebaseInitProvider`/`FlutterFirebaseMessagingInitProvider` aparecerem, se `allowBackup` não for `false` ou se `RECORD_AUDIO` sumir (voz, RF-26). O job `desktop` valida `flutter build linux` (ubuntu-latest, instala `clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev`) e `flutter build windows` (windows-latest) numa matriz com `fail-fast: false`.
 * **Assets WASM do Drift versionados (F18-T01):** `web/drift_worker.js` e `web/sqlite3.wasm` são cópias fiéis da release oficial `drift-2.34.4` (mesma versão pinada em `pubspec.lock`), necessárias ao banco no navegador (`WasmDatabase`/OPFS-IndexedDB, [05 §2.1](05-app-flutter.md), ADR-012). Para regenerar (ex.: subir o Drift), baixar da release correspondente e substituir os dois arquivos:
   ```bash
   curl -L -o web/drift_worker.js https://github.com/simolus3/drift/releases/download/drift-2.34.4/drift_worker.js
@@ -99,6 +99,7 @@ jobs:
           grep -q 'com.google.android.c2dm' "$MANIFEST" && { echo "c2dm no manifest"; falhou=1; }
           grep -q 'io.flutter.plugins.firebase' "$MANIFEST" && { echo "io.flutter.plugins.firebase no manifest"; falhou=1; }
           grep -qi 'firebaseinitprovider' "$MANIFEST" && { echo "FirebaseInitProvider no manifest"; falhou=1; }
+          grep -qi 'flutterfirebasemessaginginitprovider' "$MANIFEST" && { echo "FlutterFirebaseMessagingInitProvider no manifest"; falhou=1; }
           grep -q 'android:allowBackup="false"' "$MANIFEST" || { echo "allowBackup não desligado"; falhou=1; }
           grep -q 'android.permission.RECORD_AUDIO' "$MANIFEST" || { echo "RECORD_AUDIO sumiu"; falhou=1; }
           exit $falhou

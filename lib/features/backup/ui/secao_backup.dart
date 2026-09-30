@@ -45,7 +45,7 @@ class SecaoBackup extends ConsumerWidget {
   /// O conteúdo vai como `XFile.fromData` em vez de gravar com `dart:io` +
   /// `path_provider`: o `share_plus` materializa o arquivo temporário no nativo
   /// (com o nome pedido) e usa os bytes no web, mantendo o build web do app
-  /// colaborativo compilável (CI).
+  /// local compilável (CI).
   Future<void> _exportar(BuildContext context, WidgetRef ref) async {
     try {
       final json = await ref.read(backupRepositoryProvider).exportarJson();

@@ -32,6 +32,8 @@ jobs:
           grep -q 'com.google.firebase' "$MANIFEST" && { echo "Firebase vazou"; falhou=1; }
           grep -q 'com.google.android.c2dm' "$MANIFEST" && { echo "c2dm vazou"; falhou=1; }
           grep -q 'io.flutter.plugins.firebase' "$MANIFEST" && { echo "Firebase vazou"; falhou=1; }
+          grep -qi 'firebaseinitprovider' "$MANIFEST" && { echo "FirebaseInitProvider vazou"; falhou=1; }
+          grep -qi 'flutterfirebasemessaginginitprovider' "$MANIFEST" && { echo "FlutterFirebaseMessagingInitProvider vazou"; falhou=1; }
           grep -q 'android:allowBackup="false"' "$MANIFEST" || { echo "allowBackup não desligado"; falhou=1; }
           grep -q 'android.permission.RECORD_AUDIO' "$MANIFEST" || { echo "RECORD_AUDIO sumiu"; falhou=1; }
           exit $falhou

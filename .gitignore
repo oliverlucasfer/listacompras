@@ -15,13 +15,6 @@ flutter_*.png
 .vscode/
 *.iml
 
-# Supabase local
-supabase/.branches/
-supabase/.temp/
-supabase/.env
-supabase/functions/.env
-supabase/tests/node_modules/
-
 # Sistema operacional
 .DS_Store
 Thumbs.db
@@ -31,13 +24,7 @@ android/key.properties
 *.jks
 *.keystore
 
-# Config de build de produção (F5-T05b — doc 06 §4)
-dart_defines_prod.json
-
 # Diversos
 *.log
 .superpowers/
 .worktrees/
-
-# Firebase CLI (cache local, se o CLI for usado por engano)
-.firebase/
