@@ -679,17 +679,14 @@ void main() {
 
   test('deve_registrar_historico_quando_concluir_item_com_preco', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    await repo.adicionarItem(
+    final item = await repo.adicionarItem(
       listaId: lista.id,
       nome: 'Café',
       unidade: Unidade.pacote,
       precoCentavos: 1850,
     );
-    final item = (await (db.select(
-      db.itemLocal,
-    )..where((i) => i.nome.equals('Café'))).getSingle()).id;
 
-    await repo.editarItem(item, concluido: true);
+    await repo.editarItem(item.id, concluido: true);
 
     final rows = await db.select(db.historicoPrecoLocal).get();
     expect(rows, hasLength(1));
@@ -765,6 +762,17 @@ void main() {
       final rows = await db.select(db.historicoPrecoLocal).get();
       expect(rows, hasLength(1));
       expect(rows.single.precoCentavos, 2000);
+    },
+  );
+
+  test(
+    'deve_ignorar_sem_erro_quando_remove_ou_restaura_id_inexistente',
+    () async {
+      // Operação idempotente: id inexistente afeta 0 linhas e não lança.
+      await repo.removerItem('id-inexistente');
+      await repo.restaurarItem('id-inexistente');
+
+      expect(await db.select(db.itemLocal).get(), isEmpty);
     },
   );
 }

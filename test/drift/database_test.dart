@@ -783,7 +783,8 @@ void main() {
       "'dddddddd-0000-0000-0000-000000000002', '{}', "
       "'2026-01-01T01:00:00.000000Z', 'cccccccc-0000-0000-0000-000000000001')",
     );
-    // A vencedora também tem fila: ela precisa ser apagada junto do item.
+    // A vencedora também tinha fila (legado inerte para o dedup); a tabela
+    // inteira é removida no upgrade v10 → v11.
     antigo.execute(
       "INSERT INTO mutacao_pendente (tabela, operacao, registro_id, payload, "
       "ts_local, lista_id) VALUES ('itens_lista', 'INSERT', "
@@ -1098,18 +1099,4 @@ void main() {
       expect(indice, isNotEmpty);
     },
   );
-
-  test('deve_remover_mutacao_pendente_quando_upgrade_para_v11', () async {
-    final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
-    await db.customStatement('DROP TABLE IF EXISTS mutacao_pendente');
-    expect(db.schemaVersion, 11);
-    final rows = await db
-        .customSelect("SELECT name FROM sqlite_master WHERE type='table'")
-        .get();
-    expect(
-      rows.map((r) => r.data['name']),
-      isNot(contains('mutacao_pendente')),
-    );
-  });
 }

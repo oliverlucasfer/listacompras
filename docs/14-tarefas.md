@@ -16,23 +16,23 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
   Dep: — · Docs: [00 §3](00-visao-geral.md)
   CP: `supabase init` + `link` feitos; `supabase db reset` roda vazio; checklist 00 §3.3 completo.
 - [x] **F1-T02** — Migration `0001_init.sql`: enum de unidades
-  Dep: F1-T01 · Docs: [01 §3](01-banco-de-dados.md)
+  Dep: F1-T01 · Docs: 01 §3
   CP: `select unnest(enum_range(null::unidade_item));` retorna os 9 valores.
 - [x] **F1-T03** — Migration `0001_init.sql`: tabelas `listas`, `lista_membros`, `itens_lista` com constraints e índices
-  Dep: F1-T02 · Docs: [01 §4](01-banco-de-dados.md)
+  Dep: F1-T02 · Docs: 01 §4
   CP: unique parcial deduplica item ativo; `quantidade <= 0` rejeita; `unidade='quilos'` rejeita.
 - [x] **F1-T04** — Triggers: `touch_updated_at_lww` e `sync_dono`
-  Dep: F1-T03 · Docs: [01 §5–6](01-banco-de-dados.md)
+  Dep: F1-T03 · Docs: 01 §5–6
   CP: UPDATE reflete `updated_at`; 2º dono na lista falha; remover/rebaixar dono falha.
 - [x] **F1-T05** — Migration `0002_rls_policies.sql`: `is_member`, `papel_na_lista`, enable/force RLS, policies completas
-  Dep: F1-T04 · Docs: [02 §1–4](02-seguranca-rls.md)
+  Dep: F1-T04 · Docs: 02 §1–4
   CP: Policies criadas para as 3 tabelas; `force row level security` aplicado.
 - [x] **F1-T06** — Testes de negação e positivos RLS (N-01…N-10, P-01…P-05)
-  Dep: F1-T05 · Docs: [02 §5](02-seguranca-rls.md)
+  Dep: F1-T05 · Docs: 02 §5
   CP: Todos os 15 casos passam em Supabase local; script versionado.
   Nota: N-01…N-10 e P-01…P-04 em `supabase/tests/rls_tests.sql`; P-05 (Realtime com 2 contas) é validado na F1-T07, que testa exatamente esse cenário.
 - [x] **F1-T07** — Migration `0003_realtime.sql`: publication das tabelas
-  Dep: F1-T05 · Docs: [01 §7](01-banco-de-dados.md)
+  Dep: F1-T05 · Docs: 01 §7
   CP: Eventos chegam a usuário membro e NÃO chegam a não-membro (teste com 2 contas).
 - [x] **F1-T08** — CI GitHub Actions (analyze + format + test + db reset + RLS)
   Dep: F1-T06 · Docs: [07 §3](07-qualidade-ci.md)
@@ -62,7 +62,7 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
   Dep: F1-T08 · Docs: [05 §1–2, §7](05-app-flutter.md)
   CP: `flutter run` abre em Android e Chrome; tema escuro aplicado; `analyze` limpo. *(Android: build+instalação+launch validados no emulador; Chrome: run -d chrome + build web; emulador instabilizou após launch — ambiente, não app)*
 - [x] **F3-T02** — Schema Drift local (ListaLocal, ItemLocal, MutacaoPendente) + AppDatabase
-  Dep: F3-T01 · Docs: [05 §2](05-app-flutter.md), [03 §3](03-sincronizacao-offline.md)
+  Dep: F3-T01 · Docs: [05 §2](05-app-flutter.md), 03 §3
   CP: Migração v1 do Drift criada; CRUD local funciona em teste de repositório. *(5 testes de database: CRUD, soft delete, FK cascade, fila)*
 - [x] **F3-T03** — Auth (Supabase): registro c/ verificação, login, recuperação, guard de rotas
   Dep: F3-T01 · Docs: [05 §4, §6.1](05-app-flutter.md) · RF-01
@@ -74,14 +74,14 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
   Dep: F3-T02 · Docs: [05 §6.2](05-app-flutter.md), [10 §2](10-wireframes-telas.md) · RF-02
   CP: Cards com contagem; criar/renomear/excluir locais; estado vazio conforme wireframe. *(cards com contagem via JOIN (11 §2.1), tempo relativo, FAB + sheet nova lista, long-press renomear/excluir com confirmação destrutiva; rota /lista/:id com placeholder p/ F3-T07)*
 - [x] **F3-T06** — Repositório Listas/Itens (escrita local + enfileiramento)
-  Dep: F3-T02 · Docs: [03 §3](03-sincronizacao-offline.md), [05 §3](05-app-flutter.md)
+  Dep: F3-T02 · Docs: 03 §3, [05 §3](05-app-flutter.md)
   CP: Toda escrita aplica no Drift e registra mutação com ts_local; testes de repositório. *(11 testes: criar/renomear/excluir lista, adicionar/editar/remover item, ordem sequencial, UUID v4, enum de unidades, quantidade>0, payload completo snake_case)*
 - [x] **F3-T07** — Tela da Lista: adicionar item rápido, checkbox, seção concluídos dobrável, editar/remover (swipe+undo)
   Dep: F3-T05, F3-T06 · Docs: [05 §6.3](05-app-flutter.md), [10 §3](10-wireframes-telas.md) · RF-03, RF-04
   CP: Wireframe 3.1 funcional; undo funciona; quantidade/unidade via enum. *(Enter/＋ salva na hora; "Itens concluídos (n)" dobrável; swipe → editar diálogo stepper+dropdown do enum / remover com undo (restaurarItem); duplicado soma quantidade (05 §6.3); menu ⋮ e sync ficam para F3-T08/F4-T07)*
 - [x] **F3-T08** — Ações em massa (desmarcar todos, limpar concluídos) + diálogo excluir lista
-  Dep: F3-T07 · Docs: [05 §6.3](05-app-flutter.md), [10 §3.4](10-wireframes-telas.md) · RF-04
-  CP: Confirmações destrutivas; "desmarcar todos" reaproveita a lista. *(menu ⋮ com desmarcar/limpar/renomear/excluir; diálogo excluir no formato 10 §3.4 e volta ao painel; repo desmarcarTodos/limparConcluidos enfileiram por item; sheet de título extraída para reuso)*
+  Dep: F3-T07 · Docs: [05 §6.3](05-app-flutter.md), [10 §3.2](10-wireframes-telas.md) · RF-04
+  CP: Confirmações destrutivas; "desmarcar todos" reaproveita a lista. *(menu ⋮ com desmarcar/limpar/renomear/excluir; diálogo excluir no formato 10 §3.2 e volta ao painel; repo desmarcarTodos/limparConcluidos enfileiram por item; sheet de título extraída para reuso)*
 - [x] **F3-T09** — Widget tests das telas core
   Dep: F3-T07, F3-T08 · Docs: [07 §1](07-qualidade-ci.md)
   CP: Widgets críticos cobertos; CI verde. *(30 widget tests escritos incrementalmente: auth 15 (F3-T04), painel 6 (F3-T05), lista 10 (F3-T07/08); + 17 de repositório e 7 de util; pipeline local 07 §3 verde — format/analyze/test)*
@@ -95,25 +95,25 @@ Formato: `F<n>-T<nn>` (Fase-Tarefa) · Dep: dependências · Docs: referência n
   Dep: F4-T01 · Docs: [05 §6.4](05-app-flutter.md), [10 §4.2](10-wireframes-telas.md) · RF-16
   CP: Cancelar não grava; incluir/excluir por item; itens gravados via repositório local. *(checkbox por item + contador "N de M serão adicionados"; painel ▾ edita nome/quantidade/unidade inline; aviso em destaque; "Adicionar N" grava via `ListasRepository.adicionarItem`; 6 widget + 2 de integração com Drift)*
 - [x] **F4-T03** — Sync Engine: flush da fila (coalescing, ordenação por lista, retry/backoff)
-  Dep: F3-T06 · Docs: [03 §3–4](03-sincronizacao-offline.md) · RF-08
+  Dep: F3-T06 · Docs: 03 §3–4 · RF-08
   CP: Fila esvazia ao reconectar; coalescing testado; retry exponencial testado com fake. *(SyncEngine + SyncRemoto (interface) + estados 03 §6; dreno por lista em ordem, coalescing mantém última mutação por registro, backoff 1s→2s→…→5min com 10 tentativas → ErroSync + reiniciarTentativas; rede cai no meio do flush pausa sem queimar tentativas; gatilhos: watch da fila + conectividade; 9 testes com RemotoFake. Remoto real com LWW entra na F4-T04)*
 - [x] **F4-T04** — LWW + tombstones na aplicação de mutações e remotos
-  Dep: F4-T03 · Docs: [03 §5](03-sincronizacao-offline.md) · RF-08, RF-10
+  Dep: F4-T03 · Docs: 03 §5 · RF-08, RF-10
   CP: Casos-limite da tabela 03 §5 passam (relógio adiantado, criado+removido offline, remoção vs edição remota). *(SupabaseSyncRemoto consulta remoto e decide LWW — empate vence servidor, `remotoVenceNoLww` puro; AplicadorRemoto sobrescreve Drift incluindo tombstones; engine aplica vencedor remoto e descarta mutações do registro; criado+removido offline já coberto pelo coalescing F4-T03; 7 testes LWW + 3 aplicador + 4 engine com RemotoComLwwFake. Bootstrap/multi-conta na F4-T06)*
 - [x] **F4-T05** — Reordenar itens (drag-and-drop → `ordem`)
   Dep: F3-T07 · Docs: [05 §6.3](05-app-flutter.md) · RF-05
   CP: Reordenação persiste local e sincroniza. *(SliverReorderableList + alça ≡ (ReorderableDragStartListener); reordenarItens grava `ordem` e enfileira UPDATE só das linhas que mudaram; ordenação secundária por id para determinismo; fix: undo do SnackBar captura repo antes do unmount; sync via fila já coberto pelo engine (F4-T03); 1 teste de repo + 1 widget de drag)*
 - [x] **F4-T06** — Realtime: aplicar remotos no Drift com LWW; bootstrap e re-sync
-  Dep: F4-T04 · Docs: [03 §4, §7](03-sincronizacao-offline.md) · RF-07
+  Dep: F4-T04 · Docs: 03 §4, §7 · RF-07
   CP: Mudança remota visível < 1s; re-sync completo em gap de conexão; multi-conta isolada. *(SupabaseBootstrap: canal Realtime `postgres_changes` aplica INSERT/UPDATE imediatamente via `aplicarRemoto` com LWW (sem debounce, DELETE físico ignorado); troca de usuário → flush final + limpa cache/fila + bootstrap; último usuário em SharedPreferences para a fila sobreviver ao restart; reconexão → re-sync completo + flush; 6 testes)*
 - [x] **F4-T07** — Indicador de sync na UI (estados 03 §6 + banner offline)
-  Dep: F4-T06 · Docs: [03 §6](03-sincronizacao-offline.md), [10 §3.2](10-wireframes-telas.md) · RF-09
+  Dep: F4-T06 · Docs: 03 §6, [10 §3.2](10-wireframes-telas.md) · RF-09
   CP: Todos os 5 estados renderizam conforme wireframe. *(IndicadorSync no topo do corpo da lista: check (Sincronizado), spinner (Sincronizando), contagem singular/plural (Pendente), banner nuvem cortada (Offline), banner errorContainer com ação "Tentar novamente" → engine.reiniciarTentativas (Erro); 6 widget tests + integração na tela da lista)*
 - [x] **F4-T08** — Deduplicação no sync (unique violada → aumenta quantidade)
-  Dep: F4-T04 · Docs: [03 §5](03-sincronizacao-offline.md) · RF-10
+  Dep: F4-T04 · Docs: 03 §5 · RF-10
   CP: Item duplicado offline vira quantidade somada; testes de sync cobrem. *(SupabaseSyncRemoto consulta itens ativos da lista no INSERT e detecta mesmo nome (case-insensitive, id diferente); `mesclarDuplicado` soma quando unidades coincidem (updated_at = mais recente) e devolve null quando divergem (remoto vence); engine tombstone a linha local, aplica o registro remoto e descarta as mutações; 2 testes da mescla + 1 do engine)*
 - [x] **F4-T09** — Testes do Sync Engine completos (checklist 03 §8)
-  Dep: F4-T03…F4-T08 · Docs: [03 §8](03-sincronizacao-offline.md), [07 §1](07-qualidade-ci.md)
+  Dep: F4-T03…F4-T08 · Docs: 03 §8, [07 §1](07-qualidade-ci.md)
   CP: Os 8 itens do checklist passam; prioridade máxima de cobertura. *(checklist_sincronizacao_test.dart: 2 dispositivos + servidor fake em memória com LWW/dedup reais; 8 testes 1:1 com o checklist. Correções encontradas ao validar: flush() agora encadeia chamadas concorrentes (não drena duas vezes, quem chama espera a fila real) e incrementar tentativas não dispara novo flush; Drift v2 — datas como texto ISO-8601 com microssegundos (armazenamento em unix segundos truncava updated_at e criava empates artificiais no LWW) com migração v1→v2)*
 
 ## Fase 5 — Polimento e Publicação (MVP)
@@ -148,10 +148,10 @@ Spec do agrupamento por categoria: [superpowers/specs/2026-09-08-agrupamento-cat
   Dep: — · Docs: spec da feature
   CP: docs de planejamento consistentes entre si (00/12/13/14/spec) sem tocar código.
 - [x] **F6-T01** — Migration `0006_categorias.sql`: enum `categoria_item` (11 valores) + coluna em `itens_lista`
-  Dep: F6-T00 · Docs: [01 §3, §4.3, §8](01-banco-de-dados.md)
+  Dep: F6-T00 · Docs: 01 §3, §4.3, §8
   CP: `enum_range` retorna os 11 valores na ordem dos grupos; INSERT com categoria inválida rejeita; INSERT sem categoria → `outros`; `db reset` e `db push` ok.
 - [x] **F6-T02** — Drift v3 (`ItemLocal.categoria`) + repositório com categoria no payload
-  Dep: F6-T01 · Docs: [05 §2–3](05-app-flutter.md), [03 §3](03-sincronizacao-offline.md)
+  Dep: F6-T01 · Docs: [05 §2–3](05-app-flutter.md), 03 §3
   CP: migração v2→v3 preserva dados; adicionar/editar grava categoria e enfileira payload com `categoria`; 145 testes atuais verdes + novos de repo.
 - [x] **F6-T03** — Cadeia de sugestão local (memória por nome → dicionário estático → `outros`)
   Dep: F6-T02 · Docs: [05 §3](05-app-flutter.md)
@@ -163,44 +163,44 @@ Spec do agrupamento por categoria: [superpowers/specs/2026-09-08-agrupamento-cat
   Dep: F6-T02 · Docs: [04](04-importacao-lista.md)
   CP: enum dos 11 valores na pré-visualização; sugestão local em camadas; testes verdes.
   *(A etapa de servidor/IA desta tarefa foi removida na F17.)*
-- [x] **F6-T06** — Checklist sync [03 §8](03-sincronizacao-offline.md) com categoria + distribuição nova
-  Dep: F6-T02, F6-T05 · Docs: [03 §8](03-sincronizacao-offline.md), [07 §1](07-qualidade-ci.md)
+- [x] **F6-T06** — Checklist sync 03 §8 com categoria + distribuição nova
+  Dep: F6-T02, F6-T05 · Docs: 03 §8, [07 §1](07-qualidade-ci.md)
   CP: cenário de categoria entre 2 dispositivos (servidor fake) verde; CI verde; APK `1.1.0+3` distribuído ao grupo `testadores` (história em [09 §2.6](09-runbook-operacoes.md)).
 
 ### Pós-MVP (Fase 7) — Compartilhamento por link (spec aprovada)
 
-Spec: [superpowers/specs/2026-09-10-compartilhamento-link-design.md](superpowers/specs/2026-09-10-compartilhamento-link-design.md) · Requisito: RF-13 · Doc dono: [08](08-compartilhamento-colaborativo.md) (decisões em §1.1).
+Spec: [superpowers/specs/2026-09-10-compartilhamento-link-design.md](superpowers/specs/2026-09-10-compartilhamento-link-design.md) · Requisito: RF-13 · Doc dono: 08 (decisões em §1.1).
 
 - [x] **F7-T00** — Spec + ajustes nos docs de planejamento (08 §1.1, campo no 13, breakdown no 14)
   Dep: — · Docs: spec da feature
   CP: docs de planejamento consistentes entre si (00/12/13/14/spec) sem tocar código.
   Nota: *(spec aprovada + decisões em 08 §1.1 + break plan; commits 835cf26, c76d79e)*
 - [x] **F7-T01** — Migration `0007_convites.sql`: tabela, RLS, RPC `aceitar_convite`, publication
-  Dep: F7-T00 · Docs: [08 §2–§3.1, §7](08-compartilhamento-colaborativo.md), [02 §5](02-seguranca-rls.md)
+  Dep: F7-T00 · Docs: 08 §2–§3.1, §7, 02 §5
   CP: policies de convites criadas; aceitar link pendente entra no `lista_membros`; expirado/revogado → `CONVITE_INVALIDO`; 2º aceite idempotente; N-11…N-14 em `supabase/tests/rls_tests.sql` + testes do RPC; `db reset` e CI verde.
   Nota: casos A-01…A-07 em `supabase/tests/aceitar_convite_tests.sql` (idempotência, expiração, revogação, anon rejeitado, caminho de e-mail). RPC recebe guarda de anonimato (A-05) e mantém estado `aceito` aceitável (idempotência/§9) — desvios documentados no 08 §3.1 no mesmo PR; helper `email_autenticado` + policies de `convites` documentados no 02 §1/§4.4.
 - [x] **F7-T02** — `ConvitesRepository` (criar link, listar pendentes, revogar, aceitar via RPC) + papel no bootstrap
-  Dep: F7-T01 · Docs: [08 §3](08-compartilhamento-colaborativo.md), [03 §4](03-sincronizacao-offline.md)
+  Dep: F7-T01 · Docs: 08 §3, 03 §4
   CP: chamadas diretas ao servidor (sem fila); códigos de erro mapeados em pt-BR; papel do usuário disponível nas consultas do app; unit tests com fake.
   Nota: *(ConvitesRepository com criarLink/revogar/pendentes/mudarPapel/removerMembro/sairDaLista/aceitar (RPC `aceitar_convite`; códigos CONVITE_* e falha de rede mapeados em pt-BR); `Papel`, `Convite`, `MembroLista`, `ErroConvite`; PapelRepository fora do Drift, injetado no bootstrap (carga antes do download das tabelas, limpeza no logout) + `papelNaListaProvider`; 17 testes com ServidorFake HTTP — commits 8635873, 6a2d0bd)*
 - [x] **F7-T03** — UI: sheet "Convidar" (dono) + tela de membros (trocar papel, remover, sair da lista)
-  Dep: F7-T02 · Docs: [08 §5, §8](08-compartilhamento-colaborativo.md), [10 §4](10-wireframes-telas.md)
+  Dep: F7-T02 · Docs: 08 §5, §8, [10 §4](10-wireframes-telas.md)
   CP: link gerado com papel; copiar/compartilhar scheme + copiar token; troca editor↔leitor; remover membro com confirmação destrutiva; "sair da lista" para não-dono; widget tests.
   Nota: *(sheet Convidar com seleção de papel (radios Editor/Leitor), link com copiar e compartilhar — `SharePlus.share` na share_plus 12.x (`Share.share` removido), pin atualizado no pubspec; tela de membros com chip de papel, "Você", troca editor↔leitor, remover com confirmação destrutiva e "Sair da lista" para não-dono; gate de "Sair" no loading, copiar token/código colado no painel; "Convidar" dono-only e "Membros" para todos no menu ⋮; papel reativo via `papelNaListaStreamProvider` com fallback síncrono; widget tests — commits 1e9051c, 6e1e640)*
 - [x] **F7-T04** — Banner "Você é leitor" + bloqueio de ações de escrita na tela da lista
-  Dep: F7-T02 · Docs: [08 §1, §8](08-compartilhamento-colaborativo.md), [05 §6.3](05-app-flutter.md)
+  Dep: F7-T02 · Docs: 08 §1, §8, [05 §6.3](05-app-flutter.md)
   CP: leitor vê banner somente leitura; checkbox/menu/swipe/＋ desabilitados; widget tests do bloqueio por papel.
   Nota: *(banner "Somente leitura" no topo para leitor; sem campo adicionar, IA, checkbox, swipe (sem Dismissible) nem alça de drag; menu reduzido; default conservador (trata como leitor) quando papel não carregado; editor escreve, "Convidar" e "excluir lista" dono-only; 4 widget tests por papel — commit 832fbc3)*
 - [x] **F7-T05** — Rota `/entrar?token=` (deep link scheme) + "Entrar com código" + retomada pós-login
-  Dep: F7-T02 · Docs: [08 §3](08-compartilhamento-colaborativo.md), [05 §4](05-app-flutter.md)
+  Dep: F7-T02 · Docs: 08 §3, [05 §4](05-app-flutter.md)
   CP: link abre o app (não autenticado → login com contexto "Você foi convidado..." e retoma o aceite); token válido navega à lista; expirado/revogado → erro amigável; já membro → só navega; token colado funciona igual; widget tests dos estados.
   Nota: *(rota pública `/entrar` excluída do redirect de autenticação; sem sessão → contexto "Você foi convidado..." com Entrar/Criar conta e `?next=` para retomada pós-login; com sessão o aceite roda o RPC e navega a `/lista/:id`; expirado/revogado → erro amigável + "Tentar novamente" (idempotente); intent-filter host `entrar` + ponte deeplinkConviteProvider (app_links) — supabase_flutter só captura callbacks de auth com access_token/code (verificado no fonte do package); "Entrar com código" no painel (token colado, mesmo caminho `aceitar`); 12 widget tests. Deep link físico pendente de dispositivo (sem emulador na sessão) — smoke ficou responsabilidade do F7-T07; commits d46ef91, 2463c4b)*
 - [x] **F7-T06** — Realtime `lista_membros`: papel ao vivo, entrada de membro e perda de acesso < 5s
-  Dep: F7-T02 · Docs: [08 §5, §7](08-compartilhamento-colaborativo.md), [03 §7](03-sincronizacao-offline.md)
+  Dep: F7-T02 · Docs: 08 §5, §7, 03 §7
   CP: INSERT → "membro entrou"; UPDATE papel → papel local atualiza; DELETE do próprio usuário → flush + limpa cache/fila + refetch de listas (padrão F4-T06); remoção refletida < 5s no device removido; teste com canal fake no estilo `checklist_sincronizacao_test.dart`.
   Nota: *(função pura `aplicarEventoMembro` + roteamento por tabela no callback de `_assinarRealtime`: INSERT/UPDATE próprios atualizam o papel, DELETE próprio → flush + limpa cache/fila + re-sync (padrão F4-T06); eventos de `lista_membros` jamais passam pelo motor LWW (sem `updated_at`); migration 0008 replica identity full em `lista_membros` fora do plan — necessária para o `old_record` do DELETE chegar com `user_id` — doc 08 §7 atualizado no mesmo PR; testes com CanalFake + stream de papel; validação física < 5s pendente de 2 dispositivos; commit 3d57d07)*
 - [x] **F7-T07** — Checklist de validação 08 §9 (recorte link-only) + CI verde + distribuição aos testadores
-  Dep: F7-T03, F7-T04, F7-T05, F7-T06 · Docs: [08 §9](08-compartilhamento-colaborativo.md), [07 §1](07-qualidade-ci.md)
+  Dep: F7-T03, F7-T04, F7-T05, F7-T06 · Docs: 08 §9, [07 §1](07-qualidade-ci.md)
   CP: itens 1, 2→(adaptado a link), 4, 5, 6 e 8 do checklist verificados; APK `1.1.1+4` (ou próximo) via App Distribution; histórico em [09 §2.6](09-runbook-operacoes.md).
   Nota: *(itens 1, 2, 3(idempotência), 4, 6 e 8 do recorte verificados por suites SQL (N-01…N-17, E-01…E-05, A-01…A-07) + 223 testes Flutter; itens 1 e 5 físicos pendentes de 2 dispositivos; final review corrigiu RLS faltante (migration 0009: dono muda papel + membro sai — antes eram no-ops silenciosos), whitelist de tabelas no realtime, feedback "membro entrou" e limpeza local no sair; migrations 0007–0009 aplicadas em produção via `db push`; APK `1.1.2+5` distribuído ao grupo `testadores`)*
 
@@ -268,10 +268,10 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
   Dep: F10-T02 · Docs: [10](10-wireframes-telas.md), [07 §1](07-qualidade-ci.md)
   CP: `format`/`analyze`/`test` verdes; wireframes sincronizados; fase marcada.
 - [x] **F10-T04** — Correção: associação do dono ao criar lista
-  Dep: F10-T03 · Docs: [01 §6](01-banco-de-dados.md), [02 §1/§3](02-seguranca-rls.md) · Bug: dono virava leitor
+  Dep: F10-T03 · Docs: 01 §6, 02 §1/§3 · Bug: dono virava leitor
   CP: migration `0010_dono_automatico.sql` (trigger + backfill) em produção; papel local imediato no cliente; suites SQL (com P-08) e `flutter test` verdes.
 - [x] **F10-T05** — Correção: papel por propriedade, membros e reparo do dono
-  Dep: F10-T04 · Docs: [02 §3](02-seguranca-rls.md), [08 §5](08-compartilhamento-colaborativo.md)
+  Dep: F10-T04 · Docs: 02 §3, 08 §5
   CP: `papelEfetivoProvider` deriva dono de `listas.dono_id` (offline/após reinício); tela de membros mescla o dono local e refaz o fetch ao abrir; migration `0011_dono_repair.sql` (trigger + backfill idempotente) em produção; botão "Importar lista" com SafeArea + mais respiro inferior; `analyze`/`test` verdes.
 - [x] **F10-T06** — Navegação: push sobre o shell, voltar por origem e títulos
   Dep: F10-T03 · Docs: [05 §4/§5](05-app-flutter.md), [10 §2/§3](10-wireframes-telas.md) · Spec: [navegacao-titulos](superpowers/specs/2026-09-11-navegacao-titulos-design.md)
@@ -285,7 +285,7 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
   Dep: F10-T04 · Docs: spec da fase
   CP: RF-16 no 12; 05 §6.4, 10 §4.1 e 04 §1 atualizados; Fase 11 no 14; sem tocar código de app.
 - [x] **F11-T01** — Tipos de importação, normalizador e parser local
-  Dep: F11-T00 · Docs: [05 §3/§6.4](05-app-flutter.md), [01 §3](01-banco-de-dados.md)
+  Dep: F11-T00 · Docs: [05 §3/§6.4](05-app-flutter.md), 01 §3
   CP: parser puro com unit tests dos casos da spec §8; imports atualizados; `analyze`/`test` verdes.
 - [x] **F11-T02** — Modal de importação + pré-visualização (nomes genéricos)
   Dep: F11-T01 · Docs: [05 §6.4](05-app-flutter.md), [10 §4](10-wireframes-telas.md)
@@ -300,20 +300,20 @@ Convite por e-mail transacional (Fluxo B + Edge Function `enviar-convite`), tran
 
 Correções pontuais reportadas pelo dono: legibilidade no tema escuro e geração
 do link de convite. Docs donos: [15](15-design-system.md) (tema),
-[08](08-compartilhamento-colaborativo.md) (convites),
-[03](03-sincronizacao-offline.md) (sync).
+08 (convites),
+03 (sync).
 
 - [x] **F12-T01** — Tema escuro: `TextTheme` por brilho/`ColorScheme` (textos ilegíveis)
   Dep: F9-T08 · Docs: [15 §1–2, §4](15-design-system.md) · RNF-06
   CP: `AppTypography.textTheme(brightness, scheme)` deriva as cores do `ColorScheme` (claro → escuro; escuro → claro); teste de contraste em claro/escuro; `analyze`/`test` verdes.
 - [x] **F12-T02** — Compartilhamento: erros amigáveis + pré-condição ao gerar link
-  Dep: F7-T07 · Docs: [08 §3/§8](08-compartilhamento-colaborativo.md) · RF-13
+  Dep: F7-T07 · Docs: 08 §3/§8 · RF-13
   CP: `criarLink` mapeia FK (`23503`)/RLS (`42501`) → `lista_nao_sincronizada` e rede → `sem_conexao`; sheet faz flush best-effort da fila antes de gerar; testes de repo (4) e de sheet (2) verdes.
 - [x] **F12-T03** — Robustez do sync: assinatura da fila e cadeia do bootstrap
-  Dep: F4-T09 · Docs: [03 §4/§7](03-sincronizacao-offline.md) · RF-08, RF-09
+  Dep: F4-T09 · Docs: 03 §4/§7 · RF-08, RF-09
   CP: `SyncEngine.iniciar()` assina a fila antes da checagem de conexão (falha não impede flush); `SupabaseBootstrap._encadear` descarta erro do trabalho para não envenenar a cadeia; 2 testes novos verdes.
 - [x] **F12-T04** — Sync: INSERT/UPDATE em vez de `upsert` + policy `listas_update_editores`
-  Dep: F12-T03 · Docs: [03 §4](03-sincronizacao-offline.md), [02 §4.1](02-seguranca-rls.md) · RF-08
+  Dep: F12-T03 · Docs: 03 §4, 02 §4.1 · RF-08
   CP: `SupabaseSyncRemoto.enviar` usa `INSERT` sem linha remota e `UPDATE` com linha remota; migration `0012_fix_listas_update_policy.sql` corrige o `WITH CHECK` (`l.id = listas.id`) aplicada em produção; 3 testes do `enviar` verdes; INSERT/UPDATE validados em produção (201/204).
 - [x] **F12-T05** — Visual: espaçamento entre os cards de listas
   Dep: F10-T01 · Docs: [10 §2.1](10-wireframes-telas.md), [15 §3](15-design-system.md) · RNF-06
@@ -347,7 +347,7 @@ UX em [05](05-app-flutter.md).
 
 ## Fase 14 — Acessibilidade, fluxos e polimento de UX
 
-Spec: [superpowers/specs/2026-09-14-ux-acessibilidade-design.md](superpowers/specs/2026-09-14-ux-acessibilidade-design.md) · Docs donos: [15](15-design-system.md) (a11y/componentes), [05](05-app-flutter.md) (UX/rotas), [10](10-wireframes-telas.md) (layout), [08](08-compartilhamento-colaborativo.md) (membros), [12](12-prd.md) (RF-01/RNF-06).
+Spec: [superpowers/specs/2026-09-14-ux-acessibilidade-design.md](superpowers/specs/2026-09-14-ux-acessibilidade-design.md) · Docs donos: [15](15-design-system.md) (a11y/componentes), [05](05-app-flutter.md) (UX/rotas), [10](10-wireframes-telas.md) (layout), 08 (membros), [12](12-prd.md) (RF-01/RNF-06).
 
 - [x] **F14-T00** — Spec + docs de planejamento
   Dep: F13-T03 · Docs: spec da fase
@@ -365,7 +365,7 @@ Spec: [superpowers/specs/2026-09-14-ux-acessibilidade-design.md](superpowers/spe
   Dep: F14-T00 · Docs: [15 §3](15-design-system.md), [10 §3/§4/§6](10-wireframes-telas.md)
   CP: erro da lista com `AppEstadoErro` + retry (invalida `listaPorIdProvider`) e "não encontrada" com CTA; vazios em membros (sem cache → instrução, sem ações — papel não confiável) e na pré-visualização com 0 itens ("Nada foi reconhecido" + "Voltar e editar" sem rodapé/botão); `/entrar` sem tela em branco e com AppBar no carregando (estados transientes, sem teste dedicado). Vazio do leitor já conforme (no-op). 4 testes novos verdes.
 - [x] **F14-T05** — Feedback de ação
-  Dep: F14-T00 · Docs: [05 §6](05-app-flutter.md), [08 §5](08-compartilhamento-colaborativo.md)
+  Dep: F14-T00 · Docs: [05 §6](05-app-flutter.md), 08 §5
   CP: SnackBars de reenviar link/compartilhar/papel/remover membro/criar-renomear lista; undo em "limpar concluídos" (restaura `id`/`ordem`); "Sair" com confirmação destrutiva; testes verdes.
   *(reenviar link com "Link reenviado" + erro amigável e botão desabilitado durante o envio; compartilhar convite com "Link compartilhado"; papel/remoção de membro com SnackBar; criar/renomear lista com SnackBar 2s via `mensagemSucesso` do `SheetTituloLista`; `limparConcluidos` devolve os itens removidos e o SnackBar 3s "Desfazer" restaura `id`/`ordem`; "Sair" via `AppDialog.confirmarDestrutivo`; testes novos/ajustados em auth, convites, listas e configurações)*
 - [x] **F14-T06** — Affordance e rótulos
@@ -428,7 +428,7 @@ Spec: [superpowers/specs/2026-09-17-remocao-ia-design.md](superpowers/specs/2026
   Dep: — · Docs: [12](12-prd.md), [14](14-tarefas.md)
   CP: RF-06 e RNF-04 removidos do 12 (tabela + matriz); RF-15/RF-16 sem cláusulas de IA; Fase 17 no 14; sem tocar código.
 - [x] **F17-T01** — Migration `0013` + `excluir_conta` sem `ia_rate_limit`
-  Dep: F17-T00 · Docs: [01](01-banco-de-dados.md), [06 §3.3.1](06-mvp-entregas.md)
+  Dep: F17-T00 · Docs: 01, [06 §3.3.1](06-mvp-entregas.md)
   CP: `supabase db reset` aplica 0004+0013; `ia_rate_limit`/`registrar_requisicao_ia` inexistentes; `excluir_conta_tests.sql` E-01…E-05 verde.
 - [x] **F17-T02** — Remover Edge Function `parse-lista` e passos Deno/e2e do CI
   Dep: F17-T01 · Docs: [04](04-importacao-lista.md), [07](07-qualidade-ci.md)
@@ -460,7 +460,7 @@ Spec: [superpowers/specs/2026-09-17-suporte-web-desktop-design.md](superpowers/s
   Dep: F18-T02 · Docs: [06](06-mvp-entregas.md)
   CP: manifest sem portrait fixo; `web/version.json`; compartilhar com fallback; smoke no Chrome.
 - [x] **F18-T05** — CI (build web + desktop) e docs donos; fechamento
-  Dep: F18-T03, F18-T04 · Docs: [07](07-qualidade-ci.md), [08](08-compartilhamento-colaborativo.md), [09](09-runbook-operacoes.md)
+  Dep: F18-T03, F18-T04 · Docs: [07](07-qualidade-ci.md), 08, [09](09-runbook-operacoes.md)
   CP: CI verde com `build web` + builds desktop; 05/06/07/08/09 sincronizados; Fase 18 marcada.
 
 ## Fase 19 — Publicação Web — **CANCELADA (18/09/2026)**
@@ -495,31 +495,31 @@ Ordem: T00 → T01 → T02 (parser) → T03 → T04 → T05 (sync) → T06 (docs
   Dep: F20-T01 · Docs: [04 §3](04-importacao-lista.md)
   CP: `0 arroz` → `1 un` + aviso; edição inline rejeita `≤ 0`; nenhuma exceção crua na confirmação.
 - [x] **F20-T03** — Sync: não perder mutação enfileirada durante o flush (R-03)
-  Dep: F20-T00 · Docs: [03 §3/§4](03-sincronizacao-offline.md)
+  Dep: F20-T00 · Docs: 03 §3/§4
   CP: remoção limitada ao id do lote; teste com edição durante o envio mantém a mutação nova na fila e no servidor.
 - [x] **F20-T04** — Sync: flush sem reentrância e status correto no bootstrap (R-04, R-05)
-  Dep: F20-T03 · Docs: [03 §4/§6](03-sincronizacao-offline.md)
+  Dep: F20-T03 · Docs: 03 §4/§6
   CP: `flush()` em laço (sem ciclo de futures); fila esgotada no restart expõe `Erro` com "tentar de novo".
 - [x] **F20-T05** — Sync: divergência de relógio medida contra o servidor (R-06)
-  Dep: F20-T03 · Docs: [03 §5](03-sincronizacao-offline.md), [07 §4](07-qualidade-ci.md)
+  Dep: F20-T03 · Docs: 03 §5, [07 §4](07-qualidade-ci.md)
   CP: `ts_local` comparado ao `now()` do servidor; evento `sync_relogio_adiantado` testado com fonte injetada.
 - [x] **F20-T06** — Docs donos: publication, cascatas, inventário e CI (R-09, R-17)
-  Dep: — · Docs: [01](01-banco-de-dados.md), [02](02-seguranca-rls.md), [06](06-mvp-entregas.md), [07](07-qualidade-ci.md)
+  Dep: — · Docs: 01, 02, [06](06-mvp-entregas.md), [07](07-qualidade-ci.md)
   CP: 01 §7 e §4 com `convites`; 02 §2 com `convites`; 06 §4/ADR-013 sem afirmar deploy já entregue; 07 §3 espelhando o `ci.yml`; cascata de `convites.criado_por` na lista do 06 §3.3.1.
 - [x] **F20-T07** — CI: rodar o teste de Realtime no job `supabase` (R-10)
-  Dep: F20-T06 · Docs: [02 §5](02-seguranca-rls.md), [07 §3](07-qualidade-ci.md)
+  Dep: F20-T06 · Docs: 02 §5, [07 §3](07-qualidade-ci.md)
   CP: `realtime_test.mjs` executado no CI (sem `package.json` stub); CP da F1-T07 validado.
 - [x] **F20-T08** — Convites: revogar convite pendente pela UI (R-07)
-  Dep: — · Docs: [08 §2/§5](08-compartilhamento-colaborativo.md)
+  Dep: — · Docs: 08 §2/§5
   CP: ação "Revogar" no sheet do dono usando `ConvitesRepository.revogar`; token revogado deixa de ser aceito.
 - [x] **F20-T09** — Categorias: cobertura do termo antes do desempate alfabético (R-08)
   Dep: — · Docs: [04 §5](04-importacao-lista.md)
   CP: `Suco de laranja` → Bebidas; casos de teste para compostos.
 - [x] **F20-T10** — Realtime: limpeza ao perder acesso e status do canal (R-11, R-12)
-  Dep: — · Docs: [03 §4/§7](03-sincronizacao-offline.md), [08 §7/§9](08-compartilhamento-colaborativo.md)
+  Dep: — · Docs: 03 §4/§7, 08 §7/§9
   CP: comportamento do cache ao ser removido documentado e o caminho testado; callback de status com re-sync em erro (feito); **R-23: flaky do Realtime local mitigado no CI com retry** (ver `R-23` no relatório). *(R-11: medido contra o stack local — o `old_record` do DELETE de `lista_membros` chega vazio mesmo com `replica identity full`; causa é `_realtime.tenants.private_only`, sem opção no CLI. Limpeza garantida por reconexão/bootstrap/sair-da-lista; **não** há limpeza por evento nem reavaliação em resume — o `08 §9` descreve isso como limite conhecido. R-12: re-sync em `SUBSCRIBED` implementado e testado. R-23: flaky de infra local, retry no CI)*
 - [x] **F20-T11** — Banco: defesa em profundidade e higiene (R-18, R-19)
-  Dep: F20-T06 · Docs: [01](01-banco-de-dados.md), [02 §4.3](02-seguranca-rls.md)
+  Dep: F20-T06 · Docs: 01, 02 §4.3
   CP: `papel='dono'` restrito na policy de insert; trigger de `atualizado_em` em `convites`; testes de negação verdes.
 - [x] **F20-T12** — Privacidade e polimento de UI/a11y (R-13…R-16, R-20, R-21, R-22)
   Dep: — · Docs: [05 §7](05-app-flutter.md), [07 §4](07-qualidade-ci.md), [09 §2.4](09-runbook-operacoes.md), [15 §4](15-design-system.md)
@@ -533,11 +533,11 @@ Achados da revisão de fechamento que **não** deveriam ser marcados como conclu
   Dep: — · Docs: [10](10-wireframes-telas.md), [11](11-usabilidade-fase5.md), [15 §4](15-design-system.md)
   CP: `SeletorTema` sem overflow em tela estreita/escala 2x; telas de verificação/login com scroll; decisão registrada sobre o indicador de sync no painel (código ou wireframe ajustado). *(`seletor_tema.dart` adaptativo por largura/escala com função pura `usarSeletorSegmentado` + dropdown; `SingleChildScrollView` nos 3 corpos (`_VerificacaoEmail` e os 2 estados do `entrar_screen`); `IndicadorSync` no topo do painel de listas, seguindo o wireframe 10 §3.2 e alinhando o 05; 9 testes novos — inclui o RED real `RenderFlex overflowed by 120 pixels`)*
 - [x] **F21-T02** — Sentry: limpar `event.extra` e alinhar `07 §3`/`02 §3`
-  Dep: — · Docs: [02 §3](02-seguranca-rls.md), [07 §3/§4](07-qualidade-ci.md)
+  Dep: — · Docs: 02 §3, [07 §3/§4](07-qualidade-ci.md)
   CP: `beforeSend` limpa `breadcrumbs`, `extra` e `contexts`; esqueleto do CI espelha o `ci.yml` (step de Realtime + pin do CLI); matriz de INSERT de `lista_membros` no 02 §3 cita `user_id = auth.uid()`.
   Nota: *(`beforeSend` extraído para `limparDadosDoSentry` em `lib/core/observabilidade/sentry_privacidade.dart` — agora limpa também `extra` — e usado no `main.dart`; 2 unit tests; esqueleto do 07 §3 com `version: 2.116.0` no `setup-cli` e o step do teste de Realtime com retry (R-23); 02 §3 cita `user_id = auth.uid()`/migration 0015)*
 - [x] **F21-T03** — Convites: revogar também os pendentes anteriores (R-07 parcial)
-  Dep: — · Docs: [08 §2](08-compartilhamento-colaborativo.md)
+  Dep: — · Docs: 08 §2
   CP: sheet lista os convites pendentes da lista (usando `pendentesDaLista`) com ação de revogar; ou limite documentado no 08.
   Nota: *(sheet "Convidar" carrega `pendentesDaLista(listaId)` no `initState` e mostra a seção "Convites pendentes" com "Revogar" por item — o recém-gerado não duplica; falha de rede na listagem é silenciosa e não bloqueia gerar/revogar; strings `convitesPendentes`/`revogarConvitePendente`/`convitePendenteAjuda`; 2 widget tests)*
 - [x] **F21-T04** — Política de Privacidade acessível pelo app (herdada da F19-T04)
@@ -556,10 +556,10 @@ Spec: [superpowers/specs/2026-09-18-modo-mercado-frequentes-design.md](superpowe
   Dep: — · Docs: [05 §3](05-app-flutter.md)
   CP: `SugestaoItem` + `watchItensFrequentes` (agrupa por nome normalizado, peso 2 na lista aberta / 1 nas demais, exclui pendentes da lista aberta, limiar ≥2, limite 8, desempate alfabético); unit tests verdes.
 - [x] **F22-T03** — Chips de itens frequentes na tela da lista (RF-19)
-  Dep: F22-T02 · Docs: [05 §3/§6.3](05-app-flutter.md), [10 §3.1/§3.6](10-wireframes-telas.md), [15 §3](15-design-system.md)
+  Dep: F22-T02 · Docs: [05 §3/§6.3](05-app-flutter.md), [10 §3.1/§3.4](10-wireframes-telas.md), [15 §3](15-design-system.md)
   CP: `itensFrequentesProvider` + chips `ActionChip` acima do campo, visíveis só com o campo vazio; toque adiciona 1 `un` com categoria sugerida; widget tests verdes.
 - [x] **F22-T04** — Rota e tela do Modo Mercado (RF-18)
-  Dep: — · Docs: [05 §4/§6.5](05-app-flutter.md), [10 §3.5](10-wireframes-telas.md)
+  Dep: — · Docs: [05 §4/§6.5](05-app-flutter.md), [10 §3.3](10-wireframes-telas.md)
   CP: rota `/mercado/:listaId` + `MercadoScreen` (pendentes em destaque, contador da sessão, faixa "Marcados" como undo, estados de loading/erro/não encontrada/tudo comprado, sem menu/busca/drag/importação); testes de widget incluindo escala 2.0 sem overflow.
 - [x] **F22-T05** — Botão de entrada no modo mercado (gate por papel) e docs donos
   Dep: F22-T04 · Docs: [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [14](14-tarefas.md), [15](15-design-system.md), [00 §6](00-visao-geral.md)
@@ -573,31 +573,31 @@ Spec: [superpowers/specs/2026-09-21-duplicar-lista-design.md](superpowers/specs/
   Dep: — · Docs: [05 §6.2](05-app-flutter.md)
   CP: `ListasRepository.duplicarLista` copia só pendentes, preserva nome/quantidade/unidade/categoria e ordem, enfileira mutações e não altera a origem; unit tests verdes.
 - [x] **F23-T02** — Menu "Comprar de novo" e sheet no painel (RF-20)
-  Dep: F23-T01 · Docs: [05 §6.2](05-app-flutter.md), [10 §2.5](10-wireframes-telas.md)
+  Dep: F23-T01 · Docs: [05 §6.2](05-app-flutter.md), [10 §2.4](10-wireframes-telas.md)
   CP: item no menu `⋮` (dono e membro) só com pendentes; sheet com contagem e título editável; cria e abre a lista nova; widget tests verdes.
 - [x] **F23-T03** — Docs donos e fechamento
   Dep: F23-T02 · Docs: [12](12-prd.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [14](14-tarefas.md), [16](16-roadmap-pos-mvp.md)
-  CP: RF-20 no 12; §6.2 no 05; §2.5 no 10; Fase 23 marcada e progresso atualizado.
+  CP: RF-20 no 12; §6.2 no 05; §2.4 no 10; Fase 23 marcada e progresso atualizado.
 
 ## Fase 24 — Transferência de dono (RF-14)
 
 Spec: [superpowers/specs/2026-09-21-transferencia-dono-design.md](superpowers/specs/2026-09-21-transferencia-dono-design.md) · Requisito: RF-14 (transferência de dono). · Docs donos: 01, 02, 08, 05, 10, 06 §3.3.1, 12.
 
 - [x] **F24-T01** — Banco: migration `0016` (RPC `transferir_dono`, `sync_dono` v3, R-17) + testes SQL + CI
-  Dep: — · Docs: [01 §6](01-banco-de-dados.md), [02 §4.6](02-seguranca-rls.md), [08 §6](08-compartilhamento-colaborativo.md)
+  Dep: — · Docs: 01 §6, 02 §4.6, 08 §6
   CP: RPC só dono/destino membro/≠eu; demove→promove com `listas.dono_id` só pelo trigger; T-01…T-07 verdes; FK `convites.criado_por` com `on delete cascade`; step novo no CI.
 - [x] **F24-T02** — App: `ConvitesRepository.transferirDono` + erros + strings
-  Dep: F24-T01 · Docs: [08 §6](08-compartilhamento-colaborativo.md)
+  Dep: F24-T01 · Docs: 08 §6
   CP: RPC online-only com `p_lista`/`p_novo_dono`; erros mapeados em pt-BR (`apenas_dono`/`destino_invalido`/`sem_conexao`); 4 unit tests verdes.
 - [x] **F24-T03** — App: "Transferir dono" na tela de membros com confirmação dupla
   Dep: F24-T02 · Docs: [05 §6.6](05-app-flutter.md), [10 §3.7](10-wireframes-telas.md)
   CP: item no menu só para dono e alvo ≠ eu; confirmação dupla; sucesso atualiza o papel local (editor), invalida membros e mostra SnackBar; 3 widget tests verdes.
   Nota: após a transferência, a tela da **lista** do ex-dono só converge para editor quando o UPDATE de `listas` chega pelo realtime (LWW) — a tela de membros já reflete na hora (janela real e transitória; o servidor rejeita ações obsoletas).
 - [x] **F24-T04** — App: aviso ao novo dono via Realtime
-  Dep: F24-T03 · Docs: [08 §6](08-compartilhamento-colaborativo.md)
+  Dep: F24-T03 · Docs: 08 §6
   CP: UPDATE de `lista_membros` para `dono` sinaliza `donoTransferido`; SnackBar genérico "Você agora é dono de uma lista" com guarda por `listaId`; testes de repositório e de tela verdes.
 - [x] **F24-T05** — Docs donos e fechamento
-  Dep: F24-T04 · Docs: [01](01-banco-de-dados.md), [02](02-seguranca-rls.md), [06 §3.3.1](06-mvp-entregas.md), [08](08-compartilhamento-colaborativo.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
+  Dep: F24-T04 · Docs: 01, 02, [06 §3.3.1](06-mvp-entregas.md), 08, [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
   CP: docs donos refletem a transferência; R-17 marcado resolvido; Fase 24 na tabela de progresso (143/141).
 
 ## Fase 25 — Preço por Item e Total no Carrinho (RF-21)
@@ -605,19 +605,19 @@ Spec: [superpowers/specs/2026-09-21-transferencia-dono-design.md](superpowers/sp
 Spec: [superpowers/specs/2026-09-21-precos-total-design.md](superpowers/specs/2026-09-21-precos-total-design.md) · Requisito: RF-21 (preço unitário + total dos marcados). · Docs donos: 01, 03, 05, 10, 12.
 
 - [x] **F25-T01** — Banco: migration `0017` (coluna `preco_centavos` + CHECK) + testes SQL + CI
-  Dep: — · Docs: [01 §4.3](01-banco-de-dados.md)
+  Dep: — · Docs: 01 §4.3
   CP: `preco_centavos integer` nullable com CHECK `null ou 0..99999999`; sem policy nova (herda `itens_lista`); PC-01…PC-03 verdes; step novo no CI.
 - [x] **F25-T02** — App: `precoCentavos` no Drift, domínio, repositório e aplicador
-  Dep: F25-T01 · Docs: [01 §4.3](01-banco-de-dados.md), [03 §3](03-sincronizacao-offline.md)
+  Dep: F25-T01 · Docs: 01 §4.3, 03 §3
   CP: `Item.precoCentavos` (`int?`); `adicionarItem(..., precoCentavos)`; `editarItem(..., precoCentavos, limparPreco)`; payload de item com `preco_centavos`; aplicador tolera ausente/não numérico → `null`; `duplicarLista` copia o preço; unit tests verdes.
 - [x] **F25-T03** — App: funções puras `formatarReais`/`parsePrecoParaCentavos`/`totalCarrinho`
   Dep: F25-T02 · Docs: [05 §6.3](05-app-flutter.md)
   CP: `lib/features/listas/domain/preco.dart` sem `double` para dinheiro; total soma só **marcados com preço**, arredondando cada subtotal ao centavo; unit tests de formatação/parse/total verdes.
 - [x] **F25-T04** — App: campo de preço no editor e faixa `TotalCarrinho`
-  Dep: F25-T03 · Docs: [05 §6.3/§6.5](05-app-flutter.md), [10 §3.1/§3.5](10-wireframes-telas.md)
+  Dep: F25-T03 · Docs: [05 §6.3/§6.5](05-app-flutter.md), [10 §3.1/§3.3](10-wireframes-telas.md)
   CP: campo "Preço (R$)" opcional com erro inline; faixa "No carrinho: R$ … · N sem preço" no rodapé da lista e no modo mercado, oculta sem marcados; widget tests verdes (lista/mercado/editor).
 - [x] **F25-T05** — Docs donos e fechamento
-  Dep: F25-T04 · Docs: [01](01-banco-de-dados.md), [03](03-sincronizacao-offline.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
+  Dep: F25-T04 · Docs: 01, 03, [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
   CP: RF-21 no 12 (tabela, rastreabilidade e fora de escopo ajustado); docs donos refletem preço/total; Fase 25 na tabela de progresso (148/146).
 
 ## Fase 26 — Arquivar listas (RF-22)
@@ -625,16 +625,16 @@ Spec: [superpowers/specs/2026-09-21-precos-total-design.md](superpowers/specs/20
 Spec: [superpowers/specs/2026-09-21-arquivar-listas-design.md](superpowers/specs/2026-09-21-arquivar-listas-design.md) · Requisito: RF-22 (arquivar/desarquivar listas). · Docs donos: 01, 03, 05, 10, 12.
 
 - [x] **F26-T01** — Banco: migration `0018` (`arquivada_em` + índice parcial + trigger) + testes SQL + CI
-  Dep: — · Docs: [01 §4.1](01-banco-de-dados.md)
+  Dep: — · Docs: 01 §4.1
   CP: `arquivada_em timestamptz` nullable (`null` = ativa); índice `idx_listas_dono_ativas`; trigger `protege_arquivo_dono`/`trg_listas_arquivo_dono` restringe a autoria da mudança ao dono; sem policy nova; ARQ-01…ARQ-03 verdes; step novo no CI.
 - [x] **F26-T02** — App: `arquivadaEm` no Drift, domínio, repositório e aplicador
-  Dep: F26-T01 · Docs: [01 §4.1](01-banco-de-dados.md), [03 §3](03-sincronizacao-offline.md)
+  Dep: F26-T01 · Docs: 01 §4.1, 03 §3
   CP: `Lista.arquivadaEm` (`DateTime?`); `definirArquivada(String, {required bool arquivada})` (Drift + fila); payload de lista com `arquivada_em`; aplicador tolera ausente → `null`; `duplicarLista` nasce ativa; migração Drift v4→v5; unit tests verdes.
 - [x] **F26-T03** — UI: toggle "Mostrar arquivadas", ação no card e rótulo
   Dep: F26-T02 · Docs: [05 §6.2](05-app-flutter.md), [10 §2](10-wireframes-telas.md)
   CP: toggle "Mostrar arquivadas" na AppBar (ocultas por padrão, aplica a Minhas e Compartilhadas); menu `⋮` do dono com Arquivar/Desarquivar; chip "Arquivada" no card; busca respeita o toggle; widget tests verdes.
 - [x] **F26-T04** — Docs donos e fechamento
-  Dep: F26-T03 · Docs: [01](01-banco-de-dados.md), [03](03-sincronizacao-offline.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
+  Dep: F26-T03 · Docs: 01, 03, [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
   CP: RF-22 no 12 (tabela e rastreabilidade); docs donos refletem arquivo (coluna/índice/trigger, payload, toggle/rótulo); A2 do 16 concluído; Fase 26 na tabela de progresso (152/150).
 
 ## Fase 27 — Adicionar itens de outra lista (RF-23)
@@ -656,13 +656,13 @@ Spec: [superpowers/specs/2026-09-21-adicionar-de-outra-lista-design.md](superpow
 Spec: [superpowers/specs/2026-09-21-ordem-categorias-design.md](superpowers/specs/2026-09-21-ordem-categorias-design.md) · Requisito: RF-24 (ordem pessoal das categorias). · Docs donos: 01, 05, 10, 12.
 
 - [x] **F28-T01** — Domínio e provider local da ordem
-  Dep: — · Docs: [01 §3.2](01-banco-de-dados.md), [05 §6.3](05-app-flutter.md)
+  Dep: — · Docs: 01 §3.2, [05 §6.3](05-app-flutter.md)
   CP: `normalizarOrdem`/`serializarOrdem`/`desserializarOrdem`/`moverItem`/`indiceCruDeReordenacao` e `ordemCategoriasProvider` (`AsyncNotifier` sobre `SharedPreferences`, chave `ordem_categorias`, como o tema); unit/provider tests verdes.
 - [x] **F28-T02** — UI: tela de ordenação, Configurações e agrupamento na lista
   Dep: F28-T01 · Docs: [05 §6](05-app-flutter.md), [10 §5](10-wireframes-telas.md)
   CP: item "Ordenar categorias" em Configurações abre `/categorias`; `TelaOrdenarCategorias` (`ReorderableListView` + "Restaurar padrão" com confirmação); a tela da lista agrupa os pendentes na ordem salva (fallback: enum); o dropdown do editor mantém a ordem do enum; widget tests verdes.
 - [x] **F28-T03** — Docs donos e fechamento
-  Dep: F28-T02 · Docs: [01](01-banco-de-dados.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
+  Dep: F28-T02 · Docs: 01, [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
   CP: RF-24 no 12 (tabela e rastreabilidade); docs donos refletem a ordem pessoal (01 §3.2 padrão/fallback, 05 §6, wireframe 10 §5); A4 do 16 concluído; Fase 28 na tabela de progresso (158/156).
 
 ## Fase 29 — Quantidades em fração (RF-25)
@@ -701,7 +701,7 @@ Spec: [superpowers/specs/2026-09-21-boas-vindas-estados-vazios-design.md](superp
   Dep: — · Docs: [05 §6.8](05-app-flutter.md)
   CP: `onboardingVistoProvider` (`AsyncNotifierProvider<OnboardingNotifier, bool>`) lê/grava `onboarding_visto` em `SharedPreferences` (`marcarVisto`); sem rede/Drift/schema; unit tests verdes.
 - [x] **F31-T02** — Tela `/boas-vindas` e exibição uma vez
-  Dep: F31-T01 · Docs: [05 §6.8](05-app-flutter.md), [10 §1.4](10-wireframes-telas.md)
+  Dep: F31-T01 · Docs: [05 §6.8](05-app-flutter.md), [10 §1.1](10-wireframes-telas.md)
   CP: rota `/boas-vindas` protegida; `BoasVindasScreen` com marca, título/subtítulo, 4 destaques e "Começar" (`marcarVisto` + `/listas`); guard na home autenticada abre a tela uma vez quando a flag é falsa; widget tests verdes.
 - [x] **F31-T03** — Dica do vazio, docs donos e fechamento
   Dep: F31-T02 · Docs: [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
@@ -712,17 +712,17 @@ Spec: [superpowers/specs/2026-09-21-boas-vindas-estados-vazios-design.md](superp
 Spec: [superpowers/specs/2026-09-21-convite-email-design.md](superpowers/specs/2026-09-21-convite-email-design.md) · Requisito: RF-13 (completa o fluxo B — criar por e-mail, painel de pendentes, aceitar/recusar; envio automático segue adiado). · Docs donos: 01, 02, 08 §4.
 
 - [x] **F32-T01** — Banco: migration `0019` (RPCs) + testes SQL + CI
-  Dep: — · Docs: [01 §4.4](01-banco-de-dados.md), [02 §4.7](02-seguranca-rls.md), [08 §4](08-compartilhamento-colaborativo.md)
+  Dep: — · Docs: 01 §4.4, 02 §4.7, 08 §4
   CP: `0019_convites_email.sql` com `meus_convites_pendentes()` (devolve `id`, `token`, `lista_titulo`, `papel_oferecido`, `expira_em`; filtra `tipo='email'`, `estado='pendente'`, `expira_em >= now()` e o e-mail do chamador) e `recusar_convite(p_id)` (revoga só o convite do próprio e-mail e **também exige `expira_em >= now()`**); grants só a `authenticated`; RLS de `convites` intacto; `convites_email_tests.sql` (CE-01…CE-04 + CE-02b) verde e no CI.
 - [x] **F32-T02** — Repositório: criar/reusar, listar e recusar
-  Dep: F32-T01 · Docs: [08 §4](08-compartilhamento-colaborativo.md)
+  Dep: F32-T01 · Docs: 08 §4
   CP: `ConvitePendente`; `criarConviteEmail` reusa pendente **não expirado** do mesmo e-mail na lista (atualiza o papel) ou insere; `meusConvitesPendentes()` e `recusarConvite(id)`; o aceite reusa `aceitar_convite`; unit tests verdes.
 - [x] **F32-T03** — UI: e-mail no sheet "Convidar" e painel de pendentes
   Dep: F32-T02 · Docs: [05 §6.2](05-app-flutter.md), [10 §2.4/§3.9](10-wireframes-telas.md)
   CP: campo "E-mail do convidado" + "Enviar convite" (validação local + aviso de que não há e-mail automático) no sheet; seção "Convites pendentes" no Minhas Listas (card `Convite para <título>`, chip do papel, "expira em …", Aceitar/Recusar) sem nome do convidante; widget tests do sheet e da seção verdes.
 - [x] **F32-T04** — Docs donos e fechamento
-  Dep: F32-T03 · Docs: [01](01-banco-de-dados.md), [02 §4.7](02-seguranca-rls.md), [08 §4](08-compartilhamento-colaborativo.md), [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
-  CP: docs donos refletem o fluxo B entregue (RPCs/grants + guarda de expiração do `recusar_convite`; painel e campo de e-mail; RF-13 no 12; B2 no 16); Fase 32 na tabela de progresso (171/169).
+  Dep: F32-T03 · Docs: 01, 02 §4.7, 08 §4, [05](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
+  CP: docs donos refletem o fluxo B entregue (RPCs/grants + guarda de expiração do `recusar_convite`; painel e campo de e-mail; RF-13 no 12); Fase 32 na tabela de progresso (171/169).
 
 ## Fase 33 — Fluxos críticos (E2E no widget) (RNF-08)
 
@@ -736,7 +736,7 @@ Spec: [superpowers/specs/2026-09-21-fluxos-criticos-design.md](superpowers/specs
   CP: `fluxo_lista_test` (criar/adicionar/marcar/limpar/desfazer), `fluxo_importar_test` (colar→extrair→confirmar), `fluxo_entrar_codigo_test` (token→RPC→navega) e `fluxo_offline_test` (item local + fila) verdes em `flutter test test/fluxos/`.
 - [x] **F33-T03** — Docs donos e fechamento
   Dep: F33-T02 · Docs: [07 §1](07-qualidade-ci.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
-  CP: 07 §1 com a linha "Fluxos críticos (E2E no widget)" e o registro dos adiados (goldens sensíveis à plataforma Windows×Linux; `integration_test` exige device); C2 do 16 concluído; Fase 33 na tabela de progresso (174/172).
+  CP: 07 §1 com a linha "Fluxos críticos (E2E no widget)" e o registro dos adiados (goldens sensíveis à plataforma Windows×Linux; `integration_test` exige device); B2 do 16 concluído; Fase 33 na tabela de progresso (174/172).
 
 ## Fase 34 — Backup agendado + alertas do Sentry (RNF-08)
 
@@ -750,7 +750,7 @@ Spec: [superpowers/specs/2026-09-22-backup-alertas-design.md](superpowers/specs/
   CP: 09 §2.2 com o backup automatizado (cadência, secrets, retenção, restore a partir do artefato) e o dump manual como fallback; 07 §4 com a subseção "Regras de alerta (Sentry)" (tabela dos eventos 1-2 + passos no dashboard).
 - [x] **F34-T03** — Fechamento
   Dep: F34-T02 · Docs: [14](14-tarefas.md), [16](16-roadmap-pos-mvp.md)
-  CP: Fase 34 na tabela de progresso (177/175); C3 do 16 concluído.
+  CP: Fase 34 na tabela de progresso (177/175).
 
 ## Fase 35 — CSP recomendada no Web (R-21)
 
@@ -761,54 +761,54 @@ Spec: [docs/superpowers/specs/2026-09-22-csp-web-design.md](superpowers/specs/20
   CP: 06 §3.4.1 com a CSP recomendada (header HTTP) + cabeçalhos COOP/COEP e as notas (`wasm-unsafe-eval`, `unsafe-inline`, `worker-src`, `connect-src` do Supabase https/wss), aplicável só quando o Web for servido/publicado; sem `<meta>`/`_headers` ao vivo (ADR-013).
 - [x] **F35-T02** — Fechamento
   Dep: F35-T01 · Docs: [14](14-tarefas.md), [16](16-roadmap-pos-mvp.md)
-  CP: Fase 35 na tabela de progresso (179/177); C4 do 16 concluído.
+  CP: Fase 35 na tabela de progresso (179/177); B4 do 16 concluído.
 
 ## Fase 36 — Orçamento por lista (RF-28)
 
 Spec: [docs/superpowers/specs/2026-09-22-orcamento-lista-design.md](superpowers/specs/2026-09-22-orcamento-lista-design.md) · Requisito: RF-28 (orçamento por lista — limite de gasto sincronizado e editável por dono/editor). · Docs donos: 01, 02, 03, 05, 10, 12.
 
 - [x] **F36-T01** — Banco: migration `0020` + testes SQL + CI + docs 01/02
-  Dep: — · Docs: [01 §4.1](01-banco-de-dados.md), [02 §4.1](02-seguranca-rls.md)
+  Dep: — · Docs: 01 §4.1, 02 §4.1
   CP: `0020_orcamento_lista.sql` adiciona `listas.orcamento_centavos integer` (CHECK `null ou 0..99999999`; `0` válido; negativo rejeitado; **sem policy nova** — herda o UPDATE de `listas`); `orcamento_lista_tests.sql` (ORC-01…ORC-03) verde e no CI; docs 01 §4.1 e 02 §4.1 refletem a coluna e a herança de policy.
 - [x] **F36-T02** — Drift + domínio + repositório + sync
-  Dep: F36-T01 · Docs: [03](03-sincronizacao-offline.md)
+  Dep: F36-T01 · Docs: 03
   CP: `Lista.orcamentoCentavos` (`int?`) e coluna no Drift (schemaVersion 6); `ListasRepository.definirOrcamento(id, {required int? centavos})` grava local e enfileira UPDATE com `orcamento_centavos` no payload; aplicador tolera ausente/não numérico → `null`; doc 03 registra o campo; unit tests verdes.
 - [x] **F36-T03** — UI: definir/limpar orçamento na tela da lista
   Dep: F36-T02 · Docs: [05 §6.3](05-app-flutter.md)
   CP: item de menu "Orçamento" (só dono/editor) abre diálogo com campo em R$ (valor atual prefixado), erro inline para valor inválido e "Salvar"/"Remover orçamento" com SnackBar; o leitor não vê o item; widget tests verdes.
 - [x] **F36-T04** — UI: `TotalCarrinho` com orçamento
-  Dep: F36-T03 · Docs: [05 §6.3/§6.5](05-app-flutter.md), [10 §3.1/§3.5](10-wireframes-telas.md)
-  CP: `TotalCarrinho` lê o orçamento da lista e mostra progresso (`LinearProgressIndicator`) + alerta "Acima do orçamento" (cor/ícone) quando o total excede; sem orçamento mantém o comportamento atual; docs 05 §6.3/§6.5 e 10 §3.1/§3.5 anotam o estado com orçamento; widget tests verdes.
+  Dep: F36-T03 · Docs: [05 §6.3/§6.5](05-app-flutter.md), [10 §3.1/§3.3](10-wireframes-telas.md)
+  CP: `TotalCarrinho` lê o orçamento da lista e mostra progresso (`LinearProgressIndicator`) + alerta "Acima do orçamento" (cor/ícone) quando o total excede; sem orçamento mantém o comportamento atual; docs 05 §6.3/§6.5 e 10 §3.1/§3.3 anotam o estado com orçamento; widget tests verdes.
 - [x] **F36-T05** — RF-28 no 12 e fechamento
   Dep: F36-T04 · Docs: [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
-  CP: RF-28 no 12 (tabela e rastreabilidade; fora de escopo sem "orçamento/limite", mantendo "comparação entre idas"); D1 do 16 com preço/total (F25) e orçamento (F36) concluídos e comparação entre idas pendente; Fase 36 na tabela de progresso (184/182).
+  CP: RF-28 no 12 (tabela e rastreabilidade; fora de escopo sem "orçamento/limite", mantendo "comparação entre idas"); C1 do 16 com preço/total (F25) e orçamento (F36) concluídos e comparação entre idas pendente; Fase 36 na tabela de progresso (184/182).
 
 ## Fase 37 — Comparação entre idas (RF-29)
 
 Spec: [docs/superpowers/specs/2026-09-22-comparacao-idas-design.md](superpowers/specs/2026-09-22-comparacao-idas-design.md) · Requisito: RF-29 (comparação de preços entre idas — último preço local + variação no editor). · Docs donos: 05, 03, 10, 12.
 
 - [x] **F37-T01** — Drift local + registro no repositório
-  Dep: — · Docs: [05 §6.3](05-app-flutter.md), [03](03-sincronizacao-offline.md)
+  Dep: — · Docs: [05 §6.3](05-app-flutter.md), 03
   CP: tabela Drift `HistoricoPrecoLocal` (schemaVersion 7; migração v6→v7) + `HistoricoPrecosRepository.registrar/porNome`; `editarItem` grava o histórico quando o item fica concluído **com** preço (sem preço não grava; desmarcar não apaga); local-only (sem fila/sync); unit tests verdes.
 - [x] **F37-T02** — Provider + linha no editor do item
   Dep: F37-T01 · Docs: [05 §6.3](05-app-flutter.md), [10 §3.1](10-wireframes-telas.md)
   CP: `historicoPrecoProvider` + strings; `_DialogoEditarItem` mostra "Última compra: R$ X (dd/mm)" e a variação ↑/↓/"Mesmo preço" **só com a mesma unidade** (preço atual ausente → só o último preço); o texto reage ao digitar; widget tests verdes.
 - [x] **F37-T03** — RF-29 no 12, docs donos e fechamento
-  Dep: F37-T02 · Docs: [05 §6.3](05-app-flutter.md), [03](03-sincronizacao-offline.md), [10 §3.1](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
-  CP: RF-29 no 12 (tabela e rastreabilidade; fora de escopo sem "comparação entre idas"); docs donos 05 §6.3 / 03 / 10 §3.1 refletem a linha e o caráter local/não sincronizado; D1 do 16 concluído (F25+F36+F37); Fase 37 na tabela de progresso (187/185).
+  Dep: F37-T02 · Docs: [05 §6.3](05-app-flutter.md), 03, [10 §3.1](10-wireframes-telas.md), [12](12-prd.md), [16](16-roadmap-pos-mvp.md), [14](14-tarefas.md)
+  CP: RF-29 no 12 (tabela e rastreabilidade; fora de escopo sem "comparação entre idas"); docs donos 05 §6.3 / 03 / 10 §3.1 refletem a linha e o caráter local/não sincronizado; C1 do 16 concluído (F25+F36+F37); Fase 37 na tabela de progresso (187/185).
 
 ## Fase 38 — Notificações push (RF-30)
 
 Spec: [superpowers/specs/2026-09-23-notificacoes-push-design.md](superpowers/specs/2026-09-23-notificacoes-push-design.md) · Plano: [superpowers/plans/2026-09-23-notificacoes-push.md](superpowers/plans/2026-09-23-notificacoes-push.md) · Requisito: RF-30 (notificação push Android de convite por e-mail recebido e de novo membro numa lista sua). · Docs donos: 08, 09, 01, 02, 05, 12.
 
 - [x] **F38-T01** — Planejamento: RF-30, ADR-014, Fase 38 e docs de roadmap
-  Dep: — · Docs: [12](12-prd.md), [00 §5](00-visao-geral.md), [14](14-tarefas.md), [16](16-roadmap-pos-mvp.md), [08 §7](08-compartilhamento-colaborativo.md)
-  CP: RF-30 no 12 (tabela §2 e rastreabilidade §6; fora de escopo sem "push notifications"); ADR-014 no 00 §5 (FCM Android-first, disparo server-side via `pg_net`); Fase 38 no 14 com as 9 tarefas e a linha de progresso (196/185); B3 do 16 em execução (F38); 08 §7 com a nota do push (RF-30, F38).
+  Dep: — · Docs: [12](12-prd.md), [00 §5](00-visao-geral.md), [14](14-tarefas.md), [16](16-roadmap-pos-mvp.md), 08 §7
+  CP: RF-30 no 12 (tabela §2 e rastreabilidade §6; fora de escopo sem "push notifications"); ADR-014 no 00 §5 (FCM Android-first, disparo server-side via `pg_net`); Fase 38 no 14 com as 9 tarefas e a linha de progresso (196/185); 08 §7 com a nota do push (RF-30, F38).
 - [x] **F38-T02** — Banco: tabela `push_tokens` + RLS + testes SQL
-  Dep: F38-T01 · Docs: [01 §4.5](01-banco-de-dados.md), [02 §3/§4.8/§5](02-seguranca-rls.md)
+  Dep: F38-T01 · Docs: 01 §4.5, 02 §3/§4.8/§5
   CP: migration `0021_push_tokens.sql` (`push_tokens` com `token unique`, `plataforma` com check e índice `idx_push_tokens_user`; RLS por `auth.uid()` com SELECT/INSERT/UPDATE/DELETE; RPC `registrar_push_token` `security definer` que reatribui o token a `auth.uid()`); `push_tokens_tests.sql` (N-19…N-22 + P-12 (reatribuição)) verde e no CI; 01 §4.5 e 02 §3/§4.8/§5 refletem a tabela e as negações.
 - [x] **F38-T03** — Banco: triggers `pg_net` de notificação
-  Dep: F38-T02 · Docs: [01 §7](01-banco-de-dados.md)
+  Dep: F38-T02 · Docs: 01 §7
   CP: migration `0022_notificar_push.sql` (`pg_net`; `public.notificar_push()` `security definer` lê URL/segredo do Vault e faz `net.http_post`; triggers `trg_convites_push`/`trg_membros_push`); `notificar_push_tests.sql` (NP-01…NP-04) verde e no CI; 01 §7 com o sub-bloco "Notificações push (RF-30)".
 - [x] **F38-T04** — Edge Function `enviar-push` + testes Deno + CI
   Dep: F38-T03 · Docs: [07 §1/§2/§3](07-qualidade-ci.md)
@@ -826,8 +826,8 @@ Spec: [superpowers/specs/2026-09-23-notificacoes-push-design.md](superpowers/spe
   Dep: F38-T07 · Docs: [05](05-app-flutter.md)
   CP: `rotaDaNotificacao(data)` (convite → `/entrar?token=…`; membro → `/lista/:id`); `pushNavegacaoProvider` (toque inicial + `onMessageOpenedApp`) e `notificacoesForegroundProvider` com SnackBar via `scaffoldMessengerKey`; 3 testes da rota + `flutter test` verdes.
 - [x] **F38-T09** — Docs donos finais, runbook, fechamento e distribuição
-  Dep: F38-T08 · Docs: [08 §11/§10](08-compartilhamento-colaborativo.md), [09 §2](09-runbook-operacoes.md), [14](14-tarefas.md), [16](16-roadmap-pos-mvp.md)
-  CP: 08 §11 (arquitetura do push) + §10 (checklist de 2 aparelhos); 09 §2 (secrets/Vault/deploy/smoke/rotação); F38-T01…T09 marcadas e tabela de progresso (196/194); B3 do 16 concluído; versão `1.5.0+9`; `flutter analyze`/`flutter test` e testes SQL verdes.
+  Dep: F38-T08 · Docs: 08 §11/§10, [09 §2](09-runbook-operacoes.md), [14](14-tarefas.md), [16](16-roadmap-pos-mvp.md)
+  CP: 08 §11 (arquitetura do push) + §10 (checklist de 2 aparelhos); 09 §2 (secrets/Vault/deploy/smoke/rotação); F38-T01…T09 marcadas e tabela de progresso (196/194); versão `1.5.0+9`; `flutter analyze`/`flutter test` e testes SQL verdes.
 
 ## Fase 39 — Consistência arquitetural (RNF-08)
 
@@ -846,10 +846,10 @@ Spec: [superpowers/specs/2026-09-23-consistencia-arquitetural-design.md](superpo
   Dep: F39-T02 · Docs: [05 §2](05-app-flutter.md)
   CP: `lib/core/texto/validacao.dart` com `emailValido`; getter `Papel.rotulo`; 4 usos de regex e 3 `_rotuloPapel` eliminados; testes novos verdes.
 - [x] **F39-T05** — Drift: barreiras locais espelhando o Postgres (v7→v8)
-  Dep: F39-T02 · Docs: [05 §2](05-app-flutter.md), [03 §3](03-sincronizacao-offline.md)
+  Dep: F39-T02 · Docs: [05 §2](05-app-flutter.md), 03 §3
   CP: `customConstraints` em `ItemLocal`/`ListaLocal`; `schemaVersion = 8`; migração com dedup defensivo + `alterTable` + índice único parcial `uq_item_ativo`; `onCreate` cria o índice; testes de migração v7→v8 e de negativos dos CHECK verdes.
 - [x] **F39-T06** — Docs donos e higiene
-  Dep: F39-T05 · Docs: [05 §2](05-app-flutter.md), [02 §5](02-seguranca-rls.md), [09 §2](09-runbook-operacoes.md), [03 §3](03-sincronizacao-offline.md)
+  Dep: F39-T05 · Docs: [05 §2](05-app-flutter.md), 02 §5, [09 §2](09-runbook-operacoes.md), 03 §3
   CP: 05 §2 com a árvore real e a paridade de barreiras Drift × Postgres (incluindo a nota `real` × `numeric`); 02 §5 corrige a lista de migrations de RLS; 09 §2 registra a decisão do `google-services.json`; 03 §3 aponta para a seção de barreiras locais; `.gitignore` corrigido.
 - [x] **F39-T07** — Fechamento: verificação e distribuição
   Dep: F39-T06 · Docs: [14](14-tarefas.md)
@@ -903,7 +903,7 @@ Requisito: RF-31 (versão Lite). · Docs donos: 03, 05, 16.
 - [x] **F42-T01** — Trocar `file_picker` (pinado em 10.3.10 por incompatibilidade da linha 11.x com AGP 9/Built-in Kotlin) por `file_selector`
   CP: `pubspec.yaml` sem `file_picker` e com `file_selector`; seletor migrado em `secao_backup.dart` (cancelar silencioso, `BackupInvalidoException` → `backupInvalido`, demais erros → `backupLeituraErro`) e **sem filtro de tipo** (o Android colapsa `mimeTypes`+extensões num único MIME e esconderia `.json`); `flutter build apk --debug --flavor prod` **e** `--flavor lite` **e** `flutter build web --release` verdes; doc 16 com a dívida resolvida.
 - [x] **F42-T02** — Import de backup alimenta a fila no modo colaborativo
-  CP: builders de payload e insert da outbox extraídos de `ListasRepository` para `lib/features/sync/data/outbox_mutacoes.dart` (formato do JSON idêntico, guarda `ativa` num ponto só); `BackupRepository(db, {enfileirar})` enfileira `listas`/`itens_lista` (`operacao: 'INSERT'`, `ts_local` = agora, payload com o `updated_at` importado) **dentro da transação** e só para o que o import gravou; nunca `historicoPrecos`, nunca no Lite; docs [03 §3](03-sincronizacao-offline.md) e [05 §6.10](05-app-flutter.md) atualizados; suíte verde (754 no HEAD da F43).
+  CP: builders de payload e insert da outbox extraídos de `ListasRepository` para `lib/features/sync/data/outbox_mutacoes.dart` (formato do JSON idêntico, guarda `ativa` num ponto só); `BackupRepository(db, {enfileirar})` enfileira `listas`/`itens_lista` (`operacao: 'INSERT'`, `ts_local` = agora, payload com o `updated_at` importado) **dentro da transação** e só para o que o import gravou; nunca `historicoPrecos`, nunca no Lite; docs 03 §3 e [05 §6.10](05-app-flutter.md) atualizados; suíte verde (754 no HEAD da F43).
 
 ## Fase 43 — Correções da revisão geral 2 (RNF-08)
 
@@ -916,25 +916,25 @@ Fonte: [relatorio-revisao-geral-2.md](relatorio-revisao-geral-2.md) · Spec: [su
   Dep: F43-T00 · Docs: [05](05-app-flutter.md) §6.10
   CP: exportar→importar com lista soft-deletada não lança FK; item sem lista → erro de restauração distinto.
 - [x] **F43-T02** — Sync: dedup com coalescing (G-02)
-  Dep: F43-T00 · Docs: [03](03-sincronizacao-offline.md) §5
+  Dep: F43-T00 · Docs: 03 §5
   CP: item criado+editado offline com duplicado remoto vira `Duplicado`; `23505` refaz a dedup.
 - [x] **F43-T03** — Sync: robustez do flush e do canal (G-12…G-15, G-19, G-20)
-  Dep: F43-T00 · Docs: [03](03-sincronizacao-offline.md) §3/§4/§7
+  Dep: F43-T00 · Docs: 03 §3/§4/§7
   CP: falha não incrementa mutação fora do lote; coalescing por `ts_local`; relatório na 6ª falha; canal re-sincroniza em erro.
 - [x] **F43-T04** — Sync: histórico no logout e paginação (G-16, G-18)
-  Dep: F43-T00 · Docs: [03](03-sincronizacao-offline.md) §7
+  Dep: F43-T00 · Docs: 03 §7
   CP: histórico de preços limpo na troca de usuário; download pagina até esgotar.
 - [x] **F43-T05** — Repositórios: escrita local + fila atômicas (G-17)
-  Dep: F43-T00 · Docs: [03](03-sincronizacao-offline.md) §3
+  Dep: F43-T00 · Docs: 03 §3
   CP: falha simulada no enfileiramento reverte o write local; suíte verde.
 - [x] **F43-T06** — RLS: `deletado_em` imutável para editor (G-03)
-  Dep: F43-T00 · Docs: [02](02-seguranca-rls.md) §3/§4.1
+  Dep: F43-T00 · Docs: 02 §3/§4.1
   CP: migration `0023`; editor não altera `deletado_em`; dono exclui; testes SQL verdes.
 - [x] **F43-T07** — Banco: PII no `excluir_conta`, `revoke` e CHECK de convites (G-04, G-22, G-24)
-  Dep: F43-T00 · Docs: [01](01-banco-de-dados.md), [02](02-seguranca-rls.md), [06](06-mvp-entregas.md)
+  Dep: F43-T00 · Docs: 01, 02, [06](06-mvp-entregas.md)
   CP: convites do e-mail do titular somem; anon não executa `aceitar_convite`; `tipo`↔`email` coerentes.
 - [x] **F43-T08** — Banco: higiene de policies/limites e `search_path` (G-23, G-26, G-27, G-29, G-30)
-  Dep: F43-T00 · Docs: [01](01-banco-de-dados.md), [02](02-seguranca-rls.md)
+  Dep: F43-T00 · Docs: 01, 02
   CP: policies restritas, CHECKs de tamanho, definers com `search_path=''`; testes SQL verdes.
 - [x] **F43-T09** — i18n Material e strings (G-05, G-34, G-35, G-42)
   Dep: F43-T00 · Docs: [05](05-app-flutter.md) §7, [15](15-design-system.md) §4
@@ -946,7 +946,7 @@ Fonte: [relatorio-revisao-geral-2.md](relatorio-revisao-geral-2.md) · Spec: [su
   Dep: F43-T00 · Docs: [05](05-app-flutter.md)
   CP: exclusão de conta não trava no erro de rede; título/orçamento validados; falhas da UI tratadas.
 - [x] **F43-T12** — Domínio e app (G-43…G-46, G-48, G-51, G-53)
-  Dep: F43-T00 · Docs: [03](03-sincronizacao-offline.md), [04](04-importacao-lista.md), [05](05-app-flutter.md)
+  Dep: F43-T00 · Docs: 03, [04](04-importacao-lista.md), [05](05-app-flutter.md)
   CP: orçamento na contagem; opt-out estável; Lite sem `Supabase.instance`; parser lê `"leite 2 kg"`.
 - [x] **F43-T13** — Docs e CI (G-11, G-54…G-58)
   Dep: F43-T00 · Docs: [07](07-qualidade-ci.md), [09](09-runbook-operacoes.md), [14](14-tarefas.md)
@@ -965,10 +965,10 @@ Nota: *(fase fechada com o app `1.5.0+14`; casco nativo apenas Android — iOS/W
 
 ## Fase 45 — Unidade `pt` (pote) (RF-03)
 
-Requisito: RF-03 (CRUD de itens com unidade do enum). · Docs donos: [01](01-banco-de-dados.md), [04](04-importacao-lista.md), [13](13-premodelo-tecnico.md), [14](14-tarefas.md). · Sem spec/plano (mudança bounded).
+Requisito: RF-03 (CRUD de itens com unidade do enum). · Docs donos: 01, [04](04-importacao-lista.md), [13](13-premodelo-tecnico.md), [14](14-tarefas.md). · Sem spec/plano (mudança bounded).
 
 - [x] **F45-T01** — Unidade `pt` (pote) no enum fechado
-  Docs: [01](01-banco-de-dados.md) §3.1 · [04](04-importacao-lista.md) §2. Requisito: RF-03.
+  Docs: 01 §3.1 · [04](04-importacao-lista.md) §2. Requisito: RF-03.
   CP: migration `0026` adiciona `pt` ao enum `unidade_item`; `Unidade.pt` no Dart; parser reconhece `pt`/`pote`/`potes`; suíte Flutter verde e `rls_tests.sql` com o caso positivo U-01.
 
 Nota: *(aditivo; `pt` = "pote"; sem migration Drift — a coluna `unidade` é `text`)*

@@ -31,30 +31,30 @@ Foco: fazer a lista recorrente render mais, tudo **offline-first**, sem schema n
 | A6 | Adicionar item por voz | RF-26 | 05, 04 | Médio | M | concluído (F30-T01…T03) — microfone on-device (pt-BR); Web/Desktop ocultam |
 | A7 | Onboarding curto + estados vazios + tour | RF-27 | 05, 10, 15 | Médio | P | concluído (F31-T01…T03, F46) |
 
-## Onda C — Robustez e lançamento
+## Onda B — Robustez e lançamento
 
 Foco: confiabilidade e preparação para publicação séria.
 
 | ID | Frente | Referência | Doc dono | Valor | Esforço | Notas |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| C2 | E2E/integration dos fluxos críticos + goldens | 07 | 07 | Alto | M | concluído (F33-T01…T03) — fluxos críticos no widget rodam no CI; **goldens e `integration_test` adiados** |
-| C4 | CSP no Web (endurecimento) | R-21 | 06 §3.4 | Baixo | P | concluído (F35-T01…T02) — CSP recomendada (e COOP/COEP) documentada no 06 §3.4.1 |
+| B2 | E2E/integration dos fluxos críticos + goldens | 07 | 07 | Alto | M | concluído (F33-T01…T03) — fluxos críticos no widget rodam no CI; **goldens e `integration_test` adiados** |
+| B4 | CSP no Web (endurecimento) | R-21 | 06 §3.4 | Baixo | P | concluído (F35-T01…T02) — CSP recomendada (e COOP/COEP) documentada no 06 §3.4.1 |
 | — | **F5-T05 usabilidade / F5-T06 publicação Play** | F5 | 06, 11 | Alto | G | **Gate do dono** — só sob solicitação |
 
-## Onda D — Monetização e preços
+## Onda C — Monetização e preços
 
 | ID | Frente | Requisito | Doc dono | Valor | Esforço | Notas |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| D1 | Preço por item, total ao vivo e comparação entre idas | RF-21 (preço/total), RF-28 (orçamento), RF-29 (comparação) | 05, 10 | Alto | G | concluído (F25-T01…T05, F36-T01…T05, F37-T01…T03) — preço/total, orçamento e comparação entre idas (histórico de preços **local**) |
+| C1 | Preço por item, total ao vivo e comparação entre idas | RF-21 (preço/total), RF-28 (orçamento), RF-29 (comparação) | 05, 10 | Alto | G | concluído (F25-T01…T05, F36-T01…T05, F37-T01…T03) — preço/total, orçamento e comparação entre idas (histórico de preços **local**) |
 
-## Onda E — Alcance
+## Onda D — Alcance
 
 | ID | Frente | Requisito | Doc dono | Valor | Esforço | Notas |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| E1 | iOS na distribuição | Fase 6 | 06, 09 | Alto | G | Depende de conta Apple Developer |
-| E2 | i18n (en/es) | novo | 05, 15 | Médio | G | Infra de localização; hoje pt-BR único |
-| E3 | Widget Android / quick-add no lançador | novo | 05 | Médio | G | Atalho para adicionar item sem abrir o app |
-| E5 | Publicação do app na Play (produção) | RF-32 | 06, 09 | Alto | M | em execução (F47) — gate F5-T06 (prod) permanece separado |
+| D1 | iOS na distribuição | Fase 6 | 06, 09 | Alto | G | Depende de conta Apple Developer |
+| D2 | i18n (en/es) | novo | 05, 15 | Médio | G | Infra de localização; hoje pt-BR único |
+| D3 | Widget Android / quick-add no lançador | novo | 05 | Médio | G | Atalho para adicionar item sem abrir o app |
+| D5 | Publicação do app na Play (produção) | RF-32 | 06, 09 | Alto | M | em execução (F47) — gate F5-T06 (prod) permanece separado |
 
 ## Dívidas técnicas registradas
 

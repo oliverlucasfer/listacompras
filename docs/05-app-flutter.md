@@ -206,7 +206,7 @@ Um único modal de importação local (offline, RF-16):
 
 ### 6.5. Modo mercado (RF-18)
 
-Tela dedicada `/mercado/:listaId` para usar o celular no mercado, sem a densidade da tela da lista (wireframe [10 §3.5](10-wireframes-telas.md)):
+Tela dedicada `/mercado/:listaId` para usar o celular no mercado, sem a densidade da tela da lista (wireframe [10 §3.3](10-wireframes-telas.md)):
 
 * **AppBar** com título da lista e seta de voltar (sem menu).
 * **Contador** `mercadoProgresso(marcados, total)` (ex.: "3 de 12"): marcados **nesta sessão** / total de itens ativos; é uma live region.
@@ -228,7 +228,7 @@ Primeiro acesso ao app — apresenta o valor em **uma** página (rolável, escal
 
 * **Rota:** `/boas-vindas` (top-level; não está na lista de rotas públicas). O guard fica na home (`MinhasListasScreen`): quando `onboardingVistoProvider` resolve **falso**, faz `context.push('/boas-vindas')` **uma única vez**; não mexe no `redirect` do `go_router`.
 * **Flag local (F31-T01):** `onboardingVistoProvider` (`AsyncNotifierProvider<OnboardingNotifier, bool>`) lê/grava `SharedPreferences` (chave `onboarding_visto`), como o tema — sem rede/Drift/schema. `marcarVisto()` grava e nunca mais reabre.
-* **Conteúdo:** marca (`AppLogo`) + título (`boasVindasTitulo`) e subtítulo; destaques com ícone (offline, importar por texto, ditar um item) e o botão **"Começar"** (`AppBotao`) → `marcarVisto()` + `context.go('/listas')`. Sem "Pular" (página única). O destaque **"Dite um item"** só aparece quando `plataformaComVoz()` é verdadeiro (Android/iOS); em Web/Desktop ficam os outros destaques. Wireframe em [10 §1.4](10-wireframes-telas.md).
+* **Conteúdo:** marca (`AppLogo`) + título (`boasVindasTitulo`) e subtítulo; destaques com ícone (offline, importar por texto, ditar um item) e o botão **"Começar"** (`AppBotao`) → `marcarVisto()` + `context.go('/listas')`. Sem "Pular" (página única). O destaque **"Dite um item"** só aparece quando `plataformaComVoz()` é verdadeiro (Android/iOS); em Web/Desktop ficam os outros destaques. Wireframe em [10 §1.1](10-wireframes-telas.md).
 * **Saída da tela:** a tela é dispensada/confirmada **apenas pelo "Começar"** (único caminho que grava `onboarding_visto` e vai para `/listas`). O **voltar do sistema Android** (`Navigator.pop`) retorna ao painel de listas **sem** marcar como visto — a flag continua falsa, então a tela **reabre no próximo cold start**.
 
 ### 6.10. Backup local (RF-31)

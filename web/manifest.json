@@ -1,6 +1,6 @@
 {
     "name": "Minhas Listas",
-    "short_name": "Minhas Listas",
+    "short_name": "Listas",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#4F46E5",

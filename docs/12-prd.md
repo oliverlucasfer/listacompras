@@ -13,7 +13,7 @@ Fluxo spec-driven: `13 pré-modelo` (contexto rápido) → `este doc` (o quê) �
 | ID | Persona | Contexto |
 | :--- | :--- | :--- |
 | P1 | **Comprador solo** | Faz compras sozinho, anota em qualquer lugar, usa o celular no mercado |
-| P3 | **Anotador caótico** | Anota listas em texto livre (WhatsApp, bloco de notas), quer que "a máquina organize" |
+| P2 | **Anotador caótico** | Anota listas em texto livre (WhatsApp, bloco de notas), quer que "a máquina organize" |
 
 ## 2. Requisitos Funcionais
 
@@ -28,17 +28,17 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-15 | Agrupamento da lista por categoria (enum fechado em `lib/core/dominio/categoria.dart`) com sugestão local em camadas (memória por nome → dicionário estático → `outros`) | 05 §6.3 | F6 | [05 §8](05-app-flutter.md) |
 | RF-16 | Importação de lista por texto livre (parser local determinístico, offline) com pré-visualização editável | 05 §6.4 + 10 §4 | F11 | [05 §8](05-app-flutter.md) |
 | RF-17 | Busca/filtro **local (offline)** de listas pelo título (painel) e de itens pelo nome (tela da lista) | 05 §6.2 + §6.3 | F16 | [05 §8](05-app-flutter.md) |
-| RF-18 | Modo mercado: tela focada para comprar no corredor (pendentes em destaque, contador, faixa "Marcados") acessível por botão na tela da lista | 05 §6.5 + 10 §3.5 | F22 | [05 §8](05-app-flutter.md) |
+| RF-18 | Modo mercado: tela focada para comprar no corredor (pendentes em destaque, contador, faixa "Marcados") acessível por botão na tela da lista | 05 §6.5 + 10 §3.3 | F22 | [05 §8](05-app-flutter.md) |
 | RF-19 | Itens frequentes: chips de sugestão derivados do histórico local (offline), com peso por escopo | 05 §3 + §6.3 + 10 §3.1 | F22 | [05 §8](05-app-flutter.md) |
-| RF-20 | Duplicar lista ("comprar de novo"): cria uma lista nova a partir dos itens pendentes de uma lista existente | 05 §6.2 + 10 §2.5 | F23 | [05 §8](05-app-flutter.md) |
-| RF-21 | Preço unitário opcional por item + total ao vivo dos itens marcados ("no carrinho"), no rodapé da lista e no modo mercado | 05 §6.3/§6.5 + 10 §3.1/§3.5 | F25 | [05 §8](05-app-flutter.md) |
+| RF-20 | Duplicar lista ("comprar de novo"): cria uma lista nova a partir dos itens pendentes de uma lista existente | 05 §6.2 + 10 §2.4 | F23 | [05 §8](05-app-flutter.md) |
+| RF-21 | Preço unitário opcional por item + total ao vivo dos itens marcados ("no carrinho"), no rodapé da lista e no modo mercado | 05 §6.3/§6.5 + 10 §3.1/§3.3 | F25 | [05 §8](05-app-flutter.md) |
 | RF-22 | Arquivar/desarquivar listas (estado global) | 05 §6.2 + 10 §2 | F26 | [05 §8](05-app-flutter.md) |
 | RF-23 | Adicionar itens de outra lista (pendentes, multi-seleção, dedup) | 05 §6.3 + 10 §3 | F27 | [05 §8](05-app-flutter.md) |
 | RF-24 | Ordem pessoal das categorias (global, local por dispositivo) | 05 §6 + 10 §5 | F28 | [05 §8](05-app-flutter.md) |
 | RF-25 | Quantidades em fração na entrada e exibição (½, 1/2, 1 1/2) | 04 §3 + 05 §6.3 | F29 | [05 §8](05-app-flutter.md) |
 | RF-26 | Adicionar item por voz (reconhecimento on-device, pt-BR, preenche o campo) | 05 §6.3 | F30 | [05 §8](05-app-flutter.md) |
 | RF-27 | Boas-vindas (uma vez) + estados vazios explicativos + **tour guiado interativo do primeiro uso** (2 etapas, spotlight sobre a UI real, reabrível em Configurações) | 05 §6.8/§6.11 + 10 §2/§3/§5 | F31 · F46 | [05 §8](05-app-flutter.md) |
-| RF-28 | Orçamento (limite de gasto) por lista, comparado ao total do carrinho (RF-21), editável | 05 §6.3/§6.5 + 10 §3.1/§3.5 | F36 | [05 §8](05-app-flutter.md) |
+| RF-28 | Orçamento (limite de gasto) por lista, comparado ao total do carrinho (RF-21), editável | 05 §6.3/§6.5 + 10 §3.1/§3.3 | F36 | [05 §8](05-app-flutter.md) |
 | RF-29 | Comparação de preços entre idas: "Última compra: R$ X (dd/mm)" + variação no editor, a partir do histórico **local por dispositivo** | 05 §6.3 + 10 §3.1 | F37 | [05 §8](05-app-flutter.md) |
 | RF-31 | **App único local "Minhas Listas" (Lite):** uso sem conta, 100% no aparelho (sem login, sem convites, sem notificações, sem sincronização), com backup local exportar/importar; identidade visual própria (índigo/cesta, nome "Minhas Listas") | 05 §2.3 + 05 §6.10 | F48 | [05 §2.3](05-app-flutter.md) |
 | RF-32 | Publicação do app ("Minhas Listas") na Google Play em produção: app 100% local (sem rede/push/Firebase), AAB assinado, política de privacidade pública e Declaração de Dados | 06 §4 + 09 §2.10 + 05 §2.3 | F47 | [06 §4](06-mvp-entregas.md) |
@@ -63,7 +63,7 @@ Como P1, quero digitar o item e salvar com um toque, para não perder o fluxo no
 - Given estou na lista, when digito "Leite" e pressiono Enter, then o item aparece marcado como pendente com quantidade 1 un.
 
 **US-02 — Importar lista anotada**
-Como P3, quero colar uma anotação bagunçada e receber itens estruturados, para não digitar um por um.
+Como P2, quero colar uma anotação bagunçada e receber itens estruturados, para não digitar um por um.
 - Given colo "1kg de arroz, 2 leites, 500g de queijo prato", when confirmo a extração, then vejo pré-visualização com esses 3 itens e unidades corretas antes de salvar.
 
 **US-03 — Comprar sem sinal**

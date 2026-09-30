@@ -12,7 +12,7 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 
 ## 1. Boas-vindas
 
-### 1.4. Boas-vindas (primeiro acesso — F31/RF-27)
+### 1.1. Boas-vindas (primeiro acesso — F31/RF-27)
 ```
 ┌─────────────────────────────────┐
 │             🧺 Logo             │ ← identidade "Minhas Listas" (índigo)
@@ -100,7 +100,7 @@ Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardThem
 ```
 Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da etapa 2; como o sheet precisa estar aberto, o passo é pulado se o alvo não estiver montado ([05 §6.11](05-app-flutter.md)).
 
-### 2.5. Sheet "Comprar de novo" (F23/RF-20)
+### 2.4. Sheet "Comprar de novo" (F23/RF-20)
 
 **Entrada:** item "Comprar de novo" no menu `⋮` do card, **só quando há pendentes** (doc 10 §2.1).
 
@@ -195,7 +195,7 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 
 **Última compra (RF-29/F37):** abaixo do campo de preço, quando há histórico local para o nome, aparece "Última compra: R$ X (dd/mm)" e — se o preço atual existir **e** a unidade atual for a mesma do registro — a variação (`↑`/`↓ R$diferença` ou "Mesmo preço"); com unidade diferente ou sem preço atual, só a linha do último preço. O histórico é **local por dispositivo**.
 
-### 3.4. Diálogo "Excluir lista"
+### 3.2. Diálogo "Excluir lista"
 ```
 ┌─────────────────────────────────┐
 │  Excluir "Compras da Semana"?   │
@@ -207,7 +207,7 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 └─────────────────────────────────┘
 ```
 
-### 3.5. Modo mercado (F22/RF-18 — [05 §6.5](05-app-flutter.md))
+### 3.3. Modo mercado (F22/RF-18 — [05 §6.5](05-app-flutter.md))
 ```
 ┌─────────────────────────────────┐
 │  ← Compras da Semana            │ ← sem menu/busca/drag/importação
@@ -228,10 +228,10 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 ```
 Com 0 pendentes, a área principal dá lugar ao vazio "Tudo comprado" com CTA para voltar à lista. A seta de voltar retorna à tela da lista (push); sem pilha, vai para `/listas`. A faixa "Marcados" fica dentro de `SafeArea(top: false)`, sem encostar na área segura inferior (G-37).
 
-### 3.6. Chips de itens frequentes na lista (F22/RF-19)
+### 3.4. Chips de itens frequentes na lista (F22/RF-19)
 Acima do campo de adicionar, uma faixa horizontal rolável de `ActionChip` (alvo ≥48dp, com `Semantics` de ação "Adicionar <nome>") mostra até 8 sugestões quando o campo está vazio; tocar adiciona o item. O ranking vem do histórico local do Drift (peso 2 para a lista aberta, exclui pendentes, limiar ≥2) — nenhum dado de rede.
 
-### 3.8. Modal "Adicionar de outra lista" (F27/RF-23 — [05 §6.3](05-app-flutter.md))
+### 3.5. Modal "Adicionar de outra lista" (F27/RF-23 — [05 §6.3](05-app-flutter.md))
 **Entrada:** item "Adicionar de outra lista" no menu `⋮` da tela da lista.
 
 ```

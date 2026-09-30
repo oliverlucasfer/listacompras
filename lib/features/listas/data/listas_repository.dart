@@ -380,6 +380,8 @@ class ListasRepository {
     });
   }
 
+  /// Remove (soft delete) o item por id. Idempotente: id inexistente afeta 0
+  /// linhas e não lança.
   Future<void> removerItem(String id) {
     return _db.transaction(() async {
       final agora = DateTime.now().toUtc();
@@ -389,6 +391,7 @@ class ListasRepository {
     });
   }
 
+  /// Restaura um item removido por id. Idempotente (id inexistente = no-op).
   Future<void> restaurarItem(String id) {
     return _db.transaction(() async {
       final agora = DateTime.now().toUtc();
