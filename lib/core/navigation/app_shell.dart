@@ -9,8 +9,8 @@ import '../l10n/app_strings.dart';
 /// estreitas e `NavigationRail` em telas largas (Web/desktop). Preserva o
 /// estado de cada aba via `StatefulShellRoute.indexedStack`.
 ///
-/// As duas abas do app local (RF-31) são "Minhas listas" e "Configurações",
-/// na mesma ordem dos branches.
+/// As abas do app local (RF-31) são "Minhas listas", "Histórico" e
+/// "Configurações", na mesma ordem dos branches.
 class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.navigationShell});
 
@@ -20,9 +20,14 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final icones = [
       (normal: Icons.checklist_outlined, selecionado: Icons.checklist),
+      (normal: Icons.history_outlined, selecionado: Icons.history),
       (normal: Icons.settings_outlined, selecionado: Icons.settings),
     ];
-    final rotulos = [AppStrings.abaMinhas, AppStrings.configuracoes];
+    final rotulos = [
+      AppStrings.abaMinhas,
+      AppStrings.historico,
+      AppStrings.configuracoes,
+    ];
     // Aba Configurações é o alvo do passo "Configurações e backup" (F46).
     final indiceConfig = rotulos.length - 1;
     final largura = MediaQuery.sizeOf(context).width;

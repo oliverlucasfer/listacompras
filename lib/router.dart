@@ -6,6 +6,8 @@ import 'core/navigation/app_shell.dart';
 import 'features/compartilhamento/ui/receber_lista_screen.dart';
 import 'features/configuracoes/ui/configuracoes_screen.dart';
 import 'features/design_system/ui/design_system_screen.dart';
+import 'features/historico/ui/historico_screen.dart';
+import 'features/historico/ui/ida_detalhe_screen.dart';
 import 'features/listas/ui/mercado_screen.dart';
 import 'features/listas/ui/minhas_listas_screen.dart';
 import 'features/listas/ui/tela_lista_screen.dart';
@@ -33,6 +35,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             routes: [
               GoRoute(
+                path: '/historico',
+                builder: (context, state) => const HistoricoScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
                 path: '/configuracoes',
                 builder: (context, state) => const ConfiguracoesScreen(),
               ),
@@ -44,6 +54,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/lista/:listaId',
         builder: (context, state) =>
             TelaListaScreen(listaId: state.pathParameters['listaId']!),
+      ),
+      GoRoute(
+        path: '/historico/ida/:idaId',
+        builder: (context, state) =>
+            IdaDetalheScreen(idaId: state.pathParameters['idaId']!),
       ),
       GoRoute(
         path: '/mercado/:listaId',
