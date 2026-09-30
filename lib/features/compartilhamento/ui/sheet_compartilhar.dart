@@ -41,11 +41,15 @@ class _SheetCompartilhar extends StatelessWidget {
       await SharePlus.instance.share(ShareParams(text: gerarTextoLista(lista)));
     } on MissingPluginException {
       if (context.mounted) {
-        mostrarSnackBar(context, AppStrings.compartilharIndisponivel);
+        mostrarSnackBar(context, AppStrings.compartilharIndisponivelLista);
       }
     } on UnimplementedError {
       if (context.mounted) {
-        mostrarSnackBar(context, AppStrings.compartilharIndisponivel);
+        mostrarSnackBar(context, AppStrings.compartilharIndisponivelLista);
+      }
+    } catch (_) {
+      if (context.mounted) {
+        mostrarSnackBar(context, AppStrings.erroGenerico);
       }
     }
   }
@@ -64,11 +68,15 @@ class _SheetCompartilhar extends StatelessWidget {
       );
     } on MissingPluginException {
       if (context.mounted) {
-        mostrarSnackBar(context, AppStrings.compartilharIndisponivel);
+        mostrarSnackBar(context, AppStrings.compartilharIndisponivelLista);
       }
     } on UnimplementedError {
       if (context.mounted) {
-        mostrarSnackBar(context, AppStrings.compartilharIndisponivel);
+        mostrarSnackBar(context, AppStrings.compartilharIndisponivelLista);
+      }
+    } catch (_) {
+      if (context.mounted) {
+        mostrarSnackBar(context, AppStrings.erroGenerico);
       }
     }
   }
