@@ -50,7 +50,7 @@ firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.ap
   --release-notes "Minhas Listas (RF-31): app local, sem conta, com backup exportar/importar."
 ```
 
-**Recursos nativos:** nome "Minhas Listas" (`resValue app_name`), ícone cesta sobre fundo índigo `#4F46E5` e splash índigo vivem em `android/app/src/main/res/` (ícone adaptativo, splash API 31+ e `drawable-*/background.png`/`splash.png` com variantes `-night-*`). O endurecimento de release (`allowBackup="false"`, `dataExtractionRules`, `tools:node="remove"` para permissões/componentes de rede) fica no manifest **release** único (ex.: `android/app/src/release/AndroidManifest.xml`), preservando `RECORD_AUDIO` (voz, RF-26).
+**Recursos nativos:** nome "Minhas Listas" (`resValue app_name`), ícone cesta sobre fundo índigo `#4F46E5` e splash índigo vivem em `android/app/src/main/res/` (ícone adaptativo, splash API 31+ e `drawable-*/background.png`/`splash.png` com variantes `-night-*`). O endurecimento de release (`allowBackup="false"`, `dataExtractionRules`, `tools:node="remove"` para permissões/componentes de rede) fica no manifest **release** único (ex.: `android/app/src/release/AndroidManifest.xml`), preservando `RECORD_AUDIO` (voz, RF-26) e `CAMERA` (QR do compartilhamento, RF-33).
 
 **Smoke em device (obrigatório a cada release):**
 
@@ -72,6 +72,14 @@ Publicação do app ("Minhas Listas") em **produção** na Google Play, a partir
 6. **Ficha:** título **"Minhas Listas"**, descrições, ícone **512×512**, feature graphic **1024×500** e screenshots de telefone — textos e arte versionados em [`store/ficha-lite.md`](../store/ficha-lite.md).
 
 Hotfix de um app já publicado segue o §4 (branch `hotfix/...` → novo AAB → produção/teste interno).
+
+### 2.11. Permissões de câmera e dependências do compartilhamento (RF-33, F49)
+
+O "Compartilhar lista" (RF-33) adiciona o **envio** por texto, arquivo `.json` e QR/código e a **recepção** pelos mesmos caminhos. Nada usa rede — o share sheet do sistema só sai do aparelho por ação explícita do usuário.
+
+* **Permissões nativas (opcionais):** `android.permission.CAMERA` (`android/app/src/main/AndroidManifest.xml`) e `NSCameraUsageDescription` (`ios/Runner/Info.plist`, pt-BR: *"Usar a câmera para ler o código de uma lista compartilhada."*). A câmera é usada **apenas** no toque em "Escanear QR"; negada → aviso amigável, e colar código/texto/arquivo segue funcionando. Web/Desktop não usam câmera.
+* **Dependências novas (locais/offline):** `qr_flutter` (gerar o QR — puro Dart, todas as plataformas) e `mobile_scanner` (ler QR por câmera — Android/iOS, com o barcode do MLKit **bundled**; **não** adiciona `INTERNET`). Ficam atrás de `plataformaComCamera()`/`leitorQrProvider` para que Web/Desktop continuem compilando ([05 §6.12](05-app-flutter.md)).
+* **Declaração de Dados (Play):** inalterada — nenhum dado coletado; a câmera processa o QR localmente (§2.10, RF-32).
 
 ---
 

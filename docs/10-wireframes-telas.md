@@ -42,6 +42,8 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 
 **Busca (F16):** lupa na AppBar revela um campo no topo do corpo (rótulo "Buscar lista", hint de exemplo "Nome da lista"); a lista filtrada esconde os cards que não casam; sem resultado → vazio "Nenhuma lista encontrada".
 
+**Receber lista (RF-33):** a AppBar do painel ganha a ação `qr_code_scanner` ("Receber lista"), que abre `/receber-lista` por `push` (§7.2).
+
 ### 2.1. Estado preenchido
 ```
 ┌─────────────────────────────────┐
@@ -130,7 +132,7 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 │  ← Compras da Semana      [⋮]   │ ← [⋮]: desmarcar todos, limpar
 │                                 │    concluídos, renomear, adicionar
 ├─────────────────────────────────┤    de outra lista, orçamento,
-│  [Café] [Pão] [Leite] ...       │    arquivar, excluir lista
+│  [Café] [Pão] [Leite] ...       │    compartilhar, arquivar, excluir
 │                                 │
 │  Adicionar item                 │ ← chips de itens frequentes (RF-19),
 │  [____________ un▾   (＋) ]     │    só com o campo vazio; toque adiciona
@@ -344,6 +346,57 @@ Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstad
 | Minhas Listas | `AppEsqueleto` (F14-T09) | 2.2 | `AppEstadoErro` com retry |
 | Tela da Lista | `AppEsqueleto` (F14-T09) | 3.1 — vazio com caminhos (RF-27/F31) | `AppEstadoErro` com retry (F14-T04) |
 | Importar lista | Botão com spinner | "Nada foi reconhecido" (4.2, F14-T04) | Mensagem amigável (4.1) |
+| Receber lista (7.2) | `AppBotao(carregando: true)` | — | Banner "Código ou arquivo inválido." |
+
+---
+
+## 7. Compartilhar lista (RF-33 — [05 §6.12](05-app-flutter.md))
+
+Comportamento em [05 §6.12](05-app-flutter.md). Duas peças: o **sheet "Compartilhar"** (aberto pelo menu `⋮` da lista, §3.1) e a tela **"Receber lista"** (rota `/receber-lista`, fora do shell, acionada no painel §2).
+
+### 7.1. Sheet "Compartilhar"
+```
+┌─────────────────────────────────┐
+│  Compras da Semana              │ ← título da lista (cabeçalho)
+├─────────────────────────────────┤
+│  💬 Enviar como texto           │ ← share_plus (texto legível, RF-16)
+│  📄 Enviar arquivo              │ ← .json via XFile.fromData
+│  ▦  QR code                     │ ← gera o QR (qr_flutter)
+└─────────────────────────────────┘
+   (indisponível → SnackBar; demais falhas → genérica)
+
+Toque em "QR code" → sub-sheet com o código ML1:…:
+┌─────────────────────────────────┐
+│            █ ▄▄ █ ▄ █           │ ← QrImageView (codificarLista)
+│            █▄▀▄▀▄█ ▀█           │   só se couber em 2000 bytes;
+│            █ ▀██ ██ ▄           │   acima → aviso "Lista grande -
+│                                 │   use texto ou arquivo." e nada abre
+│  ( ⧉ Copiar código )            │ ← ML1:… p/ área de transferência
+└─────────────────────────────────┘
+   (copia → SnackBar "Código copiado.")
+```
+
+### 7.2. Tela "Receber lista"
+```
+┌─────────────────────────────────┐
+│  ← Receber lista                │ ← fora do shell (push)
+├─────────────────────────────────┤
+│  Cole o código ou o texto da    │
+│  lista                          │
+│  ┌───────────────────────────┐  │ ← campo único auto-detecta:
+│  │                           │  │    "ML1:" → código; "{"
+│  │                           │  │    → JSON de arquivo; senão
+│  └───────────────────────────┘  │    texto livre (parser RF-16)
+│  ⚠ Código ou arquivo inválido.  │ ← Banner de erro (quando houver)
+│                                 │
+│  (       Criar lista      )     │ ← lê a entrada e cria lista NOVA
+│  (   Escolher arquivo   )       │ ← file_selector (.json)
+│  (     Escanear QR      )       │ ← só Android/iOS
+└─────────────────────────────────┘    (plataformaComCamera)
+   (texto livre → parser local RF-16 + sugestão de categoria local)
+   (confirmar SEMPRE cria uma lista nova com UUIDs v4 novos e navega
+    para /lista/<novoId>; cancelar não grava nada)
+   (Escanear QR → preenche o campo com o código lido e confirma)
 
 ---
 

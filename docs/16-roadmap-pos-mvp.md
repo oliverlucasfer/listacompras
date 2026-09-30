@@ -16,6 +16,7 @@
 | ID | Frente | Requisito | Fase | Spec | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | A1 | **Duplicar lista ("Comprar de novo")** | **RF-20** | F23 | [spec](superpowers/specs/2026-09-21-duplicar-lista-design.md) | concluído (F23-T01…T03) |
+| A2 | **Compartilhar lista sem nuvem (texto/arquivo/QR)** | **RF-33** | F49 | [spec](superpowers/specs/2026-09-30-compartilhar-lista-design.md) | concluído (F49-T01…T06) |
 
 ## Onda A — Uso diário e retenção
 

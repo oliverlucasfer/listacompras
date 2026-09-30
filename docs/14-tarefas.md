@@ -1034,6 +1034,31 @@ Spec: [superpowers/specs/2026-09-29-app-unico-lite-sem-supabase-design.md](super
 
 Nota: *(fase concluída com o app único `br.com.oliverlucas.listacompras.lite` ("Minhas Listas"). As fases **F41** (flavor Lite), **F42** (dívidas da F41) e **F47** (publicação do Lite) ficam como **histórico — superadas pela F48**; a base local e o endurecimento de publicação da F47 foram reaproveitados no app único.)*
 
+## Fase 49 — Compartilhar lista sem nuvem (RF-33)
+
+Spec: [superpowers/specs/2026-09-30-compartilhar-lista-design.md](superpowers/specs/2026-09-30-compartilhar-lista-design.md) · Plano: [superpowers/plans/2026-09-30-compartilhar-lista.md](superpowers/plans/2026-09-30-compartilhar-lista.md) · Requisito: RF-33 (enviar/receber uma lista por texto, arquivo ou QR/código, sempre criando uma lista nova). · Docs donos: 05, 10, 12, 04, 09, 14, 16.
+
+- [x] **F49-T01** — Modelo e codec da lista compartilhada
+  Dep: — · Docs: [05 §6.12](05-app-flutter.md), [12 §2](12-prd.md)
+  CP: `ListaCompartilhada`/`ItemCompartilhado` + `CompartilhamentoInvalidoException`; `codificarLista`/`decodificarLista` (`ML1:` + base64Url(JSON)) e `gerarTextoLista`; unit tests de roundtrip e erros verdes.
+- [x] **F49-T02** — Repositório exportar/importar (Drift)
+  Dep: F49-T01 · Docs: [05 §6.12](05-app-flutter.md)
+  CP: `CompartilhamentoRepository.exportarLista` (todos os itens ativos) e `importarLista` (lista nova com UUIDs novos numa transação, dono `idLocal`); `compartilhamentoRepositoryProvider`; unit tests verdes.
+- [x] **F49-T03** — Envio (sheet "Compartilhar" + QR + copiar código)
+  Dep: F49-T02 · Docs: [05 §6.12](05-app-flutter.md), [10 §7.1](10-wireframes-telas.md)
+  CP: item "Compartilhar" no menu `⋮`; sheet com texto (`share_plus`), arquivo (`.json` via `XFile.fromData`) e QR (`qr_flutter`) + "Copiar código"; aviso acima de `limiteCodigoBytes = 2000`; widget test verde.
+- [x] **F49-T04** — Leitura por câmera (`LeitorQr` + `mobile_scanner` + permissões)
+  Dep: F49-T02 · Docs: [05 §6.12](05-app-flutter.md), [09 §2.11](09-runbook-operacoes.md)
+  CP: contrato `LeitorQr` + `LeitorQrPlugin` (`mobile_scanner`) e `plataformaComCamera()`/`leitorQrProvider`; tela de scanner; `CAMERA` (Android) e `NSCameraUsageDescription` (iOS); Web/Desktop seguem compilando.
+- [x] **F49-T05** — Receber lista (rota + tela + entrada no painel)
+  Dep: F49-T03, F49-T04 · Docs: [05 §6.12](05-app-flutter.md), [10 §7.2](10-wireframes-telas.md)
+  CP: rota `/receber-lista` (fora do shell) e ação no painel; campo auto-detecta `ML1:`/JSON/texto (parser RF-16 + sugestão de categoria); botões arquivo (`file_selector`, trata erro) e escanear QR; confirmar cria lista nova e navega; widget tests verdes.
+- [x] **F49-T06** — Docs donos e fechamento
+  Dep: F49-T05 · Docs: 12, 05, 10, 04, 09, 16, 14
+  CP: RF-33 no PRD e na matriz; §6.12 no 05; wireframes no 10; nota de reuso do parser no 04; permissões/deps no 09; frente concluída no 16; Fase 49 na tabela de progresso (270/268); `dart format .`, `flutter analyze` e `flutter test` verdes; sem tocar código.
+
+Nota: *(100% offline: sem schema/sync; o código é `ML1:` + base64Url(JSON) e o texto reusa o parser RF-16. `importarLista` sempre cria uma **lista nova** com UUIDs v4 novos — nunca mescla.)*
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -1084,7 +1109,8 @@ Nota: *(fase concluída com o app único `br.com.oliverlucas.listacompras.lite` 
 | F46 Tour guiado do 1º uso | 5 | 5 |
 | F47 Publicação do Lite | 8 | 8 |
 | F48 App único Lite | 8 | 8 |
-| **Total** | **264** | **262** |
+| F49 Compartilhar lista | 6 | 6 |
+| **Total** | **270** | **268** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

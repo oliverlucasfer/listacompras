@@ -29,6 +29,8 @@ Fluxo de UX completo (modal, pré-visualização, confirmação) está em [05 §
 - **Rede:** nenhuma. Não há chamada HTTP, Edge Function, API key ou rate limit.
 - **`aviso`:** preenchido quando algum item entra com quantidade padrão (`AppStrings.importLocalAvisoPadrao`).
 
+> **Reuso no compartilhamento (RF-33, F49):** o formato **texto** do "Compartilhar lista" (envio) é exatamente uma linha por item (`"<quantidade> <unidade> <nome>"`), **sem título e sem preço** — o mesmo contrato deste parser. Por isso uma lista compartilhada como texto pode ser colada tanto no "Importar lista" (RF-16, [05 §6.4](05-app-flutter.md)) quanto no "Receber lista" (RF-33, [05 §6.12](05-app-flutter.md)), que reusa `analisarListaLocal` e a sugestão de categoria. Detalhes do compartilhamento em [05 §6.12](05-app-flutter.md).
+
 ## 3. Algoritmo do parser
 
 `analisarListaLocal(texto)`:

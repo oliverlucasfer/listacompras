@@ -42,6 +42,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-29 | Comparação de preços entre idas: "Última compra: R$ X (dd/mm)" + variação no editor, a partir do histórico **local por dispositivo** | 05 §6.3 + 10 §3.1 | F37 | [05 §8](05-app-flutter.md) |
 | RF-31 | **App único local "Minhas Listas" (Lite):** uso sem conta, 100% no aparelho (sem login, sem convites, sem notificações, sem sincronização), com backup local exportar/importar; identidade visual própria (índigo/cesta, nome "Minhas Listas") | 05 §2.3 + 05 §6.10 | F48 | [05 §2.3](05-app-flutter.md) |
 | RF-32 | Publicação do app ("Minhas Listas") na Google Play em produção: app 100% local (sem rede/push/Firebase), AAB assinado, política de privacidade pública e Declaração de Dados | 06 §4 + 09 §2.10 + 05 §2.3 | F47 | [06 §4](06-mvp-entregas.md) |
+| RF-33 | Compartilhar lista sem nuvem: exportar (texto/arquivo/QR-código) e importar (texto/arquivo/QR) sempre criando uma lista nova, 100% offline | 05 §6.12 + 10 | F49 | [05 §8](05-app-flutter.md) |
 
 ## 3. Requisitos Não-Funcionais
 
@@ -116,13 +117,14 @@ Cada requisito liga story → design → tarefas ([14](14-tarefas.md)) → verif
 | RF-29 | US-01 | F37 | F37-T01, F37-T02 | Unit repo/histórico + widgets |
 | RF-31 | US-01 | F48 | F48-T01…T08 | Widget/unit + smoke em device |
 | RF-32 | US-01 | F47 | F47-T01…T08 | Widget/unit + build AAB + teste de manifest + smoke em device |
+| RF-33 | US-01 | F49 | F49-T01…F49-T06 | Unit codec/repo + widgets |
 | RNF-02 | US-03 | F48 | F48-T02, F48-T04 | Testes de repositório + fluxo `T3` |
 | RNF-06 | — | F8 · F14 | F14-T01…T02 | Guidelines de a11y + escala de fonte |
 | RNF-08 | — | F33 · F39 | F33-T01…T03 | Fluxos críticos + consistência |
 
 ## 7. Fora de escopo (MVP)
 
-Receitas/menus, histórico de compras, cupons, scan de código de barras, importação de foto/nota fiscal, app iOS na distribuição, publicação de desktop, **colaboração/compartilhamento** (removido na F48), **conta/nuvem/sync/push** (removidos na F48).
+Receitas/menus, histórico de compras, cupons, scan de código de barras, importação de foto/nota fiscal, app iOS na distribuição, publicação de desktop, **colaboração/compartilhamento em nuvem** (removido na F48; o compartilhamento **local** volta como RF-33, pós-MVP/F49), **conta/nuvem/sync/push** (removidos na F48).
 
 ---
 
