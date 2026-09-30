@@ -259,6 +259,24 @@ abstract final class AppStrings {
   static const receberConfirmar = 'Criar lista';
   static const receberInvalido = 'Código ou arquivo inválido.';
 
+  // Historico de compras (RF-34, F50)
+  static const finalizarCompra = 'Finalizar compra';
+  static const finalizarConfirmarTitulo = 'Finalizar esta compra?';
+  static String finalizarResumo(int n, String total, int semPreco) =>
+      semPreco == 0
+      ? '$n ${n == 1 ? 'item' : 'itens'} · $total'
+      : '$n ${n == 1 ? 'item' : 'itens'} · $total · $semPreco sem preço';
+  static const finalizarLimpar = 'Limpar concluídos';
+  static const finalizarManter = 'Manter a lista';
+  static const compraRegistrada = 'Compra registrada no histórico.';
+  static const historico = 'Histórico';
+  static const historicoVazio = 'Nenhuma compra finalizada ainda.';
+  static const historicoVazioDica =
+      'Marque itens e use "Finalizar compra" para registrar uma ida.';
+  static const totalGasto = 'Total gasto';
+  static const ticketMedio = 'Ticket médio';
+  static const numeroIdas = 'Idas';
+
   // Boas-vindas (RF-27, F31-T02)
   static const boasVindasTitulo = 'Bem-vindo(a)';
   static const boasVindasSubtitulo = 'Organize suas compras no seu aparelho.';

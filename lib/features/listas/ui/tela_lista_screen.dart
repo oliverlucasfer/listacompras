@@ -20,6 +20,7 @@ import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../../compartilhamento/ui/sheet_compartilhar.dart';
+import '../../historico/ui/modal_finalizar_compra.dart';
 import '../../importacao/ui/modal_importar.dart';
 import '../../importacao/ui/modal_previsao_importacao.dart';
 import '../../tour/tour_controller.dart';
@@ -88,6 +89,8 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
         repo.desmarcarTodos(idLista);
       case 'limpar':
         _confirmarLimparConcluidos(context, ref, idLista);
+      case 'finalizar':
+        await abrirFinalizarCompra(context, ref, idLista);
       case 'renomear':
         abrirSheetTitulo(
           context,
@@ -275,6 +278,8 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
           );
         }
         final inicio = inicioDaLista(ehDono: true);
+        final itens =
+            ref.watch(itensDaListaProvider(listaId)).value ?? const <Item>[];
         return PopScopeVoltarInicio(
           inicio: inicio,
           child: Scaffold(
@@ -312,6 +317,10 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                     const PopupMenuItem(
                       value: 'limpar',
                       child: Text(AppStrings.limparConcluidos),
+                    ),
+                    const PopupMenuItem(
+                      value: 'finalizar',
+                      child: Text(AppStrings.finalizarCompra),
                     ),
                     const PopupMenuItem(
                       value: 'renomear',
@@ -381,12 +390,31 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                       AppSpacing.lg,
                       AppSpacing.xl,
                     ),
-                    child: AppBotao(
-                      key: TourKeys.botaoImportar,
-                      rotulo: AppStrings.importarLista,
-                      variante: AppBotaoVariante.outlined,
-                      icone: Icons.playlist_add,
-                      onPressed: () => _importarLista(context, ref, listaId),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (itens.any((i) => i.concluido))
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: AppSpacing.xs,
+                            ),
+                            child: AppBotao(
+                              rotulo: AppStrings.finalizarCompra,
+                              icone: Icons.shopping_bag_outlined,
+                              onPressed: () =>
+                                  abrirFinalizarCompra(context, ref, listaId),
+                            ),
+                          ),
+                        AppBotao(
+                          key: TourKeys.botaoImportar,
+                          rotulo: AppStrings.importarLista,
+                          variante: AppBotaoVariante.outlined,
+                          icone: Icons.playlist_add,
+                          onPressed: () =>
+                              _importarLista(context, ref, listaId),
+                        ),
+                      ],
                     ),
                   ),
                 ),
