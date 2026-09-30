@@ -97,14 +97,31 @@ class _ReceberListaScreenState extends ConsumerState<ReceberListaScreen> {
   }
 
   Future<void> _arquivo() async {
-    final arquivo = await openFile();
-    if (arquivo == null) return;
-    _controller.text = await arquivo.readAsString();
-    if (mounted) await _confirmar();
+    final String texto;
+    try {
+      final arquivo = await openFile();
+      if (arquivo == null) return;
+      texto = await arquivo.readAsString();
+    } on FormatException {
+      if (mounted) setState(() => _erro = AppStrings.receberInvalido);
+      return;
+    } catch (_) {
+      if (mounted) setState(() => _erro = AppStrings.erroGenerico);
+      return;
+    }
+    if (!mounted) return;
+    _controller.text = texto;
+    await _confirmar();
   }
 
   Future<void> _escanear() async {
-    final codigo = await ref.read(leitorQrProvider).escanear(context);
+    final String? codigo;
+    try {
+      codigo = await ref.read(leitorQrProvider).escanear(context);
+    } catch (_) {
+      if (mounted) setState(() => _erro = AppStrings.erroGenerico);
+      return;
+    }
     if (codigo == null || !mounted) return;
     _controller.text = codigo;
     await _confirmar();
