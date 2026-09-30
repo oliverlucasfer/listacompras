@@ -1,9 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Lite é 100% local: sem rede, sem push e sem Firebase (F47/RF-32).
-         As libs continuam empacotadas, porém inertes. RECORD_AUDIO é mantido
-         para o recurso de voz. -->
+    <!-- App 100% local: sem rede, sem push e sem Firebase (F48/RF-32).
+         As libs de nuvem foram removidas; as remoções abaixo são defensivas
+         contra componentes de terceiros. RECORD_AUDIO é mantido para o
+         recurso de voz. -->
 
     <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" tools:node="remove" />

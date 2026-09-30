@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Lite é 100% local: nada sai do aparelho no backup do Google (F47/RF-32). -->
+<!-- App 100% local: nada sai do aparelho no backup do Google (F48/RF-32). -->
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="root" path="." />

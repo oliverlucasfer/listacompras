@@ -13,7 +13,6 @@ plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services")
 }
 
 android {
@@ -27,31 +26,17 @@ android {
     }
 
     defaultConfig {
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
+        // Identidade única do app local (F48): pacote e nome do Lite.
+        applicationId = "br.com.oliverlucas.listacompras.lite"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-    }
-
-    flavorDimensions += "modo"
-    productFlavors {
-        create("prod") {
-            dimension = "modo"
-            // Sem underline: Firebase App Distribution rejeita seções com "_" no package.
-            applicationId = "br.com.oliverlucas.listacompras"
-            resValue("string", "app_name", "Lista de Compras")
-        }
-        create("lite") {
-            dimension = "modo"
-            applicationId = "br.com.oliverlucas.listacompras.lite"
-            resValue("string", "app_name", "Minhas Listas")
-        }
+        resValue("string", "app_name", "Minhas Listas")
     }
 
     buildFeatures {
-        // resValue(...) dos flavors exige o build feature habilitado (AGP 8+).
+        // resValue(...) exige o build feature habilitado (AGP 8+).
         resValues = true
     }
 
