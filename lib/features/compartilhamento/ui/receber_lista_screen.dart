@@ -15,6 +15,7 @@ import '../../listas/providers/listas_providers.dart';
 import '../domain/codec_lista.dart';
 import '../domain/lista_compartilhada.dart';
 import '../providers/compartilhamento_providers.dart';
+import 'modal_previsao_receber.dart';
 
 /// Recebe uma lista compartilhada por código, texto, arquivo ou QR (RF-33).
 /// Sempre cria uma **nova** lista local — nunca mescla com as existentes.
@@ -77,18 +78,29 @@ class _ReceberListaScreenState extends ConsumerState<ReceberListaScreen> {
   }
 
   Future<void> _confirmar() async {
-    setState(() {
-      _carregando = true;
-      _erro = null;
-    });
+    setState(() => _erro = null);
+    final ListaCompartilhada entrada;
     try {
-      final entrada = await _lerEntrada();
-      final lista = await ref
-          .read(compartilhamentoRepositoryProvider)
-          .importarLista(entrada, titulo: entrada.titulo);
-      if (mounted) context.go('/lista/${lista.id}');
+      entrada = await _lerEntrada();
     } on CompartilhamentoInvalidoException {
       if (mounted) setState(() => _erro = AppStrings.receberInvalido);
+      return;
+    } catch (_) {
+      if (mounted) setState(() => _erro = AppStrings.erroGenerico);
+      return;
+    }
+    if (!mounted) return;
+    final previsao = await abrirPrevisaoReceber(context, entrada);
+    if (previsao == null || !mounted) return;
+    setState(() => _carregando = true);
+    try {
+      final lista = await ref
+          .read(compartilhamentoRepositoryProvider)
+          .importarLista(
+            ListaCompartilhada(titulo: previsao.titulo, itens: previsao.itens),
+            titulo: previsao.titulo,
+          );
+      if (mounted) context.go('/lista/${lista.id}');
     } catch (_) {
       if (mounted) setState(() => _erro = AppStrings.erroGenerico);
     } finally {
@@ -150,7 +162,7 @@ class _ReceberListaScreenState extends ConsumerState<ReceberListaScreen> {
             ],
             const SizedBox(height: AppSpacing.md),
             AppBotao(
-              rotulo: AppStrings.receberConfirmar,
+              rotulo: AppStrings.receberContinuar,
               carregando: _carregando,
               onPressed: _confirmar,
             ),

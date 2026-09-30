@@ -101,7 +101,7 @@ Nada é gravado quando a entrada é inválida.
 
 **Limite do código/QR:** sem compressão. Se `codificar(...).length` exceder
 `limiteCodigoBytes` (≈ 2000), o envio por QR/código é bloqueado com aviso
-("lista grande — use arquivo ou texto"); texto e arquivo seguem disponíveis.
+("Lista grande — use texto ou arquivo."); texto e arquivo seguem disponíveis.
 
 ## 5. UI — Enviar
 

@@ -255,6 +255,7 @@ abstract final class AppStrings {
   static const receberLista = 'Receber lista';
   static const receberCodigoOuTexto = 'Cole o código ou o texto da lista';
   static const receberArquivo = 'Escolher arquivo';
+  static const receberContinuar = 'Continuar';
   static const receberConfirmar = 'Criar lista';
   static const receberInvalido = 'Código ou arquivo inválido.';
 

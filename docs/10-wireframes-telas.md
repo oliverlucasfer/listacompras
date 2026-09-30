@@ -389,14 +389,27 @@ Toque em "QR code" → sub-sheet com o código ML1:…:
 │  └───────────────────────────┘  │    texto livre (parser RF-16)
 │  ⚠ Código ou arquivo inválido.  │ ← Banner de erro (quando houver)
 │                                 │
-│  (       Criar lista      )     │ ← lê a entrada e cria lista NOVA
+│  (       Continuar       )      │ ← lê a entrada e abre a prévia
 │  (   Escolher arquivo   )       │ ← file_selector (.json)
 │  (     Escanear QR      )       │ ← só Android/iOS
 └─────────────────────────────────┘    (plataformaComCamera)
    (texto livre → parser local RF-16 + sugestão de categoria local)
+   (Escanear QR → preenche o campo com o código lido e continua)
+
+Toque em "Continuar" → pré-visualização editável (modal, §7.2):
+┌─────────────────────────────────┐
+│  Confirme os itens           ✕  │ ← fechar = cancelar
+├─────────────────────────────────┤
+│  Nome da lista                  │
+│  ┌───────────────────────────┐  │ ← título editável (payload no
+│  │ Lista compartilhada       │  │    código/arquivo; padrão no texto)
+│  └───────────────────────────┘  │
+│  ☑ Arroz                2 kg    │ ← incluir/excluir (todos marcados)
+│  ☑ Leite                1 un    │
+│  (   Cancelar ) (  Criar lista )│ ← só "Criar lista" grava
+└─────────────────────────────────┘
    (confirmar SEMPRE cria uma lista nova com UUIDs v4 novos e navega
-    para /lista/<novoId>; cancelar não grava nada)
-   (Escanear QR → preenche o campo com o código lido e confirma)
+    para /lista/<novoId>; título vazio ou nenhum item marcado → desabilitado)
 
 ---
 
