@@ -130,9 +130,10 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 ```
 ┌─────────────────────────────────┐
 │  ← Compras da Semana      [⋮]   │ ← [⋮]: desmarcar todos, limpar
-│                                 │    concluídos, renomear, adicionar
-├─────────────────────────────────┤    de outra lista, orçamento,
-│  [Café] [Pão] [Leite] ...       │    compartilhar, arquivar, excluir
+│                                 │    concluídos, finalizar compra,
+├─────────────────────────────────┤    renomear, adicionar de outra
+│  [Café] [Pão] [Leite] ...       │    lista, orçamento, compartilhar,
+│                                 │    arquivar, excluir
 │                                 │
 │  Adicionar item                 │ ← chips de itens frequentes (RF-19),
 │  [____________ un▾   (＋) ]     │    só com o campo vazio; toque adiciona
@@ -160,6 +161,8 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 │  (Importar lista)               │
 └─────────────────────────────────┘
 ```
+
+**Finalizar compra (RF-34/F50):** com ≥ 1 item concluído, o rodapé mostra o botão **"Finalizar compra"** (`shopping_bag_outlined`, acima de "Importar lista") e o menu `⋮` ganha o mesmo item; ambos abrem o fluxo de confirmação (§8.4). Sem concluídos, nem botão nem efeito.
 
 **Busca (F16):** lupa na AppBar revela um campo (rótulo "Buscar item", hint de exemplo "Nome do item"); os grupos de categoria permanecem (vazios somem) e o drag fica desabilitado; sem resultado → vazio "Nenhum item encontrado" + "Limpar busca".
 
@@ -347,6 +350,8 @@ Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstad
 | Tela da Lista | `AppEsqueleto` (F14-T09) | 3.1 — vazio com caminhos (RF-27/F31) | `AppEstadoErro` com retry (F14-T04) |
 | Importar lista | Botão com spinner | "Nada foi reconhecido" (4.2, F14-T04) | Mensagem amigável (4.1) |
 | Receber lista (7.2) | `AppBotao(carregando: true)` | — | Banner "Código ou arquivo inválido." |
+| Histórico (8.1) | `AppEsqueleto` (4 linhas) | 8.2 — "Nenhuma compra finalizada ainda." | `AppEstadoErro` com retry |
+| Detalhe da ida (8.3) | `AppEsqueleto` (4 linhas) | "Compra não encontrada." | `AppEstadoErro` com retry |
 
 ---
 
@@ -409,7 +414,85 @@ Toque em "Continuar" → pré-visualização editável (modal, §7.2):
 │  (   Cancelar ) (  Criar lista )│ ← só "Criar lista" grava
 └─────────────────────────────────┘
    (confirmar SEMPRE cria uma lista nova com UUIDs v4 novos e navega
-    para /lista/<novoId>; título vazio ou nenhum item marcado → desabilitado)
+     para /lista/<novoId>; título vazio ou nenhum item marcado → desabilitado)
+
+---
+
+## 8. Histórico de compras (RF-34 — [05 §6.13](05-app-flutter.md))
+
+Comportamento em [05 §6.13](05-app-flutter.md). A aba **Histórico** fica no shell entre "Minhas Listas" e "Configurações"; o detalhe e o fluxo de finalizar vivem fora/na tela da lista. A Fase 50 (RF-34) entrega o registro de idas + histórico; as estatísticas (gráficos `fl_chart`) ficam para a Fase 51.
+
+### 8.1. Aba "Histórico" (resumo + lista)
+```
+┌─────────────────────────────────┐
+│  Histórico                      │ ← aba do shell (3 destinos:
+├─────────────────────────────────┤    Minhas · Histórico · Config.)
+│  Total gasto  Ticket médio  Idas│ ← resumo (resumoHistoricoProvider)
+│  R$ 128,90    R$ 42,97      3   │
+│ ─────────────────────────────── │
+│  Compras da Semana              │ ← lista por finalizada_em desc:
+│  30/09/2026 · 5 itens   R$ 62,40│    data · N itens · total
+│  Churrasco Sábado               │    (toque abre o detalhe, §8.3)
+│  21/09/2026 · 3 itens   R$ 44,10│
+└─────────────────────────────────┘
+```
+
+### 8.2. Aba "Histórico" (vazio)
+```
+┌─────────────────────────────────┐
+│  Histórico                      │
+├─────────────────────────────────┤
+│  Total gasto  Ticket médio  Idas│
+│  —            —             0   │
+│                                 │
+│          ( ícone history )      │ ← AppEstadoVazio explicativo
+│   Nenhuma compra finalizada     │
+│   ainda.                        │
+│   Marque itens e use "Finalizar │
+│   compra" para registrar uma    │
+│   ida.                          │
+└─────────────────────────────────┘
+```
+Sem idas, o resumo mostra "—" (sem valor) e o vazio orienta como registrar a primeira ida.
+
+### 8.3. Detalhe da ida (`/historico/ida/:idaId`)
+```
+┌─────────────────────────────────┐
+│  ← Compras da Semana            │ ← título = snapshot da ida
+├─────────────────────────────────┤
+│  Arroz                          │ ← itens (snapshot): nome,
+│  2 kg · Mercearia       R$ 10,98│    "quantidade unidade" · categoria
+│  Leite                          │    e preço (ou "—" sem preço)
+│  2 un · Laticínios      R$ 9,80 │
+│  Detergente                     │
+│  1 un · Limpeza         —       │
+├─────────────────────────────────┤
+│  Total gasto        R$ 20,78    │ ← rodapé (SafeArea)
+└─────────────────────────────────┘
+```
+Lista por nome; ida inexistente → vazio "Compra não encontrada."; erro → `AppEstadoErro` com retry.
+
+### 8.4. Fluxo "Finalizar compra" (RF-34)
+Acionado pelo menu `⋮` ou pelo botão no rodapé da lista (§3.1), só com ≥ 1 item concluído.
+
+```
+┌─────────────────────────────────┐
+│  Finalizar esta compra?         │ ← confirmação
+│                                 │
+│  3 itens · R$ 62,40 · 1 sem     │ ← resumo (N itens · total · M
+│  preço                          │    sem preço; RF-21)
+│  (Cancelar)  (Finalizar compra) │
+└─────────────────────────────────┘
+        │ confirma → grava a ida (transação; snapshot dos concluídos)
+        ▼
+┌─────────────────────────────────┐
+│  Compra registrada no histórico.│ ← diálogo pós-finalizar (o SnackBar
+│                                 │    já avisou o registro)
+│  (Manter a lista) (Limpar       │ ← manter = não mexe na lista;
+│                    concluídos)  │    limpar = remove os concluídos
+└─────────────────────────────────┘
+```
+Nada é removido sem a escolha "Limpar concluídos" (reusa `limparConcluidos`); não há "undo" após finalizar.
 
 ---
 

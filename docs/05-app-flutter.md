@@ -41,15 +41,16 @@ lib/
 │   ├── compartilhamento/            # domain/ data/ providers/ ui/ (F49/RF-33)
 │   ├── configuracoes/               # ui/ (inclui backup)
 │   ├── design_system/               # ui/ (catálogo, só em debug)
+│   ├── historico/                   # domain/ data/ providers/ ui/ (F50/RF-34)
 │   ├── importacao/                  # ui/ (a lógica vive em core/importacao)
 │   ├── listas/                      # domain/ data/ providers/ ui/
 │   ├── onboarding/                  # providers/ ui/
 │   ├── tour/                        # motor do tour guiado (F46)
 │   └── voz/                         # domain/ data/ providers/ (F30)
 └── drift/
-    ├── database.dart                # AppDatabase (tabelas locais, schemaVersion 11)
+    ├── database.dart                # AppDatabase (tabelas locais, schemaVersion 12)
     ├── conexao/                     # abrirBancoLocal (nativa/web, ADR-012)
-    └── tables/                      # ListaLocal, ItemLocal, HistoricoPrecoLocal
+    └── tables/                      # ListaLocal, ItemLocal, HistoricoPrecoLocal, IdaCompra, ItemIda
 ```
 
 **Regra:** `ui` só fala com `providers`; `providers` só falam com `data` (repositórios). Repositórios de leitura expõem **Streams do Drift** (UI reativa offline-first).
@@ -68,7 +69,9 @@ lib/
   e `quantidade <= 1000000`, `unidade`/`categoria` no enum, `preco_centavos` em faixa; `listas`:
   `orcamento_centavos` em faixa; índice único parcial `uq_item_ativo`). A migração **`schemaVersion 10 → 11`** (F48-T05)
   dropa a tabela `mutacao_pendente` (a antiga fila de sincronização, que deixou de existir) e ajusta a
-  dedup de itens ativos para não referenciá-la (ordenação por `updated_at DESC, rowid DESC`). Os passos
+  dedup de itens ativos para não referenciá-la (ordenação por `updated_at DESC, rowid DESC`). A migração
+  **`schemaVersion 11 → 12`** (F50/RF-34) cria as tabelas `idas_compra`/`itens_ida` (histórico de compras
+  local; snapshot imutável, sem sync). Os passos
   históricos (`de < 2 … de < 10`) permanecem para quem vem de versões antigas.
 * **`quantidade` é `real` no Drift:** a precisão efetiva da app é ≤ 3 casas decimais (tolerância 0,001, [05 §6.3]).
 
@@ -103,6 +106,11 @@ Há **um único app** (`main.dart` → `bootstrap()`), 100% local, com a identid
 | `sugestaoCategoriasProvider` | Provider | Cadeia de sugestão local (RF-15) |
 | `compartilhamentoRepositoryProvider` | Provider | `CompartilhamentoRepository` sobre o Drift: exportar/importar lista (F49/RF-33) |
 | `leitorQrProvider` | Provider | Leitor de QR injetável (`LeitorQr`): real via `mobile_scanner`, fake nos testes (F49/RF-33) |
+| `historicoComprasRepositoryProvider` | Provider | `HistoricoComprasRepository` sobre o Drift: grava idas e faz as consultas do histórico (F50/RF-34) |
+| `idasProvider` | StreamProvider | Idas finalizadas, mais recentes primeiro (`finalizada_em` desc) |
+| `idaProvider(id)` | FutureProvider.family | Uma ida por `id` (detalhe) |
+| `itensDaIdaProvider(idaId)` | FutureProvider.family | Itens (snapshot) de uma ida, ordenados por nome |
+| `resumoHistoricoProvider` | FutureProvider | Resumo do histórico: total gasto, ticket médio e nº de idas |
 
 **Sugestão de categoria em camadas (ADR-011, spec §4)** — `SugestaoCategorias.sugerirCategoria(nome)`, zero rede:
 
@@ -121,15 +129,17 @@ Rotas finais do app único (spec §3): sem `/login`, `/registro`, `/recuperar-se
 | Rota | Tela | Observação |
 | :--- | :--- | :--- |
 | `/listas` | Minhas Listas (shell) | Aba inicial; todas as listas são locais |
+| `/historico` | Histórico (shell) | Aba do histórico de compras (RF-34/F50) |
 | `/configuracoes` | Configurações (shell) | Aparência, categorias, backup, sobre, tutorial |
 | `/lista/:listaId` | Tela da Lista (fora do shell) | Abre por `push` sobre o shell |
+| `/historico/ida/:idaId` | Detalhe da ida (fora do shell) | `push` pela lista da aba Histórico (RF-34/F50) |
 | `/mercado/:listaId` | Modo mercado (fora do shell) | Entrada pelo botão `shopping_cart_checkout` da AppBar da lista (F22/RF-18) |
 | `/boas-vindas` | Boas-vindas (primeiro acesso — RF-27) | Aberta uma vez pela home |
 | `/categorias` | Ordenar categorias (fora do shell) | RF-24 |
 | `/receber-lista` | Receber lista (fora do shell) | `push` pela ação "Receber lista" do painel (RF-33/F49) |
 | `/design` | Design System (só `kDebugMode`) | Público em debug |
 
-* **Navegação por abas (F10):** `NavigationBar` inferior com **2 destinos** (**Minhas**, **Configurações**) que vira `NavigationRail` a partir de ~600dp; o `StatefulShellRoute.indexedStack` preserva o estado de cada aba e o AppBar de cada aba usa o mesmo texto do destino.
+* **Navegação por abas (F10):** `NavigationBar` inferior com **3 destinos** (**Minhas**, **Histórico**, **Configurações**) que vira `NavigationRail` a partir de ~600dp; o `StatefulShellRoute.indexedStack` preserva o estado de cada aba e o AppBar de cada aba usa o mesmo texto do destino.
 * **Abrir lista/mercado (`push` sobre o shell):** a tela cobre a barra (tela cheia) e o voltar retorna à **aba de origem**. Sem pilha, a seta e o voltar do sistema vão para `/listas` — helper `core/navigation/voltar_para_inicio.dart`.
 * **Títulos:** painel segue o destino ("Minhas Listas"/"Configurações"); a tela da lista usa o título da lista (fallback "Lista" em carregando/erro/não encontrada). Título em **24sp bold** e, nas telas de topo, a **marca do app** (`AppLogo`, 28dp) à esquerda do texto (F13-T02/T03, doc [15 §1/§6](15-design-system.md)).
 * Wireframes (layout) de todas as telas: **[10 Wireframes](10-wireframes-telas.md)**.
@@ -181,7 +191,7 @@ Rotas finais do app único (spec §3): sem `/login`, `/registro`, `/recuperar-se
 | Tocar no item | Abre o editor em **bottom sheet** (mesmo do swipe): nome, quantidade, unidade, categoria, **Preço (R$)** e ação **Remover** com undo (F12-T06/F25); a quantidade aceita decimal pt-BR (`1,5`), fração (`1/2`) e glifos (`½`, `1½`) via `parseQuantidade` — RF-25/F29 (o misto separado `1 1/2` é combinado pelo parser, não pelo editor); nome vazio/quantidade inválida/preço inválido geram erro inline no campo (F14-T07) |
 | Swipe direita/esquerda | Editar / Remover (com undo via SnackBar); edição inclui **dropdown de categoria** ao lado das unidades; o dropdown mantém a **ordem do enum**, não a ordem custom (RF-24) |
 | Botão de importação | Abre modal (6.4) |
-| Menu (⋮) | Ordem renderizada: "Desmarcar todos", "Limpar concluídos", "Renomear lista", "Adicionar de outra lista", "Orçamento", "Compartilhar", "Arquivar/Desarquivar", "Excluir lista" |
+| Menu (⋮) | Ordem renderizada: "Desmarcar todos", "Limpar concluídos", "Finalizar compra", "Renomear lista", "Adicionar de outra lista", "Orçamento", "Compartilhar", "Arquivar/Desarquivar", "Excluir lista" |
 | Ações em massa | Reaproveitar lista (desmarcar todos) e limpar concluídos — confirmação para destrutivas; "desmarcar" devolve o item ao seu grupo; **limpar concluídos tem undo** (SnackBar 3s, restaura `id`/`ordem` originais — F14-T05) |
 | Chips de itens frequentes | Acima do campo "Adicionar item", em rolagem horizontal, quando o campo está **vazio** e há sugestões (`itensFrequentesProvider`, RF-19): toque adiciona o item com quantidade 1, unidade `un` e categoria pela cadeia local (§3); somem ao digitar o primeiro caractere e voltam ao limpar o campo |
 | Botão do modo mercado | Ícone `shopping_cart_checkout` na AppBar (`tooltip` "Modo mercado"), **antes da lupa**; abre `/mercado/:listaId` via `push` (RF-18) |
@@ -272,6 +282,18 @@ Enviar e receber **uma lista específica** sem nuvem — texto, arquivo `.json` 
 * **Sempre cria lista nova:** `importarLista` gera **UUIDs v4 novos** para a lista e para cada item numa **transação** (dono `idLocal`), preservando quantidade/unidade/categoria/`concluido`/`ordem`/preço — **nunca** mescla com listas existentes. Título = o confirmado na pré-visualização (payload no código/arquivo; `listaCompartilhada` como padrão no texto livre, sempre editável). Confirmar na prévia ("Criar lista") navega para `/lista/<novoId>`; cancelar (na tela ou na prévia) não grava.
 * **Câmera:** permissões nativas `CAMERA` (Android) e `NSCameraUsageDescription` (iOS); dependências `qr_flutter` (exibir o QR em todas as plataformas) e `mobile_scanner` (ler só Android/iOS, atrás do contrato injetável `LeitorQr`; Web/Desktop colam código/texto/arquivo). Sem `INTERNET` — operação offline; detalhes em [09 §2.11](09-runbook-operacoes.md).
 
+### 6.13. Histórico de compras (RF-34, F50)
+
+Registrar **idas** de compra (snapshot dos itens concluídos) e consultá-las numa aba dedicada — tudo **100% offline** (spec: [2026-09-30-historico-compras-design.md](superpowers/specs/2026-09-30-historico-compras-design.md)). A Fase 50 entrega o núcleo (registrar + histórico); as **estatísticas** e a dependência **`fl_chart`** ficam para a **Fase 51**. Wireframes em [10 §8](10-wireframes-telas.md).
+
+* **Ação "Finalizar compra"** na tela da lista (§6.3): entra no **menu `⋮`** e num **botão no rodapé** (acima de "Importar lista"), visível quando há ≥ 1 item **concluído**. Confirma com um resumo (`N itens · Total R$ X · M sem preço`, RF-21) e, ao confirmar, `HistoricoComprasRepository.finalizar(listaId)` grava a ida numa **transação**.
+* **Snapshot imutável:** a ida guarda cópias dos itens com `concluido == true` e não deletados (nome, quantidade, unidade, categoria e preço) — **não** referencia `item_local`, então permanece fiel mesmo que a lista/itens sejam editados/excluídos depois. `total_centavos` soma só os itens **com preço** (`round(quantidade × preço)`), mesma regra do `totalCarrinho`; itens sem preço entram na ida e não somam. Sem concluídos → `StateError` (a UI nunca chama sem habilitar).
+* **Diálogo pós-finalizar:** após gravar, pergunta **"Limpar concluídos"** (reusa `ListasRepository.limparConcluidos`) **ou** **"Manter a lista"** — nada é removido sem essa escolha; sem "undo" (a ida já foi gravada).
+* **Tabelas Drift:** `idas_compra` (`id` uuid PK, `lista_id` nullable, `titulo`, `finalizada_em`, `total_centavos`, `itens_count`) e `itens_ida` (`id` uuid PK, `ida_id` FK `ON DELETE CASCADE`, `nome`, `quantidade` `> 0`, `unidade`/`categoria` no enum, `preco_centavos` nullable). Migração **`schemaVersion 11 → 12`** (§2.2), local e sem sync.
+* **Repositório/providers:** `HistoricoComprasRepository(db)` (`finalizar`, `watchIdas`, `ida`, `itensDaIda`, `resumo`) e os providers da §3 (`historicoComprasRepositoryProvider`, `idasProvider`, `idaProvider`, `itensDaIdaProvider`, `resumoHistoricoProvider`).
+* **Aba `/historico`** (entre "Minhas Listas" e "Configurações" no shell, §4): **resumo** no topo (total gasto, ticket médio = total ÷ nº de idas, nº de idas), **lista de idas** por `finalizada_em` desc (data `dd/MM/yyyy` · N itens · total) e **estado vazio** explicativo (`historicoVazio` / `historicoVazioDica`). Toque numa ida abre o **detalhe** `/historico/ida/:idaId` (itens com nome, `quantidade unidade`, categoria, preço e o total no rodapé).
+* **Fase 51 (estatísticas):** gasto por período (barras por mês), por categoria, itens mais comprados, evolução de preço por item e reforço de ticket/total — consultas de agregação + funções puras; `fl_chart` (puro Dart, offline) entra lá.
+
 ---
 
 ## 7. Design System
@@ -304,6 +326,7 @@ Plus Jakarta Sans bundlada. Aqui ficam apenas os estados transversais:
 - [ ] Acessibilidade (RNF-06): semântica/live region, alvos ≥48dp e escala de texto verificados por teste ([15 §4](15-design-system.md)).
 - [ ] Backup exportar/importar funcionando (inclusive lista soft-deletada).
 - [ ] Compartilhar/receber lista 100% offline (texto/arquivo/QR) sempre criando uma lista nova (RF-33).
+- [ ] Finalizar compra grava a ida (snapshot dos concluídos) e a aba Histórico lista/resume/detalha as idas (RF-34).
 - [ ] Widget tests das telas críticas ([07](07-qualidade-ci.md)).
 
 ---

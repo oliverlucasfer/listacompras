@@ -1059,6 +1059,36 @@ Spec: [superpowers/specs/2026-09-30-compartilhar-lista-design.md](superpowers/sp
 
 Nota: *(100% offline: sem schema/sync; o código é `ML1:` + base64Url(JSON) e o texto reusa o parser RF-16. `importarLista` sempre cria uma **lista nova** com UUIDs v4 novos — nunca mescla.)*
 
+## Fase 50 — Histórico de compras: registrar idas (RF-34)
+
+Spec: [superpowers/specs/2026-09-30-historico-compras-design.md](superpowers/specs/2026-09-30-historico-compras-design.md) · Plano: [superpowers/plans/2026-09-30-historico-compras-fase50.md](superpowers/plans/2026-09-30-historico-compras-fase50.md) · Requisito: RF-34 (ação "Finalizar compra" grava uma ida + aba Histórico). · Docs donos: 05, 10, 12, 14, 16.
+
+- [x] **F50-T01** — Tabelas Drift v12 (`idas_compra`/`itens_ida`) e domínio
+  Dep: — · Docs: [05 §2.2/§6.13](05-app-flutter.md), [12 §2](12-prd.md)
+  CP: tabelas snapshot + `Ida`/`ItemDaIda`/`ResumoHistorico`; `schemaVersion = 12` com migração v11→v12; `database.g.dart` regenerado; testes de schema/migração verdes.
+- [x] **F50-T02** — `HistoricoComprasRepository` + providers
+  Dep: F50-T01 · Docs: [05 §6.13](05-app-flutter.md)
+  CP: `finalizar` (transação, snapshot dos concluídos, total só com preço, `StateError` sem concluídos), `watchIdas`/`ida`/`itensDaIda`/`resumo`; `historicoComprasRepositoryProvider`/`idasProvider`/`idaProvider`/`itensDaIdaProvider`/`resumoHistoricoProvider`; unit tests verdes.
+- [x] **F50-T03** — Ação "Finalizar compra" na lista
+  Dep: F50-T02 · Docs: [05 §6.3/§6.13](05-app-flutter.md), [10 §3.1/§8.4](10-wireframes-telas.md)
+  CP: item no menu `⋮` + botão no rodapé (só com concluídos); confirmação com resumo; diálogo pós "Limpar concluídos"/"Manter a lista"; strings em `AppStrings`; widget test verde.
+- [x] **F50-T04** — Aba Histórico + detalhe da ida
+  Dep: F50-T02 · Docs: [05 §4/§6.13](05-app-flutter.md), [10 §8](10-wireframes-telas.md)
+  CP: rota `/historico` (branch entre listas e configurações) e `/historico/ida/:idaId`; resumo (total/ticket/nº), lista por `finalizada_em` desc e vazio; detalhe com itens e total; widget tests verdes.
+- [x] **F50-T05** — Docs donos e fechamento
+  Dep: F50-T04 · Docs: 12, 05, 10, 16, 14
+  CP: RF-34 no PRD e na matriz; §6.13 no 05 + árvore/tabelas/rotas; §8 no 10; frente A9 no 16; Fase 50 na tabela de progresso (275/273); `dart format .`, `flutter analyze` e `flutter test` verdes; sem tocar código.
+
+Nota: *(100% offline: a ida é um snapshot imutável dos itens concluídos (`idas_compra`/`itens_ida`, Drift v12); `total_centavos` soma só itens com preço. Estatísticas e `fl_chart` ficam na Fase 51.)*
+
+## Fase 51 — Estatísticas do histórico (RF-34) — **próxima; tarefas a especificar**
+
+Spec: [superpowers/specs/2026-09-30-historico-compras-design.md](superpowers/specs/2026-09-30-historico-compras-design.md) §6 · Requisito: RF-34 (estatísticas) · Docs donos: 05, 10, 12, 15.
+
+- [ ] **F51-T??** — tarefas a especificar (gasto por período/mês, por categoria, itens mais comprados, evolução de preço por item; gráficos com `fl_chart`; agregações + funções puras; telas/estados no 05/10).
+
+Nota: *(fase registrada; o breakdown F51-T01… será definido em plano próprio antes da execução. Depende da F50.)*
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -1110,7 +1140,8 @@ Nota: *(100% offline: sem schema/sync; o código é `ML1:` + base64Url(JSON) e o
 | F47 Publicação do Lite | 8 | 8 |
 | F48 App único Lite | 8 | 8 |
 | F49 Compartilhar lista | 6 | 6 |
-| **Total** | **270** | **268** |
+| F50 Histórico de compras | 5 | 5 |
+| **Total** | **275** | **273** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
