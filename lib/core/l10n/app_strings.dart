@@ -279,6 +279,15 @@ abstract final class AppStrings {
   static const ticketMedio = 'Ticket médio';
   static const numeroIdas = 'Idas';
 
+  // Estatísticas do histórico (RF-34, F51)
+  static const estatisticas = 'Estatísticas';
+  static const abaIdas = 'Idas';
+  static const gastoPorPeriodo = 'Gasto por período';
+  static const gastoPorCategoria = 'Gasto por categoria';
+  static const itensMaisComprados = 'Itens mais comprados';
+  static const evolucaoDePreco = 'Evolução de preço';
+  static const semDadosAinda = 'Sem dados ainda.';
+
   // Boas-vindas (RF-27, F31-T02)
   static const boasVindasTitulo = 'Bem-vindo(a)';
   static const boasVindasSubtitulo = 'Organize suas compras no seu aparelho.';
