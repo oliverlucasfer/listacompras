@@ -1,11 +1,11 @@
 {
-    "name": "Lista de Compras",
-    "short_name": "Compras",
+    "name": "Minhas Listas",
+    "short_name": "Minhas Listas",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#2E7D32",
     "theme_color": "#2E7D32",
-    "description": "Lista de compras inteligente e colaborativa.",
+    "description": "Lista de compras simples, que funciona no seu aparelho.",
     "prefer_related_applications": false,
     "icons": [
         {
