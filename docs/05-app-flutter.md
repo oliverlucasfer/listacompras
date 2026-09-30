@@ -17,6 +17,7 @@
 | `sqlite3` | Dependência **direta** usada por `test/drift/database_test.dart` (abre o SQLite nativo para inspecionar o banco); **não** remover (G-53) |
 | `qr_flutter` | Geração do QR do código da lista (RF-33, F49) — puro Dart, offline, todas as plataformas |
 | `mobile_scanner` | Leitura de QR por câmera (RF-33, F49) — Android/iOS; isolada por `plataformaComCamera()`; sem `INTERNET` |
+| `fl_chart` | Gráficos das estatísticas do histórico (RF-34, F51) — puro Dart, offline, todas as plataformas |
 
 ---
 
@@ -41,7 +42,7 @@ lib/
 │   ├── compartilhamento/            # domain/ data/ providers/ ui/ (F49/RF-33)
 │   ├── configuracoes/               # ui/ (inclui backup)
 │   ├── design_system/               # ui/ (catálogo, só em debug)
-│   ├── historico/                   # domain/ data/ providers/ ui/ (F50/RF-34)
+│   ├── historico/                   # domain/ data/ providers/ ui/ (F50/F51/RF-34)
 │   ├── importacao/                  # ui/ (a lógica vive em core/importacao)
 │   ├── listas/                      # domain/ data/ providers/ ui/
 │   ├── onboarding/                  # providers/ ui/
@@ -111,6 +112,12 @@ Há **um único app** (`main.dart` → `bootstrap()`), 100% local, com a identid
 | `idaProvider(id)` | FutureProvider.family | Uma ida por `id` (detalhe) |
 | `itensDaIdaProvider(idaId)` | FutureProvider.family | Itens (snapshot) de uma ida, ordenados por nome |
 | `resumoHistoricoProvider` | Provider (`AsyncValue`) | Resumo do histórico **derivado do stream `idasProvider`** (atualiza a cada ida): total gasto, ticket médio e nº de idas |
+| `gastoPorMesProvider` | FutureProvider | Gasto por mês (últimos 12 meses no gráfico), derivado de `idasProvider` (F51/RF-34) |
+| `gastoPorCategoriaProvider` | FutureProvider | Gasto por categoria (soma `quantidade × preço` dos itens com preço), derivado de `idasProvider` (F51/RF-34) |
+| `itensMaisCompradosProvider` | FutureProvider | Top 10 por frequência (nome normalizado), com gasto acumulado, derivado de `idasProvider` (F51/RF-34) |
+| `nomesCompradosProvider` | FutureProvider | Nomes comprados (normalizados, distintos) que alimentam o seletor da evolução de preço (F51/RF-34) |
+| `unidadeRecenteProvider(nome)` | FutureProvider.family | Unidade da compra mais recente de um nome — define a unidade comparada na evolução (F51/RF-34) |
+| `evolucaoPrecoProvider((nome, unidade))` | FutureProvider.family | Série `(data, preço unitário)` de um item **na mesma unidade** (regra do RF-29), derivada de `idasProvider` (F51/RF-34) |
 
 **Sugestão de categoria em camadas (ADR-011, spec §4)** — `SugestaoCategorias.sugerirCategoria(nome)`, zero rede:
 
@@ -284,18 +291,23 @@ Enviar e receber **uma lista específica** sem nuvem — texto, arquivo `.json` 
 * **Sempre cria lista nova:** `importarLista` gera **UUIDs v4 novos** para a lista e para cada item numa **transação** (dono `idLocal`), preservando quantidade/unidade/categoria/`concluido`/`ordem`/preço — **nunca** mescla com listas existentes. Título = o confirmado na pré-visualização (payload no código/arquivo; `listaCompartilhada` como padrão no texto livre, sempre editável). Confirmar na prévia ("Criar lista") navega para `/lista/<novoId>`; cancelar (na tela ou na prévia) não grava.
 * **Câmera:** permissões nativas `CAMERA` (Android) e `NSCameraUsageDescription` (iOS); dependências `qr_flutter` (exibir o QR em todas as plataformas) e `mobile_scanner` (ler só Android/iOS, atrás do contrato injetável `LeitorQr`; Web/Desktop colam código/texto/arquivo). Sem `INTERNET` — operação offline; detalhes em [09 §2.11](09-runbook-operacoes.md).
 
-### 6.13. Histórico de compras (RF-34, F50)
+### 6.13. Histórico de compras (RF-34, F50/F51)
 
-Registrar **idas** de compra (snapshot dos itens concluídos) e consultá-las numa aba dedicada — tudo **100% offline** (spec: [2026-09-30-historico-compras-design.md](superpowers/specs/2026-09-30-historico-compras-design.md)). A Fase 50 entrega o núcleo (registrar + histórico); as **estatísticas** e a dependência **`fl_chart`** ficam para a **Fase 51**. Wireframes em [10 §8](10-wireframes-telas.md).
+Registrar **idas** de compra (snapshot dos itens concluídos), consultá-las numa aba dedicada e ver **estatísticas** locais — tudo **100% offline** (spec: [2026-09-30-historico-compras-design.md](superpowers/specs/2026-09-30-historico-compras-design.md)). A Fase 50 entrega o núcleo (registrar + histórico); a Fase 51 entrega as estatísticas e a dependência **`fl_chart`** (puro Dart). Wireframes em [10 §8](10-wireframes-telas.md).
 
 * **Ação "Finalizar compra"** na tela da lista (§6.3): entra no **menu `⋮`** e num **botão no rodapé** (acima de "Importar lista"), visível quando há ≥ 1 item **concluído**. Confirma com um resumo (`N itens · Total R$ X · M sem preço`, RF-21) e, ao confirmar, `HistoricoComprasRepository.finalizar(listaId)` grava a ida numa **transação**.
 * **Snapshot imutável:** a ida guarda cópias dos itens com `concluido == true` e não deletados (nome, quantidade, unidade, categoria e preço) — **não** referencia `item_local`, então permanece fiel mesmo que a lista/itens sejam editados/excluídos depois. `total_centavos` soma só os itens **com preço** (`round(quantidade × preço)`), mesma regra do `totalCarrinho`; itens sem preço entram na ida e não somam. Sem concluídos → `StateError` (a UI nunca chama sem habilitar).
 * **Diálogo pós-finalizar:** após gravar, pergunta **"Limpar concluídos"** (reusa `ListasRepository.limparConcluidos`) **ou** **"Manter a lista"** — nada é removido sem essa escolha; sem "undo" (a ida já foi gravada).
 * **Tabelas Drift:** `idas_compra` (`id` uuid PK, `lista_id` nullable, `titulo`, `finalizada_em`, `total_centavos`, `itens_count`) e `itens_ida` (`id` uuid PK, `ida_id` FK `ON DELETE CASCADE`, `nome`, `quantidade` `> 0`, `unidade`/`categoria` no enum, `preco_centavos` nullable). Migração **`schemaVersion 11 → 12`** (§2.2), local e sem sync.
-* **Repositório/providers:** `HistoricoComprasRepository(db)` (`finalizar`, `watchIdas`, `ida`, `itensDaIda`, `resumo`) e os providers da §3 (`historicoComprasRepositoryProvider`, `idasProvider`, `idaProvider`, `itensDaIdaProvider`, `resumoHistoricoProvider`).
-* **Aba `/historico`** (entre "Minhas Listas" e "Configurações" no shell, §4): **resumo** no topo (total gasto, ticket médio = total ÷ nº de idas, nº de idas), **lista de idas** por `finalizada_em` desc (data `dd/MM/yyyy` · N itens · total) e **estado vazio** explicativo (`historicoVazio` / `historicoVazioDica`). Toque numa ida abre o **detalhe** `/historico/ida/:idaId` (itens com nome, `quantidade unidade`, categoria, preço e o total no rodapé).
+* **Repositório/providers:** `HistoricoComprasRepository(db)` (`finalizar`, `watchIdas`, `ida`, `itensDaIda`, `resumo` e as agregações `gastoPorMes`, `gastoPorCategoria`, `itensMaisComprados`, `nomesComprados`, `evolucaoPreco`, `unidadeRecenteComprada`) e os providers da §3 (`historicoComprasRepositoryProvider`, `idasProvider`, `idaProvider`, `itensDaIdaProvider`, `resumoHistoricoProvider` + os de estatística). Os tipos do domínio (`GastoPorMes`, `GastoPorCategoria`, `ItemFrequente`, `PontoPreco`) ficam em `lib/features/historico/domain/estatisticas.dart`.
+* **Aba `/historico`** (entre "Minhas Listas" e "Configurações" no shell, §4) com **`TabBar` "Idas" | "Estatísticas"**: a aba **Idas** tem **resumo** no topo (total gasto, ticket médio = total ÷ nº de idas, nº de idas), **lista de idas** por `finalizada_em` desc (data `dd/MM/yyyy` · N itens · total) e **estado vazio** explicativo (`historicoVazio` / `historicoVazioDica`). Toque numa ida abre o **detalhe** `/historico/ida/:idaId` (itens com nome, `quantidade unidade`, categoria, preço e o total no rodapé).
+* **Aba Estatísticas (F51, §6 da spec):** deriva de `idasProvider` (reativa — uma nova ida atualiza tudo). Seções (`AppCabecalhoSecao` + estado vazio `semDadosAinda`/`AppEsqueleto`/`AppEstadoErro` em cada uma, [10 §8.5](10-wireframes-telas.md)):
+  * **Gasto por período:** `GraficoGastoMensal` — gráfico de **barras** (`fl_chart`) com uma barra por mês (`MM/yy` no eixo X, valor em `formatarReais` no topo), limitado aos **últimos 12 meses** (`gastoPorMesProvider`).
+  * **Gasto por categoria:** lista por categoria (`categoria.rotulo`) com total e **% do total** (`gastoPorCategoriaProvider`); soma `round(quantidade × preço)` só dos itens **com preço** (mesma regra do RF-21).
+  * **Itens mais comprados:** top **10** por frequência de **nome normalizado**, com gasto acumulado (`Nx · R$`), reusando `itensMaisCompradosProvider`.
+  * **Evolução de preço:** seletor (`AppDropdown`) de `nomesCompradosProvider`; ao escolher, usa `unidadeRecenteProvider` (unidade da compra mais recente) e mostra a série de `evolucaoPrecoProvider` — **só a mesma unidade** (regra do RF-29) — como lista `dd/MM/yyyy · R$` + **mini gráfico de linha** (`fl_chart`, com ≥ 2 pontos); item sem compras comparáveis → vazio.
 * **Backup (RF-31):** o backup local passou à **versão 2** (§6.10) e agora inclui as `idas` e os `itensIda` (snapshot do histórico) — restaurar um backup preserva o histórico de compras. Arquivos **versão 1** continuam importáveis (sem idas).
-* **Fase 51 (estatísticas):** gasto por período (barras por mês), por categoria, itens mais comprados, evolução de preço por item e reforço de ticket/total — consultas de agregação + funções puras; `fl_chart` (puro Dart, offline) entra lá.
+* **Dependência `fl_chart` (F51):** puro Dart, offline, sem permissão nova e sem rede (detalhes em [09 §2.12](09-runbook-operacoes.md)); os gráficos (`GraficoGastoMensal` e o mini gráfico de linha) usam os tokens do tema (`colorScheme.primary`).
 
 ---
 
@@ -329,7 +341,7 @@ Plus Jakarta Sans bundlada. Aqui ficam apenas os estados transversais:
 - [ ] Acessibilidade (RNF-06): semântica/live region, alvos ≥48dp e escala de texto verificados por teste ([15 §4](15-design-system.md)).
 - [ ] Backup exportar/importar funcionando (inclusive lista soft-deletada).
 - [ ] Compartilhar/receber lista 100% offline (texto/arquivo/QR) sempre criando uma lista nova (RF-33).
-- [ ] Finalizar compra grava a ida (snapshot dos concluídos) e a aba Histórico lista/resume/detalha as idas (RF-34).
+- [ ] Finalizar compra grava a ida (snapshot dos concluídos); a aba Histórico lista/resume/detalha as idas e a aba Estatísticas mostra gasto por período/categoria, mais comprados e evolução de preço (RF-34).
 - [ ] Widget tests das telas críticas ([07](07-qualidade-ci.md)).
 
 ---

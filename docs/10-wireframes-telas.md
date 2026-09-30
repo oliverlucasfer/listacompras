@@ -420,7 +420,7 @@ Toque em "Continuar" → pré-visualização editável (modal, §7.2):
 
 ## 8. Histórico de compras (RF-34 — [05 §6.13](05-app-flutter.md))
 
-Comportamento em [05 §6.13](05-app-flutter.md). A aba **Histórico** fica no shell entre "Minhas Listas" e "Configurações"; o detalhe e o fluxo de finalizar vivem fora/na tela da lista. A Fase 50 (RF-34) entrega o registro de idas + histórico; as estatísticas (gráficos `fl_chart`) ficam para a Fase 51.
+Comportamento em [05 §6.13](05-app-flutter.md). A aba **Histórico** fica no shell entre "Minhas Listas" e "Configurações" e tem **duas abas internas: "Idas" | "Estatísticas"** (§8.1/§8.5); o detalhe e o fluxo de finalizar vivem fora/na tela da lista. A Fase 50 (RF-34) entrega o registro de idas + histórico; a Fase 51 entrega as estatísticas (gráficos `fl_chart`).
 
 ### 8.1. Aba "Histórico" (resumo + lista)
 ```
@@ -493,6 +493,37 @@ Acionado pelo menu `⋮` ou pelo botão no rodapé da lista (§3.1), só com ≥
 └─────────────────────────────────┘
 ```
 Nada é removido sem a escolha "Limpar concluídos" (reusa `limparConcluidos`); não há "undo" após finalizar.
+
+### 8.5. Aba "Estatísticas" (RF-34, F51)
+```
+┌─────────────────────────────────┐
+│  Histórico                      │ ← mesma tela da §8.1
+│  [ Idas ] [ Estatísticas ]      │ ← TabBar (F51); aba ativa
+├─────────────────────────────────┤
+│  Gasto por período              │ ← GraficoGastoMensal (fl_chart):
+│  ▁ ▃ ▂ ▅ ▄ ▆ ▃ ▇ ▅ █ ▆ ▅        │    barras dos últimos 12 meses
+│  10/25      …        09/26      │    (MM/yy no eixo X)
+│  R$ 42,90                R$ 78,10│   valor no topo da barra
+│ ─────────────────────────────── │
+│  Gasto por categoria            │ ← lista: categoria · total · %
+│  Mercearia          R$ 68,40 61%│
+│  Frios              R$ 30,10 27%│
+│  Limpeza            R$ 13,20 12%│
+│ ─────────────────────────────── │
+│  Itens mais comprados           │ ← top 10 (nome normalizado)
+│  Arroz              5x   R$ 24,50│   frequência · gasto
+│  Leite              4x   R$ 19,60│
+│ ─────────────────────────────── │
+│  Evolução de preço              │ ← seletor de item (dropdown)
+│  [ Arroz                    ▾ ] │
+│   ╭─────────────────────────╮   │ ← mini gráfico de linha
+│   │      ╱‾╲    ╱            │   │   (≥ 2 pontos; fl_chart)
+│   ╰─────────────────────────╯   │
+│  21/08/2026 · R$ 5,00           │ ← lista dd/MM/yyyy · R$
+│  30/09/2026 · R$ 6,10           │
+└─────────────────────────────────┘
+```
+Cada seção tem estado vazio próprio ("Sem dados ainda.") e usa `AppEsqueleto`/`AppEstadoErro` no carregamento/erro. A evolução compara **só a mesma unidade** (regra do RF-29): o item é escolhido pelo nome e a unidade vem da compra mais recente; item sem compras comparáveis → vazio.
 
 ---
 

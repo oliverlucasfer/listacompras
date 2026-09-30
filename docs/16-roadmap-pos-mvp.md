@@ -17,7 +17,7 @@
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | A1 | **Duplicar lista ("Comprar de novo")** | **RF-20** | F23 | [spec](superpowers/specs/2026-09-21-duplicar-lista-design.md) | concluído (F23-T01…T03) |
 | A8 | **Compartilhar lista sem nuvem (texto/arquivo/QR)** | **RF-33** | F49 | [spec](superpowers/specs/2026-09-30-compartilhar-lista-design.md) | concluído (F49-T01…T06) |
-| A9 | **Histórico de compras e estatísticas** | **RF-34** | F50 · F51 | [spec](superpowers/specs/2026-09-30-historico-compras-design.md) | núcleo entregue (F50-T01…T05); **estatísticas pendentes (F51)** |
+| A9 | **Histórico de compras e estatísticas** | **RF-34** | F50 · F51 | [spec](superpowers/specs/2026-09-30-historico-compras-design.md) | concluído (F50-T01…T05 + F51-T01…T04) |
 
 ## Onda A — Uso diário e retenção
 

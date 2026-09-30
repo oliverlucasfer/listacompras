@@ -43,7 +43,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-31 | **App único local "Minhas Listas" (Lite):** uso sem conta, 100% no aparelho (sem login, sem convites, sem notificações, sem sincronização), com backup local exportar/importar; identidade visual própria (índigo/cesta, nome "Minhas Listas") | 05 §2.3 + 05 §6.10 | F48 | [05 §2.3](05-app-flutter.md) |
 | RF-32 | Publicação do app ("Minhas Listas") na Google Play em produção: app 100% local (sem rede/push/Firebase), AAB assinado, política de privacidade pública e Declaração de Dados | 06 §4 + 09 §2.10 + 05 §2.3 | F47 | [06 §4](06-mvp-entregas.md) |
 | RF-33 | Compartilhar lista sem nuvem: exportar (texto/arquivo/QR-código) e importar (texto/arquivo/QR) sempre criando uma lista nova, 100% offline | 05 §6.12 + 10 | F49 | [05 §8](05-app-flutter.md) |
-| RF-34 | Histórico de compras: ação "Finalizar compra" grava uma ida (snapshot dos itens concluídos) + aba Histórico (lista/resumo/detalhe); estatísticas na Fase 51 | 05 §6.13 + 10 | F50 · F51 | [05 §8](05-app-flutter.md) |
+| RF-34 | Histórico de compras: ação "Finalizar compra" grava uma ida (snapshot dos itens concluídos) + aba Histórico com **Idas** (lista/resumo/detalhe) e **Estatísticas** (gasto por período/categoria, itens mais comprados, evolução de preço por item) | 05 §6.13 + 10 §8 | F50 · F51 | [05 §8](05-app-flutter.md) |
 
 ## 3. Requisitos Não-Funcionais
 
@@ -119,7 +119,7 @@ Cada requisito liga story → design → tarefas ([14](14-tarefas.md)) → verif
 | RF-31 | US-01 | F48 | F48-T01…T08 | Widget/unit + smoke em device |
 | RF-32 | US-01 | F47 | F47-T01…T08 | Widget/unit + build AAB + teste de manifest + smoke em device |
 | RF-33 | US-01 | F49 | F49-T01…F49-T06 | Unit codec/repo + widgets |
-| RF-34 | US-01 | F50 · F51 | F50-T01…T05 (F51 depois) | Unit repo + widgets |
+| RF-34 | US-01 | F50 · F51 | F50-T01…T05; F51-T01…T04 | Unit repo/agregações + widgets |
 | RNF-02 | US-03 | F48 | F48-T02, F48-T04 | Testes de repositório + fluxo `T3` |
 | RNF-06 | — | F8 · F14 | F14-T01…T02 | Guidelines de a11y + escala de fonte |
 | RNF-08 | — | F33 · F39 | F33-T01…T03 | Fluxos críticos + consistência |

@@ -1081,13 +1081,24 @@ Spec: [superpowers/specs/2026-09-30-historico-compras-design.md](superpowers/spe
 
 Nota: *(100% offline: a ida é um snapshot imutável dos itens concluídos (`idas_compra`/`itens_ida`, Drift v12); `total_centavos` soma só itens com preço. Estatísticas e `fl_chart` ficam na Fase 51.)*
 
-## Fase 51 — Estatísticas do histórico (RF-34) — **próxima; tarefas a especificar**
+## Fase 51 — Histórico: estatísticas (RF-34)
 
-Spec: [superpowers/specs/2026-09-30-historico-compras-design.md](superpowers/specs/2026-09-30-historico-compras-design.md) §6 · Requisito: RF-34 (estatísticas) · Docs donos: 05, 10, 12, 15.
+Spec: [superpowers/specs/2026-09-30-historico-compras-design.md](superpowers/specs/2026-09-30-historico-compras-design.md) §6 · Plano: [superpowers/plans/2026-09-30-historico-compras-fase51.md](superpowers/plans/2026-09-30-historico-compras-fase51.md) · Requisito: RF-34 (estatísticas do histórico). · Docs donos: 05, 09, 10, 12, 14, 16.
 
-- [ ] **F51-T??** — tarefas a especificar (gasto por período/mês, por categoria, itens mais comprados, evolução de preço por item; gráficos com `fl_chart`; agregações + funções puras; telas/estados no 05/10).
+- [x] **F51-T01** — Domínio e agregações no repositório
+  Dep: F50-T02 · Docs: [05 §3/§6.13](05-app-flutter.md), [12 §2](12-prd.md)
+  CP: `lib/features/historico/domain/estatisticas.dart` (`GastoPorMes`/`GastoPorCategoria`/`ItemFrequente`/`PontoPreco`) e `HistoricoComprasRepository` com `gastoPorMes`/`gastoPorCategoria`/`itensMaisComprados`/`nomesComprados`/`evolucaoPreco`/`unidadeRecenteComprada` (agregação local; só itens com preço; evolução só da mesma unidade); unit tests verdes.
+- [x] **F51-T02** — Gráfico de gasto mensal (`fl_chart`)
+  Dep: F51-T01 · Docs: [05 §6.13](05-app-flutter.md), [09 §2.12](09-runbook-operacoes.md)
+  CP: dependência `fl_chart` (puro Dart, offline) em `pubspec.yaml`/`pubspec.lock`; `GraficoGastoMensal` (barras por mês, `MM/yy` no eixo X, valor no topo; `semDadosAinda` no vazio); widget test verde.
+- [x] **F51-T03** — Aba Estatísticas (Idas × Estatísticas)
+  Dep: F51-T01, F51-T02 · Docs: [05 §3/§6.13](05-app-flutter.md), [10 §8.5](10-wireframes-telas.md)
+  CP: providers `gastoPorMes`/`gastoPorCategoria`/`itensMaisComprados`/`nomesComprados`/`unidadeRecente`/`evolucaoPreco` **derivados de `idasProvider`**; `EstatisticasTab` (gasto por período/categoria, mais comprados, evolução com mini gráfico de linha); `HistoricoScreen` com `TabBar` Idas/Estatísticas; widget test verde.
+- [x] **F51-T04** — Docs donos e fechamento
+  Dep: F51-T03 · Docs: 12, 05, 10, 09, 16, 14
+  CP: RF-34 no PRD (descrição + matriz F51-T01…T04); §6.13/F50→F51 no 05 (+ providers e dependência `fl_chart`); §8.5 no 10; `fl_chart` no 09 (§2.12); frente A9 concluída no 16; Fase 51 na tabela de progresso (279/277); `dart format .`, `flutter analyze` e `flutter test` verdes; sem tocar código.
 
-Nota: *(fase registrada; o breakdown F51-T01… será definido em plano próprio antes da execução. Depende da F50.)*
+Nota: *(100% offline: agregações locais sobre `idas_compra`/`itens_ida`; gráficos com `fl_chart` (puro Dart); evolução de preço só compara a mesma unidade — RF-29.)*
 
 ## Progresso por fase (atualize ao concluir)
 
@@ -1141,7 +1152,8 @@ Nota: *(fase registrada; o breakdown F51-T01… será definido em plano próprio
 | F48 App único Lite | 8 | 8 |
 | F49 Compartilhar lista | 6 | 6 |
 | F50 Histórico de compras | 5 | 5 |
-| **Total** | **275** | **273** |
+| F51 Histórico: estatísticas | 4 | 4 |
+| **Total** | **279** | **277** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

@@ -81,6 +81,13 @@ O "Compartilhar lista" (RF-33) adiciona o **envio** por texto, arquivo `.json` e
 * **Dependências novas (locais/offline):** `qr_flutter` (gerar o QR — puro Dart, todas as plataformas) e `mobile_scanner` (ler QR por câmera — Android/iOS, com o barcode do MLKit **bundled**; **não** adiciona `INTERNET`). Ficam atrás de `plataformaComCamera()`/`leitorQrProvider` para que Web/Desktop continuem compilando ([05 §6.12](05-app-flutter.md)).
 * **Declaração de Dados (Play):** inalterada — nenhum dado coletado; a câmera processa o QR localmente (§2.10, RF-32).
 
+### 2.12. Dependência dos gráficos do histórico (RF-34, F51)
+
+As estatísticas do histórico (F51) desenham gráficos de barras e de linha com **`fl_chart`** (puro Dart, offline, todas as plataformas) — [05 §6.13](05-app-flutter.md).
+
+* **Local/offline:** sem rede, sem permissão nova e sem serviço externo; nenhuma configuração nativa/`INTERNET`; o pacote é `direct main` (`pubspec.yaml`/`pubspec.lock`) e os dados vêm das idas no Drift.
+* **Declaração de Dados (Play):** inalterada — nenhum dado coletado.
+
 ---
 
 ## 3. Incidentes comuns
