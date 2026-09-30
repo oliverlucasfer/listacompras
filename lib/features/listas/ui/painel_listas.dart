@@ -93,6 +93,11 @@ class _PainelListasState extends ConsumerState<PainelListas> {
                   setState(() => _mostrarArquivadas = !_mostrarArquivadas),
             ),
             IconButton(
+              tooltip: AppStrings.receberLista,
+              icon: const Icon(Icons.qr_code_scanner),
+              onPressed: () => context.push('/receber-lista'),
+            ),
+            IconButton(
               key: TourKeys.lupa,
               tooltip: AppStrings.buscar,
               icon: const Icon(Icons.search),

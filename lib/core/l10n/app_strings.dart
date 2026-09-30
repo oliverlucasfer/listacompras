@@ -252,6 +252,11 @@ abstract final class AppStrings {
   static const compartilharIndisponivelLista =
       'Compartilhamento indisponível aqui.';
   static const escanearQr = 'Escanear QR';
+  static const receberLista = 'Receber lista';
+  static const receberCodigoOuTexto = 'Cole o código ou o texto da lista';
+  static const receberArquivo = 'Escolher arquivo';
+  static const receberConfirmar = 'Criar lista';
+  static const receberInvalido = 'Código ou arquivo inválido.';
 
   // Boas-vindas (RF-27, F31-T02)
   static const boasVindasTitulo = 'Bem-vindo(a)';

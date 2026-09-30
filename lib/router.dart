@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'core/navigation/app_shell.dart';
+import 'features/compartilhamento/ui/receber_lista_screen.dart';
 import 'features/configuracoes/ui/configuracoes_screen.dart';
 import 'features/design_system/ui/design_system_screen.dart';
 import 'features/listas/ui/mercado_screen.dart';
@@ -56,6 +57,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/categorias',
         builder: (context, state) => const TelaOrdenarCategorias(),
+      ),
+      GoRoute(
+        path: '/receber-lista',
+        builder: (context, state) => const ReceberListaScreen(),
       ),
       if (kDebugMode)
         GoRoute(
