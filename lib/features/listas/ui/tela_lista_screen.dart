@@ -19,6 +19,7 @@ import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_snack_bar.dart';
+import '../../compartilhamento/ui/sheet_compartilhar.dart';
 import '../../importacao/ui/modal_importar.dart';
 import '../../importacao/ui/modal_previsao_importacao.dart';
 import '../../tour/tour_controller.dart';
@@ -75,12 +76,12 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
     setState(() {});
   }
 
-  void _acaoMenu(
+  Future<void> _acaoMenu(
     BuildContext context,
     WidgetRef ref,
     String idLista,
     String acao,
-  ) {
+  ) async {
     final repo = ref.read(listasRepositoryProvider);
     switch (acao) {
       case 'desmarcar':
@@ -101,6 +102,8 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
         _confirmarExcluirLista(context, ref, idLista);
       case 'outraLista':
         _adicionarDeOutraLista(context, ref, idLista);
+      case 'compartilhar':
+        await abrirSheetCompartilhar(context, ref, idLista);
     }
   }
 
@@ -321,6 +324,10 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                     const PopupMenuItem(
                       value: 'outraLista',
                       child: Text(AppStrings.adicionarDeOutraLista),
+                    ),
+                    const PopupMenuItem(
+                      value: 'compartilhar',
+                      child: Text(AppStrings.compartilharLista),
                     ),
                     PopupMenuItem(
                       value: 'excluir',

@@ -240,6 +240,16 @@ abstract final class AppStrings {
   static const compartilharIndisponivel =
       'Compartilhamento indisponível aqui. Use "Copiar link".';
 
+  // Compartilhar lista (RF-33, F49)
+  static const compartilharLista = 'Compartilhar';
+  static const compartilharTexto = 'Enviar como texto';
+  static const compartilharArquivo = 'Enviar arquivo';
+  static const compartilharQr = 'QR code';
+  static const copiarCodigo = 'Copiar código';
+  static const codigoCopiado = 'Código copiado.';
+  static const compartilharQrGrande = 'Lista grande — use texto ou arquivo.';
+  static const listaCompartilhada = 'Lista compartilhada';
+
   // Boas-vindas (RF-27, F31-T02)
   static const boasVindasTitulo = 'Bem-vindo(a)';
   static const boasVindasSubtitulo = 'Organize suas compras no seu aparelho.';
