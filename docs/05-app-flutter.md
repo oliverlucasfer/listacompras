@@ -107,10 +107,10 @@ Há **um único app** (`main.dart` → `bootstrap()`), 100% local, com a identid
 | `compartilhamentoRepositoryProvider` | Provider | `CompartilhamentoRepository` sobre o Drift: exportar/importar lista (F49/RF-33) |
 | `leitorQrProvider` | Provider | Leitor de QR injetável (`LeitorQr`): real via `mobile_scanner`, fake nos testes (F49/RF-33) |
 | `historicoComprasRepositoryProvider` | Provider | `HistoricoComprasRepository` sobre o Drift: grava idas e faz as consultas do histórico (F50/RF-34) |
-| `idasProvider` | StreamProvider | Idas finalizadas, mais recentes primeiro (`finalizada_em` desc) |
+| `idasProvider` | StreamProvider | Idas finalizadas, mais recentes primeiro (`finalizada_em` desc, desempate por `id`) |
 | `idaProvider(id)` | FutureProvider.family | Uma ida por `id` (detalhe) |
 | `itensDaIdaProvider(idaId)` | FutureProvider.family | Itens (snapshot) de uma ida, ordenados por nome |
-| `resumoHistoricoProvider` | FutureProvider | Resumo do histórico: total gasto, ticket médio e nº de idas |
+| `resumoHistoricoProvider` | Provider (`AsyncValue`) | Resumo do histórico **derivado do stream `idasProvider`** (atualiza a cada ida): total gasto, ticket médio e nº de idas |
 
 **Sugestão de categoria em camadas (ADR-011, spec §4)** — `SugestaoCategorias.sugerirCategoria(nome)`, zero rede:
 
@@ -250,8 +250,10 @@ Primeiro acesso ao app — apresenta o valor em **uma** página (rolável, escal
 
 ### 6.10. Backup local (RF-31)
 
-Em Configurações → "Backup": **Exportar backup** gera um `.json` (versão + listas + itens + histórico de preços)
-e **Importar backup** restaura com merge por `id` e LWW por `updated_at` (comparação de timestamps local).
+Em Configurações → "Backup": **Exportar backup** gera um `.json` **versão 2** (versão + listas + itens +
+histórico de preços + **idas de compra e seus itens**, RF-34) e **Importar backup** restaura com merge por `id`
+(e LWW por `updated_at` para listas/itens). O arquivo é **retrocompatível**: backups **versão 1** (sem
+`idas`/`itensIda`) importam normalmente — as idas ficam vazias.
 
 O export é **fiel ao banco**: inclui listas e itens com `deletado_em` preenchido (soft delete), para que
 a restauração nunca encontre item órfão de lista e viole a FK. A UI separa **arquivo inválido**
@@ -292,6 +294,7 @@ Registrar **idas** de compra (snapshot dos itens concluídos) e consultá-las nu
 * **Tabelas Drift:** `idas_compra` (`id` uuid PK, `lista_id` nullable, `titulo`, `finalizada_em`, `total_centavos`, `itens_count`) e `itens_ida` (`id` uuid PK, `ida_id` FK `ON DELETE CASCADE`, `nome`, `quantidade` `> 0`, `unidade`/`categoria` no enum, `preco_centavos` nullable). Migração **`schemaVersion 11 → 12`** (§2.2), local e sem sync.
 * **Repositório/providers:** `HistoricoComprasRepository(db)` (`finalizar`, `watchIdas`, `ida`, `itensDaIda`, `resumo`) e os providers da §3 (`historicoComprasRepositoryProvider`, `idasProvider`, `idaProvider`, `itensDaIdaProvider`, `resumoHistoricoProvider`).
 * **Aba `/historico`** (entre "Minhas Listas" e "Configurações" no shell, §4): **resumo** no topo (total gasto, ticket médio = total ÷ nº de idas, nº de idas), **lista de idas** por `finalizada_em` desc (data `dd/MM/yyyy` · N itens · total) e **estado vazio** explicativo (`historicoVazio` / `historicoVazioDica`). Toque numa ida abre o **detalhe** `/historico/ida/:idaId` (itens com nome, `quantidade unidade`, categoria, preço e o total no rodapé).
+* **Backup (RF-31):** o backup local passou à **versão 2** (§6.10) e agora inclui as `idas` e os `itensIda` (snapshot do histórico) — restaurar um backup preserva o histórico de compras. Arquivos **versão 1** continuam importáveis (sem idas).
 * **Fase 51 (estatísticas):** gasto por período (barras por mês), por categoria, itens mais comprados, evolução de preço por item e reforço de ticket/total — consultas de agregação + funções puras; `fl_chart` (puro Dart, offline) entra lá.
 
 ---

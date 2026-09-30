@@ -78,8 +78,10 @@ class HistoricoComprasRepository {
   }
 
   Stream<List<Ida>> watchIdas() =>
-      (_db.select(_db.idaCompra)
-            ..orderBy([(t) => OrderingTerm.desc(t.finalizadaEm)]))
+      (_db.select(_db.idaCompra)..orderBy([
+            (t) => OrderingTerm.desc(t.finalizadaEm),
+            (t) => OrderingTerm.asc(t.id),
+          ]))
           .watch()
           .map((rows) => rows.map(Ida.fromLocal).toList());
 

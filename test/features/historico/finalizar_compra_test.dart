@@ -62,6 +62,13 @@ void main() {
     expect((await r.db.select(r.db.idaCompra).get()), hasLength(1));
     expect((await r.db.select(r.db.itemIda).get()), hasLength(1));
 
+    // "Manter a lista" não mexe na lista: o item concluído segue ativo.
+    final ativos = (await r.db.select(r.db.itemLocal).get()).where(
+      (i) => i.listaId == r.listaId && i.deletadoEm == null,
+    );
+    expect(ativos, hasLength(1));
+    expect(ativos.single.concluido, isTrue);
+
     await fechar(tester);
   });
 

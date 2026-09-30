@@ -18,6 +18,6 @@ void main() {
     addTearDown(container.dispose);
 
     final json = await container.read(backupRepositoryProvider).exportarJson();
-    expect(jsonDecode(json), containsPair('versao', 1));
+    expect(jsonDecode(json), containsPair('versao', 2));
   });
 }

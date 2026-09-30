@@ -52,4 +52,47 @@ void main() {
     expect(find.textContaining(RegExp(r'· 1 item$')), findsOneWidget);
     await fechar(tester);
   });
+
+  testWidgets('deve_atualizar_resumo_quando_nova_ida_finalizada', (
+    tester,
+  ) async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final listas = ListasRepository(db);
+    final historico = HistoricoComprasRepository(db);
+    final l = await listas.criarLista(titulo: 'Semana', donoId: 'local');
+    final i = await listas.adicionarItem(
+      listaId: l.id,
+      nome: 'Arroz',
+      quantidade: 1,
+      precoCentavos: 300,
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [appDatabaseProvider.overrideWithValue(db)],
+        child: const MaterialApp(home: HistoricoScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.text('R\$ 0,00'),
+      findsNWidgets(2),
+      reason: 'total e ticket zerados antes de qualquer ida',
+    );
+
+    await listas.editarItem(i.id, concluido: true);
+    await historico.finalizar(l.id);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('R\$ 3,00'),
+      findsNWidgets(3),
+      reason:
+          'o resumo (total + ticket) acompanha a nova ida sem recarregar a '
+          'tela; a lista também mostra o total da ida',
+    );
+    expect(find.text('1'), findsOneWidget, reason: 'nº de idas atualizado');
+    await fechar(tester);
+  });
 }

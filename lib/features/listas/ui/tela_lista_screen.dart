@@ -318,10 +318,11 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                       value: 'limpar',
                       child: Text(AppStrings.limparConcluidos),
                     ),
-                    const PopupMenuItem(
-                      value: 'finalizar',
-                      child: Text(AppStrings.finalizarCompra),
-                    ),
+                    if (itens.any((i) => i.concluido))
+                      const PopupMenuItem(
+                        value: 'finalizar',
+                        child: Text(AppStrings.finalizarCompra),
+                      ),
                     const PopupMenuItem(
                       value: 'renomear',
                       child: Text(AppStrings.renomearLista),

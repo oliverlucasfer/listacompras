@@ -17,10 +17,12 @@ void main() {
     final json = await BackupRepository(db).exportarJson();
     final mapa = jsonDecode(json) as Map<String, dynamic>;
 
-    expect(mapa['versao'], 1);
+    expect(mapa['versao'], 2);
     expect((mapa['listas'] as List), hasLength(1));
     expect((mapa['itens'] as List), hasLength(1));
     expect((mapa['historicoPrecos'] as List), isEmpty);
+    expect((mapa['idas'] as List), isEmpty);
+    expect((mapa['itensIda'] as List), isEmpty);
   });
 
   test(

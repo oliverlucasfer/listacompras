@@ -62,7 +62,7 @@ void main() {
   test('deve_falhar_quando_nao_ha_concluidos', () async {
     final l = await listas.criarLista(titulo: 'X', donoId: 'local');
     await listas.adicionarItem(listaId: l.id, nome: 'Pendente');
-    expect(() => historico.finalizar(l.id), throwsStateError);
+    await expectLater(historico.finalizar(l.id), throwsStateError);
     expect(await db.select(db.idaCompra).get(), isEmpty);
   });
 

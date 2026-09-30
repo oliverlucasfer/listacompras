@@ -2066,6 +2066,33 @@ void main() {
 
     await fechar(tester);
   });
+
+  testWidgets('deve_mostrar_finalizar_no_menu_quando_tem_concluido', (
+    tester,
+  ) async {
+    await listaComItens(tester, comConcluido: true);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    expect(
+      find.widgetWithText(PopupMenuItem<String>, AppStrings.finalizarCompra),
+      findsOneWidget,
+    );
+
+    await fechar(tester);
+  });
+
+  testWidgets('nao_deve_mostrar_finalizar_no_menu_quando_sem_concluido', (
+    tester,
+  ) async {
+    await listaComItens(tester);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.finalizarCompra), findsNothing);
+
+    await fechar(tester);
+  });
 }
 
 class _RepoLimparFalha extends ListasRepository {

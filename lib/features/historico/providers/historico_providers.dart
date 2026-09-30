@@ -21,6 +21,16 @@ final itensDaIdaProvider = FutureProvider.family<List<ItemDaIda>, String>(
       ref.watch(historicoComprasRepositoryProvider).itensDaIda(idaId),
 );
 
-final resumoHistoricoProvider = FutureProvider<ResumoHistorico>(
-  (ref) => ref.watch(historicoComprasRepositoryProvider).resumo(),
+final resumoHistoricoProvider = Provider<AsyncValue<ResumoHistorico>>(
+  (ref) => ref.watch(idasProvider).whenData(_resumoDeIdas),
 );
+
+ResumoHistorico _resumoDeIdas(List<Ida> idas) {
+  final total = idas.fold<int>(0, (s, i) => s + i.totalCentavos);
+  final n = idas.length;
+  return ResumoHistorico(
+    totalGeralCentavos: total,
+    ticketMedioCentavos: n == 0 ? 0 : (total / n).round(),
+    nIdas: n,
+  );
+}

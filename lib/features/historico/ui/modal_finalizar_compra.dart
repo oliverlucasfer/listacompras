@@ -44,7 +44,12 @@ Future<void> abrirFinalizarCompra(
   );
   if (confirmar != true || !context.mounted) return;
 
-  await ref.read(historicoComprasRepositoryProvider).finalizar(listaId);
+  try {
+    await ref.read(historicoComprasRepositoryProvider).finalizar(listaId);
+  } catch (_) {
+    if (context.mounted) mostrarSnackBar(context, AppStrings.erroGenerico);
+    return;
+  }
   if (!context.mounted) return;
   mostrarSnackBar(context, AppStrings.compraRegistrada);
 
@@ -65,6 +70,10 @@ Future<void> abrirFinalizarCompra(
     ),
   );
   if (limpar == true) {
-    await ref.read(listasRepositoryProvider).limparConcluidos(listaId);
+    try {
+      await ref.read(listasRepositoryProvider).limparConcluidos(listaId);
+    } catch (_) {
+      if (context.mounted) mostrarSnackBar(context, AppStrings.erroGenerico);
+    }
   }
 }

@@ -35,6 +35,8 @@ class BackupRepository {
     final listas = await _db.select(_db.listaLocal).get();
     final itens = await _db.select(_db.itemLocal).get();
     final historico = await _db.select(_db.historicoPrecoLocal).get();
+    final idas = await _db.select(_db.idaCompra).get();
+    final itensIda = await _db.select(_db.itemIda).get();
 
     final arquivo = BackupArquivo(
       exportadoEm: DateTime.now().toUtc(),
@@ -82,6 +84,31 @@ class BackupRepository {
             },
           )
           .toList(),
+      idas: idas
+          .map(
+            (i) => <String, Object?>{
+              'id': i.id,
+              'lista_id': i.listaId,
+              'titulo': i.titulo,
+              'finalizada_em': _iso(i.finalizadaEm),
+              'total_centavos': i.totalCentavos,
+              'itens_count': i.itensCount,
+            },
+          )
+          .toList(),
+      itensIda: itensIda
+          .map(
+            (i) => <String, Object?>{
+              'id': i.id,
+              'ida_id': i.idaId,
+              'nome': i.nome,
+              'quantidade': i.quantidade,
+              'unidade': i.unidade,
+              'categoria': i.categoria,
+              'preco_centavos': i.precoCentavos,
+            },
+          )
+          .toList(),
     );
     return jsonEncode(arquivo.toJson());
   }
@@ -93,7 +120,7 @@ class BackupRepository {
     late final BackupArquivo arquivo;
     try {
       final mapa = jsonDecode(conteudo) as Map<String, dynamic>;
-      if (mapa['versao'] != BackupArquivo.versao) {
+      if (!BackupArquivo.versoesSuportadas.contains(mapa['versao'])) {
         throw BackupInvalidoException(
           'Versão de backup não suportada: ${mapa['versao']}',
         );
@@ -182,6 +209,38 @@ class BackupRepository {
                   precoCentavos: h['preco_centavos'] as int,
                   unidade: h['unidade'] as String,
                   registradoEm: registradoEm,
+                ),
+              );
+        }
+        // Idas de compra (RF-34, F50): snapshots imutáveis — restaura antes
+        // dos itens (FK `itens_ida.ida_id`) e faz merge por `id`.
+        for (final ida in arquivo.idas) {
+          await _db
+              .into(_db.idaCompra)
+              .insertOnConflictUpdate(
+                IdaCompraCompanion.insert(
+                  id: ida['id'] as String,
+                  listaId: Value(ida['lista_id'] as String?),
+                  titulo: ida['titulo'] as String,
+                  finalizadaEm: DateTime.parse(ida['finalizada_em'] as String),
+                  totalCentavos: Value(ida['total_centavos'] as int? ?? 0),
+                  itensCount: Value(ida['itens_count'] as int? ?? 0),
+                ),
+              );
+        }
+
+        for (final i in arquivo.itensIda) {
+          await _db
+              .into(_db.itemIda)
+              .insertOnConflictUpdate(
+                ItemIdaCompanion.insert(
+                  id: i['id'] as String,
+                  idaId: i['ida_id'] as String,
+                  nome: i['nome'] as String,
+                  quantidade: Value((i['quantidade'] as num).toDouble()),
+                  unidade: Value(i['unidade'] as String),
+                  categoria: Value(i['categoria'] as String),
+                  precoCentavos: Value(i['preco_centavos'] as int?),
                 ),
               );
         }
