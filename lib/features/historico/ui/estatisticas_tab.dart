@@ -1,3 +1,4 @@
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,6 +9,7 @@ import '../../../core/widgets/app_dropdown.dart';
 import '../../../core/widgets/app_esqueleto.dart';
 import '../../../core/widgets/app_estado_erro.dart';
 import '../../listas/domain/preco.dart';
+import '../domain/estatisticas.dart';
 import '../providers/historico_providers.dart';
 import 'grafico_gasto_mensal.dart';
 
@@ -220,6 +222,13 @@ class _SeriePreco extends ConsumerWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (pontos.length >= 2) ...[
+                  SizedBox(
+                    height: 120,
+                    child: _MiniGraficoPreco(pontos: pontos),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                ],
                 for (final ponto in pontos)
                   Padding(
                     padding: const EdgeInsets.symmetric(
@@ -235,6 +244,54 @@ class _SeriePreco extends ConsumerWidget {
           },
         );
       },
+    );
+  }
+}
+
+/// Mini gráfico de linha da evolução de preço (RF-34, F51), com um ponto por
+/// compra: eixo X = ordem cronológica, eixo Y = preço em centavos.
+class _MiniGraficoPreco extends StatelessWidget {
+  const _MiniGraficoPreco({required this.pontos});
+
+  final List<PontoPreco> pontos;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+    return LineChart(
+      LineChartData(
+        minY: 0,
+        lineBarsData: [
+          LineChartBarData(
+            spots: [
+              for (var i = 0; i < pontos.length; i++)
+                FlSpot(i.toDouble(), pontos[i].precoCentavos.toDouble()),
+            ],
+            isCurved: false,
+            color: tema.colorScheme.primary,
+            barWidth: 2,
+            dotData: const FlDotData(show: true),
+          ),
+        ],
+        titlesData: const FlTitlesData(show: false),
+        gridData: const FlGridData(show: false),
+        borderData: FlBorderData(show: false),
+        lineTouchData: LineTouchData(
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (_) => tema.colorScheme.inverseSurface,
+            getTooltipItems: (tocados) => [
+              for (final toque in tocados)
+                LineTooltipItem(
+                  '${_formatarData(pontos[toque.x.toInt()].data)} · '
+                  '${formatarReais(toque.y.round())}',
+                  (tema.textTheme.labelMedium ?? const TextStyle()).copyWith(
+                    color: tema.colorScheme.onInverseSurface,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
