@@ -6,6 +6,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/identidade_visual.dart';
 import 'core/theme/theme_mode_provider.dart';
 import 'features/tour/ui/tour_overlay.dart';
+import 'features/widget/ui/widget_atualizador.dart';
 import 'router.dart';
 
 final _messengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -41,6 +42,7 @@ class ListaComprasApp extends ConsumerWidget {
         children: [
           if (child != null) child else const SizedBox.shrink(),
           const TourOverlay(),
+          const WidgetAtualizador(),
         ],
       ),
     );
