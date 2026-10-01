@@ -10,6 +10,7 @@ import '../../../core/navigation/voltar_para_inicio.dart';
 import '../../../core/texto/busca.dart';
 import '../../../core/texto/normalizar.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
+import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_cabecalho_secao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
@@ -35,6 +36,7 @@ import '../../voz/providers/reconhecimento_voz_provider.dart';
 import '../../../core/dominio/categoria.dart';
 import '../domain/historico_preco.dart';
 import '../domain/item.dart';
+import '../domain/orcamento.dart';
 import '../domain/preco.dart';
 import '../../../core/dominio/quantidade.dart';
 import '../domain/resultado_dedup.dart';
@@ -409,6 +411,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                   ),
                 ),
                 TotalCarrinho(listaId: listaId),
+                _AlertaOrcamentoCategorias(listaId: listaId),
                 SafeArea(
                   top: false,
                   child: Padding(
@@ -462,6 +465,56 @@ String? _mercadoDaUltimaIda(List<Ida> idas, String listaId) {
     if (ida.listaId == listaId) return ida.mercado;
   }
   return null;
+}
+
+/// Aviso de categorias que estouraram o limite (RF-36, F53-T04), abaixo do
+/// `TotalCarrinho`. Considera só itens marcados com preço; oculto quando não
+/// há limite definido nem categoria estourada.
+class _AlertaOrcamentoCategorias extends ConsumerWidget {
+  const _AlertaOrcamentoCategorias({required this.listaId});
+
+  final String listaId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final limites =
+        ref.watch(limitesCategoriaProvider).value ??
+        const <CategoriaItem, int>{};
+    if (limites.isEmpty) return const SizedBox.shrink();
+    final itens =
+        ref.watch(itensDaListaProvider(listaId)).value ?? const <Item>[];
+    final subtotais = <CategoriaItem, int>{};
+    for (final item in itens) {
+      if (!item.concluido || item.precoCentavos == null) continue;
+      final valor = subtotalMarcado(item);
+      subtotais.update(
+        item.categoria,
+        (atual) => atual + valor,
+        ifAbsent: () => valor,
+      );
+    }
+    final acima = categoriasAcimaDoLimite(
+      subtotais: subtotais,
+      limites: limites,
+    );
+    if (acima.isEmpty) return const SizedBox.shrink();
+    final nomes = CategoriaItem.values
+        .where(acima.contains)
+        .map((c) => c.rotulo)
+        .join(', ');
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        0,
+        AppSpacing.lg,
+        AppSpacing.xs,
+      ),
+      child: AppBanner(
+        tipo: AppBannerTipo.aviso,
+        mensagem: '${AppStrings.acimaDoLimiteDaCategoria}: $nomes',
+      ),
+    );
+  }
 }
 
 class _CampoAdicionar extends ConsumerStatefulWidget {

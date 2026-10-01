@@ -1,3 +1,4 @@
+import '../../../core/dominio/categoria.dart';
 import 'item.dart';
 
 enum EstadoOrcamento { semOrcamento, normal, aviso, acima }
@@ -28,4 +29,19 @@ bool cruzouLimite({
 int subtotalMarcado(Item item) {
   final preco = item.precoCentavos;
   return preco == null ? 0 : (item.quantidade * preco).round();
+}
+
+/// Categorias cujo subtotal marcado excede o limite definido (RF-36, F53-T04).
+/// Categorias sem limite em [limites] são ignoradas; categoria com limite e
+/// sem subtotal conta como 0.
+Set<CategoriaItem> categoriasAcimaDoLimite({
+  required Map<CategoriaItem, int> subtotais,
+  required Map<CategoriaItem, int> limites,
+}) {
+  final acima = <CategoriaItem>{};
+  for (final entrada in limites.entries) {
+    final subtotal = subtotais[entrada.key] ?? 0;
+    if (subtotal > entrada.value) acima.add(entrada.key);
+  }
+  return acima;
 }

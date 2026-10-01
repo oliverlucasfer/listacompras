@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/categorias/sugestao_categorias.dart';
+import '../../../core/dominio/categoria.dart';
 import '../../../drift/database.dart';
 import '../data/historico_precos_repository.dart';
 import '../data/listas_repository.dart';
+import '../data/orcamento_categoria_repository.dart';
 import '../domain/historico_preco.dart';
 import '../domain/item.dart';
 import '../domain/lista.dart';
@@ -22,6 +24,15 @@ final listasRepositoryProvider = Provider<ListasRepository>(
 
 final sugestaoCategoriasProvider = Provider<SugestaoCategorias>(
   (ref) => SugestaoCategorias(ref.watch(appDatabaseProvider)),
+);
+
+final limitesCategoriaRepositoryProvider = Provider<LimitesCategoriaRepository>(
+  (ref) => LimitesCategoriaRepository(ref.watch(appDatabaseProvider)),
+);
+
+/// Limites de orçamento por categoria (RF-36, F53). Stream do Drift.
+final limitesCategoriaProvider = StreamProvider<Map<CategoriaItem, int>>(
+  (ref) => ref.watch(limitesCategoriaRepositoryProvider).watchLimites(),
 );
 
 final listasProvider = StreamProvider<List<Lista>>(

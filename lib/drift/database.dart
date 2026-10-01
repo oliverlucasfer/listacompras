@@ -6,19 +6,27 @@ import 'tables/ida_compra.dart';
 import 'tables/item_ida.dart';
 import 'tables/item_local.dart';
 import 'tables/lista_local.dart';
+import 'tables/orcamento_categoria.dart';
 
 part 'database.g.dart';
 
 /// Fonte de verdade local (doc 03 §1). Espelha o schema Postgres (doc 01).
 /// Testes injetam um executor (ex.: NativeDatabase.memory()).
 @DriftDatabase(
-  tables: [ListaLocal, ItemLocal, HistoricoPrecoLocal, IdaCompra, ItemIda],
+  tables: [
+    ListaLocal,
+    ItemLocal,
+    HistoricoPrecoLocal,
+    IdaCompra,
+    ItemIda,
+    OrcamentoCategoria,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   /// Paridade com o índice único parcial `uq_item_ativo` do Postgres
   /// (`0001_init.sql:57-59`): parcial não é expressável no `@TableIndex`.
@@ -155,6 +163,12 @@ class AppDatabase extends _$AppDatabase {
         // já criam `ida_compra` com a definição atual (passo `de < 12`), que
         // já inclui `mercado` — então a coluna só é adicionada a partir do v12.
         await m.addColumn(idaCompra, idaCompra.mercado);
+      }
+      if (de == 13) {
+        // v13 → v14: limite de orçamento por categoria (RF-36, F53). Bancos
+        // abaixo de v13 já criam a tabela com a definição atual via
+        // `onCreate`/passos anteriores — então só é criada a partir do v13.
+        await m.createTable(orcamentoCategoria);
       }
     },
     beforeOpen: (details) async {
