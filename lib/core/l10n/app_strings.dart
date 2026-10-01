@@ -187,6 +187,14 @@ abstract final class AppStrings {
   static const importLocalAvisoPadrao =
       'Itens sem quantidade entraram com 1 un.';
 
+  // Importar por foto / OCR (RF-37, F54)
+  static const foto = 'Foto';
+  static const tirarFoto = 'Tirar foto';
+  static const escolherDaGaleria = 'Escolher da galeria';
+  static const ocrLendo = 'Lendo a foto...';
+  static const ocrNenhumTexto = 'Nenhum texto reconhecido na foto.';
+  static const ocrFalha = 'Não foi possível ler a foto.';
+
   // Adicionar de outra lista (RF-23)
   static const adicionarDeOutraLista = 'Adicionar de outra lista';
   static const escolherListaOrigem = 'Lista de origem';

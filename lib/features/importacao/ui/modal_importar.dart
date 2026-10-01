@@ -10,6 +10,7 @@ import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
 import '../../listas/providers/listas_providers.dart';
+import '../../ocr/providers/ocr_providers.dart';
 
 /// Abre o modal de entrada da importação de lista (doc 04, wireframe 10 §4.1,
 /// RF-16). Retorna os itens extraídos, ou null se cancelado.
@@ -36,6 +37,7 @@ class ModalImportar extends ConsumerStatefulWidget {
 class _ModalImportarState extends ConsumerState<ModalImportar> {
   final _controller = TextEditingController();
   bool _carregando = false;
+  bool _lendoFoto = false;
   String? _erro;
 
   int get _limite => maxCaracteresImportLocal;
@@ -56,8 +58,64 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
 
   bool get _podeExtrair =>
       !_carregando &&
+      !_lendoFoto &&
       _controller.text.trim().isNotEmpty &&
       _caracteres <= _limite;
+
+  /// OCR on-device (RF-37): escolhe câmera/galeria, lê a imagem e preenche o
+  /// campo editável. A imagem não é armazenada; só o texto entra no fluxo RF-16.
+  Future<void> _lerFoto() async {
+    final origem = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: const Text(AppStrings.tirarFoto),
+              onTap: () => Navigator.pop(context, 'camera'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text(AppStrings.escolherDaGaleria),
+              onTap: () => Navigator.pop(context, 'galeria'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (origem == null || !mounted) return;
+
+    final fonte = ref.read(fonteImagemProvider);
+    final caminho = origem == 'camera'
+        ? await fonte.daCamera()
+        : await fonte.daGaleria();
+    if (caminho == null || !mounted) return;
+
+    setState(() {
+      _lendoFoto = true;
+      _erro = null;
+    });
+    var texto = '';
+    try {
+      texto = await ref.read(ocrTextoProvider).extrair(caminho);
+    } catch (_) {
+      if (mounted) setState(() => _erro = AppStrings.ocrFalha);
+      return;
+    } finally {
+      if (mounted) setState(() => _lendoFoto = false);
+    }
+    if (!mounted) return;
+
+    if (texto.trim().isEmpty) {
+      setState(() => _erro = AppStrings.ocrNenhumTexto);
+    } else {
+      _controller.text = _controller.text.trim().isEmpty
+          ? texto
+          : '${_controller.text}\n$texto';
+    }
+  }
 
   Future<void> _extrair() async {
     setState(() {
@@ -137,6 +195,16 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
                     : null,
               ),
             ),
+            if (plataformaComOcr()) ...[
+              const SizedBox(height: AppSpacing.sm),
+              AppBotao(
+                rotulo: _lendoFoto ? AppStrings.ocrLendo : AppStrings.foto,
+                icone: Icons.photo_camera_outlined,
+                variante: AppBotaoVariante.outlined,
+                carregando: _lendoFoto,
+                onPressed: (_lendoFoto || _carregando) ? null : _lerFoto,
+              ),
+            ],
             if (_erro != null) ...[
               const SizedBox(height: AppSpacing.sm),
               AppBanner(tipo: AppBannerTipo.erro, mensagem: _erro!),
