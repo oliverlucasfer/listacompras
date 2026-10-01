@@ -55,6 +55,7 @@ dependencies:
   flutter_local_notifications: ^22.3.1
   google_mlkit_text_recognition: ^0.17.1
   image_picker: ^1.2.3
+  home_widget: ^0.10.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
