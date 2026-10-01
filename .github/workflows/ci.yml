@@ -36,6 +36,7 @@ jobs:
           grep -qi 'flutterfirebasemessaginginitprovider' "$MANIFEST" && { echo "FlutterFirebaseMessagingInitProvider vazou"; falhou=1; }
           grep -q 'android:allowBackup="false"' "$MANIFEST" || { echo "allowBackup não desligado"; falhou=1; }
           grep -q 'android.permission.RECORD_AUDIO' "$MANIFEST" || { echo "RECORD_AUDIO sumiu"; falhou=1; }
+          grep -q 'android.permission.POST_NOTIFICATIONS' "$MANIFEST" || { echo "POST_NOTIFICATIONS sumiu (notificação de orçamento, RF-36)"; falhou=1; }
           exit $falhou
 
   desktop:

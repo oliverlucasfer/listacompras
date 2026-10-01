@@ -304,7 +304,7 @@ Expected: FAIL.
 
 - [ ] **Step 3: Implement**
 
-- Tabela (v13→v14, `de == 13`):
+- Tabela (v13→v14, `de < 14`):
 
 ```dart
 class OrcamentoCategoria extends Table {
@@ -314,7 +314,7 @@ class OrcamentoCategoria extends Table {
   Set<Column> get primaryKey => {categoria};
 }
 ```
-Migração: `if (de == 13) { await m.createTable(orcamentoCategoria); }` (mesmo padrão `de == X` da F52) + registre em `@DriftDatabase` + regen.
+Migração: `if (de < 14) { await m.createTable(orcamentoCategoria); }` (tabela **nova** → passo acumulativo `de < 14`, como `historico_preco_local` `de < 7` e as idas `de < 12`) + registre em `@DriftDatabase` + regen.
 
 - Repositório `LimitesCategoriaRepository` (upsert por `categoria`, `limiteCentavos` nulo = sem limite) + provider.
 - Função pura `categoriasAcimaDoLimite({required Map<CategoriaItem,int> subtotais, required Map<CategoriaItem,int> limites})` → `Set<CategoriaItem>` (subtotal > limite).
