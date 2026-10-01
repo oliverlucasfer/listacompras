@@ -38,8 +38,8 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
   Future<void> _marcar(Item item) async {
     final jaContava = _marcadosNaSessao.contains(item.id);
     setState(() => _marcadosNaSessao.add(item.id));
-    await _talvezAvisar(item, marcando: true);
     try {
+      await _talvezAvisar(item, marcando: true);
       await ref
           .read(listasRepositoryProvider)
           .editarItem(item.id, concluido: true);
@@ -55,8 +55,8 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
   Future<void> _desmarcar(Item item) async {
     final jaContava = _marcadosNaSessao.contains(item.id);
     setState(() => _marcadosNaSessao.remove(item.id));
-    await _talvezAvisar(item, marcando: false);
     try {
+      await _talvezAvisar(item, marcando: false);
       await ref
           .read(listasRepositoryProvider)
           .editarItem(item.id, concluido: false);

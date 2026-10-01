@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -39,12 +41,17 @@ Future<void> talvezAvisarCruzamento(
   // Best-effort — uma falha do plugin nunca pode quebrar o fluxo da lista.
   if (plataformaComNotificacao()) {
     try {
-      await ref
-          .read(notificacaoLocalProvider)
-          .mostrar(
-            titulo: AppStrings.orcamento,
-            corpo: AppStrings.orcamentoCruzado(formatarReais(depois)),
-          );
+      // Fire-and-forget: não bloqueia a escrita do item esperando a inicialização
+      // do plugin e o prompt de permissão do SO (RF-36, F53-T05).
+      unawaited(
+        ref
+            .read(notificacaoLocalProvider)
+            .mostrar(
+              titulo: AppStrings.orcamento,
+              corpo: AppStrings.orcamentoCruzado(formatarReais(depois)),
+            )
+            .catchError((_) {}),
+      );
     } catch (_) {
       // silencioso por design: o aviso in-app (SnackBar) já foi mostrado.
     }

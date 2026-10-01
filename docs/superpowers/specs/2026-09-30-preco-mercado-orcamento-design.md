@@ -65,7 +65,7 @@ iOS na distribuição (a notificação iOS fica implementada mas fora de distrib
 
 ## 6. Fluxo — Alertas de orçamento (Fase 53)
 
-- **Progressivo (`TotalCarrinho`):** normal (< 80%) → **aviso** (≥ 80% e < 100%) → **acima** (≥ 100%),
+- **Progressivo (`TotalCarrinho`):** normal (< 80%) → **aviso** (≥ 80% e < 100%) → **acima** (> 100%),
   refletido em cor/ícone e na barra de progresso. Sem orçamento → comportamento atual.
 - **SnackBar ao cruzar:** ao marcar um item que faz o total passar de ≤ 100% para > 100%, mostra
   um aviso (uma vez por cruzamento).

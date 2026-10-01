@@ -11,4 +11,10 @@ class OrcamentoCategoria extends Table {
 
   @override
   Set<Column> get primaryKey => {categoria};
+
+  @override
+  List<String> get customConstraints => [
+    'CHECK (limite_centavos IS NULL OR '
+        '(limite_centavos >= 0 AND limite_centavos <= 99999999))',
+  ];
 }
