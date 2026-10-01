@@ -88,6 +88,15 @@ As estatísticas do histórico (F51) desenham gráficos de barras e de linha com
 * **Local/offline:** sem rede, sem permissão nova e sem serviço externo; nenhuma configuração nativa/`INTERNET`; o pacote é `direct main` (`pubspec.yaml`/`pubspec.lock`) e os dados vêm das idas no Drift.
 * **Declaração de Dados (Play):** inalterada — nenhum dado coletado.
 
+### 2.13. Notificação local de orçamento (RF-36, F53)
+
+Os **alertas de orçamento** (RF-36) mostram o SnackBar in-app e, em **Android/iOS**, emitem uma **notificação local** do SO ao cruzar o orçamento — sem push nem rede ([05 §6.15](05-app-flutter.md)).
+
+* **Dependência nova (local/offline):** **`flutter_local_notifications`** (`direct main` em `pubspec.yaml`/`pubspec.lock`). Web/Desktop continuam compilando: a dependência fica atrás do gate **`plataformaComNotificacao()`** (Android/iOS), e o canal/id são fixos.
+* **Permissão Android (`POST_NOTIFICATIONS`):** declarada em `android/app/src/main/AndroidManifest.xml`; obrigatória no **Android 13+** e pedida no primeiro uso (negada → sem notificação, mantendo os alertas in-app). No iOS, o plugin pede permissão (alert/badge/sound).
+* **Core library desugaring (Gradle):** o plugin exige **`isCoreLibraryDesugaringEnabled = true`** em `android/app/build.gradle.kts` (`compileOptions`) **e** `coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")` em `dependencies` — sem isso o build Android falha.
+* **Declaração de Dados (Play):** inalterada — nenhum dado coletado; a notificação é local.
+
 ---
 
 ## 3. Incidentes comuns

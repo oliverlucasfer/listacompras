@@ -159,11 +159,21 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 │  No carrinho: R$ 17,47 · 1 sem  │ ← faixa do total (RF-21/F25):
 │  preço                          │    soma itens marcados com preço;
 │                                 │    oculta sem marcados; com
-│                                 │    orçamento: "de R$ Y" + barra;
-│                                 │    acima → alerta (RF-28)
+│                                 │    orçamento: "de R$ Y" + barra
+│                                 │    progressiva (RF-28/RF-36):
+│                                 │    ≥80% "aviso", >100% "acima"
+│                                 │
+│  ⚠ Acima do limite da categoria │ ← banner de categoria (RF-36/F53):
+│    Mercearia                    │    só com limite definido+estouro
 │  (Importar lista)               │
 └─────────────────────────────────┘
 ```
+
+**Estados do total do carrinho (RF-28/RF-36):** com orçamento, a faixa do total mostra **"de R$ Y"** + barra de progresso em três estados — **normal** (< 80%, cor padrão), **aviso** (≥ 80% e ≤ 100%, `colorScheme.tertiary`, ícone `notification_important_outlined`, "Perto do orçamento") e **acima** (> 100%, `colorScheme.error`, ícone `warning_amber_rounded`, "Acima do orçamento"). Sem orçamento, a faixa segue a linha simples "No carrinho" (RF-21). Sem itens marcados, some.
+
+**Alerta por categoria (RF-36/F53):** abaixo do total, um `AppBanner` de aviso ("Acima do limite da categoria: <rótulos>") destaca as categorias cujo **subtotal marcado** excede o limite; fica **oculto** quando não há limite definido nem categoria estourada.
+
+**Aviso ao cruzar (RF-36/F53):** ao marcar/desmarcar um item que faz o total **passar** do orçamento, um **SnackBar** ("Você passou do orçamento: R$ X") é mostrado **uma vez** por cruzamento — na tela da lista e no modo mercado (`§3.3`). Permanecer acima (marcar mais itens) **não** re-dispara. Em Android/iOS, o mesmo cruzamento emite uma **notificação local** do SO (§6.15 de [05](05-app-flutter.md)).
 
 **Finalizar compra (RF-34/F50):** com ≥ 1 item concluído, o rodapé mostra o botão **"Finalizar compra"** (`shopping_bag_outlined`, acima de "Importar lista") e o menu `⋮` ganha o mesmo item; ambos abrem o fluxo de confirmação (§8.4). Sem concluídos, nem botão nem efeito.
 
@@ -229,8 +239,9 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 │  3 de 12                        │ ← marcados nesta sessão / total ativo
 │  No carrinho: R$ 15,98          │    (live region); faixa do total
 │                                 │    (RF-21/F25) logo abaixo; com
-│                                 │    orçamento: "de R$ Y" + barra;
-│                                 │    acima → alerta (RF-28)
+│                                 │    orçamento: "de R$ Y" + barra
+│                                 │    progressiva (RF-28/RF-36:
+│                                 │    aviso ≥80%, acima >100%)
 │  ☐ Arroz            1 kg        │ ← lista generosa de pendentes;
 │  ☐ Leite            2 un        │    toque na linha marca (alvo ≥48dp)
 │  ☐ Café             1 pacote    │
@@ -319,6 +330,7 @@ Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstad
 │  Aparência                      │
 │  [ Claro | Sistema | Escuro ]   │ ← tema manual (doc 15)
 │  Ordenar categorias      (→)    │ ← corredores; arrastar-e-soltar (RF-24)
+│  Orçamento por categoria (→)    │ ← limites em R$ por categoria (RF-36)
 │                                 │
 │  Dados                          │
 │  Backup: exportar / importar    │ ← .json local (RF-31)
@@ -349,6 +361,25 @@ Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstad
 
 * Cada reordenação persiste na hora (preferência local, global); sem rede/schema.
 
+### 5.2. Tela "Orçamento por categoria" (RF-36, F53)
+```
+┌─────────────────────────────────┐
+│  ← Orçamento por categoria      │
+├─────────────────────────────────┤
+│  Hortifrúti                     │ ← uma linha por categoria
+│  Limite (R$)                    │    (as 11 do enum)
+│  [R$ 120,00_____________ ]      │ ← campo em R$; vazio = sem limite
+│  (Limpar)              (Salvar) │ ← "Limpar" só com limite definido
+│                                 │
+│  Mercearia                      │
+│  Limite (R$)                    │
+│  [_________________________ ]   │ ← inválido → erro inline
+│                        (Salvar) │
+│  …                              │
+└─────────────────────────────────┘
+```
+Cada limite é salvo na hora (`LimitesCategoriaRepository`, Drift `orcamento_categoria`) e alimenta o alerta da tela da lista (§3.1). Rota `/orcamento-categorias`, fora do shell, acionada em Configurações.
+
 ---
 
 ## 6. Mapa de estados por tela (transversal)
@@ -361,6 +392,7 @@ Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstad
 | Receber lista (7.2) | `AppBotao(carregando: true)` | — | Banner "Código ou arquivo inválido." |
 | Histórico (8.1) | `AppEsqueleto` (4 linhas) | 8.2 — "Nenhuma compra finalizada ainda." | `AppEstadoErro` com retry |
 | Detalhe da ida (8.3) | `AppEsqueleto` (4 linhas) | "Compra não encontrada." | `AppEstadoErro` com retry |
+| Orçamento por categoria (5.2) | `AppEsqueleto` (6 linhas) | — | — |
 
 ---
 

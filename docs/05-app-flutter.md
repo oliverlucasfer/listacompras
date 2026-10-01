@@ -44,14 +44,15 @@ lib/
 │   ├── design_system/               # ui/ (catálogo, só em debug)
 │   ├── historico/                   # domain/ data/ providers/ ui/ (F50/F51/F52/RF-34/RF-35)
 │   ├── importacao/                  # ui/ (a lógica vive em core/importacao)
-│   ├── listas/                      # domain/ data/ providers/ ui/
+│   ├── listas/                      # domain/ data/ providers/ ui/ (orçamento RF-36)
+│   ├── notificacoes/                # domain/ data/ providers/ (F53/RF-36)
 │   ├── onboarding/                  # providers/ ui/
 │   ├── tour/                        # motor do tour guiado (F46)
 │   └── voz/                         # domain/ data/ providers/ (F30)
 └── drift/
-    ├── database.dart                # AppDatabase (tabelas locais, schemaVersion 13)
+    ├── database.dart                # AppDatabase (tabelas locais, schemaVersion 14)
     ├── conexao/                     # abrirBancoLocal (nativa/web, ADR-012)
-    └── tables/                      # ListaLocal, ItemLocal, HistoricoPrecoLocal, IdaCompra, ItemIda
+    └── tables/                      # ListaLocal, ItemLocal, HistoricoPrecoLocal, IdaCompra, ItemIda, OrcamentoCategoria
 ```
 
 **Regra:** `ui` só fala com `providers`; `providers` só falam com `data` (repositórios). Repositórios de leitura expõem **Streams do Drift** (UI reativa offline-first).
@@ -74,8 +75,11 @@ lib/
   **`schemaVersion 11 → 12`** (F50/RF-34) cria as tabelas `idas_compra`/`itens_ida` (histórico de compras
   local; snapshot imutável, sem sync). A migração **`schemaVersion 12 → 13`** (F52/RF-35) adiciona a coluna
   `mercado` (text, nullable) em `idas_compra`; como o passo `de < 12` cria a tabela já na definição atual,
-  a coluna só precisa ser adicionada para quem vem exatamente do v12 (`de == 12`). Os passos
-  históricos (`de < 2 … de < 10`) permanecem para quem vem de versões antigas.
+  a coluna só precisa ser adicionada para quem vem exatamente do v12 (`de == 12`). A migração
+  **`schemaVersion 13 → 14`** (F53/RF-36) cria a tabela `orcamento_categoria` (limite local por categoria);
+  por ser tabela **nova**, o passo é **acumulativo** (`de < 14`), como `historico_preco_local` (`de < 7`)
+  e as idas (`de < 12`) — nenhum passo anterior a cria, então ela é criada para todo banco abaixo do v14.
+  Os passos históricos (`de < 2 … de < 10`) permanecem para quem vem de versões antigas.
 * **`quantidade` é `real` no Drift:** a precisão efetiva da app é ≤ 3 casas decimais (tolerância 0,001, [05 §6.3]).
 
 ### 2.1. Banco e plataformas (ADR-012)
@@ -123,6 +127,9 @@ Há **um único app** (`main.dart` → `bootstrap()`), 100% local, com a identid
 | `mercadosUsadosProvider` | FutureProvider | Mercados distintos já usados nas idas (normalizados, exibindo a caixa da 1ª ocorrência), derivado de `idasProvider` (F52/RF-35) |
 | `precosPorMercadoProvider((nome, unidade))` | FutureProvider.family | Último preço de cada mercado para o item **na mesma unidade** (mais barato primeiro), derivado de `idasProvider` (F52/RF-35) |
 | `gastoPorMercadoProvider` | FutureProvider | Gasto por mercado (soma de `total_centavos`, com o grupo "Sem mercado"), derivado de `idasProvider` (F52/RF-35) |
+| `limitesCategoriaRepositoryProvider` | Provider | `LimitesCategoriaRepository` sobre o Drift: define/observa o limite de orçamento por categoria (F53/RF-36) |
+| `limitesCategoriaProvider` | StreamProvider | Limites por categoria (`Map<CategoriaItem, int>`), stream do Drift (F53/RF-36) |
+| `notificacaoLocalProvider` | Provider | `NotificacaoLocal` injetável (`NotificacaoLocalPlugin`): notificação local do SO; fake nos testes (F53/RF-36) |
 
 **Sugestão de categoria em camadas (ADR-011, spec §4)** — `SugestaoCategorias.sugerirCategoria(nome)`, zero rede:
 
@@ -148,6 +155,7 @@ Rotas finais do app único (spec §3): sem `/login`, `/registro`, `/recuperar-se
 | `/mercado/:listaId` | Modo mercado (fora do shell) | Entrada pelo botão `shopping_cart_checkout` da AppBar da lista (F22/RF-18) |
 | `/boas-vindas` | Boas-vindas (primeiro acesso — RF-27) | Aberta uma vez pela home |
 | `/categorias` | Ordenar categorias (fora do shell) | RF-24 |
+| `/orcamento-categorias` | Orçamento por categoria (fora do shell) | Limites locais por categoria (RF-36/F53), acessível em Configurações |
 | `/receber-lista` | Receber lista (fora do shell) | `push` pela ação "Receber lista" do painel (RF-33/F49) |
 | `/design` | Design System (só `kDebugMode`) | Público em debug |
 
@@ -329,6 +337,19 @@ Registrar **onde** a compra foi feita e derivar, das próprias idas, os **preço
   * **Tela da lista:** **chip** informativo (`storefront_outlined`) com o mercado da **última ida** da lista, oculto quando ela não tem mercado.
   * **Estatísticas:** nova seção **"Gasto por mercado"** na aba Estatísticas (§6.13), listando cada mercado (ou "Sem mercado") com o total.
 
+### 6.15. Alertas de orçamento (RF-36, F53)
+
+Alertar de forma **progressiva** sobre o orçamento da lista, avisar ao **cruzar** o limite, permitir **orçamento por categoria** e emitir uma **notificação local** ao ultrapassar — tudo **100% offline** (spec: [2026-09-30-preco-mercado-orcamento-design.md](superpowers/specs/2026-09-30-preco-mercado-orcamento-design.md)). Complementa o orçamento por lista (RF-28, §6.3/§6.5) e o mercado (RF-35, §6.14).
+
+* **Funções puras (`domain/orcamento.dart`):** `EstadoOrcamento` (`semOrcamento`/`normal`/`aviso`/`acima`) e `estadoOrcamento(total, orcamento)` com o limiar fixo **`limiarAvisoOrcamento = 0.8`** (aviso a partir de **80%**; acima quando o total **excede** o orçamento); `cruzouLimite({antes, depois, orcamento})` (verdadeiro só ao **passar** de ≤ orçamento para > orçamento); `subtotalMarcado(item)` (só itens **com preço**, mesma regra do `totalCarrinho`); e `categoriasAcimaDoLimite({subtotais, limites})` (categorias cujo subtotal **marcado** excede o limite). Orçamento `0` → qualquer total marcado já é "acima"; sem orçamento ou sem itens marcados → sem alerta.
+* **`TotalCarrinho` progressivo (§6.3):** a faixa do total passa a refletir o estado — `normal` mantém a linha atual; **`aviso`** usa `colorScheme.tertiary`, ícone `Icons.notification_important_outlined` e `AppStrings.orcamentoAtencao`; **`acima`** mantém o alerta atual (`colorScheme.error`, `Icons.warning_amber_rounded`, `AppStrings.acimaDoOrcamento`); a barra de progresso acompanha a cor. `Semantics(liveRegion: true)` preservado.
+* **SnackBar ao cruzar (lista e modo mercado):** `talvezAvisarCruzamento(context, ref, listaId, {itens, item, marcando})` (`ui/aviso_orcamento.dart`) é chamado **antes** da escrita ao marcar/desmarcar um item; quando o total **cruza** o orçamento, mostra `AppStrings.orcamentoCruzado(total)` **uma vez** por cruzamento (não re-dispara ao permanecer acima).
+* **Orçamento por categoria (Drift v14):** nova tabela **`orcamento_categoria`** (`categoria` text **PK** — enum fechado `CategoriaItem` — e `limite_centavos` int nullable, teto `99999999`), migração **`schemaVersion 13 → 14`** aditiva (§2.2; `de < 14`). `LimitesCategoriaRepository` (`definir(categoria, {centavos})` — `null` remove o limite —, `limites()`, `watchLimites()`) + `limitesCategoriaProvider` (§3).
+  * **Tela `/orcamento-categorias` (§4),** acessível em **Configurações → "Orçamento por categoria"**: lista as 11 categorias, cada uma com campo em R$ (vazio = sem limite) e Salvar/Limpar; valor inválido → erro inline.
+  * **Alerta na lista:** abaixo do `TotalCarrinho`, um `AppBanner` de aviso destaca as categorias estouradas (`AppStrings.acimaDoLimiteDaCategoria` + rótulos); oculto quando não há limite definido nem subtotal acima.
+* **Notificação local (F53-T05):** ao cruzar o orçamento, além do SnackBar, emite uma **notificação do SO** via **`flutter_local_notifications`** (dependência offline, [09 §2.13](09-runbook-operacoes.md)) — contrato `NotificacaoLocal` (`pedirPermissao`, `mostrar`) em `features/notificacoes/`, implementação `NotificacaoLocalPlugin` (canal/id fixos, pede permissão no 1º uso) e `notificacaoLocalProvider` (fake nos testes). O gate **`plataformaComNotificacao()`** restringe a **Android/iOS**; **Web/Desktop** seguem só com os alertas in-app. Best-effort: falha do plugin nunca quebra o fluxo da lista.
+* **Permissão Android:** `POST_NOTIFICATIONS` no `AndroidManifest.xml` e **core library desugaring** no `android/app/build.gradle.kts` ([09 §2.13](09-runbook-operacoes.md)).
+
 ---
 
 ## 7. Design System
@@ -363,6 +384,7 @@ Plus Jakarta Sans bundlada. Aqui ficam apenas os estados transversais:
 - [ ] Compartilhar/receber lista 100% offline (texto/arquivo/QR) sempre criando uma lista nova (RF-33).
 - [ ] Finalizar compra grava a ida (snapshot dos concluídos); a aba Histórico lista/resume/detalha as idas e a aba Estatísticas mostra gasto por período/categoria, mais comprados e evolução de preço (RF-34).
 - [ ] Preço por mercado: a ida guarda o mercado (opcional); o editor mostra "Por mercado", a lista mostra o chip da última ida, o detalhe mostra o rótulo e as Estatísticas mostram "Gasto por mercado" (RF-35).
+- [ ] Alertas de orçamento: o total fica progressivo (aviso ≥ 80%, acima > 100%), um SnackBar avisa ao cruzar, o orçamento por categoria é editável em Configurações (tela `/orcamento-categorias`) com alerta na lista e a notificação local é emitida em Android/iOS (RF-36).
 - [ ] Widget tests das telas críticas ([07](07-qualidade-ci.md)).
 
 ---

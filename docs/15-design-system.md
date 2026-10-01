@@ -56,6 +56,8 @@ Título de tela (AppBar): **24sp bold** aplicado via `appBarTheme.titleTextStyle
 
 **Tour do primeiro uso (F46/RF-27):** `TourOverlay` + `Spotlight` (`lib/features/tour/ui/tour_overlay.dart`) são componentes do design system (feature-specific, montados na raiz do app). O `Spotlight` desenha o scrim (`colorScheme.scrim`) com recorte e halo (`colorScheme.primary`); a bolha é `Material` sobre `surfaceContainerHigh` com `AppElevation.nivel3`/`AppRadius.lg` e botões `AppBotao` — **tudo com tokens `App*` (`AppSpacing`/`AppRadius`/`AppElevation`/`AppMotion`) e `colorScheme`, sem cor literal**. A animação de troca de passo respeita `disableAnimations` (`AppMotion.media` ou `Duration.zero`). Spec: [tour-guiado](superpowers/specs/2026-09-28-tour-guiado-primeiro-uso-design.md).
 
+**Estado de orçamento no `TotalCarrinho` (RF-28/RF-36, F53):** o total usa **tokens do tema, sem cor literal** — **normal** com o estilo padrão; **aviso** (≥ 80%) em `colorScheme.tertiary` + `Icons.notification_important_outlined` ("Perto do orçamento"); **acima** (total > orçamento) em `colorScheme.error` + `Icons.warning_amber_rounded` ("Acima do orçamento"). A barra de progresso acompanha a cor. O alerta por categoria na lista reusa o **`AppBanner`** de aviso (já existente, `liveRegion`). Nenhum componente `App*` novo foi necessário.
+
 ## 4. Acessibilidade (RNF-06)
 
 Regras vinculantes (detalhe e evidência na [spec da Fase 14](superpowers/specs/2026-09-14-ux-acessibilidade-design.md)):

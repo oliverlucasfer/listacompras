@@ -1122,8 +1122,30 @@ Spec: [superpowers/specs/2026-09-30-preco-mercado-orcamento-design.md](superpowe
 
 Nota: *(100% offline: o mercado é um campo opcional na ida e os preços por mercado são **derivados** de `itens_ida × idas_compra.mercado` — sem tabela nova. Os alertas de orçamento (RF-36) ficam na Fase 53.)*
 
-### Próxima fase
-- **Fase 53 — Alertas de orçamento (RF-36)** (spec §6 de [2026-09-30-preco-mercado-orcamento-design.md](superpowers/specs/2026-09-30-preco-mercado-orcamento-design.md)): estado progressivo do total (normal → aviso ≥ 80% → acima ≥ 100%), SnackBar ao cruzar, orçamento por categoria (Drift v14) e notificação local. **Ainda não implementada.**
+## Fase 53 — Alertas de orçamento (RF-36)
+
+Spec: [superpowers/specs/2026-09-30-preco-mercado-orcamento-design.md](superpowers/specs/2026-09-30-preco-mercado-orcamento-design.md) §6 · Plano: [superpowers/plans/2026-09-30-alertas-orcamento-fase53.md](superpowers/plans/2026-09-30-alertas-orcamento-fase53.md) · Requisito: RF-36 (progressivo, SnackBar ao cruzar, orçamento por categoria e notificação local). · Docs donos: 05, 09, 10, 12, 14, 15, 16.
+
+- [x] **F53-T01** — Domínio e funções puras do orçamento
+  Dep: F52-T05 · Docs: [05 §6.15](05-app-flutter.md), [12 §2](12-prd.md)
+  CP: `lib/features/listas/domain/orcamento.dart` com `EstadoOrcamento` (`semOrcamento`/`normal`/`aviso`/`acima`), `limiarAvisoOrcamento = 0.8`, `estadoOrcamento(total, orcamento)`, `cruzouLimite({antes, depois, orcamento})` e `subtotalMarcado(item)`; unit tests verdes.
+- [x] **F53-T02** — `TotalCarrinho` progressivo
+  Dep: F53-T01 · Docs: [05 §6.15](05-app-flutter.md), [10 §3.1](10-wireframes-telas.md)
+  CP: `TotalCarrinho` reflete o estado — aviso ≥ 80% em `colorScheme.tertiary` + `Icons.notification_important_outlined` + `orcamentoAtencao`; acima em `colorScheme.error` + `Icons.warning_amber_rounded` + `acimaDoOrcamento`; strings em `AppStrings`; `Semantics(liveRegion: true)`; widget test verde.
+- [x] **F53-T03** — SnackBar ao cruzar (lista e modo mercado)
+  Dep: F53-T02 · Docs: [05 §6.15](05-app-flutter.md), [10 §3.1/§3.3](10-wireframes-telas.md)
+  CP: `lib/features/listas/ui/aviso_orcamento.dart` (`talvezAvisarCruzamento`); chamado **antes** da escrita na tela da lista e no modo mercado; SnackBar `orcamentoCruzado(total)` só ao **passar** o limite (não re-dispara); widget test verde.
+- [x] **F53-T04** — Orçamento por categoria (Drift v14 + tela + alerta)
+  Dep: F53-T03 · Docs: [05 §2.2/§3/§6.15](05-app-flutter.md), [10 §3.1/§5.2](10-wireframes-telas.md)
+  CP: tabela `orcamento_categoria` (`categoria` PK, `limite_centavos` nullable) com `schemaVersion = 14` e migração v13→v14 (`de < 14`); `LimitesCategoriaRepository`; `categoriasAcimaDoLimite(...)`; tela `/orcamento-categorias` em Configurações; `AppBanner` de aviso na lista; `database.g.dart` regenerado; unit/widget tests verdes.
+- [x] **F53-T05** — Notificação local ao cruzar
+  Dep: F53-T04 · Docs: [05 §6.15](05-app-flutter.md), [09 §2.13](09-runbook-operacoes.md)
+  CP: `flutter_local_notifications` em `pubspec.yaml`/`pubspec.lock`; `POST_NOTIFICATIONS` no manifest e core library desugaring no `android/app/build.gradle.kts`; contrato `NotificacaoLocal` + `NotificacaoLocalPlugin` + `notificacaoLocalProvider`; gate `plataformaComNotificacao()` (Android/iOS; Web/Desktop só in-app); notificação **uma vez** por cruzamento (best-effort) disparada por `talvezAvisarCruzamento`; test com fake verde; build Web/APK não quebra.
+- [x] **F53-T06** — Docs donos e fechamento
+  Dep: F53-T05 · Docs: 12, 05, 09, 10, 14, 15, 16
+  CP: RF-36 no PRD e na matriz; §6.15 no 05 + árvore/tabelas/providers/rotas/migração v14; wireframes no 10 (estados do total, alerta por categoria, tela §5.2 e aviso ao cruzar); `flutter_local_notifications`/`POST_NOTIFICATIONS`/desugaring no 09 §2.13; estado de "aviso" no 15; frente A11 concluída no 16; Fase 53 na tabela de progresso (290/288); `dart format .`, `flutter analyze` e `flutter test` verdes; sem tocar código.
+
+Nota: *(100% offline: funções puras do orçamento + Drift local; a notificação é **local** (sem push/rede) e só em Android/iOS — Web/Desktop seguem com os alertas in-app. A frente RF-35/RF-36 é fechada com a F53.)*
 
 ## Progresso por fase (atualize ao concluir)
 
@@ -1179,7 +1201,8 @@ Nota: *(100% offline: o mercado é um campo opcional na ida e os preços por mer
 | F50 Histórico de compras | 5 | 5 |
 | F51 Histórico: estatísticas | 4 | 4 |
 | F52 Preço por mercado | 5 | 5 |
-| **Total** | **284** | **282** |
+| F53 Alertas de orçamento | 6 | 6 |
+| **Total** | **290** | **288** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
