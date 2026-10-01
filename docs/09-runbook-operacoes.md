@@ -98,6 +98,15 @@ Os **alertas de orçamento** (RF-36) mostram o SnackBar in-app e, em **Android/i
 * **Core library desugaring (Gradle):** o plugin exige **`isCoreLibraryDesugaringEnabled = true`** em `android/app/build.gradle.kts` (`compileOptions`) **e** `coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")` em `dependencies` — sem isso o build Android falha.
 * **Declaração de Dados (Play):** inalterada — nenhum dado coletado; a notificação é local.
 
+### 2.14. Importar por foto: OCR on-device (RF-37, F54)
+
+A **importação por foto** (RF-37) reconhece o texto de uma imagem no próprio aparelho (Android/iOS) e o coloca no campo de importação — **sem rede** ([05 §6.16](05-app-flutter.md)).
+
+* **Dependências novas (locais/offline):** **`google_mlkit_text_recognition`** (OCR on-device, script latino, modelo **bundled**) e **`image_picker`** (câmera/galeria), ambas `direct main` em `pubspec.yaml`/`pubspec.lock`. Ficam atrás do gate **`plataformaComOcr()`** (Android/iOS) e dos contratos `OcrTexto`/`FonteImagem`, então Web/Desktop continuam compilando sem o botão.
+* **Tamanho do app:** o modelo do ML Kit é **bundled** (embutido no APK/AAB), o que **aumenta o tamanho do app**; em troca, funciona 100% offline, sem download on-demand e **sem `INTERNET`** — a dependência **não** adiciona o nó de rede (o guard de CI do manifest release segue válido; [07 §3](07-qualidade-ci.md)).
+* **Permissões:** **sem** permissão Android nova (o `image_picker` moderno usa o Photo Picker; a `CAMERA` já existe desde a RF-33). No iOS, adicionar **`NSPhotoLibraryUsageDescription`** em `ios/Runner/Info.plist` (pt-BR: *"Acessar suas fotos para importar a lista de compras."*); a `NSCameraUsageDescription` já existe. A imagem **não é armazenada** nem enviada a lugar algum.
+* **Declaração de Dados (Play):** inalterada — nenhum dado coletado; a imagem é processada localmente e descartada (só o texto reconhecido entra no campo).
+
 ---
 
 ## 3. Incidentes comuns

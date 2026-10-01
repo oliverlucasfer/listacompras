@@ -294,11 +294,24 @@ Acima do campo de adicionar, uma faixa horizontal rolável de `ActionChip` (alvo
 │  └───────────────────────────┘  │
 │                       128/10000 │ ← contador ≤ 10.000; vermelho > limite
 │                                 │
+│  [  📷 Foto  ]                  │ ← só onde há OCR (Android/iOS, RF-37);
+│                                 │   lendo: "Lendo a foto..." + spinner
 │  (     ✨ Extrair itens    )    │ ← sem rede; spinner + "Lendo..."
 └─────────────────────────────────┘
-   (erro → mensagem amigável do parser [04])
+   (erro → mensagem amigável do parser/OCR [04])
 ```
 O conteúdo do modal é rolável (`SingleChildScrollView`), para caber com fonte ampliada e teclado abertos (G-38).
+
+**Importar por foto (RF-37, F54 — [05 §6.16](05-app-flutter.md)):** o botão **"Foto"** (ícone câmera) só aparece quando `plataformaComOcr()` é verdadeiro (Android/iOS); Web/Desktop o ocultam. Ao tocar, abre a escolha da origem:
+
+```
+┌─────────────────────────────────┐
+│  ─────                          │
+│  📷  Tirar foto                 │
+│  🖼️  Escolher da galeria        │
+└─────────────────────────────────┘
+```
+O texto reconhecido **preenche o campo editável** (vazio → substitui; com conteúdo → acrescenta em nova linha) e o fluxo "Extrair itens" → pré-visualização (§4.2) segue igual. **Nenhum texto** na foto → aviso "Nenhum texto reconhecido na foto."; falha/cancelamento da câmera ou do OCR → aviso amigável; a **imagem não é armazenada**. 1 imagem por importação.
 
 ### 4.2. Modal de pré-visualização
 ```

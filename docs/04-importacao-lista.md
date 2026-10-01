@@ -31,6 +31,8 @@ Fluxo de UX completo (modal, pré-visualização, confirmação) está em [05 §
 
 > **Reuso no compartilhamento (RF-33, F49):** o formato **texto** do "Compartilhar lista" (envio) é exatamente uma linha por item (`"<quantidade> <unidade> <nome>"`), **sem título e sem preço** — o mesmo contrato deste parser. Por isso uma lista compartilhada como texto pode ser colada tanto no "Importar lista" (RF-16, [05 §6.4](05-app-flutter.md)) quanto no "Receber lista" (RF-33, [05 §6.12](05-app-flutter.md)), que reusa `analisarListaLocal` e a sugestão de categoria. Detalhes do compartilhamento em [05 §6.12](05-app-flutter.md).
 
+> **Reuso no OCR (RF-37, F54):** o "Importar por foto" ([05 §6.16](05-app-flutter.md)) roda **OCR on-device** e coloca o texto reconhecido no **campo editável** do modal de importação; dali em diante vale exatamente este contrato (parser local + sugestão de categoria, §3/§5). O OCR **não** cria um caminho paralelo de parsing e **não** muda o limite (`maxCaracteresImportLocal`); a imagem não é persistida — só o texto entra no fluxo RF-16.
+
 ## 3. Algoritmo do parser
 
 `analisarListaLocal(texto)`:

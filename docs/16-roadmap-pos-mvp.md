@@ -20,6 +20,7 @@
 | A9 | **Histórico de compras e estatísticas** | **RF-34** | F50 · F51 | [spec](superpowers/specs/2026-09-30-historico-compras-design.md) | concluído (F50-T01…T05 + F51-T01…T04) |
 | A10 | **Preço por mercado** | **RF-35** | F52 | [spec](superpowers/specs/2026-09-30-preco-mercado-orcamento-design.md) | concluído (F52-T01…T05) |
 | A11 | **Alertas de orçamento** | **RF-36** | F53 | [spec](superpowers/specs/2026-09-30-preco-mercado-orcamento-design.md) | concluído (F53-T01…T06) |
+| A12 | **Importar por foto (OCR)** | **RF-37** | F54 | [spec](superpowers/specs/2026-09-30-importar-foto-ocr-design.md) | concluído (F54-T01…T03) |
 
 ## Onda A — Uso diário e retenção
 

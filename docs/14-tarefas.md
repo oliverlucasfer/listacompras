@@ -1147,6 +1147,22 @@ Spec: [superpowers/specs/2026-09-30-preco-mercado-orcamento-design.md](superpowe
 
 Nota: *(100% offline: funções puras do orçamento + Drift local; a notificação é **local** (sem push/rede) e só em Android/iOS — Web/Desktop seguem com os alertas in-app. A frente RF-35/RF-36 é fechada com a F53.)*
 
+## Fase 54 — Importar por foto (OCR) (RF-37)
+
+Spec: [superpowers/specs/2026-09-30-importar-foto-ocr-design.md](superpowers/specs/2026-09-30-importar-foto-ocr-design.md) · Plano: [superpowers/plans/2026-09-30-importar-foto-ocr-fase54.md](superpowers/plans/2026-09-30-importar-foto-ocr-fase54.md) · Requisito: RF-37 (importar lista por foto com OCR on-device). · Docs donos: 04, 05, 09, 10, 12, 14, 15, 16.
+
+- [x] **F54-T01** — Contratos, plugins e gate de plataforma
+  Dep: F53-T06 · Docs: [05 §1/§2/§3/§6.16](05-app-flutter.md), [12 §2](12-prd.md), [09 §2.14](09-runbook-operacoes.md)
+  CP: `google_mlkit_text_recognition`/`image_picker` em `pubspec.yaml`/`pubspec.lock`; `NSPhotoLibraryUsageDescription` no `ios/Runner/Info.plist`; contratos `OcrTexto`/`FonteImagem` + impls `OcrTextoMlKit`/`FonteImagemImagePicker` + `ocrTextoProvider`/`fonteImagemProvider`; gate `plataformaComOcr()` (Android/iOS; Web/Desktop escondem); teste do gate verde; builds Web/APK não quebram.
+- [x] **F54-T02** — Botão "Foto" no modal de importar
+  Dep: F54-T01 · Docs: [05 §6.4/§6.16](05-app-flutter.md), [10 §4.1](10-wireframes-telas.md)
+  CP: botão "Foto" (só onde há OCR) → bottom sheet "Tirar foto"/"Escolher da galeria" → OCR preenche o campo editável (vazio → substitui; com conteúdo → nova linha); "Lendo a foto..."; sem texto → aviso; falha/cancelamento → `AppBanner`; strings em `AppStrings`; widget tests verdes (fakes).
+- [x] **F54-T03** — Docs donos e fechamento
+  Dep: F54-T02 · Docs: 04, 05, 09, 10, 12, 14, 15, 16
+  CP: RF-37 no PRD (tabela, matriz e fora de escopo); §6.16 no 05 + árvore/tabelas/providers; §4.1 no 10 (botão + escolha); nota do OCR no 04; deps/permissão/tamanho no 09 §2.14; §3 no 15; frente A12 no 16; Fase 54 na tabela de progresso (293/291); `dart format .`, `flutter analyze` e `flutter test` verdes; sem tocar código.
+
+Nota: *(100% offline: o OCR roda no aparelho (ML Kit **bundled**) e a imagem **não é armazenada** — só o texto entra no campo editável e o fluxo RF-16 segue igual. 1 imagem por importação; o botão só aparece em Android/iOS. O modelo bundled aumenta o tamanho do app.)*
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -1202,7 +1218,8 @@ Nota: *(100% offline: funções puras do orçamento + Drift local; a notificaç�
 | F51 Histórico: estatísticas | 4 | 4 |
 | F52 Preço por mercado | 5 | 5 |
 | F53 Alertas de orçamento | 6 | 6 |
-| **Total** | **290** | **288** |
+| F54 Importar por foto (OCR) | 3 | 3 |
+| **Total** | **293** | **291** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

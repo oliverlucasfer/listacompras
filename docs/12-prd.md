@@ -46,6 +46,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-34 | Histórico de compras: ação "Finalizar compra" grava uma ida (snapshot dos itens concluídos) + aba Histórico com **Idas** (lista/resumo/detalhe) e **Estatísticas** (gasto por período/categoria, itens mais comprados, evolução de preço por item) | 05 §6.13 + 10 §8 | F50 · F51 | [05 §8](05-app-flutter.md) |
 | RF-35 | Registrar o **mercado** (opcional) ao finalizar a compra e **derivar das idas** o preço por mercado (último + mais barato, mesma unidade): linha "Por mercado" no editor, rótulo no detalhe, **chip** do mercado da última ida na lista e "Gasto por mercado" nas estatísticas | 05 §6.14 + 10 §8 | F52 | [05 §8](05-app-flutter.md) |
 | RF-36 | Alertas de orçamento: estado progressivo do total do carrinho (normal < 80% / **aviso** ≥ 80% / **acima** > 100%), **SnackBar ao cruzar** o limite, **orçamento por categoria** (limite local por categoria, Drift v14) e **notificação local** ao ultrapassar (Android/iOS; Web/Desktop só in-app) | 05 §6.15 + 10 §3.1/§5.2 | F53 | [05 §8](05-app-flutter.md) |
+| RF-37 | Importar lista por **foto** com **OCR on-device**: botão "Foto" no modal de importar (RF-16) oferece câmera/galeria, reconhece o texto (latino/pt-BR) e preenche o campo editável; o fluxo Extrair → pré-visualização segue igual (Android/iOS; Web/Desktop escondem o botão). A imagem **não é armazenada** | 05 §6.16 + 10 §4.1 | F54 | [05 §8](05-app-flutter.md) |
 
 ## 3. Requisitos Não-Funcionais
 
@@ -124,13 +125,14 @@ Cada requisito liga story → design → tarefas ([14](14-tarefas.md)) → verif
 | RF-34 | US-01 | F50 · F51 | F50-T01…T05; F51-T01…T04 | Unit repo/agregações + widgets |
 | RF-35 | US-01 | F52 | F52-T01…T05 | Unit repo/preço por mercado + widgets |
 | RF-36 | US-01 | F53 | F53-T01…T06 | Unit funções puras/repo + widgets + fake de notificação |
+| RF-37 | US-02 | F54 | F54-T01…T03 | Unit gate de plataforma + widgets (fakes; plugin real: smoke em device) |
 | RNF-02 | US-03 | F48 | F48-T02, F48-T04 | Testes de repositório + fluxo `T3` |
 | RNF-06 | — | F8 · F14 | F14-T01…T02 | Guidelines de a11y + escala de fonte |
 | RNF-08 | — | F33 · F39 | F33-T01…T03 | Fluxos críticos + consistência |
 
 ## 7. Fora de escopo (MVP)
 
-Receitas/menus, cupons, scan de código de barras, importação de foto/nota fiscal, app iOS na distribuição, publicação de desktop, **colaboração/compartilhamento em nuvem** (removido na F48; o compartilhamento **local** volta como RF-33, pós-MVP/F49), **conta/nuvem/sync/push** (removidos na F48). O **histórico de compras** volta como RF-34 (pós-MVP: F50 núcleo, F51 estatísticas), o **preço por mercado** entra como RF-35 (pós-MVP: F52) e os **alertas de orçamento** entram como RF-36 (pós-MVP: F53).
+Receitas/menus, cupons (parse estruturado de nota fiscal), scan de código de barras, app iOS na distribuição, publicação de desktop, **colaboração/compartilhamento em nuvem** (removido na F48; o compartilhamento **local** volta como RF-33, pós-MVP/F49), **conta/nuvem/sync/push** (removidos na F48). O **histórico de compras** volta como RF-34 (pós-MVP: F50 núcleo, F51 estatísticas), o **preço por mercado** entra como RF-35 (pós-MVP: F52), os **alertas de orçamento** entram como RF-36 (pós-MVP: F53) e a **importação por foto (OCR on-device)** entra como RF-37 (pós-MVP: F54 — a imagem **não é armazenada**; o OCR alimenta o parser local do RF-16).
 
 ---
 

@@ -18,6 +18,8 @@
 | `qr_flutter` | Geração do QR do código da lista (RF-33, F49) — puro Dart, offline, todas as plataformas |
 | `mobile_scanner` | Leitura de QR por câmera (RF-33, F49) — Android/iOS; isolada por `plataformaComCamera()`; sem `INTERNET` |
 | `fl_chart` | Gráficos das estatísticas do histórico (RF-34, F51) — puro Dart, offline, todas as plataformas |
+| `google_mlkit_text_recognition` | OCR on-device (script latino) da importação por foto (RF-37, F54) — Android/iOS, modelo **bundled**; isolado por `plataformaComOcr()`; sem `INTERNET` (aumenta o tamanho do app) |
+| `image_picker` | Origem da imagem (câmera/galeria) para o OCR (RF-37, F54) — Android/iOS, atrás do contrato `FonteImagem` |
 
 ---
 
@@ -46,6 +48,7 @@ lib/
 │   ├── importacao/                  # ui/ (a lógica vive em core/importacao)
 │   ├── listas/                      # domain/ data/ providers/ ui/ (orçamento RF-36)
 │   ├── notificacoes/                # domain/ data/ providers/ (F53/RF-36)
+│   ├── ocr/                         # domain/ data/ providers/ (F54/RF-37)
 │   ├── onboarding/                  # providers/ ui/
 │   ├── tour/                        # motor do tour guiado (F46)
 │   └── voz/                         # domain/ data/ providers/ (F30)
@@ -130,6 +133,8 @@ Há **um único app** (`main.dart` → `bootstrap()`), 100% local, com a identid
 | `limitesCategoriaRepositoryProvider` | Provider | `LimitesCategoriaRepository` sobre o Drift: define/observa o limite de orçamento por categoria (F53/RF-36) |
 | `limitesCategoriaProvider` | StreamProvider | Limites por categoria (`Map<CategoriaItem, int>`), stream do Drift (F53/RF-36) |
 | `notificacaoLocalProvider` | Provider | `NotificacaoLocal` injetável (`NotificacaoLocalPlugin`): notificação local do SO; fake nos testes (F53/RF-36) |
+| `ocrTextoProvider` | Provider | `OcrTexto` injetável (`OcrTextoMlKit`): OCR on-device da foto; fake nos testes (F54/RF-37) |
+| `fonteImagemProvider` | Provider | `FonteImagem` injetável (`FonteImagemImagePicker`): câmera/galeria (`image_picker`); fake nos testes (F54/RF-37) |
 
 **Sugestão de categoria em camadas (ADR-011, spec §4)** — `SugestaoCategorias.sugerirCategoria(nome)`, zero rede:
 
@@ -350,6 +355,16 @@ Alertar de forma **progressiva** sobre o orçamento da lista, avisar ao **cruzar
 * **Notificação local (F53-T05):** ao cruzar o orçamento, além do SnackBar, emite uma **notificação do SO** via **`flutter_local_notifications`** (dependência offline, [09 §2.13](09-runbook-operacoes.md)) — contrato `NotificacaoLocal` (`pedirPermissao`, `mostrar`) em `features/notificacoes/`, implementação `NotificacaoLocalPlugin` (canal/id fixos, pede permissão no 1º uso) e `notificacaoLocalProvider` (fake nos testes). O gate **`plataformaComNotificacao()`** restringe a **Android/iOS**; **Web/Desktop** seguem só com os alertas in-app. Best-effort: falha do plugin nunca quebra o fluxo da lista.
 * **Permissão Android:** `POST_NOTIFICATIONS` no `AndroidManifest.xml` (declarada no `main` e **mantida no release** — a F53 removeu o strip defensivo da F48) e **core library desugaring** no `android/app/build.gradle.kts` ([09 §2.13](09-runbook-operacoes.md)).
 
+### 6.16. Importar por foto (OCR) (RF-37, F54)
+
+Importar a lista a partir de uma **foto** — de uma anotação no papel, de uma nota ou de um cupom — convertendo o texto por **OCR on-device** para o mesmo campo editável do "Importar lista" (RF-16) — tudo **100% offline** (spec: [2026-09-30-importar-foto-ocr-design.md](superpowers/specs/2026-09-30-importar-foto-ocr-design.md)). A frente atende P1/P2, que já anotam a lista à mão.
+
+* **Botão "Foto" (§6.4):** no modal "Importar lista", logo abaixo do campo e do contador, aparece um `AppBotao` (variante `outlined`, ícone `photo_camera_outlined`, rótulo `AppStrings.foto`) **apenas** onde `plataformaComOcr()` é verdadeiro (Android/iOS). Web/Desktop compilam sem o plugin e sem o botão.
+* **Fluxo:** toque em "Foto" abre um bottom sheet com **"Tirar foto"** (`AppStrings.tirarFoto`) e **"Escolher da galeria"** (`AppStrings.escolherDaGaleria`); a escolha lê a imagem pela `FonteImagem` (câmera ou galeria) e roda o OCR (`ocrTextoProvider.extrair(caminho)`), mostrando **`AppStrings.ocrLendo`** no próprio botão (`AppBotao(carregando: true)`). O texto reconhecido **preenche o campo editável**: campo vazio → substitui; com conteúdo → acrescenta em **nova linha**. O usuário corrige (se quiser) e segue com "Extrair itens" → pré-visualização → adicionar à lista, **sem alterar** o fluxo RF-16.
+* **Regras e casos-limite:** **1 imagem** por importação; script **latino** (pt-BR); manuscrito é **best-effort** (o campo é editável, então o usuário corrige). A **imagem não é armazenada** — só o texto entra no campo. Cancelar a captura (fonte devolve `null`) → sem efeito; **nenhum texto** reconhecido → `AppStrings.ocrNenhumTexto` no `AppBanner` de erro; falha do picker ou do OCR → `AppStrings.ocrFalha` (best-effort, o campo fica intacto). O contador/limite (`maxCaracteresImportLocal = 10.000`) continua valendo, e "Foto"/"Extrair" ficam desabilitados enquanto o OCR roda (`_lendoFoto`).
+* **Contratos e implementações (`lib/features/ocr/`):** `domain/ocr_texto.dart` (`OcrTexto.extrair(String caminhoImagem)` → `''` se não houver texto) e `domain/fonte_imagem.dart` (`FonteImagem.daCamera()`/`daGaleria()` → caminho ou `null` se cancelado). Implementações `data/ocr_texto_mlkit.dart` (`OcrTextoMlKit` sobre `google_mlkit_text_recognition`, `TextRecognitionScript.latin`) e `data/fonte_imagem_image_picker.dart` (`FonteImagemImagePicker` sobre `image_picker`), expostas por `providers/ocr_providers.dart` (`ocrTextoProvider`/`fonteImagemProvider`). Os plugins ficam **atrás dos contratos**: os testes usam fakes e **nunca** tocam o plugin real.
+* **Gate de plataforma:** `plataformaComOcr()` (Android/iOS; Web/Desktop escondem), no padrão de `plataformaComVoz()`/`plataformaComNotificacao()`. Dependências, permissão de fotos no iOS e o impacto no tamanho do app em [09 §2.14](09-runbook-operacoes.md); wireframe em [10 §4.1](10-wireframes-telas.md).
+
 ---
 
 ## 7. Design System
@@ -385,6 +400,7 @@ Plus Jakarta Sans bundlada. Aqui ficam apenas os estados transversais:
 - [ ] Finalizar compra grava a ida (snapshot dos concluídos); a aba Histórico lista/resume/detalha as idas e a aba Estatísticas mostra gasto por período/categoria, mais comprados e evolução de preço (RF-34).
 - [ ] Preço por mercado: a ida guarda o mercado (opcional); o editor mostra "Por mercado", a lista mostra o chip da última ida, o detalhe mostra o rótulo e as Estatísticas mostram "Gasto por mercado" (RF-35).
 - [ ] Alertas de orçamento: o total fica progressivo (aviso ≥ 80%, acima > 100%), um SnackBar avisa ao cruzar, o orçamento por categoria é editável em Configurações (tela `/orcamento-categorias`) com alerta na lista e a notificação local é emitida em Android/iOS (RF-36).
+- [ ] Importar por foto: o botão "Foto" (só onde há OCR) tira/escolhe uma imagem, o texto reconhecido preenche o campo editável e o fluxo Extrair → pré-visualização → adicionar segue igual; a imagem não é armazenada (RF-37).
 - [ ] Widget tests das telas críticas ([07](07-qualidade-ci.md)).
 
 ---
