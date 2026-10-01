@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#4F46E5</color>
+
+    <!-- Widget de tela inicial (RF-38, F55): identidade indigo do app. -->
+    <color name="widget_indigo">#4F46E5</color>
+    <color name="widget_fundo">#FFFFFF</color>
+    <color name="widget_texto">#1C1B1F</color>
+    <color name="widget_texto_secundario">#49454F</color>
+    <color name="widget_texto_sobre_indigo">#FFFFFF</color>
 </resources>
