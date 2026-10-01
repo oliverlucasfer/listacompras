@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../domain/item.dart';
+import '../domain/orcamento.dart';
 import '../domain/preco.dart';
 import '../providers/listas_providers.dart';
 
@@ -49,8 +50,23 @@ class TotalCarrinho extends ConsumerWidget {
       );
     }
 
-    final cor = Theme.of(context).colorScheme.error;
-    final acima = total > orcamento;
+    final estado = estadoOrcamento(total, orcamento);
+    final esquema = Theme.of(context).colorScheme;
+    final cor = switch (estado) {
+      EstadoOrcamento.aviso => esquema.tertiary,
+      EstadoOrcamento.acima => esquema.error,
+      EstadoOrcamento.semOrcamento || EstadoOrcamento.normal => null,
+    };
+    final icone = switch (estado) {
+      EstadoOrcamento.aviso => Icons.notification_important_outlined,
+      EstadoOrcamento.acima => Icons.warning_amber_rounded,
+      EstadoOrcamento.semOrcamento || EstadoOrcamento.normal => null,
+    };
+    final aviso = switch (estado) {
+      EstadoOrcamento.aviso => AppStrings.orcamentoAtencao,
+      EstadoOrcamento.acima => AppStrings.acimaDoOrcamento,
+      EstadoOrcamento.semOrcamento || EstadoOrcamento.normal => null,
+    };
     return Semantics(
       liveRegion: true,
       child: Padding(
@@ -60,8 +76,8 @@ class TotalCarrinho extends ConsumerWidget {
           children: [
             Row(
               children: [
-                if (acima) ...[
-                  Icon(Icons.warning_amber_rounded, color: cor, size: 20),
+                if (icone != null) ...[
+                  Icon(icone, color: cor, size: 20),
                   const SizedBox(width: AppSpacing.xs),
                 ],
                 Expanded(
@@ -71,9 +87,9 @@ class TotalCarrinho extends ConsumerWidget {
                       formatarReais(orcamento),
                       semPreco,
                     ),
-                    style: acima
-                        ? textoEstilo?.copyWith(color: cor)
-                        : textoEstilo,
+                    style: cor == null
+                        ? textoEstilo
+                        : textoEstilo?.copyWith(color: cor),
                   ),
                 ),
               ],
@@ -82,13 +98,13 @@ class TotalCarrinho extends ConsumerWidget {
               const SizedBox(height: AppSpacing.xs),
               LinearProgressIndicator(
                 value: (total / orcamento).clamp(0.0, 1.0).toDouble(),
-                color: acima ? cor : null,
+                color: cor,
               ),
             ],
-            if (acima) ...[
+            if (aviso != null) ...[
               const SizedBox(height: AppSpacing.xs),
               Text(
-                AppStrings.acimaDoOrcamento,
+                aviso,
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: cor),
