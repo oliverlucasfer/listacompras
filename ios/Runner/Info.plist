@@ -28,6 +28,8 @@
 		<true/>
 		<key>NSCameraUsageDescription</key>
 		<string>Usar a câmera para ler o código de uma lista compartilhada.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Acessar suas fotos para importar a lista de compras.</string>
 		<key>NSMicrophoneUsageDescription</key>
 		<string>Usamos o microfone para você ditar itens da lista.</string>
 		<key>NSSpeechRecognitionUsageDescription</key>
