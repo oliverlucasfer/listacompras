@@ -66,4 +66,13 @@ void main() {
     );
     expect(gasto.firstWhere((g) => g.mercado == null).totalCentavos, 300);
   });
+
+  test('deve_normalizar_mercado_ao_agrupar_gasto', () async {
+    await ida('Mercado A', [('Arroz', 500, Unidade.kg)]);
+    await ida('mercado a', [('Leite', 400, Unidade.l)]);
+    final gasto = await historico.gastoPorMercado();
+    expect(gasto.length, 1);
+    expect(gasto.single.mercado, 'Mercado A');
+    expect(gasto.single.totalCentavos, 900);
+  });
 }

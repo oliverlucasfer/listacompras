@@ -290,16 +290,20 @@ class HistoricoComprasRepository {
 
   Future<List<GastoPorMercado>> gastoPorMercado() async {
     final idas = await _db.select(_db.idaCompra).get();
-    final mapa = <String?, int>{};
+    final totais = <String?, int>{};
+    final exibicao = <String, String>{};
     for (final i in idas) {
-      final m = (i.mercado == null || i.mercado!.trim().isEmpty)
-          ? null
-          : i.mercado;
-      mapa[m] = (mapa[m] ?? 0) + i.totalCentavos;
+      final m = i.mercado;
+      final chave = (m == null || m.trim().isEmpty) ? null : normalizarTexto(m);
+      if (chave != null) exibicao.putIfAbsent(chave, () => m!);
+      totais[chave] = (totais[chave] ?? 0) + i.totalCentavos;
     }
     final lista = [
-      for (final e in mapa.entries)
-        GastoPorMercado(mercado: e.key, totalCentavos: e.value),
+      for (final e in totais.entries)
+        GastoPorMercado(
+          mercado: e.key == null ? null : exibicao[e.key]!,
+          totalCentavos: e.value,
+        ),
     ]..sort((a, b) => b.totalCentavos.compareTo(a.totalCentavos));
     return lista;
   }
