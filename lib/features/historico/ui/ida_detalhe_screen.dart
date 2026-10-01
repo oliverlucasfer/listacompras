@@ -40,6 +40,7 @@ class IdaDetalheScreen extends ConsumerWidget {
           }
           return Column(
             children: [
+              if (ida.mercado != null) _CabecalhoMercado(mercado: ida.mercado!),
               Expanded(
                 child: itensAsync.when(
                   loading: () => const AppEsqueleto(linhas: 4),
@@ -83,6 +84,20 @@ class _Item extends StatelessWidget {
       trailing: Text(
         preco == null ? AppStrings.semValor : formatarReais(preco),
       ),
+    );
+  }
+}
+
+class _CabecalhoMercado extends StatelessWidget {
+  const _CabecalhoMercado({required this.mercado});
+
+  final String mercado;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: const Icon(Icons.storefront_outlined),
+      title: Text(mercado, style: Theme.of(context).textTheme.titleMedium),
     );
   }
 }

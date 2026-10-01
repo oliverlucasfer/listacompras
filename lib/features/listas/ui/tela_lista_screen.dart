@@ -8,6 +8,7 @@ import '../../../core/importacao/parser_lista_local.dart';
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/navigation/voltar_para_inicio.dart';
 import '../../../core/texto/busca.dart';
+import '../../../core/texto/normalizar.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_cabecalho_secao.dart';
@@ -20,6 +21,9 @@ import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../../compartilhamento/ui/sheet_compartilhar.dart';
+import '../../historico/domain/ida.dart';
+import '../../historico/domain/mercado.dart';
+import '../../historico/providers/historico_providers.dart';
 import '../../historico/ui/modal_finalizar_compra.dart';
 import '../../importacao/ui/modal_importar.dart';
 import '../../importacao/ui/modal_previsao_importacao.dart';
@@ -280,6 +284,12 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
         final inicio = inicioDaLista(ehDono: true);
         final itens =
             ref.watch(itensDaListaProvider(listaId)).value ?? const <Item>[];
+        // Mercado da última ida desta lista (RF-35, F52): o `idasProvider` já
+        // chega ordenado por `finalizadaEm` desc, então o 1º match é o recente.
+        final mercado = _mercadoDaUltimaIda(
+          ref.watch(idasProvider).value ?? const <Ida>[],
+          listaId,
+        );
         return PopScopeVoltarInicio(
           inicio: inicio,
           child: Scaffold(
@@ -354,6 +364,22 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
             ),
             body: Column(
               children: [
+                if (mercado != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      AppSpacing.sm,
+                      AppSpacing.lg,
+                      0,
+                    ),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Chip(
+                        avatar: const Icon(Icons.storefront_outlined, size: 18),
+                        label: Text(mercado),
+                      ),
+                    ),
+                  ),
                 if (_buscando)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
@@ -426,6 +452,15 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
       },
     );
   }
+}
+
+/// Mercado da ida mais recente de [listaId], ou `null` se não houver ida ou se
+/// a mais recente não tiver mercado (RF-35, F52).
+String? _mercadoDaUltimaIda(List<Ida> idas, String listaId) {
+  for (final ida in idas) {
+    if (ida.listaId == listaId) return ida.mercado;
+  }
+  return null;
 }
 
 class _CampoAdicionar extends ConsumerStatefulWidget {
@@ -1200,6 +1235,42 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
     );
   }
 
+  /// Preços por mercado do item (RF-35, F52): mostra o último preço em cada
+  /// mercado para a unidade atual, com o mais barato em destaque. Oculta quando
+  /// não há histórico com mercado.
+  Widget _linhaPorMercado(List<PrecoMercado> precos) {
+    final estilo = Theme.of(context).textTheme.bodySmall;
+    final destaque = Theme.of(context).colorScheme.primary;
+    final menor = precos
+        .map((p) => p.precoCentavos)
+        .reduce((a, b) => a < b ? a : b);
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppStrings.porMercado,
+            style: estilo?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          for (final p in precos)
+            Text(
+              p.precoCentavos == menor
+                  ? '${p.mercado}: ${formatarReais(p.precoCentavos)} '
+                        '(${AppStrings.maisBarato})'
+                  : '${p.mercado}: ${formatarReais(p.precoCentavos)}',
+              style: p.precoCentavos == menor
+                  ? estilo?.copyWith(
+                      color: destaque,
+                      fontWeight: FontWeight.bold,
+                    )
+                  : estilo,
+            ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _salvar() async {
     final nome = _nome.text.trim();
     final quantidade = _quantidadeLida();
@@ -1235,6 +1306,13 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
   @override
   Widget build(BuildContext context) {
     final hist = ref.watch(historicoPrecoProvider(widget.item.nome)).value;
+    final precos =
+        ref
+            .watch(
+              precosPorMercadoProvider((normalizarTexto(_nome.text), _unidade)),
+            )
+            .value ??
+        const <PrecoMercado>[];
     return SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1249,9 +1327,7 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
             controller: _nome,
             label: AppStrings.nomeDoItem,
             erro: _erroNome,
-            onChanged: (_) {
-              if (_erroNome != null) setState(() => _erroNome = null);
-            },
+            onChanged: (_) => setState(() => _erroNome = null),
           ),
           const SizedBox(height: AppSpacing.md),
           Row(
@@ -1348,6 +1424,7 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
             ],
           ),
           if (hist != null) _linhaHistoricoPreco(hist),
+          if (precos.isNotEmpty) _linhaPorMercado(precos),
           const SizedBox(height: AppSpacing.lg),
           // Rodapé sempre sem estouro (RNF-06): o `OverflowBar` externo põe
           // Remover à esquerda e o grupo à direita quando cabem, e só empilha

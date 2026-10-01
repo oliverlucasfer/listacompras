@@ -279,6 +279,15 @@ abstract final class AppStrings {
   static const ticketMedio = 'Ticket médio';
   static const numeroIdas = 'Idas';
 
+  // Mercado da compra (RF-35, F52)
+  static const mercado = 'Mercado';
+  static const mercadoOpcional = 'Mercado (opcional)';
+  static const porMercado = 'Por mercado';
+  static const maisBarato = 'mais barato';
+  static const gastoPorMercado = 'Gasto por mercado';
+  static const semMercado = 'Sem mercado';
+  static const mercadosSugeridos = 'Mercados usados';
+
   // Estatísticas do histórico (RF-34, F51)
   static const estatisticas = 'Estatísticas';
   static const abaIdas = 'Idas';
