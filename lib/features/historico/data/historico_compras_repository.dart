@@ -7,6 +7,7 @@ import '../../../core/texto/normalizar.dart';
 import '../../../drift/database.dart';
 import '../domain/estatisticas.dart';
 import '../domain/ida.dart';
+import '../domain/mercado.dart';
 
 class HistoricoComprasRepository {
   HistoricoComprasRepository(this._db, {Uuid? uuid})
@@ -237,5 +238,69 @@ class HistoricoComprasRepository {
     if (pontos.isEmpty) return null;
     pontos.sort((a, b) => a.$1.compareTo(b.$1));
     return Unidade.fromValor(pontos.last.$2);
+  }
+
+  Future<List<String>> mercadosUsados() async {
+    final idas = await _db.select(_db.idaCompra).get();
+    final vistos = <String, String>{}; // normalizado -> exibição
+    for (final i in idas) {
+      final m = i.mercado;
+      if (m == null || m.trim().isEmpty) continue;
+      vistos.putIfAbsent(normalizarTexto(m), () => m);
+    }
+    final lista = vistos.values.toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    return lista;
+  }
+
+  Future<List<PrecoMercado>> precosPorMercado(
+    String nomeNormalizado,
+    Unidade unidade,
+  ) async {
+    final linhas = await _db.select(_db.itemIda).join([
+      innerJoin(_db.idaCompra, _db.idaCompra.id.equalsExp(_db.itemIda.idaId)),
+    ]).get();
+    // Último preço por mercado (normalizado), só mesma unidade e com preço.
+    final porMercado = <String, PrecoMercado>{};
+    final exibicao = <String, String>{};
+    for (final linha in linhas) {
+      final i = linha.readTable(_db.itemIda);
+      final ida = linha.readTable(_db.idaCompra);
+      final m = ida.mercado;
+      if (m == null || m.trim().isEmpty) continue;
+      if (normalizarTexto(i.nome) != nomeNormalizado) continue;
+      if (i.unidade != unidade.valor) continue;
+      final preco = i.precoCentavos;
+      if (preco == null) continue;
+      final chave = normalizarTexto(m);
+      exibicao.putIfAbsent(chave, () => m);
+      final atual = porMercado[chave];
+      if (atual == null || ida.finalizadaEm.isAfter(atual.data)) {
+        porMercado[chave] = PrecoMercado(
+          mercado: exibicao[chave]!,
+          precoCentavos: preco,
+          data: ida.finalizadaEm,
+        );
+      }
+    }
+    final lista = porMercado.values.toList()
+      ..sort((a, b) => a.precoCentavos.compareTo(b.precoCentavos));
+    return lista;
+  }
+
+  Future<List<GastoPorMercado>> gastoPorMercado() async {
+    final idas = await _db.select(_db.idaCompra).get();
+    final mapa = <String?, int>{};
+    for (final i in idas) {
+      final m = (i.mercado == null || i.mercado!.trim().isEmpty)
+          ? null
+          : i.mercado;
+      mapa[m] = (mapa[m] ?? 0) + i.totalCentavos;
+    }
+    final lista = [
+      for (final e in mapa.entries)
+        GastoPorMercado(mercado: e.key, totalCentavos: e.value),
+    ]..sort((a, b) => b.totalCentavos.compareTo(a.totalCentavos));
+    return lista;
   }
 }

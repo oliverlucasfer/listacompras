@@ -5,6 +5,7 @@ import '../../listas/providers/listas_providers.dart';
 import '../data/historico_compras_repository.dart';
 import '../domain/estatisticas.dart';
 import '../domain/ida.dart';
+import '../domain/mercado.dart';
 
 final historicoComprasRepositoryProvider = Provider<HistoricoComprasRepository>(
   (ref) => HistoricoComprasRepository(ref.watch(appDatabaseProvider)),
@@ -66,6 +67,24 @@ final evolucaoPrecoProvider =
           .watch(historicoComprasRepositoryProvider)
           .evolucaoPreco(args.$1, args.$2);
     });
+
+final mercadosUsadosProvider = FutureProvider<List<String>>((ref) {
+  ref.watch(idasProvider);
+  return ref.watch(historicoComprasRepositoryProvider).mercadosUsados();
+});
+
+final precosPorMercadoProvider =
+    FutureProvider.family<List<PrecoMercado>, (String, Unidade)>((ref, args) {
+      ref.watch(idasProvider);
+      return ref
+          .watch(historicoComprasRepositoryProvider)
+          .precosPorMercado(args.$1, args.$2);
+    });
+
+final gastoPorMercadoProvider = FutureProvider<List<GastoPorMercado>>((ref) {
+  ref.watch(idasProvider);
+  return ref.watch(historicoComprasRepositoryProvider).gastoPorMercado();
+});
 
 ResumoHistorico _resumoDeIdas(List<Ida> idas) {
   final total = idas.fold<int>(0, (s, i) => s + i.totalCentavos);
