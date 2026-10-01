@@ -1163,6 +1163,28 @@ Spec: [superpowers/specs/2026-09-30-importar-foto-ocr-design.md](superpowers/spe
 
 Nota: *(100% offline: o OCR roda no aparelho (ML Kit **bundled**) e a imagem **não é armazenada** — só o texto entra no campo editável e o fluxo RF-16 segue igual. 1 imagem por importação; o botão só aparece em Android/iOS. O modelo bundled aumenta o tamanho do app.)*
 
+## Fase 55 — Widget Android / quick-add (RF-38)
+
+Spec: [superpowers/specs/2026-09-30-widget-android-design.md](superpowers/specs/2026-09-30-widget-android-design.md) · Plano: [superpowers/plans/2026-09-30-widget-android-fase55.md](superpowers/plans/2026-09-30-widget-android-fase55.md) · Requisito: RF-38 (widget de tela inicial Android + quick-add). · Docs donos: 05, 09, 10, 12, 14, 15, 16.
+
+- [x] **F55-T01** — Serviços Dart (ponte do widget + última lista)
+  Dep: F54-T03 · Docs: [05 §1/§2/§3/§6.17](05-app-flutter.md), [12 §2](12-prd.md), [09 §2.15](09-runbook-operacoes.md)
+  CP: `home_widget` em `pubspec.yaml`/`pubspec.lock`; `WidgetDados`/`WidgetService` + `WidgetServiceHomeWidget` (chaves `titulo`/`pendentes`/`tem_lista`; `nomeAppWidget = MinhasListasWidgetProvider`) + `UltimaListaService` (`ultima_lista_id`); providers `widgetServiceProvider`/`ultimaListaServiceProvider`/`ultimaListaProvider`; testes com fake da ponte verdes.
+- [x] **F55-T02** — Rota `/adicionar` + foco no campo + registro da última lista
+  Dep: F55-T01 · Docs: [05 §4/§6.3/§6.17](05-app-flutter.md)
+  CP: rota `/adicionar` resolve a última lista (ou a existente mais recente) e faz `pushReplacement('/lista/<id>?foco=1')`; sem lista → `/listas`; `TelaListaScreen(foco:)` com `autofocus` no campo "Adicionar item" e gravação da última lista ao abrir; widget tests (Drift in-memory) verdes.
+- [x] **F55-T03** — Atualização do widget e toque → navegação
+  Dep: F55-T02 · Docs: [05 §3/§6.17](05-app-flutter.md)
+  CP: `WidgetAtualizador` montado no topo do app atualiza o widget (título + pendentes) com debounce de 300ms, best-effort, no resume e quando os streams mudam; `toques()`/`toqueInicial()` navegam para `/adicionar`; testes com fake verdes.
+- [x] **F55-T04** — Nativo Android (provider, layout, info, manifest)
+  Dep: F55-T03 · Docs: [05 §6.17](05-app-flutter.md), [09 §2.15](09-runbook-operacoes.md), [15 §3/§6](15-design-system.md)
+  CP: `MinhasListasWidgetProvider.kt` + `res/layout/widget_minhas_listas.xml` + `res/xml/widget_minhas_listas_info.xml` + drawable/colors/strings + `<receiver android:exported="false">` no manifest; `flutter build apk --debug` OK e manifest release sem `INTERNET`/SDK Firebase; smoke em device.
+- [x] **F55-T05** — Docs donos e fechamento
+  Dep: F55-T04 · Docs: 05, 09, 10, 12, 14, 15, 16
+  CP: RF-38 no PRD (tabela, matriz e fora de escopo); §6.17 no 05 + árvore/tabelas/providers/rotas; §9 no 10; deps/setup nativo/smoke no 09 §2.15 (+ nota L-10/R8); cores no 15; frente D3 no 16; Fase 55 na tabela de progresso (298/296); `dart format .`, `flutter analyze` e `flutter test` verdes; sem tocar código.
+
+Nota: *(100% offline e Android-only: o widget é nativo do Android e os dados (título + pendentes) são locais — sem permissão nova e sem `INTERNET`; a atualização é best-effort. A falha pré-existente do R8/MLKit no release é a dívida **L-10** (F54), fora do escopo da F55.)*
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -1219,7 +1241,8 @@ Nota: *(100% offline: o OCR roda no aparelho (ML Kit **bundled**) e a imagem **n
 | F52 Preço por mercado | 5 | 5 |
 | F53 Alertas de orçamento | 6 | 6 |
 | F54 Importar por foto (OCR) | 3 | 3 |
-| **Total** | **293** | **291** |
+| F55 Widget Android / quick-add | 5 | 5 |
+| **Total** | **298** | **296** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

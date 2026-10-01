@@ -20,6 +20,7 @@
 | `fl_chart` | Gráficos das estatísticas do histórico (RF-34, F51) — puro Dart, offline, todas as plataformas |
 | `google_mlkit_text_recognition` | OCR on-device (script latino) da importação por foto (RF-37, F54) — Android/iOS, modelo **bundled**; isolado por `plataformaComOcr()`; sem `INTERNET` (aumenta o tamanho do app) |
 | `image_picker` | Origem da imagem (câmera/galeria) para o OCR (RF-37, F54) — Android/iOS, atrás do contrato `FonteImagem` |
+| `home_widget` | Ponte entre o Flutter e o **widget de tela inicial** do Android (RF-38, F55) — offline, Android-only; a ponte fica atrás do contrato `WidgetService` (fake nos testes) |
 
 ---
 
@@ -51,7 +52,8 @@ lib/
 │   ├── ocr/                         # domain/ data/ providers/ (F54/RF-37)
 │   ├── onboarding/                  # providers/ ui/
 │   ├── tour/                        # motor do tour guiado (F46)
-│   └── voz/                         # domain/ data/ providers/ (F30)
+│   ├── voz/                         # domain/ data/ providers/ (F30)
+│   └── widget/                      # domain/ data/ providers/ ui/ — widget Android (F55/RF-38)
 └── drift/
     ├── database.dart                # AppDatabase (tabelas locais, schemaVersion 14)
     ├── conexao/                     # abrirBancoLocal (nativa/web, ADR-012)
@@ -135,6 +137,9 @@ Há **um único app** (`main.dart` → `bootstrap()`), 100% local, com a identid
 | `notificacaoLocalProvider` | Provider | `NotificacaoLocal` injetável (`NotificacaoLocalPlugin`): notificação local do SO; fake nos testes (F53/RF-36) |
 | `ocrTextoProvider` | Provider | `OcrTexto` injetável (`OcrTextoMlKit`): OCR on-device da foto; fake nos testes (F54/RF-37) |
 | `fonteImagemProvider` | Provider | `FonteImagem` injetável (`FonteImagemImagePicker`): câmera/galeria (`image_picker`); fake nos testes (F54/RF-37) |
+| `widgetServiceProvider` | Provider | Ponte com o widget de tela inicial (`WidgetService`): `WidgetServiceHomeWidget` (`home_widget`); fake nos testes (F55/RF-38) |
+| `ultimaListaServiceProvider` | Provider | `UltimaListaService`: grava/lê `ultima_lista_id` em SharedPreferences (F55/RF-38) |
+| `ultimaListaProvider` | AsyncNotifierProvider | Última lista aberta, **reativo**: lê no `build` e `registrar(listaId)` atualiza o estado na mesma sessão, alimentando o `WidgetAtualizador` (F55/RF-38) |
 
 **Sugestão de categoria em camadas (ADR-011, spec §4)** — `SugestaoCategorias.sugerirCategoria(nome)`, zero rede:
 
@@ -162,6 +167,7 @@ Rotas finais do app único (spec §3): sem `/login`, `/registro`, `/recuperar-se
 | `/categorias` | Ordenar categorias (fora do shell) | RF-24 |
 | `/orcamento-categorias` | Orçamento por categoria (fora do shell) | Limites locais por categoria (RF-36/F53), acessível em Configurações |
 | `/receber-lista` | Receber lista (fora do shell) | `push` pela ação "Receber lista" do painel (RF-33/F49) |
+| `/adicionar` | Quick-add do widget (fora do shell) | Resolve a última lista e redireciona para a lista com o campo focado (RF-38/F55) |
 | `/design` | Design System (só `kDebugMode`) | Público em debug |
 
 * **Navegação por abas (F10):** `NavigationBar` inferior com **3 destinos** (**Minhas**, **Histórico**, **Configurações**) que vira `NavigationRail` a partir de ~600dp; o `StatefulShellRoute.indexedStack` preserva o estado de cada aba e o AppBar de cada aba usa o mesmo texto do destino.
@@ -365,6 +371,18 @@ Importar a lista a partir de uma **foto** — de uma anotação no papel, de uma
 * **Contratos e implementações (`lib/features/ocr/`):** `domain/ocr_texto.dart` (`OcrTexto.extrair(String caminhoImagem)` → `''` se não houver texto; `close()` libera o reconhecedor nativo) e `domain/fonte_imagem.dart` (`FonteImagem.daCamera()`/`daGaleria()` → caminho ou `null` se cancelado). Implementações `data/ocr_texto_mlkit.dart` (`OcrTextoMlKit` sobre `google_mlkit_text_recognition`, `TextRecognitionScript.latin`) e `data/fonte_imagem_image_picker.dart` (`FonteImagemImagePicker` sobre `image_picker`), expostas por `providers/ocr_providers.dart` (`ocrTextoProvider`/`fonteImagemProvider`; o de OCR é `autoDispose` e libera o `TextRecognizer` no descarte). Os plugins ficam **atrás dos contratos**: os testes usam fakes e **nunca** tocam o plugin real.
 * **Gate de plataforma:** `plataformaComOcr()` (Android/iOS; Web/Desktop escondem), no padrão de `plataformaComVoz()`/`plataformaComNotificacao()`. Dependências, permissão de fotos no iOS e o impacto no tamanho do app em [09 §2.14](09-runbook-operacoes.md); wireframe em [10 §4.1](10-wireframes-telas.md).
 
+### 6.17. Widget de tela inicial / quick-add (RF-38, F55)
+
+Um **AppWidget** Android na tela inicial mostra a **última lista aberta**, o **nº de itens pendentes** e um botão **"Adicionar item"**; o toque abre o app já com o campo de adicionar focado — tudo **100% offline**, **Android-only** e **sem permissão nova** (spec: [2026-09-30-widget-android-design.md](superpowers/specs/2026-09-30-widget-android-design.md)). Os dados do widget são locais (título + contagem); nada sai do aparelho. O wireframe está em [10 §9](10-wireframes-telas.md).
+
+* **Bridge e pasta:** `lib/features/widget/` — `domain/widget_service.dart` (contrato `WidgetService` + payload `WidgetDados{titulo, pendentes}`), `data/widget_service_home_widget.dart` (`WidgetServiceHomeWidget` sobre **`home_widget`**; `nomeAppWidget = 'MinhasListasWidgetProvider'`; grava `titulo`/`pendentes`/`tem_lista` com `saveWidgetData` e chama `updateWidget`), `data/ultima_lista_service.dart` (`UltimaListaService`: `registrar`/`ler` a chave `ultima_lista_id` em SharedPreferences), `providers/widget_providers.dart` (`widgetServiceProvider`, `ultimaListaServiceProvider`, `ultimaListaProvider`) e `ui/adicionar_screen.dart` + `ui/widget_atualizador.dart`.
+* **Última lista (reativa):** ao abrir uma lista, `TelaListaScreen` (§6.3) chama `ref.read(ultimaListaProvider.notifier).registrar(listaId)`; o `UltimaListaNotifier` atualiza o estado e persiste a chave em SharedPreferences. ID inválido/excluído → o alvo cai na **lista existente mais recente**; sem lista → o widget mostra o convite e o toque leva ao **painel**.
+* **Rota `/adicionar` (fora do shell):** `AdicionarScreen` mostra o `AppEsqueleto` e, no primeiro frame, resolve o alvo lendo `ultimaListaService.ler()` e `listasRepositoryProvider.watchListas().first`: com lista → `context.pushReplacement('/lista/<id>?foco=1')`; sem lista → `context.go('/listas')`. A rota `/lista/:listaId` passa `foco: state.uri.queryParameters['foco'] == '1'` e a `TelaListaScreen({..., bool foco = false})` repassa `autofocus: widget.foco` ao campo "Adicionar item" (que registra a última lista ao abrir). A rota `/adicionar` é alcançada pelo toque no widget (não há ação no painel).
+* **Atualização (best-effort):** o `WidgetAtualizador` (montado no topo do app) observa `listasProvider` e `itensDaListaProvider` da lista alvo, empurrando `WidgetDados(titulo:, pendentes: nº de não concluídos)` com **debounce de 300 ms** e em `try/catch` silencioso — a falha ao atualizar o widget **nunca** quebra a UI. Ele também reenvia no **resume** (`WidgetsBindingObserver`) e mantém o payload anterior. Assim o widget reflui ao abrir a lista, ao adicionar/concluir/remover itens e ao criar/renomear/excluir listas. Sem lista → `WidgetDados(titulo: null, pendentes: 0)`.
+* **Toque → quick-add:** o `WidgetAtualizador` escuta `widgetServiceProvider.toques()` e lê `toqueInicial()` uma vez no start; em ambos, navega para `/adicionar` (`routerProvider.go`). A navegação é best-effort (`onError` ignorado).
+* **Nativo Android (RemoteViews):** `MinhasListasWidgetProvider` (`AppWidgetProvider` Kotlin) lê os dados por `HomeWidgetPlugin.getData` e monta `widget_minhas_listas.xml` (nome do app + título **ou** `widget_sem_lista` + plural `widget_pendentes` + botão "Adicionar item"); tanto o card quanto o botão abrem a `MainActivity` via `HomeWidgetLaunchIntent` com a URI `minhas-listas://adicionar`. Recursos nativos: `res/layout/widget_minhas_listas.xml`, `res/xml/widget_minhas_listas_info.xml` (`minWidth 180dp`/`minHeight 110dp`, `updatePeriodMillis=0`, `resizeMode`), `res/drawable/widget_minhas_listas_fundo.xml`, `res/values/{colors,strings}.xml` e o `<receiver android:exported="false">` no `AndroidManifest.xml`. Sem `INTERNET` nem nós do SDK Firebase (guards da F47/F48/F53). Setup e smoke em device em [09 §2.15](09-runbook-operacoes.md).
+* **Plataformas:** **Android-only** — no iOS/Web/Desktop nada muda (o widget é nativo do Android); a ponte fica atrás de `WidgetService`, então o app compila nas demais plataformas.
+
 ---
 
 ## 7. Design System
@@ -401,6 +419,7 @@ Plus Jakarta Sans bundlada. Aqui ficam apenas os estados transversais:
 - [ ] Preço por mercado: a ida guarda o mercado (opcional); o editor mostra "Por mercado", a lista mostra o chip da última ida, o detalhe mostra o rótulo e as Estatísticas mostram "Gasto por mercado" (RF-35).
 - [ ] Alertas de orçamento: o total fica progressivo (aviso ≥ 80%, acima > 100%), um SnackBar avisa ao cruzar, o orçamento por categoria é editável em Configurações (tela `/orcamento-categorias`) com alerta na lista e a notificação local é emitida em Android/iOS (RF-36).
 - [ ] Importar por foto: o botão "Foto" (só onde há OCR) tira/escolhe uma imagem, o texto reconhecido preenche o campo editável e o fluxo Extrair → pré-visualização → adicionar segue igual; a imagem não é armazenada (RF-37).
+- [ ] Widget de tela inicial (Android): mostra a última lista + nº de pendentes e reflui as mudanças; o toque/botão abre `/adicionar` (campo focado) e, sem lista, o painel (RF-38).
 - [ ] Widget tests das telas críticas ([07](07-qualidade-ci.md)).
 
 ---

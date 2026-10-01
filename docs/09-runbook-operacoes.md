@@ -60,6 +60,8 @@ firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.ap
 4. **Configurações → Importar backup** — escolher um `.json` **real** no seletor do sistema. Confirmar que o seletor **abre** e que o arquivo aparece **selecionável** (sem filtro de tipo, para não esconder backup válido).
 5. Importar um arquivo inválido (ex.: um `.txt` renomeado) — deve mostrar a mensagem de backup inválido **sem** alterar os dados.
 
+> **Nota (dívida L-10 — falha pré-existente do release):** o `flutter build appbundle --release` pode falhar no passo do **R8/minify** por causa das regras do **MLKit OCR** (RF-37, F54): o pacote exige regras de keep que hoje **não** estão no repo (não há `android/**/proguard-rules.pro`). É um achado **pré-existente** (dívida **L-10** de [`relatorio-revisao-lite-play.md`](relatorio-revisao-lite-play.md) — a F54 já registrava o R8/MLKit), **fora do escopo da F55**: o widget (RF-38) não adiciona dependência de minify. Enquanto L-10 não for resolvida, use o **APK/APK debug** e o **manifest release** para o smoke; o AAB de publicação fica bloqueado no R8 (não é regressão do widget).
+
 ### 2.10. Publicação do Lite na Play (RF-32, F47)
 
 Publicação do app ("Minhas Listas") em **produção** na Google Play, a partir do AAB do §2.9. O caminho crítico é a trilha de testes (1–4, ~2+ semanas), que roda em paralelo ao código.
@@ -107,6 +109,19 @@ A **importação por foto** (RF-37) reconhece o texto de uma imagem no próprio 
 * **Permissões:** **sem** permissão Android nova (o `image_picker` moderno usa o Photo Picker; a `CAMERA` já existe desde a RF-33). No iOS, adicionar **`NSPhotoLibraryUsageDescription`** em `ios/Runner/Info.plist` (pt-BR: *"Acessar suas fotos para importar a lista de compras."*); a `NSCameraUsageDescription` já existe. A imagem **não é armazenada** nem enviada a lugar algum.
 * **iOS mínimo:** o plugin do ML Kit exige **iOS 15.5** (o Flutter gerava 13.0). O `IPHONEOS_DEPLOYMENT_TARGET` foi elevado para **15.5** nas 3 ocorrências de `ios/Runner.xcodeproj/project.pbxproj` e o `ios/Podfile` fixa `platform :ios, '15.5'`. Sem isso, `pod install`/`flutter build ios` aborta. Aparelhos com iOS < 15.5 ficam fora de escopo.
 * **Declaração de Dados (Play):** inalterada — nenhum dado coletado; a imagem é processada localmente e descartada (só o texto reconhecido entra no campo).
+
+### 2.15. Widget Android / quick-add (RF-38, F55)
+
+O **widget de tela inicial** (RF-38) mostra a última lista + nº de pendentes e abre a rota `/adicionar` pelo toque — **Android-only**, **offline** e **sem permissão nova** ([05 §6.17](05-app-flutter.md)).
+
+* **Dependência nova (local/offline):** **`home_widget`** (`direct main` em `pubspec.yaml`/`pubspec.lock`), ponte Flutter ↔ AppWidget nativo. Não usa rede e **não** adiciona `INTERNET` nem nós do SDK Firebase (o guard de manifest release da F47/F48/F53 segue válido). No iOS/Web/Desktop nada é configurado (o widget é nativo do Android) e o app continua compilando (a ponte fica atrás do contrato `WidgetService`).
+* **Setup nativo (namespace `br.com.oliverlucas.lista_compras`):**
+  * `android/app/src/main/kotlin/.../MinhasListasWidgetProvider.kt` — `AppWidgetProvider` que lê `titulo`/`pendentes`/`tem_lista` via `HomeWidgetPlugin.getData` e monta o `RemoteViews` (`widget_minhas_listas`); card e botão usam `HomeWidgetLaunchIntent.getActivity(..., MainActivity::class.java, Uri.parse("minhas-listas://adicionar"))` (`MainActivity` é `singleTop`).
+  * `android/app/src/main/res/layout/widget_minhas_listas.xml` (nome do app + título **ou** `widget_sem_lista` + plural `widget_pendentes` + botão "Adicionar item"), `res/xml/widget_minhas_listas_info.xml` (`minWidth 180dp`, `minHeight 110dp`, `updatePeriodMillis=0`, `initialLayout`, `resizeMode`), `res/drawable/widget_minhas_listas_fundo.xml` e `res/values/{colors,strings}.xml` ([15 §3/§6](15-design-system.md)).
+  * `AndroidManifest.xml` — dentro de `<application>`: `<receiver android:name=".MinhasListasWidgetProvider" android:exported="false">` com o `intent-filter` `android.appwidget.action.APPWIDGET_UPDATE` e o `meta-data android.appwidget.provider` apontando para `@xml/widget_minhas_listas_info`.
+* **Chaves empurradas pelo Flutter:** `titulo` (string), `pendentes` (int) e `tem_lista` (bool), via `HomeWidget.saveWidgetData` + `HomeWidget.updateWidget(name: 'MinhasListasWidgetProvider')`; a lista alvo é a **última aberta** (`ultima_lista_id` em SharedPreferences) ou, se inválida, a mais recente.
+* **Smoke em device (obrigatório):** instalar o APK; adicionar o widget **"Minhas Listas"** à tela inicial e conferir: sem lista → "Crie sua primeira lista"; com lista → título + "N pendentes". Tocar no card **e** no botão "Adicionar item" abre o app na lista com o campo de adicionar **focado**. Adicionar/concluir um item e voltar à tela inicial → a contagem reflui; reabrir o app (resume) também reflui. Falha ao atualizar o widget é **silenciosa** (nunca quebra a UI).
+* **Declaração de Dados (Play):** inalterada — nenhum dado coletado; título e contagem são locais e nada sai do aparelho.
 
 ---
 

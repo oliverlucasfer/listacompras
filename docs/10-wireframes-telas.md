@@ -591,6 +591,35 @@ Cada seção tem estado vazio próprio ("Sem dados ainda.") e usa `AppEsqueleto`
 
 ---
 
+## 9. Widget de tela inicial (RF-38 — [05 §6.17](05-app-flutter.md))
+
+Comportamento em [05 §6.17](05-app-flutter.md). É um **AppWidget nativo do Android** (RemoteViews, fora da árvore Flutter) — não é uma tela do app; o toque no card e o botão **"Adicionar item"** abrem a rota `/adicionar`, que resolve a última lista e abre a tela da lista com o campo focado. Cores da identidade em [15 §3/§6](15-design-system.md); setup nativo e smoke em device em [09 §2.15](09-runbook-operacoes.md).
+
+### 9.1. Com lista (última lista + pendentes)
+```
+┌───────────────────────────┐  ← card do widget na tela inicial (min 180×110dp,
+│ Minhas Listas             │     cantos 16dp, fundo neutro; §15)
+│ Compras da Semana         │  ← título da última lista aberta
+│ 3 pendentes               │  ← plural: "1 pendente" / "N pendentes"
+│ (     Adicionar item    ) │  ← botão índigo
+└───────────────────────────┘
+   (o card inteiro e o botão abrem o app em /adicionar → lista com o campo
+    "Adicionar item" focado; a contagem reflui ao mudar itens/listas e no resume)
+```
+
+### 9.2. Sem lista (convite)
+```
+┌───────────────────────────┐
+│ Minhas Listas             │
+│ Crie sua primeira lista   │  ← widget_sem_lista (título da lista vazio)
+│ 0 pendentes               │
+│ (     Adicionar item    ) │
+└───────────────────────────┘
+   (sem lista, /adicionar cai no painel "Minhas Listas" §2)
+```
+
+---
+
 ## Documentos relacionados
 - [05 App Flutter](05-app-flutter.md) — comportamento e interações de cada tela
 - [06 MVP & Entregas](06-mvp-entregas.md) — LGPD e publicação

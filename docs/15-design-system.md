@@ -60,6 +60,8 @@ Título de tela (AppBar): **24sp bold** aplicado via `appBarTheme.titleTextStyle
 
 **Importar por foto / OCR (RF-37, F54):** nenhum componente `App*` novo — o botão **"Foto"** reusa o **`AppBotao`** (variante `outlined`; com `carregando`, o `AppBotao` anuncia o progresso genérico `AppStrings.carregando` — "Carregando..." — na semântica, e o rótulo visível é "Lendo a foto...") e a escolha de origem reusa `ListTile` num bottom sheet; o texto reconhecido entra no `AppCampoTexto` existente e os avisos/erros do OCR reusam o **`AppBanner`** de **aviso**/**erro** (`liveRegion`). Tudo com tokens `App*`/`colorScheme`, sem cor literal.
 
+**Widget de tela inicial (RF-38, F55):** nenhum componente `App*` novo — o widget é **nativo** (RemoteViews, fora da árvore Flutter), então não há `BuildContext`/`colorScheme`; as cores da identidade vivem em `android/app/src/main/res/values/colors.xml` e **espelham** os tokens do tema: índigo da marca `widget_indigo #4F46E5` (rótulo do app e botão), fundo `widget_fundo #FFFFFF` (superfície), texto `widget_texto #1C1B1F`, secundário `widget_texto_secundario #49454F` e sobre-índigo `widget_texto_sobre_indigo #FFFFFF`; cantos de **16dp** (`widget_minhas_listas_fundo`, equivalente a `AppRadius.lg`). Os rótulos/plural ficam em `res/values/strings.xml` ([05 §6.17](05-app-flutter.md), [09 §2.15](09-runbook-operacoes.md)).
+
 ## 4. Acessibilidade (RNF-06)
 
 Regras vinculantes (detalhe e evidência na [spec da Fase 14](superpowers/specs/2026-09-14-ux-acessibilidade-design.md)):
@@ -84,6 +86,7 @@ Rota de debug `/design` (`kDebugMode`) renderiza tokens e componentes em claro/e
 - **Usos:** ícone do app (Android/iOS/web), splash e cabeçalho das telas de topo (`AppLogo`, 28dp). O ícone cheio vai full-bleed — as plataformas aplicam a máscara (squircle/círculo).
 - **Área de respiro / tamanho mínimo:** não encostar o glifo nas bordas (o master `logo_glyph_lite` já traz ~19% de margem); não exibir o glifo abaixo de **24dp**.
 - **Splash:** com o glifo centrado — fundo índigo `#4F46E5` (escuro `#3730A3`).
+- **Widget de tela inicial:** mantém a identidade — índigo `#4F46E5` no rótulo do app e no botão "Adicionar item"; fundo neutro e textos da paleta Material (`#1C1B1F`/`#49454F`), sem cor literal inventada (§3; RF-38/F55).
 - **Regenerar** (após editar o SVG, re-renderizar o PNG de 1024 a partir dele — qualquer rasterizador serve; no dev usamos Chromium headless — e então):
   ```bash
   dart run flutter_launcher_icons
