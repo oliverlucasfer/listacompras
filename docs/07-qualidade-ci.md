@@ -56,7 +56,7 @@ Pipeline único `.github/workflows/ci.yml`, disparado em PR e push em `main`:
 ```
 
 * PR só mergea com CI verde (branch protection).
-* **Builds (F18-T05, ADR-012; F48):** o job `flutter` compila o Web (`flutter build web --release`), o **apk Android em debug** e o **AAB release** — **sem `--flavor` e sem `--dart-define`** (o app é único). Em seguida **verifica o manifest mergeado** (`build/app/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml`): o passo falha se `INTERNET`, `com.google.firebase`, `com.google.android.c2dm` ou os componentes `io.flutter.plugins.firebase.*`/`FirebaseInitProvider`/`FlutterFirebaseMessagingInitProvider` aparecerem, se `allowBackup` não for `false` ou se `RECORD_AUDIO` sumir (voz, RF-26). O job `desktop` valida `flutter build linux` (ubuntu-latest, instala `clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev`) e `flutter build windows` (windows-latest) numa matriz com `fail-fast: false`.
+* **Builds (F18-T05, ADR-012; F48/F49):** o job `flutter` compila o Web (`flutter build web --release`), o **apk Android em debug** e o **AAB release** — **sem `--flavor` e sem `--dart-define`** (o app é único). Em seguida **verifica o manifest mergeado** (`build/app/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml`): o passo falha se aparecerem `INTERNET`, `com.google.android.c2dm` ou os nós do **SDK do Firebase** (`FirebaseInitProvider`, `com.google.firebase.components.ComponentDiscoveryService`, `com.google.firebase.messaging`, `com.google.firebase.iid`, `com.google.firebase.installations`, `com.google.firebase.datatransport`, `io.flutter.plugins.firebase.*`, `FlutterFirebaseMessagingInitProvider`), se `allowBackup` não for `false`, se `RECORD_AUDIO` sumir (voz, RF-26) ou se o `MlKitComponentDiscoveryService` sumir (QR, RF-33). **Exceção deliberada (F49):** o `mobile_scanner` (QR) usa o MLKit bundled, que embute o registrar **local** do `firebase-components` — logo o guard proíbe os **nós do SDK/rede**, e não o literal `com.google.firebase` (o MLKit não adiciona `INTERNET`; [09 §2.11](09-runbook-operacoes.md)). O job `desktop` valida `flutter build linux` (ubuntu-latest, instala `clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev`) e `flutter build windows` (windows-latest) numa matriz com `fail-fast: false`.
 * **Assets WASM do Drift versionados (F18-T01):** `web/drift_worker.js` e `web/sqlite3.wasm` são cópias fiéis da release oficial `drift-2.34.4` (mesma versão pinada em `pubspec.lock`), necessárias ao banco no navegador (`WasmDatabase`/OPFS-IndexedDB, [05 §2.1](05-app-flutter.md), ADR-012). Para regenerar (ex.: subir o Drift), baixar da release correspondente e substituir os dois arquivos:
   ```bash
   curl -L -o web/drift_worker.js https://github.com/simolus3/drift/releases/download/drift-2.34.4/drift_worker.js
@@ -89,19 +89,24 @@ jobs:
       - run: flutter build web --release
       - run: flutter build apk --debug
       - run: flutter build appbundle --release
-      - name: Manifest release sem INTERNET nem Firebase   # F48
+      - name: Manifest release sem INTERNET nem SDK Firebase   # F48/F49
         run: |
           MANIFEST=build/app/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml
           test -f "$MANIFEST" || { echo "manifest mergeado não encontrado"; exit 1; }
           falhou=0
           grep -q 'android.permission.INTERNET' "$MANIFEST" && { echo "INTERNET no manifest"; falhou=1; }
-          grep -q 'com.google.firebase' "$MANIFEST" && { echo "Firebase no manifest"; falhou=1; }
           grep -q 'com.google.android.c2dm' "$MANIFEST" && { echo "c2dm no manifest"; falhou=1; }
+          grep -q 'com.google.firebase.provider.FirebaseInitProvider' "$MANIFEST" && { echo "FirebaseInitProvider no manifest"; falhou=1; }
+          grep -q 'com.google.firebase.components.ComponentDiscoveryService' "$MANIFEST" && { echo "ComponentDiscoveryService no manifest"; falhou=1; }
+          grep -q 'com.google.firebase.messaging' "$MANIFEST" && { echo "FirebaseMessaging no manifest"; falhou=1; }
+          grep -q 'com.google.firebase.iid' "$MANIFEST" && { echo "FirebaseInstanceId no manifest"; falhou=1; }
+          grep -q 'com.google.firebase.installations' "$MANIFEST" && { echo "FirebaseInstallations no manifest"; falhou=1; }
+          grep -q 'com.google.firebase.datatransport' "$MANIFEST" && { echo "FirebaseDataTransport no manifest"; falhou=1; }
           grep -q 'io.flutter.plugins.firebase' "$MANIFEST" && { echo "io.flutter.plugins.firebase no manifest"; falhou=1; }
-          grep -qi 'firebaseinitprovider' "$MANIFEST" && { echo "FirebaseInitProvider no manifest"; falhou=1; }
           grep -qi 'flutterfirebasemessaginginitprovider' "$MANIFEST" && { echo "FlutterFirebaseMessagingInitProvider no manifest"; falhou=1; }
           grep -q 'android:allowBackup="false"' "$MANIFEST" || { echo "allowBackup não desligado"; falhou=1; }
           grep -q 'android.permission.RECORD_AUDIO' "$MANIFEST" || { echo "RECORD_AUDIO sumiu"; falhou=1; }
+          grep -q 'com.google.mlkit.common.internal.MlKitComponentDiscoveryService' "$MANIFEST" || { echo "MLKit sumiu (QR quebra)"; falhou=1; }
           exit $falhou
 
   desktop:

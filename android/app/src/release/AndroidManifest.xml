@@ -1,10 +1,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- App 100% local: sem rede, sem push e sem Firebase (F48/RF-32).
+    <!-- App 100% local: sem rede, sem push e sem o SDK do Firebase (F48/RF-32).
          As libs de nuvem foram removidas; as remoções abaixo são defensivas
          contra componentes de terceiros. RECORD_AUDIO é mantido para o
-         recurso de voz. -->
+         recurso de voz.
+
+         Exceção conhecida: o mobile_scanner (QR, RF-33) usa o MLKit bundled,
+         que traz o registrar LOCAL do firebase-components (DI, sem rede) no
+         seu próprio MlKitComponentDiscoveryService. Ele NÃO é removido (sem
+         ele o MLKit não inicializa) e não adiciona INTERNET — por isso o
+         guard de CI proíbe os nós do SDK/rede, não o literal
+         "com.google.firebase". -->
 
     <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" tools:node="remove" />

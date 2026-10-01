@@ -22,20 +22,31 @@ jobs:
       - run: flutter build web --release
       - run: flutter build apk --debug
       - run: flutter build appbundle --release
-      # F48/RF-31: o app único não pode herdar rede nem Firebase.
-      - name: Manifest release sem INTERNET nem Firebase
+      # F48/RF-31: o app único não pode herdar rede nem o SDK do Firebase.
+      # O mobile_scanner (QR, RF-33) usa o MLKit bundled, que traz apenas os
+      # registrars LOCAIS do firebase-components (DI, sem rede): por isso o
+      # guard proíbe os nós do SDK (messaging/iid/installations/datatransport,
+      # ComponentDiscoveryService do Firebase, INTERNET, c2dm) em vez do
+      # literal "com.google.firebase" — que também aparece no registrar do
+      # MlKitComponentDiscoveryService e é inofensivo/offline.
+      - name: Manifest release sem INTERNET nem SDK Firebase
         run: |
           MANIFEST=build/app/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml
           test -f "$MANIFEST" || { echo "manifest mergeado não encontrado"; exit 1; }
           falhou=0
           grep -q 'android.permission.INTERNET' "$MANIFEST" && { echo "INTERNET vazou"; falhou=1; }
-          grep -q 'com.google.firebase' "$MANIFEST" && { echo "Firebase vazou"; falhou=1; }
           grep -q 'com.google.android.c2dm' "$MANIFEST" && { echo "c2dm vazou"; falhou=1; }
-          grep -q 'io.flutter.plugins.firebase' "$MANIFEST" && { echo "Firebase vazou"; falhou=1; }
-          grep -qi 'firebaseinitprovider' "$MANIFEST" && { echo "FirebaseInitProvider vazou"; falhou=1; }
+          grep -q 'com.google.firebase.provider.FirebaseInitProvider' "$MANIFEST" && { echo "FirebaseInitProvider vazou"; falhou=1; }
+          grep -q 'com.google.firebase.components.ComponentDiscoveryService' "$MANIFEST" && { echo "ComponentDiscoveryService vazou"; falhou=1; }
+          grep -q 'com.google.firebase.messaging' "$MANIFEST" && { echo "FirebaseMessaging vazou"; falhou=1; }
+          grep -q 'com.google.firebase.iid' "$MANIFEST" && { echo "FirebaseInstanceId vazou"; falhou=1; }
+          grep -q 'com.google.firebase.installations' "$MANIFEST" && { echo "FirebaseInstallations vazou"; falhou=1; }
+          grep -q 'com.google.firebase.datatransport' "$MANIFEST" && { echo "FirebaseDataTransport vazou"; falhou=1; }
+          grep -q 'io.flutter.plugins.firebase' "$MANIFEST" && { echo "Firebase Flutter vazou"; falhou=1; }
           grep -qi 'flutterfirebasemessaginginitprovider' "$MANIFEST" && { echo "FlutterFirebaseMessagingInitProvider vazou"; falhou=1; }
           grep -q 'android:allowBackup="false"' "$MANIFEST" || { echo "allowBackup não desligado"; falhou=1; }
           grep -q 'android.permission.RECORD_AUDIO' "$MANIFEST" || { echo "RECORD_AUDIO sumiu"; falhou=1; }
+          grep -q 'com.google.mlkit.common.internal.MlKitComponentDiscoveryService' "$MANIFEST" || { echo "MLKit sumiu (QR quebra)"; falhou=1; }
           exit $falhou
 
   desktop:

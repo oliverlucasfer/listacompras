@@ -79,6 +79,7 @@ O "Compartilhar lista" (RF-33) adiciona o **envio** por texto, arquivo `.json` e
 
 * **Permissões nativas (opcionais):** `android.permission.CAMERA` (`android/app/src/main/AndroidManifest.xml`) e `NSCameraUsageDescription` (`ios/Runner/Info.plist`, pt-BR: *"Usar a câmera para ler o código de uma lista compartilhada."*). A câmera é usada **apenas** no toque em "Escanear QR"; negada → aviso amigável, e colar código/texto/arquivo segue funcionando. Web/Desktop não usam câmera.
 * **Dependências novas (locais/offline):** `qr_flutter` (gerar o QR — puro Dart, todas as plataformas) e `mobile_scanner` (ler QR por câmera — Android/iOS, com o barcode do MLKit **bundled**; **não** adiciona `INTERNET`). Ficam atrás de `plataformaComCamera()`/`leitorQrProvider` para que Web/Desktop continuem compilando ([05 §6.12](05-app-flutter.md)).
+* **`firebase-components` via MLKit (esperado):** o MLKit bundled traz o registrar **local** do `firebase-components` (DI, sem rede) no seu próprio `MlKitComponentDiscoveryService` — única referência a `com.google.firebase` no manifest. O componente é **necessário** (sem ele o MLKit não inicializa e o QR quebra) e não é removido; o guard de CI proíbe os **nós do SDK/rede**, não o literal ([07 §3](07-qualidade-ci.md)). O classpath do release **não** contém `firebase-common`/`firebase-messaging`/`firebase-installations`.
 * **Declaração de Dados (Play):** inalterada — nenhum dado coletado; a câmera processa o QR localmente (§2.10, RF-32).
 
 ### 2.12. Dependência dos gráficos do histórico (RF-34, F51)
