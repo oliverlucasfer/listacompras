@@ -93,6 +93,7 @@ class BackupRepository {
               'finalizada_em': _iso(i.finalizadaEm),
               'total_centavos': i.totalCentavos,
               'itens_count': i.itensCount,
+              'mercado': i.mercado,
             },
           )
           .toList(),
@@ -225,6 +226,7 @@ class BackupRepository {
                   finalizadaEm: DateTime.parse(ida['finalizada_em'] as String),
                   totalCentavos: Value(ida['total_centavos'] as int? ?? 0),
                   itensCount: Value(ida['itens_count'] as int? ?? 0),
+                  mercado: Value(ida['mercado'] as String?),
                 ),
               );
         }

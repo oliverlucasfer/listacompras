@@ -15,7 +15,7 @@ class HistoricoComprasRepository {
   final AppDatabase _db;
   final Uuid _uuid;
 
-  Future<Ida> finalizar(String listaId) {
+  Future<Ida> finalizar(String listaId, {String? mercado}) {
     return _db.transaction(() async {
       final lista = await (_db.select(
         _db.listaLocal,
@@ -43,6 +43,7 @@ class HistoricoComprasRepository {
         final preco = i.precoCentavos;
         if (preco != null) total += (i.quantidade * preco).round();
       }
+      final mercadoLimpo = (mercado ?? '').trim();
       await _db
           .into(_db.idaCompra)
           .insert(
@@ -53,6 +54,7 @@ class HistoricoComprasRepository {
               finalizadaEm: agora,
               totalCentavos: Value(total),
               itensCount: Value(concluidos.length),
+              mercado: Value(mercadoLimpo.isEmpty ? null : mercadoLimpo),
             ),
           );
       for (final i in concluidos) {
@@ -77,6 +79,7 @@ class HistoricoComprasRepository {
         finalizadaEm: agora,
         totalCentavos: total,
         itensCount: concluidos.length,
+        mercado: mercadoLimpo.isEmpty ? null : mercadoLimpo,
       );
     });
   }

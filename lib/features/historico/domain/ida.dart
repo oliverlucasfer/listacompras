@@ -10,6 +10,7 @@ class Ida {
     required this.finalizadaEm,
     required this.totalCentavos,
     required this.itensCount,
+    this.mercado,
   });
   final String id;
   final String? listaId;
@@ -17,6 +18,7 @@ class Ida {
   final DateTime finalizadaEm;
   final int totalCentavos;
   final int itensCount;
+  final String? mercado;
 
   factory Ida.fromLocal(IdaCompraData d) => Ida(
     id: d.id,
@@ -25,6 +27,7 @@ class Ida {
     finalizadaEm: d.finalizadaEm,
     totalCentavos: d.totalCentavos,
     itensCount: d.itensCount,
+    mercado: d.mercado,
   );
 }
 

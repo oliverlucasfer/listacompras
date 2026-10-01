@@ -39,6 +39,43 @@ void main() {
     expect(itens.single.precoCentavos, 500);
   });
 
+  test('deve_preservar_mercado_quando_backup_v2', () async {
+    final origem = AppDatabase(NativeDatabase.memory());
+    addTearDown(origem.close);
+    final listas = ListasRepository(origem);
+    final historico = HistoricoComprasRepository(origem);
+    final l = await listas.criarLista(titulo: 'Semana', donoId: 'local');
+    final item = await listas.adicionarItem(
+      listaId: l.id,
+      nome: 'Arroz',
+      precoCentavos: 500,
+    );
+    await listas.editarItem(item.id, concluido: true);
+    await historico.finalizar(l.id, mercado: 'Mercado A');
+    final json = await BackupRepository(origem).exportarJson();
+
+    final destino = AppDatabase(NativeDatabase.memory());
+    addTearDown(destino.close);
+    await BackupRepository(destino).importarJson(json);
+
+    final idas = await destino.select(destino.idaCompra).get();
+    expect(idas.single.mercado, 'Mercado A');
+  });
+
+  test('deve_importar_mercado_nulo_quando_backup_v2_antigo', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    const json =
+        '{"versao":2,"exportadoEm":"2026-01-01T00:00:00Z",'
+        '"listas":[],"itens":[],"historicoPrecos":[],'
+        '"idas":[{"id":"aaaaaaaa-0000-0000-0000-000000000001","lista_id":null,'
+        '"titulo":"Antiga","finalizada_em":"2026-01-01T00:00:00Z",'
+        '"total_centavos":0,"itens_count":0}],"itensIda":[]}';
+    await BackupRepository(db).importarJson(json);
+    final idas = await db.select(db.idaCompra).get();
+    expect(idas.single.mercado, isNull);
+  });
+
   test('deve_importar_backup_v1_sem_idas_quando_retrocompativel', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);

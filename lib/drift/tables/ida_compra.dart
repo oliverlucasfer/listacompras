@@ -8,6 +8,7 @@ class IdaCompra extends Table {
   DateTimeColumn get finalizadaEm => dateTime()();
   IntColumn get totalCentavos => integer().withDefault(const Constant(0))();
   IntColumn get itensCount => integer().withDefault(const Constant(0))();
+  TextColumn get mercado => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

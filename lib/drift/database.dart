@@ -18,7 +18,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   /// Paridade com o índice único parcial `uq_item_ativo` do Postgres
   /// (`0001_init.sql:57-59`): parcial não é expressável no `@TableIndex`.
@@ -149,6 +149,12 @@ class AppDatabase extends _$AppDatabase {
         // v11 → v12: idas de compra (RF-34, F50). Local-only; sem sync.
         await m.createTable(idaCompra);
         await m.createTable(itemIda);
+      }
+      if (de == 12) {
+        // v12 → v13: mercado (loja) da ida (RF-35, F52). Bancos abaixo de v12
+        // já criam `ida_compra` com a definição atual (passo `de < 12`), que
+        // já inclui `mercado` — então a coluna só é adicionada a partir do v12.
+        await m.addColumn(idaCompra, idaCompra.mercado);
       }
     },
     beforeOpen: (details) async {

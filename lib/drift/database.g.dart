@@ -1656,6 +1656,17 @@ class $IdaCompraTable extends IdaCompra
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _mercadoMeta = const VerificationMeta(
+    'mercado',
+  );
+  @override
+  late final GeneratedColumn<String> mercado = GeneratedColumn<String>(
+    'mercado',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1664,6 +1675,7 @@ class $IdaCompraTable extends IdaCompra
     finalizadaEm,
     totalCentavos,
     itensCount,
+    mercado,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1722,6 +1734,12 @@ class $IdaCompraTable extends IdaCompra
         itensCount.isAcceptableOrUnknown(data['itens_count']!, _itensCountMeta),
       );
     }
+    if (data.containsKey('mercado')) {
+      context.handle(
+        _mercadoMeta,
+        mercado.isAcceptableOrUnknown(data['mercado']!, _mercadoMeta),
+      );
+    }
     return context;
   }
 
@@ -1755,6 +1773,10 @@ class $IdaCompraTable extends IdaCompra
         DriftSqlType.int,
         data['${effectivePrefix}itens_count'],
       )!,
+      mercado: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mercado'],
+      ),
     );
   }
 
@@ -1771,6 +1793,7 @@ class IdaCompraData extends DataClass implements Insertable<IdaCompraData> {
   final DateTime finalizadaEm;
   final int totalCentavos;
   final int itensCount;
+  final String? mercado;
   const IdaCompraData({
     required this.id,
     this.listaId,
@@ -1778,6 +1801,7 @@ class IdaCompraData extends DataClass implements Insertable<IdaCompraData> {
     required this.finalizadaEm,
     required this.totalCentavos,
     required this.itensCount,
+    this.mercado,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1790,6 +1814,9 @@ class IdaCompraData extends DataClass implements Insertable<IdaCompraData> {
     map['finalizada_em'] = Variable<DateTime>(finalizadaEm);
     map['total_centavos'] = Variable<int>(totalCentavos);
     map['itens_count'] = Variable<int>(itensCount);
+    if (!nullToAbsent || mercado != null) {
+      map['mercado'] = Variable<String>(mercado);
+    }
     return map;
   }
 
@@ -1803,6 +1830,9 @@ class IdaCompraData extends DataClass implements Insertable<IdaCompraData> {
       finalizadaEm: Value(finalizadaEm),
       totalCentavos: Value(totalCentavos),
       itensCount: Value(itensCount),
+      mercado: mercado == null && nullToAbsent
+          ? const Value.absent()
+          : Value(mercado),
     );
   }
 
@@ -1818,6 +1848,7 @@ class IdaCompraData extends DataClass implements Insertable<IdaCompraData> {
       finalizadaEm: serializer.fromJson<DateTime>(json['finalizadaEm']),
       totalCentavos: serializer.fromJson<int>(json['totalCentavos']),
       itensCount: serializer.fromJson<int>(json['itensCount']),
+      mercado: serializer.fromJson<String?>(json['mercado']),
     );
   }
   @override
@@ -1830,6 +1861,7 @@ class IdaCompraData extends DataClass implements Insertable<IdaCompraData> {
       'finalizadaEm': serializer.toJson<DateTime>(finalizadaEm),
       'totalCentavos': serializer.toJson<int>(totalCentavos),
       'itensCount': serializer.toJson<int>(itensCount),
+      'mercado': serializer.toJson<String?>(mercado),
     };
   }
 
@@ -1840,6 +1872,7 @@ class IdaCompraData extends DataClass implements Insertable<IdaCompraData> {
     DateTime? finalizadaEm,
     int? totalCentavos,
     int? itensCount,
+    Value<String?> mercado = const Value.absent(),
   }) => IdaCompraData(
     id: id ?? this.id,
     listaId: listaId.present ? listaId.value : this.listaId,
@@ -1847,6 +1880,7 @@ class IdaCompraData extends DataClass implements Insertable<IdaCompraData> {
     finalizadaEm: finalizadaEm ?? this.finalizadaEm,
     totalCentavos: totalCentavos ?? this.totalCentavos,
     itensCount: itensCount ?? this.itensCount,
+    mercado: mercado.present ? mercado.value : this.mercado,
   );
   IdaCompraData copyWithCompanion(IdaCompraCompanion data) {
     return IdaCompraData(
@@ -1862,6 +1896,7 @@ class IdaCompraData extends DataClass implements Insertable<IdaCompraData> {
       itensCount: data.itensCount.present
           ? data.itensCount.value
           : this.itensCount,
+      mercado: data.mercado.present ? data.mercado.value : this.mercado,
     );
   }
 
@@ -1873,14 +1908,22 @@ class IdaCompraData extends DataClass implements Insertable<IdaCompraData> {
           ..write('titulo: $titulo, ')
           ..write('finalizadaEm: $finalizadaEm, ')
           ..write('totalCentavos: $totalCentavos, ')
-          ..write('itensCount: $itensCount')
+          ..write('itensCount: $itensCount, ')
+          ..write('mercado: $mercado')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, listaId, titulo, finalizadaEm, totalCentavos, itensCount);
+  int get hashCode => Object.hash(
+    id,
+    listaId,
+    titulo,
+    finalizadaEm,
+    totalCentavos,
+    itensCount,
+    mercado,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1890,7 +1933,8 @@ class IdaCompraData extends DataClass implements Insertable<IdaCompraData> {
           other.titulo == this.titulo &&
           other.finalizadaEm == this.finalizadaEm &&
           other.totalCentavos == this.totalCentavos &&
-          other.itensCount == this.itensCount);
+          other.itensCount == this.itensCount &&
+          other.mercado == this.mercado);
 }
 
 class IdaCompraCompanion extends UpdateCompanion<IdaCompraData> {
@@ -1900,6 +1944,7 @@ class IdaCompraCompanion extends UpdateCompanion<IdaCompraData> {
   final Value<DateTime> finalizadaEm;
   final Value<int> totalCentavos;
   final Value<int> itensCount;
+  final Value<String?> mercado;
   final Value<int> rowid;
   const IdaCompraCompanion({
     this.id = const Value.absent(),
@@ -1908,6 +1953,7 @@ class IdaCompraCompanion extends UpdateCompanion<IdaCompraData> {
     this.finalizadaEm = const Value.absent(),
     this.totalCentavos = const Value.absent(),
     this.itensCount = const Value.absent(),
+    this.mercado = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   IdaCompraCompanion.insert({
@@ -1917,6 +1963,7 @@ class IdaCompraCompanion extends UpdateCompanion<IdaCompraData> {
     required DateTime finalizadaEm,
     this.totalCentavos = const Value.absent(),
     this.itensCount = const Value.absent(),
+    this.mercado = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        titulo = Value(titulo),
@@ -1928,6 +1975,7 @@ class IdaCompraCompanion extends UpdateCompanion<IdaCompraData> {
     Expression<DateTime>? finalizadaEm,
     Expression<int>? totalCentavos,
     Expression<int>? itensCount,
+    Expression<String>? mercado,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1937,6 +1985,7 @@ class IdaCompraCompanion extends UpdateCompanion<IdaCompraData> {
       if (finalizadaEm != null) 'finalizada_em': finalizadaEm,
       if (totalCentavos != null) 'total_centavos': totalCentavos,
       if (itensCount != null) 'itens_count': itensCount,
+      if (mercado != null) 'mercado': mercado,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1948,6 +1997,7 @@ class IdaCompraCompanion extends UpdateCompanion<IdaCompraData> {
     Value<DateTime>? finalizadaEm,
     Value<int>? totalCentavos,
     Value<int>? itensCount,
+    Value<String?>? mercado,
     Value<int>? rowid,
   }) {
     return IdaCompraCompanion(
@@ -1957,6 +2007,7 @@ class IdaCompraCompanion extends UpdateCompanion<IdaCompraData> {
       finalizadaEm: finalizadaEm ?? this.finalizadaEm,
       totalCentavos: totalCentavos ?? this.totalCentavos,
       itensCount: itensCount ?? this.itensCount,
+      mercado: mercado ?? this.mercado,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1982,6 +2033,9 @@ class IdaCompraCompanion extends UpdateCompanion<IdaCompraData> {
     if (itensCount.present) {
       map['itens_count'] = Variable<int>(itensCount.value);
     }
+    if (mercado.present) {
+      map['mercado'] = Variable<String>(mercado.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1997,6 +2051,7 @@ class IdaCompraCompanion extends UpdateCompanion<IdaCompraData> {
           ..write('finalizadaEm: $finalizadaEm, ')
           ..write('totalCentavos: $totalCentavos, ')
           ..write('itensCount: $itensCount, ')
+          ..write('mercado: $mercado, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3539,6 +3594,7 @@ typedef $$IdaCompraTableCreateCompanionBuilder =
       required DateTime finalizadaEm,
       Value<int> totalCentavos,
       Value<int> itensCount,
+      Value<String?> mercado,
       Value<int> rowid,
     });
 typedef $$IdaCompraTableUpdateCompanionBuilder =
@@ -3549,6 +3605,7 @@ typedef $$IdaCompraTableUpdateCompanionBuilder =
       Value<DateTime> finalizadaEm,
       Value<int> totalCentavos,
       Value<int> itensCount,
+      Value<String?> mercado,
       Value<int> rowid,
     });
 
@@ -3611,6 +3668,11 @@ class $$IdaCompraTableFilterComposer
 
   ColumnFilters<int> get itensCount => $composableBuilder(
     column: $table.itensCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mercado => $composableBuilder(
+    column: $table.mercado,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3678,6 +3740,11 @@ class $$IdaCompraTableOrderingComposer
     column: $table.itensCount,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get mercado => $composableBuilder(
+    column: $table.mercado,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$IdaCompraTableAnnotationComposer
@@ -3712,6 +3779,9 @@ class $$IdaCompraTableAnnotationComposer
     column: $table.itensCount,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get mercado =>
+      $composableBuilder(column: $table.mercado, builder: (column) => column);
 
   Expression<T> itemIdaRefs<T extends Object>(
     Expression<T> Function($$ItemIdaTableAnnotationComposer a) f,
@@ -3773,6 +3843,7 @@ class $$IdaCompraTableTableManager
                 Value<DateTime> finalizadaEm = const Value.absent(),
                 Value<int> totalCentavos = const Value.absent(),
                 Value<int> itensCount = const Value.absent(),
+                Value<String?> mercado = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => IdaCompraCompanion(
                 id: id,
@@ -3781,6 +3852,7 @@ class $$IdaCompraTableTableManager
                 finalizadaEm: finalizadaEm,
                 totalCentavos: totalCentavos,
                 itensCount: itensCount,
+                mercado: mercado,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -3791,6 +3863,7 @@ class $$IdaCompraTableTableManager
                 required DateTime finalizadaEm,
                 Value<int> totalCentavos = const Value.absent(),
                 Value<int> itensCount = const Value.absent(),
+                Value<String?> mercado = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => IdaCompraCompanion.insert(
                 id: id,
@@ -3799,6 +3872,7 @@ class $$IdaCompraTableTableManager
                 finalizadaEm: finalizadaEm,
                 totalCentavos: totalCentavos,
                 itensCount: itensCount,
+                mercado: mercado,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
