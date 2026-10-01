@@ -39,6 +39,7 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
   bool _carregando = false;
   bool _lendoFoto = false;
   String? _erro;
+  AppBannerTipo _tipoErro = AppBannerTipo.erro;
 
   int get _limite => maxCaracteresImportLocal;
 
@@ -88,9 +89,20 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
     if (origem == null || !mounted) return;
 
     final fonte = ref.read(fonteImagemProvider);
-    final caminho = origem == 'camera'
-        ? await fonte.daCamera()
-        : await fonte.daGaleria();
+    String? caminho;
+    try {
+      caminho = origem == 'camera'
+          ? await fonte.daCamera()
+          : await fonte.daGaleria();
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _erro = AppStrings.ocrFalha;
+          _tipoErro = AppBannerTipo.erro;
+        });
+      }
+      return;
+    }
     if (caminho == null || !mounted) return;
 
     setState(() {
@@ -98,22 +110,35 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
       _erro = null;
     });
     var texto = '';
+    // Mantém o provider (autoDispose) vivo durante o OCR assíncrono; sem isso o
+    // `TextRecognizer` poderia ser fechado antes de `extrair` terminar.
+    final assinatura = ref.listenManual(ocrTextoProvider, (_, _) {});
     try {
       texto = await ref.read(ocrTextoProvider).extrair(caminho);
     } catch (_) {
-      if (mounted) setState(() => _erro = AppStrings.ocrFalha);
+      if (mounted) {
+        setState(() {
+          _erro = AppStrings.ocrFalha;
+          _tipoErro = AppBannerTipo.erro;
+        });
+      }
       return;
     } finally {
+      assinatura.close();
       if (mounted) setState(() => _lendoFoto = false);
     }
     if (!mounted) return;
 
-    if (texto.trim().isEmpty) {
-      setState(() => _erro = AppStrings.ocrNenhumTexto);
+    final limpo = texto.trim();
+    if (limpo.isEmpty) {
+      setState(() {
+        _erro = AppStrings.ocrNenhumTexto;
+        _tipoErro = AppBannerTipo.aviso;
+      });
     } else {
       _controller.text = _controller.text.trim().isEmpty
-          ? texto
-          : '${_controller.text}\n$texto';
+          ? limpo
+          : '${_controller.text}\n$limpo';
     }
   }
 
@@ -121,6 +146,7 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
     setState(() {
       _carregando = true;
       _erro = null;
+      _tipoErro = AppBannerTipo.erro;
     });
     try {
       final resposta = await _extrairLocal(_controller.text);
@@ -207,7 +233,7 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
             ],
             if (_erro != null) ...[
               const SizedBox(height: AppSpacing.sm),
-              AppBanner(tipo: AppBannerTipo.erro, mensagem: _erro!),
+              AppBanner(tipo: _tipoErro, mensagem: _erro!),
             ],
             const SizedBox(height: AppSpacing.md),
             AppBotao(

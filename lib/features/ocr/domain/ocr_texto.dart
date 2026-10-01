@@ -2,4 +2,7 @@
 abstract interface class OcrTexto {
   /// Reconhece o texto da imagem no [caminhoImagem]; devolve '' se não houver texto.
   Future<String> extrair(String caminhoImagem);
+
+  /// Libera o reconhecedor nativo. Chamado quando o provider é descartado.
+  void close();
 }

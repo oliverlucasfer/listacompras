@@ -13,7 +13,11 @@ bool plataformaComOcr() {
       defaultTargetPlatform == TargetPlatform.iOS;
 }
 
-final ocrTextoProvider = Provider<OcrTexto>((ref) => OcrTextoMlKit());
+final ocrTextoProvider = Provider.autoDispose<OcrTexto>((ref) {
+  final ocr = OcrTextoMlKit();
+  ref.onDispose(ocr.close);
+  return ocr;
+});
 final fonteImagemProvider = Provider<FonteImagem>(
   (ref) => FonteImagemImagePicker(),
 );

@@ -58,7 +58,7 @@ Título de tela (AppBar): **24sp bold** aplicado via `appBarTheme.titleTextStyle
 
 **Estado de orçamento no `TotalCarrinho` (RF-28/RF-36, F53):** o total usa **tokens do tema, sem cor literal** — **normal** com o estilo padrão; **aviso** (≥ 80%) em `colorScheme.tertiary` + `Icons.notification_important_outlined` ("Perto do orçamento"); **acima** (total > orçamento) em `colorScheme.error` + `Icons.warning_amber_rounded` ("Acima do orçamento"). A barra de progresso acompanha a cor. O alerta por categoria na lista reusa o **`AppBanner`** de aviso (já existente, `liveRegion`). Nenhum componente `App*` novo foi necessário.
 
-**Importar por foto / OCR (RF-37, F54):** nenhum componente `App*` novo — o botão **"Foto"** reusa o **`AppBotao`** (variante `outlined`, com `carregando` que anuncia "Lendo a foto..." na semântica) e a escolha de origem reusa `ListTile` num bottom sheet; o texto reconhecido entra no `AppCampoTexto` existente e os erros/avisos do OCR reusam o **`AppBanner`** de erro (`liveRegion`). Tudo com tokens `App*`/`colorScheme`, sem cor literal.
+**Importar por foto / OCR (RF-37, F54):** nenhum componente `App*` novo — o botão **"Foto"** reusa o **`AppBotao`** (variante `outlined`; com `carregando`, o `AppBotao` anuncia o progresso genérico `AppStrings.carregando` — "Carregando..." — na semântica, e o rótulo visível é "Lendo a foto...") e a escolha de origem reusa `ListTile` num bottom sheet; o texto reconhecido entra no `AppCampoTexto` existente e os avisos/erros do OCR reusam o **`AppBanner`** de **aviso**/**erro** (`liveRegion`). Tudo com tokens `App*`/`colorScheme`, sem cor literal.
 
 ## 4. Acessibilidade (RNF-06)
 

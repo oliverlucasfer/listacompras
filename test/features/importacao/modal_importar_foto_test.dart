@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/importacao/resposta_import.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
+import 'package:lista_compras/core/widgets/app_banner.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/importacao/ui/modal_importar.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
@@ -17,12 +18,16 @@ class _OcrFake implements OcrTexto {
   final String _texto;
   @override
   Future<String> extrair(String caminho) async => _texto;
+  @override
+  void close() {}
 }
 
 class _OcrQueFalha implements OcrTexto {
   @override
   Future<String> extrair(String caminho) async =>
       throw StateError('ocr indisponível');
+  @override
+  void close() {}
 }
 
 class _FonteFake implements FonteImagem {
@@ -34,18 +39,30 @@ class _FonteFake implements FonteImagem {
   Future<String?> daGaleria() async => caminho;
 }
 
+class _FonteQueFalha implements FonteImagem {
+  @override
+  Future<String?> daCamera() async =>
+      throw StateError('permissão da câmera negada');
+  @override
+  Future<String?> daGaleria() async =>
+      throw StateError('permissão da galeria negada');
+}
+
 Widget _app(
   AppDatabase db, {
   required String texto,
   String? caminho,
   OcrTexto? ocr,
+  FonteImagem? fonte,
   ValueChanged<RespostaParse?>? onResultado,
 }) {
   return ProviderScope(
     overrides: [
       appDatabaseProvider.overrideWithValue(db),
       ocrTextoProvider.overrideWithValue(ocr ?? _OcrFake(texto)),
-      fonteImagemProvider.overrideWithValue(_FonteFake(caminho: caminho)),
+      fonteImagemProvider.overrideWithValue(
+        fonte ?? _FonteFake(caminho: caminho),
+      ),
     ],
     child: MaterialApp(
       home: Scaffold(body: _Abrir(onResultado: onResultado)),
@@ -108,6 +125,10 @@ void main() {
     await tester.tap(find.text('Tirar foto'));
     await tester.pumpAndSettle();
     expect(find.text('Nenhum texto reconhecido na foto.'), findsOneWidget);
+    expect(
+      tester.widget<AppBanner>(find.byType(AppBanner)).tipo,
+      AppBannerTipo.aviso,
+    );
     debugDefaultTargetPlatformOverride = null;
   });
 
@@ -142,6 +163,32 @@ void main() {
     await tester.tap(find.text('Tirar foto'));
     await tester.pumpAndSettle();
     expect(find.text(AppStrings.ocrFalha), findsOneWidget);
+    expect(
+      tester.widget<AppBanner>(find.byType(AppBanner)).tipo,
+      AppBannerTipo.erro,
+    );
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('deve_exibir_banner_quando_picker_falha', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    await tester.pumpWidget(
+      _app(db, texto: 'Arroz 2kg', fonte: _FonteQueFalha()),
+    );
+    await tester.tap(find.text('abrir'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Foto'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tirar foto'));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.ocrFalha), findsOneWidget);
+    expect(
+      tester.widget<AppBanner>(find.byType(AppBanner)).tipo,
+      AppBannerTipo.erro,
+    );
+    expect(tester.takeException(), isNull);
     debugDefaultTargetPlatformOverride = null;
   });
 

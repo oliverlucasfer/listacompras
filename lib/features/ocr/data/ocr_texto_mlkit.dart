@@ -11,4 +11,7 @@ class OcrTextoMlKit implements OcrTexto {
     final resultado = await _recognizer.processImage(input);
     return resultado.text;
   }
+
+  @override
+  void close() => _recognizer.close();
 }
