@@ -164,10 +164,11 @@ class AppDatabase extends _$AppDatabase {
         // já inclui `mercado` — então a coluna só é adicionada a partir do v12.
         await m.addColumn(idaCompra, idaCompra.mercado);
       }
-      if (de == 13) {
-        // v13 → v14: limite de orçamento por categoria (RF-36, F53). Bancos
-        // abaixo de v13 já criam a tabela com a definição atual via
-        // `onCreate`/passos anteriores — então só é criada a partir do v13.
+      if (de < 14) {
+        // v13 → v14: limite de orçamento por categoria (RF-36, F53). Tabela
+        // NOVA: acumulativo (`de < 14`), como `historico_preco_local` (`de < 7`)
+        // e as idas (`de < 12`) — bancos abaixo do v14 precisam criá-la aqui,
+        // já que nenhum passo anterior a cria.
         await m.createTable(orcamentoCategoria);
       }
     },
