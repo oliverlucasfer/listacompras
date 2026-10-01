@@ -42,14 +42,14 @@ lib/
 │   ├── compartilhamento/            # domain/ data/ providers/ ui/ (F49/RF-33)
 │   ├── configuracoes/               # ui/ (inclui backup)
 │   ├── design_system/               # ui/ (catálogo, só em debug)
-│   ├── historico/                   # domain/ data/ providers/ ui/ (F50/F51/RF-34)
+│   ├── historico/                   # domain/ data/ providers/ ui/ (F50/F51/F52/RF-34/RF-35)
 │   ├── importacao/                  # ui/ (a lógica vive em core/importacao)
 │   ├── listas/                      # domain/ data/ providers/ ui/
 │   ├── onboarding/                  # providers/ ui/
 │   ├── tour/                        # motor do tour guiado (F46)
 │   └── voz/                         # domain/ data/ providers/ (F30)
 └── drift/
-    ├── database.dart                # AppDatabase (tabelas locais, schemaVersion 12)
+    ├── database.dart                # AppDatabase (tabelas locais, schemaVersion 13)
     ├── conexao/                     # abrirBancoLocal (nativa/web, ADR-012)
     └── tables/                      # ListaLocal, ItemLocal, HistoricoPrecoLocal, IdaCompra, ItemIda
 ```
@@ -72,7 +72,9 @@ lib/
   dropa a tabela `mutacao_pendente` (a antiga fila de sincronização, que deixou de existir) e ajusta a
   dedup de itens ativos para não referenciá-la (ordenação por `updated_at DESC, rowid DESC`). A migração
   **`schemaVersion 11 → 12`** (F50/RF-34) cria as tabelas `idas_compra`/`itens_ida` (histórico de compras
-  local; snapshot imutável, sem sync). Os passos
+  local; snapshot imutável, sem sync). A migração **`schemaVersion 12 → 13`** (F52/RF-35) adiciona a coluna
+  `mercado` (text, nullable) em `idas_compra`; como o passo `de < 12` cria a tabela já na definição atual,
+  a coluna só precisa ser adicionada para quem vem exatamente do v12 (`de == 12`). Os passos
   históricos (`de < 2 … de < 10`) permanecem para quem vem de versões antigas.
 * **`quantidade` é `real` no Drift:** a precisão efetiva da app é ≤ 3 casas decimais (tolerância 0,001, [05 §6.3]).
 
@@ -118,6 +120,9 @@ Há **um único app** (`main.dart` → `bootstrap()`), 100% local, com a identid
 | `nomesCompradosProvider` | FutureProvider | Nomes comprados (normalizados, distintos) que alimentam o seletor da evolução de preço (F51/RF-34) |
 | `unidadeRecenteProvider(nome)` | FutureProvider.family | Unidade da compra mais recente de um nome — define a unidade comparada na evolução (F51/RF-34) |
 | `evolucaoPrecoProvider((nome, unidade))` | FutureProvider.family | Série `(data, preço unitário)` de um item **na mesma unidade** (regra do RF-29), derivada de `idasProvider` (F51/RF-34) |
+| `mercadosUsadosProvider` | FutureProvider | Mercados distintos já usados nas idas (normalizados, exibindo a caixa da 1ª ocorrência), derivado de `idasProvider` (F52/RF-35) |
+| `precosPorMercadoProvider((nome, unidade))` | FutureProvider.family | Último preço de cada mercado para o item **na mesma unidade** (mais barato primeiro), derivado de `idasProvider` (F52/RF-35) |
+| `gastoPorMercadoProvider` | FutureProvider | Gasto por mercado (soma de `total_centavos`, com o grupo "Sem mercado"), derivado de `idasProvider` (F52/RF-35) |
 
 **Sugestão de categoria em camadas (ADR-011, spec §4)** — `SugestaoCategorias.sugerirCategoria(nome)`, zero rede:
 
@@ -309,6 +314,21 @@ Registrar **idas** de compra (snapshot dos itens concluídos), consultá-las num
 * **Backup (RF-31):** o backup local passou à **versão 2** (§6.10) e agora inclui as `idas` e os `itensIda` (snapshot do histórico) — restaurar um backup preserva o histórico de compras. Arquivos **versão 1** continuam importáveis (sem idas).
 * **Dependência `fl_chart` (F51):** puro Dart, offline, sem permissão nova e sem rede (detalhes em [09 §2.12](09-runbook-operacoes.md)); os gráficos (`GraficoGastoMensal` e o mini gráfico de linha) usam os tokens do tema (`colorScheme.primary`).
 
+### 6.14. Preço por mercado (RF-35, F52)
+
+Registrar **onde** a compra foi feita e derivar, das próprias idas, os **preços por mercado** — tudo **100% offline** e **sem tabela nova** (spec: [2026-09-30-preco-mercado-orcamento-design.md](superpowers/specs/2026-09-30-preco-mercado-orcamento-design.md)). Os **alertas de orçamento** (RF-36) ficam para a Fase 53; aqui entra só o mercado.
+
+* **`mercado` na ida (Drift v13):** `idas_compra` ganha **`mercado`** (text, **nullable**); `null` = ida sem mercado informado. Migração **`schemaVersion 12 → 13`** aditiva (§2.2; `de == 12`). O backup local **v2** (§6.10) passa a carregar `mercado` — campo opcional e **retrocompatível** (backup antigo importa com `null`).
+* **Preços derivados (sem tabela nova):** os preços por mercado são calculados de `itens_ida × idas_compra.mercado` — para cada mercado, o **último** preço do item (`finalizada_em` mais recente), considerando **só a mesma unidade** e itens **com preço** (regra do RF-29), ordenados do **mais barato** ao mais caro. A tabela `historico_precos` (RF-29) permanece **inalterada**.
+* **`finalizar(listaId, {String? mercado})`:** a ida (§6.13) passa a gravar o mercado (após `trim`; vazio → `null`) na mesma transação do snapshot dos concluídos.
+* **Repositório/providers:** `HistoricoComprasRepository` ganha `mercadosUsados()` (distintos por `normalizarTexto`, exibindo a caixa da 1ª ocorrência, ordenados), `precosPorMercado(nome, unidade)` — tipos `PrecoMercado`/`GastoPorMercado` em `lib/features/historico/domain/mercado.dart` — e `gastoPorMercado()` (soma de `total_centavos` por mercado **normalizado**, incluindo o grupo `null` = "Sem mercado", do maior para o menor). Providers `mercadosUsadosProvider`, `precosPorMercadoProvider((nome, unidade))` e `gastoPorMercadoProvider`, todos derivados de `idasProvider` (§3).
+* **Onde aparece:**
+  * **Finalizar compra:** o diálogo de confirmação (§6.13/§8.4) ganha o campo opcional **"Mercado (opcional)"**, com chips de sugestão dos `mercadosUsados` que preenchem o campo; o valor vai para `finalizar(..., mercado:)`.
+  * **Editor do item:** abaixo da linha "Última compra" (RF-29), a linha **"Por mercado"** lista o último preço de cada mercado para o **item + unidade** atuais, com o **mais barato** em destaque ("mais barato"); oculta quando não há histórico com mercado.
+  * **Detalhe da ida:** cabeçalho com ícone de loja (`storefront_outlined`) e o nome do mercado, quando presente.
+  * **Tela da lista:** **chip** informativo (`storefront_outlined`) com o mercado da **última ida** da lista, oculto quando ela não tem mercado.
+  * **Estatísticas:** nova seção **"Gasto por mercado"** na aba Estatísticas (§6.13), listando cada mercado (ou "Sem mercado") com o total.
+
 ---
 
 ## 7. Design System
@@ -342,6 +362,7 @@ Plus Jakarta Sans bundlada. Aqui ficam apenas os estados transversais:
 - [ ] Backup exportar/importar funcionando (inclusive lista soft-deletada).
 - [ ] Compartilhar/receber lista 100% offline (texto/arquivo/QR) sempre criando uma lista nova (RF-33).
 - [ ] Finalizar compra grava a ida (snapshot dos concluídos); a aba Histórico lista/resume/detalha as idas e a aba Estatísticas mostra gasto por período/categoria, mais comprados e evolução de preço (RF-34).
+- [ ] Preço por mercado: a ida guarda o mercado (opcional); o editor mostra "Por mercado", a lista mostra o chip da última ida, o detalhe mostra o rótulo e as Estatísticas mostram "Gasto por mercado" (RF-35).
 - [ ] Widget tests das telas críticas ([07](07-qualidade-ci.md)).
 
 ---

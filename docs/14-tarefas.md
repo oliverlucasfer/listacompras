@@ -1100,6 +1100,31 @@ Spec: [superpowers/specs/2026-09-30-historico-compras-design.md](superpowers/spe
 
 Nota: *(100% offline: agregações locais sobre `idas_compra`/`itens_ida`; gráficos com `fl_chart` (puro Dart); evolução de preço só compara a mesma unidade — RF-29.)*
 
+## Fase 52 — Preço por mercado (RF-35)
+
+Spec: [superpowers/specs/2026-09-30-preco-mercado-orcamento-design.md](superpowers/specs/2026-09-30-preco-mercado-orcamento-design.md) §3/§5 · Plano: [superpowers/plans/2026-09-30-preco-mercado-fase52.md](superpowers/plans/2026-09-30-preco-mercado-fase52.md) · Requisito: RF-35 (mercado por ida + preços derivados). · Docs donos: 05, 10, 12, 14, 16.
+
+- [x] **F52-T01** — Drift v13 (`mercado`), domínio, `finalizar({mercado})` e backup
+  Dep: F51-T04 · Docs: [05 §2.2/§6.14](05-app-flutter.md), [12 §2](12-prd.md)
+  CP: coluna `mercado` (text, nullable) em `idas_compra`; `schemaVersion = 13` com migração v12→v13 (`de == 12`; `de < 12` cria a tabela já com a coluna); `Ida.mercado`; `finalizar(listaId, {String? mercado})` (normalizado, vazio → `null`); backup v2 carrega `mercado` (retrocompatível); `database.g.dart` regenerado; teste de migração e unit tests verdes.
+- [x] **F52-T02** — Consultas derivadas (mercados, preço por mercado, gasto)
+  Dep: F52-T01 · Docs: [05 §3/§6.14](05-app-flutter.md)
+  CP: `lib/features/historico/domain/mercado.dart` (`PrecoMercado`/`GastoPorMercado`); `mercadosUsados`/`precosPorMercado`/`gastoPorMercado` no repositório (último preço por mercado, mesma unidade, mais barato primeiro; gasto por mercado normalizado com "Sem mercado"); providers `mercadosUsadosProvider`/`precosPorMercadoProvider`/`gastoPorMercadoProvider` derivados de `idasProvider`; unit tests verdes.
+- [x] **F52-T03** — UI do mercado (finalizar + editor + detalhe + chip)
+  Dep: F52-T02 · Docs: [05 §6.3/§6.13/§6.14](05-app-flutter.md), [10 §3.1/§8.4](10-wireframes-telas.md)
+  CP: campo "Mercado (opcional)" com chips de sugestão no finalizar; linha "Por mercado" (destaque do mais barato) no editor; rótulo do mercado no detalhe da ida; chip do mercado da última ida na tela da lista; strings em `AppStrings`; widget tests verdes.
+- [x] **F52-T04** — Estatísticas "Gasto por mercado"
+  Dep: F52-T02 · Docs: [05 §6.13/§6.14](05-app-flutter.md), [10 §8.5](10-wireframes-telas.md)
+  CP: seção "Gasto por mercado" na aba Estatísticas (`gastoPorMercadoProvider`, "Sem mercado" e vazio "Sem dados ainda"); widget test verde.
+- [x] **F52-T05** — Docs donos e fechamento
+  Dep: F52-T04 · Docs: 12, 05, 10, 14, 16
+  CP: RF-35 no PRD e na matriz; §6.14 no 05 + árvore/tabelas/providers/migração v13; wireframes no 10 (campo Mercado, "Por mercado", chip, "Gasto por mercado"); frente A10 no 16; Fase 52 na tabela de progresso (284/282); `dart format .`, `flutter analyze` e `flutter test` verdes (555/555); sem tocar código.
+
+Nota: *(100% offline: o mercado é um campo opcional na ida e os preços por mercado são **derivados** de `itens_ida × idas_compra.mercado` — sem tabela nova. Os alertas de orçamento (RF-36) ficam na Fase 53.)*
+
+### Próxima fase
+- **Fase 53 — Alertas de orçamento (RF-36)** (spec §6 de [2026-09-30-preco-mercado-orcamento-design.md](superpowers/specs/2026-09-30-preco-mercado-orcamento-design.md)): estado progressivo do total (normal → aviso ≥ 80% → acima ≥ 100%), SnackBar ao cruzar, orçamento por categoria (Drift v14) e notificação local. **Ainda não implementada.**
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -1153,7 +1178,8 @@ Nota: *(100% offline: agregações locais sobre `idas_compra`/`itens_ida`; gráf
 | F49 Compartilhar lista | 6 | 6 |
 | F50 Histórico de compras | 5 | 5 |
 | F51 Histórico: estatísticas | 4 | 4 |
-| **Total** | **279** | **277** |
+| F52 Preço por mercado | 5 | 5 |
+| **Total** | **284** | **282** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

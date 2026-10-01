@@ -132,8 +132,11 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 │  ← Compras da Semana      [⋮]   │ ← [⋮]: desmarcar todos, limpar
 │                                 │    concluídos, finalizar compra,
 ├─────────────────────────────────┤    renomear, adicionar de outra
+│  🏬 Mercado A                    │ ← chip do mercado da última ida
 │  [Café] [Pão] [Leite] ...       │    lista, orçamento, compartilhar,
 │                                 │    arquivar, excluir
+│                                 │    (chip da última ida; oculto
+│                                 │     quando ela não tem mercado)
 │                                 │
 │  Adicionar item                 │ ← chips de itens frequentes (RF-19),
 │  [____________ un▾   (＋) ]     │    só com o campo vazio; toque adiciona
@@ -194,11 +197,17 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 │  Última compra: R$ 4,99 (12/09) │ ← histórico local por dispositivo
 │  ↑ R$ 0,50                      │    (RF-29/F37); ↑/↓ só com a
 │                                 │    mesma unidade
+│  Por mercado                    │ ← último preço por mercado do item
+│  Mercado A: R$ 4,99 (mais       │    + unidade atual (RF-35/F52);
+│  barato)                        │    mais barato em destaque; oculto
+│  Mercado B: R$ 5,49             │    quando não há histórico com mercado
 │  (Remover) (Cancelar) (Salvar)  │ ← empilha quando não cabe
 └─────────────────────────────────┘    (fonte ampliada ou tela estreita; RNF-06)
 ```
 
 **Última compra (RF-29/F37):** abaixo do campo de preço, quando há histórico local para o nome, aparece "Última compra: R$ X (dd/mm)" e — se o preço atual existir **e** a unidade atual for a mesma do registro — a variação (`↑`/`↓ R$diferença` ou "Mesmo preço"); com unidade diferente ou sem preço atual, só a linha do último preço. O histórico é **local por dispositivo**.
+
+**Preço por mercado (RF-35/F52):** abaixo da "Última compra", a linha "Por mercado" lista o **último preço de cada mercado** para o item **na mesma unidade** atual (do mais barato ao mais caro), com o mais barato em destaque ("mais barato"); fica **oculta** quando não há histórico com mercado. Os preços são **derivados das idas** — não há tabela de preços.
 
 ### 3.2. Diálogo "Excluir lista"
 ```
@@ -420,7 +429,7 @@ Toque em "Continuar" → pré-visualização editável (modal, §7.2):
 
 ## 8. Histórico de compras (RF-34 — [05 §6.13](05-app-flutter.md))
 
-Comportamento em [05 §6.13](05-app-flutter.md). A aba **Histórico** fica no shell entre "Minhas Listas" e "Configurações" e tem **duas abas internas: "Idas" | "Estatísticas"** (§8.1/§8.5); o detalhe e o fluxo de finalizar vivem fora/na tela da lista. A Fase 50 (RF-34) entrega o registro de idas + histórico; a Fase 51 entrega as estatísticas (gráficos `fl_chart`).
+Comportamento em [05 §6.13](05-app-flutter.md). A aba **Histórico** fica no shell entre "Minhas Listas" e "Configurações" e tem **duas abas internas: "Idas" | "Estatísticas"** (§8.1/§8.5); o detalhe e o fluxo de finalizar vivem fora/na tela da lista. A Fase 50 (RF-34) entrega o registro de idas + histórico; a Fase 51 entrega as estatísticas (gráficos `fl_chart`); a Fase 52 (RF-35) acrescenta o **mercado** na ida e as visões de preço/gasto por mercado (§6.14).
 
 ### 8.1. Aba "Histórico" (resumo + lista)
 ```
@@ -472,7 +481,7 @@ Sem idas, o resumo mostra "—" (sem valor) e o vazio orienta como registrar a p
 ```
 Lista por nome; ida inexistente → vazio "Compra não encontrada."; erro → `AppEstadoErro` com retry.
 
-### 8.4. Fluxo "Finalizar compra" (RF-34)
+### 8.4. Fluxo "Finalizar compra" (RF-34; mercado RF-35)
 Acionado pelo menu `⋮` ou pelo botão no rodapé da lista (§3.1), só com ≥ 1 item concluído.
 
 ```
@@ -481,7 +490,10 @@ Acionado pelo menu `⋮` ou pelo botão no rodapé da lista (§3.1), só com ≥
 │                                 │
 │  3 itens · R$ 62,40 · 1 sem     │ ← resumo (N itens · total · M
 │  preço                          │    sem preço; RF-21)
-│  (Cancelar)  (Finalizar compra) │
+│  Mercado (opcional)             │ ← campo opcional (RF-35/F52)
+│  [________________________ ]    │
+│  [Mercado A] [Mercado B]        │ ← chips dos mercados já usados
+│  (Cancelar)  (Finalizar compra) │    (mercadosUsados); vazio → sem mercado
 └─────────────────────────────────┘
         │ confirma → grava a ida (transação; snapshot dos concluídos)
         ▼
@@ -494,7 +506,7 @@ Acionado pelo menu `⋮` ou pelo botão no rodapé da lista (§3.1), só com ≥
 ```
 Nada é removido sem a escolha "Limpar concluídos" (reusa `limparConcluidos`); não há "undo" após finalizar.
 
-### 8.5. Aba "Estatísticas" (RF-34, F51)
+### 8.5. Aba "Estatísticas" (RF-34, F51; mercado RF-35)
 ```
 ┌─────────────────────────────────┐
 │  Histórico                      │ ← mesma tela da §8.1
@@ -511,6 +523,10 @@ Nada é removido sem a escolha "Limpar concluídos" (reusa `limparConcluidos`); 
 │  Mercearia          R$ 68,40 61%│
 │  Frios              R$ 30,10 27%│
 │  Limpeza            R$ 13,20 12%│
+│ ─────────────────────────────── │
+│  Gasto por mercado              │ ← soma por mercado (RF-35/F52);
+│  Mercado A          R$ 88,40    │    inclui o grupo "Sem mercado";
+│  Sem mercado        R$ 31,60    │    maior → menor
 │ ─────────────────────────────── │
 │  Itens mais comprados           │ ← top 10 (nome normalizado)
 │  [ Frequência ] [ Gasto ]       │ ← ordena por frequência ou gasto
