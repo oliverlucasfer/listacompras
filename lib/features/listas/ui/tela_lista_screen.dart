@@ -33,6 +33,7 @@ import '../../tour/tour_keys.dart';
 import '../../tour/ui/tour_loader.dart';
 import '../../voz/domain/reconhecimento_voz.dart';
 import '../../voz/providers/reconhecimento_voz_provider.dart';
+import '../../widget/providers/widget_providers.dart';
 import '../../../core/dominio/categoria.dart';
 import '../domain/historico_preco.dart';
 import '../domain/item.dart';
@@ -52,9 +53,12 @@ import 'total_carrinho.dart';
 /// Tela da Lista de Compras (doc 05 §6.3, wireframe 10 §3.1, RF-03/RF-04).
 /// Indicador de sync (F4-T07), IA (F4-T01) e drag-and-drop (F4-T05) chegam depois.
 class TelaListaScreen extends ConsumerStatefulWidget {
-  const TelaListaScreen({super.key, required this.listaId});
+  const TelaListaScreen({super.key, required this.listaId, this.foco = false});
 
   final String listaId;
+
+  /// Foca o campo de adicionar ao abrir (rota `/adicionar`, RF-38, F55).
+  final bool foco;
 
   @override
   ConsumerState<TelaListaScreen> createState() => _TelaListaScreenState();
@@ -63,6 +67,14 @@ class TelaListaScreen extends ConsumerStatefulWidget {
 class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
   final _busca = TextEditingController();
   bool _buscando = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Registra a lista aberta para o widget apontar a rota `/adicionar`
+    // (RF-38, F55).
+    unawaited(ref.read(ultimaListaServiceProvider).registrar(widget.listaId));
+  }
 
   @override
   void dispose() {
@@ -401,6 +413,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                   ),
                 _CampoAdicionar(
                   listaId: listaId,
+                  autofocus: widget.foco,
                   onItemAdicionado: _buscando ? _fecharBusca : null,
                 ),
                 Expanded(
@@ -518,9 +531,14 @@ class _AlertaOrcamentoCategorias extends ConsumerWidget {
 }
 
 class _CampoAdicionar extends ConsumerStatefulWidget {
-  const _CampoAdicionar({required this.listaId, this.onItemAdicionado});
+  const _CampoAdicionar({
+    required this.listaId,
+    this.autofocus = false,
+    this.onItemAdicionado,
+  });
 
   final String listaId;
+  final bool autofocus;
   final VoidCallback? onItemAdicionado;
 
   @override
@@ -709,6 +727,7 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
             controller: _controller,
             label: AppStrings.adicionarItem,
             erro: _erro,
+            autofocus: widget.autofocus,
             onChanged: (_) => setState(() => _erro = null),
             onSubmitted: _adicionar,
             sufixo: Row(

@@ -14,6 +14,7 @@ import 'features/listas/ui/tela_lista_screen.dart';
 import 'features/listas/ui/tela_orcamento_categorias.dart';
 import 'features/listas/ui/tela_ordenar_categorias.dart';
 import 'features/onboarding/ui/boas_vindas_screen.dart';
+import 'features/widget/ui/adicionar_screen.dart';
 
 /// Rotas do app local (RF-31): sem conta, sem compartilhamento, sem sync.
 final routerProvider = Provider<GoRouter>((ref) {
@@ -53,8 +54,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/lista/:listaId',
-        builder: (context, state) =>
-            TelaListaScreen(listaId: state.pathParameters['listaId']!),
+        builder: (context, state) => TelaListaScreen(
+          listaId: state.pathParameters['listaId']!,
+          foco: state.uri.queryParameters['foco'] == '1',
+        ),
+      ),
+      GoRoute(
+        path: '/adicionar',
+        builder: (context, state) => const AdicionarScreen(),
       ),
       GoRoute(
         path: '/historico/ida/:idaId',
