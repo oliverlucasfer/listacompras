@@ -47,6 +47,7 @@ Future<void> _semearLista(
   required String titulo,
   int pendentes = 0,
   int concluidos = 0,
+  DateTime? arquivadaEm,
 }) async {
   final agora = DateTime.utc(2026, 1, 1);
   await db
@@ -58,6 +59,7 @@ Future<void> _semearLista(
           updatedAt: agora,
           titulo: titulo,
           donoId: idLocal,
+          arquivadaEm: Value(arquivadaEm),
         ),
       );
   var ordem = 0;
@@ -196,6 +198,31 @@ void main() {
     final dados = h.fake.chamadas.last;
     expect(dados.titulo, isNull);
     expect(dados.pendentes, 0);
+
+    await _fechar(tester);
+  });
+
+  testWidgets('deve_ignorar_lista_arquivada_quando_e_a_ultima', (tester) async {
+    final h = await _montar(
+      tester,
+      ultimaListaId: 'arquivada',
+      seed: (db) async {
+        await _semearLista(
+          db,
+          listaId: 'arquivada',
+          titulo: 'Arquivada',
+          arquivadaEm: DateTime.utc(2026, 2, 1),
+        );
+        await _semearLista(db, listaId: 'ativa', titulo: 'Ativa', pendentes: 2);
+      },
+    );
+
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pump();
+
+    final dados = h.fake.chamadas.last;
+    expect(dados.titulo, 'Ativa');
+    expect(dados.pendentes, 2);
 
     await _fechar(tester);
   });

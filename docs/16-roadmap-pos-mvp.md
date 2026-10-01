@@ -60,7 +60,7 @@ Foco: confiabilidade e preparação para publicação séria.
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | D1 | iOS na distribuição | Fase 6 | 06, 09 | Alto | G | Depende de conta Apple Developer |
 | D2 | i18n (en/es) | novo | 05, 15 | Médio | G | Infra de localização; hoje pt-BR único |
-| D3 | Widget Android / quick-add no lançador | RF-38 | 05, 09, 10, 12, 15 | Médio | G | concluído (F55-T01…T05, frente A13) — AppWidget de tela inicial com a última lista, nº de pendentes e botão "Adicionar item" que abre `/adicionar` (Android-only, offline) |
+| D3 | Widget Android / quick-add na tela inicial | RF-38 | 05, 09, 10, 12, 15 | Médio | G | concluído (F55-T01…T05, frente A13) — AppWidget de tela inicial com a última lista, nº de pendentes e botão "Adicionar item" que abre `/adicionar` (Android-only, offline) |
 | D5 | Publicação do app na Play (produção) | RF-32 | 06, 09 | Alto | M | em execução (F47) — gate F5-T06 (prod) permanece separado |
 
 ## Dívidas técnicas registradas

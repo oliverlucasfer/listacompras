@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,7 +39,12 @@ Future<ProviderContainer> _montar(
   return container;
 }
 
-Future<void> _semearLista(AppDatabase db, String id, String titulo) async {
+Future<void> _semearLista(
+  AppDatabase db,
+  String id,
+  String titulo, {
+  DateTime? arquivadaEm,
+}) async {
   final agora = DateTime.utc(2026, 1, 1);
   await db
       .into(db.listaLocal)
@@ -49,6 +55,7 @@ Future<void> _semearLista(AppDatabase db, String id, String titulo) async {
           updatedAt: agora,
           titulo: titulo,
           donoId: idLocal,
+          arquivadaEm: Value(arquivadaEm),
         ),
       );
 }
@@ -89,5 +96,33 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(router.routerDelegate.currentConfiguration.uri.path, '/listas');
+  });
+
+  testWidgets('deve_abrir_lista_ativa_quando_ultima_esta_arquivada', (
+    tester,
+  ) async {
+    final container = await _montar(
+      tester,
+      ultimaListaId: 'arquivada',
+      seed: (db) async {
+        await _semearLista(
+          db,
+          'arquivada',
+          'Arquivada',
+          arquivadaEm: DateTime.utc(2026, 2, 1),
+        );
+        await _semearLista(db, 'ativa', 'Ativa');
+      },
+    );
+    final router = container.read(routerProvider);
+
+    router.go('/adicionar');
+    await tester.pumpAndSettle();
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(router.routerDelegate.currentConfiguration.uri.path, '/lista/ativa');
   });
 }

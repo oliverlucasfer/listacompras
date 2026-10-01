@@ -22,9 +22,10 @@ class _AdicionarScreenState extends ConsumerState<AdicionarScreen> {
   Future<void> _resolver() async {
     final ultima = await ref.read(ultimaListaServiceProvider).ler();
     final listas = await ref.read(listasRepositoryProvider).watchListas().first;
+    final disponiveis = listas.where((l) => l.arquivadaEm == null).toList();
     final alvo =
-        listas.where((l) => l.id == ultima).firstOrNull ??
-        (listas.isNotEmpty ? listas.first : null);
+        disponiveis.where((l) => l.id == ultima).firstOrNull ??
+        (disponiveis.isNotEmpty ? disponiveis.first : null);
     if (!mounted) return;
     if (alvo == null) {
       context.go('/listas');

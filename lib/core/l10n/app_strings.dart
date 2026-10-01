@@ -374,11 +374,4 @@ abstract final class AppStrings {
   static const tourOrcamentoTitulo = 'Orçamento e total';
   static const tourOrcamentoCorpo =
       'Defina um teto e acompanhe o total do carrinho.';
-
-  // Widget Android (RF-38, F55)
-  static const widgetPendentesSingular = '1 pendente';
-  static String widgetPendentesPlural(int n) => '$n pendentes';
-  static const widgetSemLista = 'Crie sua primeira lista';
-  static const widgetAdicionar = 'Adicionar item';
-  static const widgetLista = 'Lista';
 }

@@ -18,8 +18,10 @@ final _listaAlvoWidgetProvider = Provider<AsyncValue<Lista?>>((ref) {
   final lista = listas.value;
   if (lista == null) return const AsyncData<Lista?>(null);
   final alvoId = id.value;
+  final disponiveis = lista.where((l) => l.arquivadaEm == null).toList();
   return AsyncData<Lista?>(
-    lista.where((l) => l.id == alvoId).firstOrNull ?? lista.firstOrNull,
+    disponiveis.where((l) => l.id == alvoId).firstOrNull ??
+        disponiveis.firstOrNull,
   );
 });
 
