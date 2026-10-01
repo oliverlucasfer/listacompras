@@ -35,6 +35,8 @@ class _EstatisticasTabState extends ConsumerState<EstatisticasTab> {
         const _SecaoGastoPorPeriodo(maxMeses: _maxMeses),
         const AppCabecalhoSecao(AppStrings.gastoPorCategoria),
         const _SecaoGastoPorCategoria(),
+        const AppCabecalhoSecao(AppStrings.gastoPorMercado),
+        const _SecaoGastoPorMercado(),
         const AppCabecalhoSecao(AppStrings.itensMaisComprados),
         const _SecaoItensMaisComprados(),
         const AppCabecalhoSecao(AppStrings.evolucaoDePreco),
@@ -113,6 +115,35 @@ class _SecaoGastoPorCategoria extends ConsumerWidget {
                   '${formatarReais(c.totalCentavos)} · '
                   '${_percentual(c.totalCentavos, total)}',
                 ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _SecaoGastoPorMercado extends ConsumerWidget {
+  const _SecaoGastoPorMercado();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dados = ref.watch(gastoPorMercadoProvider);
+    return dados.when(
+      loading: () => const AppEsqueleto(linhas: 2, altura: 40),
+      error: (_, _) => AppEstadoErro(
+        mensagem: AppStrings.erroGenerico,
+        onRetentar: () => ref.invalidate(gastoPorMercadoProvider),
+      ),
+      data: (mercados) {
+        if (mercados.isEmpty) return const _SemDados();
+        return Column(
+          children: [
+            for (final m in mercados)
+              ListTile(
+                dense: true,
+                title: Text(m.mercado ?? AppStrings.semMercado),
+                trailing: Text(formatarReais(m.totalCentavos)),
               ),
           ],
         );

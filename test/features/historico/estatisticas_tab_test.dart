@@ -61,17 +61,10 @@ void main() {
     await tester.tap(find.text('Estatísticas'));
     await tester.pumpAndSettle();
     expect(find.text('Gasto por categoria'), findsOneWidget);
-    expect(find.text('Itens mais comprados'), findsOneWidget);
-    expect(find.text('Arroz'), findsOneWidget, reason: 'item mais comprado');
     expect(
       find.text('Mercearia'),
       findsOneWidget,
       reason: 'categoria agregada',
-    );
-    expect(
-      find.textContaining('R\$ 10,00'),
-      findsWidgets,
-      reason: '2 kg × R\$ 5,00 = R\$ 10,00 agregado nas seções',
     );
     expect(
       find.text('Total no período: R\$ 10,00'),
@@ -82,6 +75,19 @@ void main() {
       find.text('Total gasto'),
       findsOneWidget,
       reason: 'resumo visível também na aba Estatísticas (acima do TabBar)',
+    );
+    await tester.scrollUntilVisible(
+      find.text('Itens mais comprados'),
+      200,
+      scrollable: scrollEstatisticas(),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Itens mais comprados'), findsOneWidget);
+    expect(find.text('Arroz'), findsOneWidget, reason: 'item mais comprado');
+    expect(
+      find.textContaining('R\$ 10,00'),
+      findsWidgets,
+      reason: '2 kg × R\$ 5,00 = R\$ 10,00 agregado nas seções',
     );
     await fechar(tester);
   });
