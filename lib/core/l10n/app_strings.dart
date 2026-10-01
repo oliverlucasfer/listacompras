@@ -121,6 +121,17 @@ abstract final class AppStrings {
 
   static const acimaDoOrcamento = 'Acima do orçamento';
 
+  // Alertas de orçamento (RF-36, F53)
+  static const orcamentoAtencao = 'Perto do orçamento';
+  static String orcamentoCruzado(String total) =>
+      'Você passou do orçamento: $total';
+  static const orcamentoPorCategoria = 'Orçamento por categoria';
+  static const limitePorCategoria = 'Limite (R\$)';
+  static const categoriaSemLimite = 'Sem limite';
+  static const orcamentosSalvos = 'Limites por categoria salvos.';
+  static const acimaDoLimiteDaCategoria = 'Acima do limite da categoria';
+  static const notificacoesOrcamento = 'Notificações de orçamento';
+
   static const diminuir = 'Diminuir';
   static const aumentar = 'Aumentar';
   static const menu = 'Menu';

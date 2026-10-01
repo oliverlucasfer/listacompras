@@ -19,7 +19,7 @@
 | A8 | **Compartilhar lista sem nuvem (texto/arquivo/QR)** | **RF-33** | F49 | [spec](superpowers/specs/2026-09-30-compartilhar-lista-design.md) | concluído (F49-T01…T06) |
 | A9 | **Histórico de compras e estatísticas** | **RF-34** | F50 · F51 | [spec](superpowers/specs/2026-09-30-historico-compras-design.md) | concluído (F50-T01…T05 + F51-T01…T04) |
 | A10 | **Preço por mercado** | **RF-35** | F52 | [spec](superpowers/specs/2026-09-30-preco-mercado-orcamento-design.md) | concluído (F52-T01…T05) |
-| A11 | **Alertas de orçamento** | **RF-36** | F53 | [spec](superpowers/specs/2026-09-30-preco-mercado-orcamento-design.md) | pendente (próxima) |
+| A11 | **Alertas de orçamento** | **RF-36** | F53 | [spec](superpowers/specs/2026-09-30-preco-mercado-orcamento-design.md) | concluído (F53-T01…T06) |
 
 ## Onda A — Uso diário e retenção
 
@@ -50,7 +50,7 @@ Foco: confiabilidade e preparação para publicação séria.
 | ID | Frente | Requisito | Doc dono | Valor | Esforço | Notas |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | C1 | Preço por item, total ao vivo e comparação entre idas | RF-21 (preço/total), RF-28 (orçamento), RF-29 (comparação) | 05, 10 | Alto | G | concluído (F25-T01…T05, F36-T01…T05, F37-T01…T03) — preço/total, orçamento e comparação entre idas (histórico de preços **local**) |
-| C2 | Preço por mercado e alertas de orçamento | RF-35 (mercado), RF-36 (alertas) | 05, 10 | Alto | M · G | RF-35 concluído (F52-T01…T05, frente A10); RF-36 pendente (F53, frente A11) — preços derivados das idas, sem tabela nova |
+| C2 | Preço por mercado e alertas de orçamento | RF-35 (mercado), RF-36 (alertas) | 05, 10 | Alto | M · G | concluído — RF-35 (F52-T01…T05, frente A10) e RF-36 (F53-T01…T06, frente A11): preços derivados das idas, sem tabela nova; alertas progressivos + orçamento por categoria + notificação local |
 
 ## Onda D — Alcance
 

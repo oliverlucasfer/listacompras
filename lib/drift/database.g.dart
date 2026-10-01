@@ -2524,6 +2524,236 @@ class ItemIdaCompanion extends UpdateCompanion<ItemIdaData> {
   }
 }
 
+class $OrcamentoCategoriaTable extends OrcamentoCategoria
+    with TableInfo<$OrcamentoCategoriaTable, OrcamentoCategoriaData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OrcamentoCategoriaTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _categoriaMeta = const VerificationMeta(
+    'categoria',
+  );
+  @override
+  late final GeneratedColumn<String> categoria = GeneratedColumn<String>(
+    'categoria',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _limiteCentavosMeta = const VerificationMeta(
+    'limiteCentavos',
+  );
+  @override
+  late final GeneratedColumn<int> limiteCentavos = GeneratedColumn<int>(
+    'limite_centavos',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [categoria, limiteCentavos];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'orcamento_categoria';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<OrcamentoCategoriaData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('categoria')) {
+      context.handle(
+        _categoriaMeta,
+        categoria.isAcceptableOrUnknown(data['categoria']!, _categoriaMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoriaMeta);
+    }
+    if (data.containsKey('limite_centavos')) {
+      context.handle(
+        _limiteCentavosMeta,
+        limiteCentavos.isAcceptableOrUnknown(
+          data['limite_centavos']!,
+          _limiteCentavosMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {categoria};
+  @override
+  OrcamentoCategoriaData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OrcamentoCategoriaData(
+      categoria: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}categoria'],
+      )!,
+      limiteCentavos: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}limite_centavos'],
+      ),
+    );
+  }
+
+  @override
+  $OrcamentoCategoriaTable createAlias(String alias) {
+    return $OrcamentoCategoriaTable(attachedDatabase, alias);
+  }
+}
+
+class OrcamentoCategoriaData extends DataClass
+    implements Insertable<OrcamentoCategoriaData> {
+  final String categoria;
+  final int? limiteCentavos;
+  const OrcamentoCategoriaData({required this.categoria, this.limiteCentavos});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['categoria'] = Variable<String>(categoria);
+    if (!nullToAbsent || limiteCentavos != null) {
+      map['limite_centavos'] = Variable<int>(limiteCentavos);
+    }
+    return map;
+  }
+
+  OrcamentoCategoriaCompanion toCompanion(bool nullToAbsent) {
+    return OrcamentoCategoriaCompanion(
+      categoria: Value(categoria),
+      limiteCentavos: limiteCentavos == null && nullToAbsent
+          ? const Value.absent()
+          : Value(limiteCentavos),
+    );
+  }
+
+  factory OrcamentoCategoriaData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OrcamentoCategoriaData(
+      categoria: serializer.fromJson<String>(json['categoria']),
+      limiteCentavos: serializer.fromJson<int?>(json['limiteCentavos']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'categoria': serializer.toJson<String>(categoria),
+      'limiteCentavos': serializer.toJson<int?>(limiteCentavos),
+    };
+  }
+
+  OrcamentoCategoriaData copyWith({
+    String? categoria,
+    Value<int?> limiteCentavos = const Value.absent(),
+  }) => OrcamentoCategoriaData(
+    categoria: categoria ?? this.categoria,
+    limiteCentavos: limiteCentavos.present
+        ? limiteCentavos.value
+        : this.limiteCentavos,
+  );
+  OrcamentoCategoriaData copyWithCompanion(OrcamentoCategoriaCompanion data) {
+    return OrcamentoCategoriaData(
+      categoria: data.categoria.present ? data.categoria.value : this.categoria,
+      limiteCentavos: data.limiteCentavos.present
+          ? data.limiteCentavos.value
+          : this.limiteCentavos,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OrcamentoCategoriaData(')
+          ..write('categoria: $categoria, ')
+          ..write('limiteCentavos: $limiteCentavos')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(categoria, limiteCentavos);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OrcamentoCategoriaData &&
+          other.categoria == this.categoria &&
+          other.limiteCentavos == this.limiteCentavos);
+}
+
+class OrcamentoCategoriaCompanion
+    extends UpdateCompanion<OrcamentoCategoriaData> {
+  final Value<String> categoria;
+  final Value<int?> limiteCentavos;
+  final Value<int> rowid;
+  const OrcamentoCategoriaCompanion({
+    this.categoria = const Value.absent(),
+    this.limiteCentavos = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  OrcamentoCategoriaCompanion.insert({
+    required String categoria,
+    this.limiteCentavos = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : categoria = Value(categoria);
+  static Insertable<OrcamentoCategoriaData> custom({
+    Expression<String>? categoria,
+    Expression<int>? limiteCentavos,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (categoria != null) 'categoria': categoria,
+      if (limiteCentavos != null) 'limite_centavos': limiteCentavos,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  OrcamentoCategoriaCompanion copyWith({
+    Value<String>? categoria,
+    Value<int?>? limiteCentavos,
+    Value<int>? rowid,
+  }) {
+    return OrcamentoCategoriaCompanion(
+      categoria: categoria ?? this.categoria,
+      limiteCentavos: limiteCentavos ?? this.limiteCentavos,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (categoria.present) {
+      map['categoria'] = Variable<String>(categoria.value);
+    }
+    if (limiteCentavos.present) {
+      map['limite_centavos'] = Variable<int>(limiteCentavos.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OrcamentoCategoriaCompanion(')
+          ..write('categoria: $categoria, ')
+          ..write('limiteCentavos: $limiteCentavos, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2533,6 +2763,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $HistoricoPrecoLocalTable(this);
   late final $IdaCompraTable idaCompra = $IdaCompraTable(this);
   late final $ItemIdaTable itemIda = $ItemIdaTable(this);
+  late final $OrcamentoCategoriaTable orcamentoCategoria =
+      $OrcamentoCategoriaTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2543,6 +2775,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     historicoPrecoLocal,
     idaCompra,
     itemIda,
+    orcamentoCategoria,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -4286,6 +4519,164 @@ typedef $$ItemIdaTableProcessedTableManager =
       ItemIdaData,
       PrefetchHooks Function({bool idaId})
     >;
+typedef $$OrcamentoCategoriaTableCreateCompanionBuilder =
+    OrcamentoCategoriaCompanion Function({
+      required String categoria,
+      Value<int?> limiteCentavos,
+      Value<int> rowid,
+    });
+typedef $$OrcamentoCategoriaTableUpdateCompanionBuilder =
+    OrcamentoCategoriaCompanion Function({
+      Value<String> categoria,
+      Value<int?> limiteCentavos,
+      Value<int> rowid,
+    });
+
+class $$OrcamentoCategoriaTableFilterComposer
+    extends Composer<_$AppDatabase, $OrcamentoCategoriaTable> {
+  $$OrcamentoCategoriaTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get categoria => $composableBuilder(
+    column: $table.categoria,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get limiteCentavos => $composableBuilder(
+    column: $table.limiteCentavos,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$OrcamentoCategoriaTableOrderingComposer
+    extends Composer<_$AppDatabase, $OrcamentoCategoriaTable> {
+  $$OrcamentoCategoriaTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get categoria => $composableBuilder(
+    column: $table.categoria,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get limiteCentavos => $composableBuilder(
+    column: $table.limiteCentavos,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$OrcamentoCategoriaTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OrcamentoCategoriaTable> {
+  $$OrcamentoCategoriaTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get categoria =>
+      $composableBuilder(column: $table.categoria, builder: (column) => column);
+
+  GeneratedColumn<int> get limiteCentavos => $composableBuilder(
+    column: $table.limiteCentavos,
+    builder: (column) => column,
+  );
+}
+
+class $$OrcamentoCategoriaTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $OrcamentoCategoriaTable,
+          OrcamentoCategoriaData,
+          $$OrcamentoCategoriaTableFilterComposer,
+          $$OrcamentoCategoriaTableOrderingComposer,
+          $$OrcamentoCategoriaTableAnnotationComposer,
+          $$OrcamentoCategoriaTableCreateCompanionBuilder,
+          $$OrcamentoCategoriaTableUpdateCompanionBuilder,
+          (
+            OrcamentoCategoriaData,
+            BaseReferences<
+              _$AppDatabase,
+              $OrcamentoCategoriaTable,
+              OrcamentoCategoriaData
+            >,
+          ),
+          OrcamentoCategoriaData,
+          PrefetchHooks Function()
+        > {
+  $$OrcamentoCategoriaTableTableManager(
+    _$AppDatabase db,
+    $OrcamentoCategoriaTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OrcamentoCategoriaTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$OrcamentoCategoriaTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$OrcamentoCategoriaTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> categoria = const Value.absent(),
+                Value<int?> limiteCentavos = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OrcamentoCategoriaCompanion(
+                categoria: categoria,
+                limiteCentavos: limiteCentavos,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String categoria,
+                Value<int?> limiteCentavos = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OrcamentoCategoriaCompanion.insert(
+                categoria: categoria,
+                limiteCentavos: limiteCentavos,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$OrcamentoCategoriaTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $OrcamentoCategoriaTable,
+      OrcamentoCategoriaData,
+      $$OrcamentoCategoriaTableFilterComposer,
+      $$OrcamentoCategoriaTableOrderingComposer,
+      $$OrcamentoCategoriaTableAnnotationComposer,
+      $$OrcamentoCategoriaTableCreateCompanionBuilder,
+      $$OrcamentoCategoriaTableUpdateCompanionBuilder,
+      (
+        OrcamentoCategoriaData,
+        BaseReferences<
+          _$AppDatabase,
+          $OrcamentoCategoriaTable,
+          OrcamentoCategoriaData
+        >,
+      ),
+      OrcamentoCategoriaData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4300,4 +4691,6 @@ class $AppDatabaseManager {
       $$IdaCompraTableTableManager(_db, _db.idaCompra);
   $$ItemIdaTableTableManager get itemIda =>
       $$ItemIdaTableTableManager(_db, _db.itemIda);
+  $$OrcamentoCategoriaTableTableManager get orcamentoCategoria =>
+      $$OrcamentoCategoriaTableTableManager(_db, _db.orcamentoCategoria);
 }

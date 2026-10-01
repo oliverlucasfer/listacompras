@@ -11,6 +11,7 @@ import 'features/historico/ui/ida_detalhe_screen.dart';
 import 'features/listas/ui/mercado_screen.dart';
 import 'features/listas/ui/minhas_listas_screen.dart';
 import 'features/listas/ui/tela_lista_screen.dart';
+import 'features/listas/ui/tela_orcamento_categorias.dart';
 import 'features/listas/ui/tela_ordenar_categorias.dart';
 import 'features/onboarding/ui/boas_vindas_screen.dart';
 
@@ -72,6 +73,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/categorias',
         builder: (context, state) => const TelaOrdenarCategorias(),
+      ),
+      GoRoute(
+        path: '/orcamento-categorias',
+        builder: (context, state) => const TelaOrcamentoCategorias(),
       ),
       GoRoute(
         path: '/receber-lista',

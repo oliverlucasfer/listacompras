@@ -1317,4 +1317,234 @@ void main() {
             .getSingle();
     expect(atualizada.mercado, 'Mercado B');
   });
+
+  test(
+    'deve_criar_tabela_orcamento_categoria_quando_migrar_v13_para_v14',
+    () async {
+      // Banco real na versão v13 (com ida_compra.mercado, sem a tabela
+      // `orcamento_categoria`): DDL espelhando o schema v13 gerado + índice
+      // manual `uq_item_ativo`, dados gravados e user_version = 13.
+      final arquivo = File(
+        '${Directory.systemTemp.path}/v13_para_v14_${DateTime.now().microsecondsSinceEpoch}.sqlite',
+      );
+      addTearDown(() {
+        if (arquivo.existsSync()) arquivo.deleteSync();
+      });
+
+      final antigo = sq3.sqlite3.open(arquivo.path);
+      antigo.execute('''
+        CREATE TABLE lista_local (
+          id TEXT NOT NULL PRIMARY KEY,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          titulo TEXT NOT NULL,
+          dono_id TEXT NOT NULL,
+          deletado_em TEXT NULL,
+          arquivada_em TEXT NULL,
+          orcamento_centavos INTEGER NULL,
+          FOREIGN KEY (dono_id) REFERENCES lista_local (id) ON DELETE CASCADE
+        );
+        CREATE TABLE item_local (
+          id TEXT NOT NULL PRIMARY KEY,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          lista_id TEXT NOT NULL REFERENCES lista_local (id) ON DELETE CASCADE,
+          nome TEXT NOT NULL,
+          quantidade REAL NOT NULL DEFAULT 1.0,
+          unidade TEXT NOT NULL DEFAULT 'un',
+          categoria TEXT NOT NULL DEFAULT 'outros',
+          concluido INTEGER NOT NULL DEFAULT 0,
+          ordem INTEGER NOT NULL DEFAULT 0,
+          deletado_em TEXT NULL,
+          preco_centavos INTEGER NULL,
+          CHECK (quantidade > 0),
+          CHECK (quantidade <= 1000000),
+          CHECK (unidade IN ('un','kg','g','l','ml','caixa','pacote','pct','pt','dz')),
+          CHECK (categoria IN ('hortifruti','mercearia','frios','laticinios',
+            'congelados','padaria','bebidas','pet','limpeza','higiene','outros')),
+          CHECK (preco_centavos IS NULL OR
+            (preco_centavos >= 0 AND preco_centavos <= 99999999))
+        );
+        CREATE TABLE historico_preco_local (
+          nome_normalizado TEXT NOT NULL PRIMARY KEY,
+          preco_centavos INTEGER NOT NULL,
+          unidade TEXT NOT NULL,
+          registrado_em TEXT NOT NULL
+        );
+        CREATE TABLE ida_compra (
+          id TEXT NOT NULL PRIMARY KEY,
+          lista_id TEXT NULL,
+          titulo TEXT NOT NULL,
+          finalizada_em TEXT NOT NULL,
+          total_centavos INTEGER NOT NULL DEFAULT 0,
+          itens_count INTEGER NOT NULL DEFAULT 0,
+          mercado TEXT NULL
+        );
+        CREATE TABLE item_ida (
+          id TEXT NOT NULL PRIMARY KEY,
+          ida_id TEXT NOT NULL REFERENCES ida_compra (id) ON DELETE CASCADE,
+          nome TEXT NOT NULL,
+          quantidade REAL NOT NULL DEFAULT 1.0,
+          unidade TEXT NOT NULL DEFAULT 'un',
+          categoria TEXT NOT NULL DEFAULT 'outros',
+          preco_centavos INTEGER NULL,
+          CHECK (quantidade > 0),
+          CHECK (unidade IN ('un','kg','g','l','ml','caixa','pacote','pct','pt','dz')),
+          CHECK (categoria IN ('hortifruti','mercearia','frios','laticinios','congelados',
+            'padaria','bebidas','pet','limpeza','higiene','outros'))
+        );
+        CREATE UNIQUE INDEX uq_item_ativo
+          ON item_local (lista_id, lower(nome)) WHERE deletado_em IS NULL;
+        PRAGMA user_version = 13;
+      ''');
+      antigo.execute(
+        "INSERT INTO lista_local (id, created_at, updated_at, titulo, dono_id) "
+        "VALUES ('eeeeeeee-0000-0000-0000-000000000001', "
+        "'2026-01-01T00:00:00.000000Z', '2026-01-01T00:00:00.000000Z', "
+        "'Antiga v13', 'user-a')",
+      );
+      antigo.close();
+
+      final migrado = AppDatabase(NativeDatabase(arquivo));
+      addTearDown(migrado.close);
+
+      final lista =
+          await (migrado.select(migrado.listaLocal)..where(
+                (l) => l.id.equals('eeeeeeee-0000-0000-0000-000000000001'),
+              ))
+              .getSingle();
+      expect(lista.titulo, 'Antiga v13');
+
+      // Tabela nova existe e aceita escrita/leitura após a migração.
+      await migrado
+          .into(migrado.orcamentoCategoria)
+          .insert(
+            OrcamentoCategoriaCompanion.insert(
+              categoria: 'mercearia',
+              limiteCentavos: const Value(15000),
+            ),
+          );
+      final orcamento = await migrado
+          .select(migrado.orcamentoCategoria)
+          .getSingle();
+      expect(orcamento.categoria, 'mercearia');
+      expect(orcamento.limiteCentavos, 15000);
+    },
+  );
+
+  test(
+    'deve_criar_tabela_orcamento_categoria_quando_migrar_v12_para_v14',
+    () async {
+      // Banco real na versão v12 (sem ida_compra.mercado e sem
+      // `orcamento_categoria`): prova o guard ACUMULATIVO da tabela NOVA — um
+      // banco bem abaixo do v13 precisa ganhar a tabela ao subir para o v14.
+      // DDL espelhando o schema v12 gerado + índice manual `uq_item_ativo`,
+      // dados gravados e user_version = 12.
+      final arquivo = File(
+        '${Directory.systemTemp.path}/v12_para_v14_${DateTime.now().microsecondsSinceEpoch}.sqlite',
+      );
+      addTearDown(() {
+        if (arquivo.existsSync()) arquivo.deleteSync();
+      });
+
+      final antigo = sq3.sqlite3.open(arquivo.path);
+      antigo.execute('''
+        CREATE TABLE lista_local (
+          id TEXT NOT NULL PRIMARY KEY,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          titulo TEXT NOT NULL,
+          dono_id TEXT NOT NULL,
+          deletado_em TEXT NULL,
+          arquivada_em TEXT NULL,
+          orcamento_centavos INTEGER NULL,
+          FOREIGN KEY (dono_id) REFERENCES lista_local (id) ON DELETE CASCADE
+        );
+        CREATE TABLE item_local (
+          id TEXT NOT NULL PRIMARY KEY,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          lista_id TEXT NOT NULL REFERENCES lista_local (id) ON DELETE CASCADE,
+          nome TEXT NOT NULL,
+          quantidade REAL NOT NULL DEFAULT 1.0,
+          unidade TEXT NOT NULL DEFAULT 'un',
+          categoria TEXT NOT NULL DEFAULT 'outros',
+          concluido INTEGER NOT NULL DEFAULT 0,
+          ordem INTEGER NOT NULL DEFAULT 0,
+          deletado_em TEXT NULL,
+          preco_centavos INTEGER NULL,
+          CHECK (quantidade > 0),
+          CHECK (quantidade <= 1000000),
+          CHECK (unidade IN ('un','kg','g','l','ml','caixa','pacote','pct','pt','dz')),
+          CHECK (categoria IN ('hortifruti','mercearia','frios','laticinios',
+            'congelados','padaria','bebidas','pet','limpeza','higiene','outros')),
+          CHECK (preco_centavos IS NULL OR
+            (preco_centavos >= 0 AND preco_centavos <= 99999999))
+        );
+        CREATE TABLE historico_preco_local (
+          nome_normalizado TEXT NOT NULL PRIMARY KEY,
+          preco_centavos INTEGER NOT NULL,
+          unidade TEXT NOT NULL,
+          registrado_em TEXT NOT NULL
+        );
+        CREATE TABLE ida_compra (
+          id TEXT NOT NULL PRIMARY KEY,
+          lista_id TEXT NULL,
+          titulo TEXT NOT NULL,
+          finalizada_em TEXT NOT NULL,
+          total_centavos INTEGER NOT NULL DEFAULT 0,
+          itens_count INTEGER NOT NULL DEFAULT 0
+        );
+        CREATE TABLE item_ida (
+          id TEXT NOT NULL PRIMARY KEY,
+          ida_id TEXT NOT NULL REFERENCES ida_compra (id) ON DELETE CASCADE,
+          nome TEXT NOT NULL,
+          quantidade REAL NOT NULL DEFAULT 1.0,
+          unidade TEXT NOT NULL DEFAULT 'un',
+          categoria TEXT NOT NULL DEFAULT 'outros',
+          preco_centavos INTEGER NULL,
+          CHECK (quantidade > 0),
+          CHECK (unidade IN ('un','kg','g','l','ml','caixa','pacote','pct','pt','dz')),
+          CHECK (categoria IN ('hortifruti','mercearia','frios','laticinios','congelados',
+            'padaria','bebidas','pet','limpeza','higiene','outros'))
+        );
+        CREATE UNIQUE INDEX uq_item_ativo
+          ON item_local (lista_id, lower(nome)) WHERE deletado_em IS NULL;
+        PRAGMA user_version = 12;
+      ''');
+      antigo.execute(
+        "INSERT INTO lista_local (id, created_at, updated_at, titulo, dono_id) "
+        "VALUES ('dddddddd-0000-0000-0000-000000000001', "
+        "'2026-01-01T00:00:00.000000Z', '2026-01-01T00:00:00.000000Z', "
+        "'Antiga v12', 'user-a')",
+      );
+      antigo.close();
+
+      final migrado = AppDatabase(NativeDatabase(arquivo));
+      addTearDown(migrado.close);
+
+      final lista =
+          await (migrado.select(migrado.listaLocal)..where(
+                (l) => l.id.equals('dddddddd-0000-0000-0000-000000000001'),
+              ))
+              .getSingle();
+      expect(lista.titulo, 'Antiga v12');
+
+      // O guard acumulativo (`de < 14`) cria a tabela NOVA também a partir do
+      // v12; sem ele a feature seria no-op silencioso nessas instalações.
+      await migrado
+          .into(migrado.orcamentoCategoria)
+          .insert(
+            OrcamentoCategoriaCompanion.insert(
+              categoria: 'bebidas',
+              limiteCentavos: const Value(5000),
+            ),
+          );
+      final orcamento = await migrado
+          .select(migrado.orcamentoCategoria)
+          .getSingle();
+      expect(orcamento.categoria, 'bebidas');
+      expect(orcamento.limiteCentavos, 5000);
+    },
+  );
 }

@@ -8,8 +8,8 @@ void main() {
   setUp(() => db = AppDatabase(NativeDatabase.memory()));
   tearDown(() => db.close());
 
-  test('deve_ter_schema_v13_quando_abre', () {
-    expect(db.schemaVersion, 13);
+  test('deve_ter_schema_v14_quando_abre', () {
+    expect(db.schemaVersion, 14);
   });
 
   test('deve_gravar_ida_e_item_quando_insere', () async {

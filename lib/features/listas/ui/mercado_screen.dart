@@ -15,6 +15,7 @@ import '../../../core/widgets/app_snack_bar.dart';
 import '../domain/item.dart';
 import '../../../core/dominio/quantidade.dart';
 import '../providers/listas_providers.dart';
+import 'aviso_orcamento.dart';
 import 'total_carrinho.dart';
 
 /// Modo mercado (RF-18, doc 05 §6.5, wireframe 10 §3.5): tela focada para
@@ -38,6 +39,7 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
     final jaContava = _marcadosNaSessao.contains(item.id);
     setState(() => _marcadosNaSessao.add(item.id));
     try {
+      await _talvezAvisar(item, marcando: true);
       await ref
           .read(listasRepositoryProvider)
           .editarItem(item.id, concluido: true);
@@ -54,6 +56,7 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
     final jaContava = _marcadosNaSessao.contains(item.id);
     setState(() => _marcadosNaSessao.remove(item.id));
     try {
+      await _talvezAvisar(item, marcando: false);
       await ref
           .read(listasRepositoryProvider)
           .editarItem(item.id, concluido: false);
@@ -64,6 +67,21 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
       });
       mostrarSnackBar(context, AppStrings.erroGenerico);
     }
+  }
+
+  /// Avisa, antes da escrita, quando marcar/desmarcar [item] faz o total
+  /// cruzar o orçamento da lista (RF-36, F53-T03).
+  Future<void> _talvezAvisar(Item item, {required bool marcando}) {
+    final itens =
+        ref.read(itensDaListaProvider(widget.listaId)).value ?? const <Item>[];
+    return talvezAvisarCruzamento(
+      context,
+      ref,
+      widget.listaId,
+      itens: itens,
+      item: item,
+      marcando: marcando,
+    );
   }
 
   /// Ids marcados nesta sessão que ainda existem **e** estão concluídos no

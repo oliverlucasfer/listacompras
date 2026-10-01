@@ -57,6 +57,12 @@ class ConfiguracoesScreen extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/categorias'),
           ),
+          ListTile(
+            leading: const Icon(Icons.savings_outlined),
+            title: const Text(AppStrings.orcamentoPorCategoria),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/orcamento-categorias'),
+          ),
           const AppCabecalhoSecao(AppStrings.sobre),
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined),

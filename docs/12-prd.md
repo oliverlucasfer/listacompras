@@ -40,11 +40,12 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-27 | Boas-vindas (uma vez) + estados vazios explicativos + **tour guiado interativo do primeiro uso** (2 etapas, spotlight sobre a UI real, reabrível em Configurações) | 05 §6.8/§6.11 + 10 §2/§3/§5 | F31 · F46 | [05 §8](05-app-flutter.md) |
 | RF-28 | Orçamento (limite de gasto) por lista, comparado ao total do carrinho (RF-21), editável | 05 §6.3/§6.5 + 10 §3.1/§3.3 | F36 | [05 §8](05-app-flutter.md) |
 | RF-29 | Comparação de preços entre idas: "Última compra: R$ X (dd/mm)" + variação no editor, a partir do histórico **local por dispositivo** | 05 §6.3 + 10 §3.1 | F37 | [05 §8](05-app-flutter.md) |
-| RF-31 | **App único local "Minhas Listas" (Lite):** uso sem conta, 100% no aparelho (sem login, sem convites, sem notificações, sem sincronização), com backup local exportar/importar; identidade visual própria (índigo/cesta, nome "Minhas Listas") | 05 §2.3 + 05 §6.10 | F48 | [05 §2.3](05-app-flutter.md) |
+| RF-31 | **App único local "Minhas Listas" (Lite):** uso sem conta, 100% no aparelho (sem login, sem convites, sem sincronização, sem notificações push/remotas — a notificação **local** de orçamento é RF-36), com backup local exportar/importar; identidade visual própria (índigo/cesta, nome "Minhas Listas") | 05 §2.3 + 05 §6.10 | F48 | [05 §2.3](05-app-flutter.md) |
 | RF-32 | Publicação do app ("Minhas Listas") na Google Play em produção: app 100% local (sem rede/push/Firebase), AAB assinado, política de privacidade pública e Declaração de Dados | 06 §4 + 09 §2.10 + 05 §2.3 | F47 | [06 §4](06-mvp-entregas.md) |
 | RF-33 | Compartilhar lista sem nuvem: exportar (texto/arquivo/QR-código) e importar (texto/arquivo/QR) sempre criando uma lista nova, 100% offline | 05 §6.12 + 10 | F49 | [05 §8](05-app-flutter.md) |
 | RF-34 | Histórico de compras: ação "Finalizar compra" grava uma ida (snapshot dos itens concluídos) + aba Histórico com **Idas** (lista/resumo/detalhe) e **Estatísticas** (gasto por período/categoria, itens mais comprados, evolução de preço por item) | 05 §6.13 + 10 §8 | F50 · F51 | [05 §8](05-app-flutter.md) |
 | RF-35 | Registrar o **mercado** (opcional) ao finalizar a compra e **derivar das idas** o preço por mercado (último + mais barato, mesma unidade): linha "Por mercado" no editor, rótulo no detalhe, **chip** do mercado da última ida na lista e "Gasto por mercado" nas estatísticas | 05 §6.14 + 10 §8 | F52 | [05 §8](05-app-flutter.md) |
+| RF-36 | Alertas de orçamento: estado progressivo do total do carrinho (normal < 80% / **aviso** ≥ 80% / **acima** > 100%), **SnackBar ao cruzar** o limite, **orçamento por categoria** (limite local por categoria, Drift v14) e **notificação local** ao ultrapassar (Android/iOS; Web/Desktop só in-app) | 05 §6.15 + 10 §3.1/§5.2 | F53 | [05 §8](05-app-flutter.md) |
 
 ## 3. Requisitos Não-Funcionais
 
@@ -122,13 +123,14 @@ Cada requisito liga story → design → tarefas ([14](14-tarefas.md)) → verif
 | RF-33 | US-01 | F49 | F49-T01…F49-T06 | Unit codec/repo + widgets |
 | RF-34 | US-01 | F50 · F51 | F50-T01…T05; F51-T01…T04 | Unit repo/agregações + widgets |
 | RF-35 | US-01 | F52 | F52-T01…T05 | Unit repo/preço por mercado + widgets |
+| RF-36 | US-01 | F53 | F53-T01…T06 | Unit funções puras/repo + widgets + fake de notificação |
 | RNF-02 | US-03 | F48 | F48-T02, F48-T04 | Testes de repositório + fluxo `T3` |
 | RNF-06 | — | F8 · F14 | F14-T01…T02 | Guidelines de a11y + escala de fonte |
 | RNF-08 | — | F33 · F39 | F33-T01…T03 | Fluxos críticos + consistência |
 
 ## 7. Fora de escopo (MVP)
 
-Receitas/menus, cupons, scan de código de barras, importação de foto/nota fiscal, app iOS na distribuição, publicação de desktop, **colaboração/compartilhamento em nuvem** (removido na F48; o compartilhamento **local** volta como RF-33, pós-MVP/F49), **conta/nuvem/sync/push** (removidos na F48). O **histórico de compras** volta como RF-34 (pós-MVP: F50 núcleo, F51 estatísticas) e o **preço por mercado** entra como RF-35 (pós-MVP: F52).
+Receitas/menus, cupons, scan de código de barras, importação de foto/nota fiscal, app iOS na distribuição, publicação de desktop, **colaboração/compartilhamento em nuvem** (removido na F48; o compartilhamento **local** volta como RF-33, pós-MVP/F49), **conta/nuvem/sync/push** (removidos na F48). O **histórico de compras** volta como RF-34 (pós-MVP: F50 núcleo, F51 estatísticas), o **preço por mercado** entra como RF-35 (pós-MVP: F52) e os **alertas de orçamento** entram como RF-36 (pós-MVP: F53).
 
 ---
 

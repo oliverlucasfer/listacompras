@@ -11,10 +11,13 @@
          seu próprio MlKitComponentDiscoveryService. Ele NÃO é removido (sem
          ele o MLKit não inicializa) e não adiciona INTERNET — por isso o
          guard de CI proíbe os nós do SDK/rede, não o literal
-         "com.google.firebase". -->
+         "com.google.firebase".
+
+         POST_NOTIFICATIONS é mantido intencionalmente para a notificação
+         local de orçamento (RF-36, F53) — o strip defensivo da F48 foi
+         removido. -->
 
     <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" tools:node="remove" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" tools:node="remove" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
     <uses-permission android:name="android.permission.WAKE_LOCK" tools:node="remove" />
