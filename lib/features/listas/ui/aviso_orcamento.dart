@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/app_strings.dart';
 import '../../../core/widgets/app_snack_bar.dart';
+import '../../notificacoes/providers/notificacao_providers.dart';
 import '../domain/item.dart';
 import '../domain/orcamento.dart';
 import '../domain/preco.dart';
@@ -28,12 +29,24 @@ Future<void> talvezAvisarCruzamento(
   final subtotal = subtotalMarcado(item);
   final depois = marcando ? antes + subtotal : antes - subtotal;
   if (!cruzouLimite(antes: antes, depois: depois, orcamento: orcamento)) return;
-  // Ponto de extensão (Task 5, RF-36): disparar a notificação local aqui,
-  // quando `notificacaoLocalProvider` existir, antes/junto do SnackBar.
   if (context.mounted) {
     mostrarSnackBar(
       context,
       AppStrings.orcamentoCruzado(formatarReais(depois)),
     );
+  }
+  // Notificação local (RF-36, F53-T05): só onde o SO suporta (Android/iOS).
+  // Best-effort — uma falha do plugin nunca pode quebrar o fluxo da lista.
+  if (plataformaComNotificacao()) {
+    try {
+      await ref
+          .read(notificacaoLocalProvider)
+          .mostrar(
+            titulo: AppStrings.orcamento,
+            corpo: AppStrings.orcamentoCruzado(formatarReais(depois)),
+          );
+    } catch (_) {
+      // silencioso por design: o aviso in-app (SnackBar) já foi mostrado.
+    }
   }
 }
