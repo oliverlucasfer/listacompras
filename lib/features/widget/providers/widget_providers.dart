@@ -10,3 +10,19 @@ final widgetServiceProvider = Provider<WidgetService>(
 final ultimaListaServiceProvider = Provider<UltimaListaService>(
   (ref) => UltimaListaService(),
 );
+
+/// Última lista aberta (RF-38, F55), reativa: `TelaListaScreen` grava e o
+/// `WidgetAtualizador` observa, mantendo o widget em dia na mesma sessão.
+class UltimaListaNotifier extends AsyncNotifier<String?> {
+  @override
+  Future<String?> build() => ref.watch(ultimaListaServiceProvider).ler();
+
+  Future<void> registrar(String listaId) async {
+    state = AsyncData(listaId);
+    await ref.read(ultimaListaServiceProvider).registrar(listaId);
+  }
+}
+
+final ultimaListaProvider = AsyncNotifierProvider<UltimaListaNotifier, String?>(
+  UltimaListaNotifier.new,
+);

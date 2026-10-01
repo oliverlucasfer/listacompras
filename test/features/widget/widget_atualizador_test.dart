@@ -157,6 +157,33 @@ void main() {
     await _fechar(tester);
   });
 
+  testWidgets('deve_atualizar_payload_quando_troca_a_ultima_lista', (
+    tester,
+  ) async {
+    final h = await _montar(
+      tester,
+      ultimaListaId: 'l1',
+      seed: (db) async {
+        await _semearLista(db, listaId: 'l1', titulo: 'Primeira', pendentes: 1);
+        await _semearLista(db, listaId: 'l2', titulo: 'Segunda', pendentes: 3);
+      },
+    );
+
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pump();
+    expect(h.fake.chamadas.last.titulo, 'Primeira');
+    expect(h.fake.chamadas.last.pendentes, 1);
+
+    await h.container.read(ultimaListaProvider.notifier).registrar('l2');
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pump();
+
+    expect(h.fake.chamadas.last.titulo, 'Segunda');
+    expect(h.fake.chamadas.last.pendentes, 3);
+
+    await _fechar(tester);
+  });
+
   testWidgets('deve_enviar_sem_lista_quando_ultima_lista_inexistente', (
     tester,
   ) async {

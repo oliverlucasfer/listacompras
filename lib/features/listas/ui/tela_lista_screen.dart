@@ -72,8 +72,14 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
   void initState() {
     super.initState();
     // Registra a lista aberta para o widget apontar a rota `/adicionar`
-    // (RF-38, F55).
-    unawaited(ref.read(ultimaListaServiceProvider).registrar(widget.listaId));
+    // (RF-38, F55). Adiado para depois do frame: o registro reativo atualiza um
+    // provider e não pode rodar durante o build da árvore.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(
+        ref.read(ultimaListaProvider.notifier).registrar(widget.listaId),
+      );
+    });
   }
 
   @override

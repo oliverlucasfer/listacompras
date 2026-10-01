@@ -9,16 +9,11 @@ import '../../listas/providers/listas_providers.dart';
 import '../domain/widget_service.dart';
 import '../providers/widget_providers.dart';
 
-/// Id da última lista aberta (RF-38, F55).
-final _ultimaListaIdProvider = FutureProvider<String?>(
-  (ref) => ref.watch(ultimaListaServiceProvider).ler(),
-);
-
 /// Lista que o widget deve exibir: a última aberta ou, se inválida, a mais
 /// recente (RF-38 §5).
 final _listaAlvoWidgetProvider = Provider<AsyncValue<Lista?>>((ref) {
   final listas = ref.watch(listasProvider);
-  final id = ref.watch(_ultimaListaIdProvider);
+  final id = ref.watch(ultimaListaProvider);
   if (listas.isLoading || id.isLoading) return const AsyncLoading<Lista?>();
   final lista = listas.value;
   if (lista == null) return const AsyncData<Lista?>(null);
@@ -74,7 +69,10 @@ class _WidgetAtualizadorState extends ConsumerState<WidgetAtualizador>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     final service = ref.read(widgetServiceProvider);
-    _toques = service.toques().listen((_) => _abrirAdicionar());
+    _toques = service.toques().listen(
+      (_) => _abrirAdicionar(),
+      onError: (_) {},
+    );
     _verificarToqueInicial(service);
     _dados = ref.listenManual<AsyncValue<WidgetDados>>(
       _widgetDadosProvider,
