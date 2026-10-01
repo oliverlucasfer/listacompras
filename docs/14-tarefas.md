@@ -1169,7 +1169,7 @@ Spec: [superpowers/specs/2026-09-30-widget-android-design.md](superpowers/specs/
 
 - [x] **F55-T01** — Serviços Dart (ponte do widget + última lista)
   Dep: F54-T03 · Docs: [05 §1/§2/§3/§6.17](05-app-flutter.md), [12 §2](12-prd.md), [09 §2.15](09-runbook-operacoes.md)
-  CP: `home_widget` em `pubspec.yaml`/`pubspec.lock`; `WidgetDados`/`WidgetService` + `WidgetServiceHomeWidget` (chaves `titulo`/`pendentes`/`tem_lista`; `nomeAppWidget = MinhasListasWidgetProvider`) + `UltimaListaService` (`ultima_lista_id`); providers `widgetServiceProvider`/`ultimaListaServiceProvider`/`ultimaListaProvider`; testes com fake da ponte verdes.
+  CP: `home_widget` em `pubspec.yaml`/`pubspec.lock`; `WidgetDados`/`WidgetService` + `WidgetServiceHomeWidget` (chaves `titulo`/`pendentes`/`tem_lista`; `updateWidget(qualifiedAndroidName: ...)` com o FQCN `br.com.oliverlucas.lista_compras.MinhasListasWidgetProvider`) + `UltimaListaService` (`ultima_lista_id`); providers `widgetServiceProvider`/`ultimaListaServiceProvider`/`ultimaListaProvider`; testes com fake da ponte verdes.
 - [x] **F55-T02** — Rota `/adicionar` + foco no campo + registro da última lista
   Dep: F55-T01 · Docs: [05 §4/§6.3/§6.17](05-app-flutter.md)
   CP: rota `/adicionar` resolve a última lista (ou a existente mais recente) e faz `pushReplacement('/lista/<id>?foco=1')`; sem lista → `/listas`; `TelaListaScreen(foco:)` com `autofocus` no campo "Adicionar item" e gravação da última lista ao abrir; widget tests (Drift in-memory) verdes.
