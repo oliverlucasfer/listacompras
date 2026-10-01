@@ -42,6 +42,7 @@ import '../domain/sugestao_item.dart';
 import '../../../core/dominio/unidade.dart';
 import '../providers/listas_providers.dart';
 import '../providers/ordem_categorias_provider.dart';
+import 'aviso_orcamento.dart';
 import 'modal_adicionar_de_outra_lista.dart';
 import 'sheet_titulo_lista.dart';
 import 'total_carrinho.dart';
@@ -916,9 +917,7 @@ class _LinhaItem extends ConsumerWidget {
           label: item.nome,
           child: Checkbox(
             value: item.concluido,
-            onChanged: (_) => ref
-                .read(listasRepositoryProvider)
-                .editarItem(item.id, concluido: !item.concluido),
+            onChanged: (_) => _alternar(context, ref),
           ),
         ),
       ),
@@ -969,6 +968,25 @@ class _LinhaItem extends ConsumerWidget {
       },
       child: linha,
     );
+  }
+
+  /// Marca/desmarca o item avisando antes se o total cruzar o orçamento
+  /// (RF-36, F53-T03). O aviso usa os itens atuais (antes da escrita).
+  Future<void> _alternar(BuildContext context, WidgetRef ref) async {
+    final itens =
+        ref.read(itensDaListaProvider(listaId)).value ?? const <Item>[];
+    final marcando = !item.concluido;
+    await talvezAvisarCruzamento(
+      context,
+      ref,
+      listaId,
+      itens: itens,
+      item: item,
+      marcando: marcando,
+    );
+    await ref
+        .read(listasRepositoryProvider)
+        .editarItem(item.id, concluido: marcando);
   }
 
   /// Remove o item e oferece Desfazer (usado pelo swipe e pelo diálogo).
