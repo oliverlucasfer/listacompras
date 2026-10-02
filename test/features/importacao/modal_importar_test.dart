@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/categorias/sugestao_categorias.dart';
 import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/core/importacao/resposta_import.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/importacao/ui/modal_importar.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
@@ -23,7 +22,7 @@ class _SugestaoQueFalha extends SugestaoCategorias {
 
 void main() {
   FilledButton botaoExtrair(WidgetTester tester) => tester.widget<FilledButton>(
-    find.widgetWithText(FilledButton, AppStrings.importExtrairItens),
+    find.widgetWithText(FilledButton, 'Extrair itens'),
   );
 
   Future<void> abrir(
@@ -80,15 +79,13 @@ void main() {
     await abrir(tester, onResultado: (r) => recebida = r);
     await tester.enterText(find.byType(TextField), '1kg de arroz');
     await tester.pump();
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.importExtrairItens),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Extrair itens'));
     await tester.pumpAndSettle();
     expect(recebida, isNotNull);
     expect(recebida!.itens, hasLength(1));
     expect(recebida!.itens.single.nome, 'Arroz');
     expect(recebida!.itens.single.unidade.valor, 'kg');
-    expect(find.text(AppStrings.importColeOuDigite), findsNothing);
+    expect(find.text('Cole ou digite sua lista:'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
@@ -99,9 +96,7 @@ void main() {
     await abrir(tester, onResultado: (r) => recebida = r);
     await tester.enterText(find.byType(TextField), '0 arroz, 2 leite');
     await tester.pump();
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.importExtrairItens),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Extrair itens'));
     await tester.pumpAndSettle();
     expect(recebida, isNotNull);
     expect(recebida!.itens.map((i) => i.quantidade), [1, 2]);
@@ -114,9 +109,7 @@ void main() {
     await abrir(tester, onResultado: (r) => recebida = r);
     await tester.enterText(find.byType(TextField), '1kg de arroz, 2 leites');
     await tester.pump();
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.importExtrairItens),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Extrair itens'));
     await tester.pumpAndSettle();
     expect(recebida!.itens, hasLength(2));
     expect(recebida!.itens.first.unidade.valor, 'kg');
@@ -129,11 +122,12 @@ void main() {
     await abrir(tester);
     await tester.enterText(find.byType(TextField), ',,,');
     await tester.pump();
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.importExtrairItens),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Extrair itens'));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.importRespostaInvalida), findsOneWidget);
+    expect(
+      find.text('Não consegui entender a lista. Tente reescrever.'),
+      findsOneWidget,
+    );
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
@@ -143,16 +137,20 @@ void main() {
     await abrir(tester);
     await tester.enterText(find.byType(TextField), ',,,');
     await tester.pump();
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.importExtrairItens),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Extrair itens'));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.importRespostaInvalida), findsOneWidget);
+    expect(
+      find.text('Não consegui entender a lista. Tente reescrever.'),
+      findsOneWidget,
+    );
 
     await tester.enterText(find.byType(TextField), 'arroz e feijão');
     await tester.pump();
 
-    expect(find.text(AppStrings.importRespostaInvalida), findsNothing);
+    expect(
+      find.text('Não consegui entender a lista. Tente reescrever.'),
+      findsNothing,
+    );
 
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -164,12 +162,13 @@ void main() {
 
     await tester.enterText(find.byType(TextField), '1kg de arroz');
     await tester.pump();
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.importExtrairItens),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Extrair itens'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.erroGenerico), findsOneWidget);
+    expect(
+      find.text('Não foi possível concluir. Tente novamente.'),
+      findsOneWidget,
+    );
     expect(botaoExtrair(tester).onPressed, isNotNull);
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -178,10 +177,10 @@ void main() {
   testWidgets('deve_retornar_null_quando_fechar', (tester) async {
     RespostaParse? recebida = const RespostaParse(itens: [], aviso: null);
     await abrir(tester, onResultado: (r) => recebida = r);
-    await tester.tap(find.byTooltip(AppStrings.fechar));
+    await tester.tap(find.byTooltip('Fechar'));
     await tester.pumpAndSettle();
     expect(recebida, isNull);
-    expect(find.text(AppStrings.importColeOuDigite), findsNothing);
+    expect(find.text('Cole ou digite sua lista:'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
@@ -197,10 +196,10 @@ void main() {
 
     await abrir(tester);
 
-    expect(find.text(AppStrings.importColeOuDigite), findsOneWidget);
+    expect(find.text('Cole ou digite sua lista:'), findsOneWidget);
     expect(
       find.ancestor(
-        of: find.text(AppStrings.importColeOuDigite),
+        of: find.text('Cole ou digite sua lista:'),
         matching: find.byType(SingleChildScrollView),
       ),
       findsWidgets,

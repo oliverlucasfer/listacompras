@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lista_compras/core/config/usuario_local.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/theme/tokens/app_spacing.dart';
 import 'package:lista_compras/core/widgets/app_card.dart';
 import 'package:lista_compras/core/widgets/app_logo.dart';
@@ -79,9 +78,9 @@ void main() {
 
   testWidgets('deve_exibir_estado_vazio_quando_nenhuma_lista', (tester) async {
     await abrirTela(tester);
-    expect(find.text(AppStrings.nenhumaLista), findsOneWidget);
-    expect(find.text(AppStrings.criarPrimeiraLista), findsOneWidget);
-    expect(find.text(AppStrings.novaLista), findsOneWidget);
+    expect(find.text('Nenhuma lista por aqui'), findsOneWidget);
+    expect(find.text('Criar primeira lista'), findsOneWidget);
+    expect(find.text('Nova lista'), findsOneWidget);
     await fechar(tester);
   });
 
@@ -100,7 +99,7 @@ void main() {
     await abrirTela(tester);
     expect(find.text('Compras da Semana'), findsOneWidget);
     expect(find.text('1/2 itens concluídos'), findsOneWidget);
-    expect(find.textContaining(AppStrings.atualizada), findsOneWidget);
+    expect(find.textContaining('atualizada'), findsOneWidget);
     await fechar(tester);
   });
 
@@ -130,7 +129,7 @@ void main() {
 
     await abrirTela(tester);
     expect(find.text('Do parceiro'), findsNothing);
-    expect(find.text(AppStrings.nenhumaLista), findsOneWidget);
+    expect(find.text('Nenhuma lista por aqui'), findsOneWidget);
     await fechar(tester);
   });
 
@@ -142,15 +141,15 @@ void main() {
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.nomeDaLista),
+      find.widgetWithText(TextField, 'Nome da lista'),
       'Churrasco',
     );
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.criarLista));
+    await tester.tap(find.widgetWithText(FilledButton, 'Criar lista'));
     await tester.pumpAndSettle();
 
     expect(find.text('Churrasco'), findsOneWidget);
-    expect(find.text(AppStrings.nenhumaLista), findsNothing);
-    expect(find.text(AppStrings.listaCriada), findsOneWidget);
+    expect(find.text('Nenhuma lista por aqui'), findsNothing);
+    expect(find.text('Lista criada.'), findsOneWidget);
     await fechar(tester);
   });
 
@@ -161,11 +160,11 @@ void main() {
 
     await tester.tap(find.byType(FloatingActionButton));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.criarLista));
+    await tester.tap(find.widgetWithText(FilledButton, 'Criar lista'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.erroNomeVazio), findsOneWidget);
-    expect(find.text(AppStrings.nenhumaLista), findsOneWidget);
+    expect(find.text('Informe um nome.'), findsOneWidget);
+    expect(find.text('Nenhuma lista por aqui'), findsOneWidget);
     await fechar(tester);
   });
 
@@ -178,18 +177,18 @@ void main() {
 
     await tester.longPress(find.text('Antigo'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.renomear));
+    await tester.tap(find.text('Renomear'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.nomeDaLista),
+      find.widgetWithText(TextField, 'Nome da lista'),
       'Novo',
     );
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
     await tester.pumpAndSettle();
 
     expect(find.text('Novo'), findsOneWidget);
     expect(find.text('Antigo'), findsNothing);
-    expect(find.text(AppStrings.listaRenomeada), findsOneWidget);
+    expect(find.text('Lista renomeada.'), findsOneWidget);
     await fechar(tester);
   });
 
@@ -200,18 +199,15 @@ void main() {
 
     await tester.longPress(find.text('Para excluir'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.excluir).first);
+    await tester.tap(find.text('Excluir').first);
     await tester.pumpAndSettle();
-    expect(
-      find.text(AppStrings.excluirListaMensagem(0, temMembros: false)),
-      findsOneWidget,
-    );
+    expect(find.text('A lista será excluída.'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.excluir));
+    await tester.tap(find.widgetWithText(FilledButton, 'Excluir'));
     await tester.pumpAndSettle();
 
     expect(find.text('Para excluir'), findsNothing);
-    expect(find.text(AppStrings.nenhumaLista), findsOneWidget);
+    expect(find.text('Nenhuma lista por aqui'), findsOneWidget);
     await fechar(tester);
   });
 
@@ -264,13 +260,13 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.renomear));
+    await tester.tap(find.text('Renomear'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.nomeDaLista),
+      find.widgetWithText(TextField, 'Nome da lista'),
       'Novo',
     );
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
     await tester.pumpAndSettle();
 
     expect(find.text('Novo'), findsOneWidget);
@@ -283,7 +279,7 @@ void main() {
     await repo.criarLista(titulo: 'Compras', donoId: idLocal);
     await abrirTela(tester);
 
-    expect(find.byTooltip(AppStrings.menu), findsOneWidget);
+    expect(find.byTooltip('Menu'), findsOneWidget);
     await fechar(tester);
   });
 
@@ -293,10 +289,10 @@ void main() {
     await repo.criarLista(titulo: 'Churrasco', donoId: idLocal);
     await abrirTela(tester);
 
-    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.tap(find.byTooltip('Buscar'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.buscarLista),
+      find.widgetWithText(TextField, 'Buscar lista'),
       'chur',
     );
     await tester.pumpAndSettle();
@@ -312,15 +308,15 @@ void main() {
     await repo.criarLista(titulo: 'Compras', donoId: idLocal);
     await abrirTela(tester);
 
-    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.tap(find.byTooltip('Buscar'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.buscarLista),
+      find.widgetWithText(TextField, 'Buscar lista'),
       'zzz',
     );
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.nenhumaListaEncontrada), findsOneWidget);
+    expect(find.text('Nenhuma lista encontrada'), findsOneWidget);
 
     await fechar(tester);
   });
@@ -331,22 +327,19 @@ void main() {
     await repo.criarLista(titulo: 'Churrasco', donoId: idLocal);
     await abrirTela(tester);
 
-    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.tap(find.byTooltip('Buscar'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.buscarLista),
+      find.widgetWithText(TextField, 'Buscar lista'),
       'chur',
     );
     await tester.pumpAndSettle();
     expect(find.text('Compras da Semana'), findsNothing);
 
-    await tester.tap(find.byTooltip(AppStrings.limparBusca));
+    await tester.tap(find.byTooltip('Limpar busca'));
     await tester.pumpAndSettle();
 
-    expect(
-      find.widgetWithText(TextField, AppStrings.buscarLista),
-      findsNothing,
-    );
+    expect(find.widgetWithText(TextField, 'Buscar lista'), findsNothing);
     expect(find.text('Compras da Semana'), findsOneWidget);
 
     await fechar(tester);
@@ -363,7 +356,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.comprarDeNovo), findsOneWidget);
+    expect(find.text('Comprar de novo'), findsOneWidget);
     await fechar(tester);
   });
 
@@ -379,7 +372,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.comprarDeNovo), findsNothing);
+    expect(find.text('Comprar de novo'), findsNothing);
     await fechar(tester);
   });
 
@@ -391,29 +384,24 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.comprarDeNovo));
+    await tester.tap(find.text('Comprar de novo'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.duplicarDescricao(1)), findsOneWidget);
-    expect(
-      find.widgetWithText(TextField, AppStrings.nomeDaLista),
-      findsOneWidget,
-    );
+    expect(find.text('1 item pendente será copiado.'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Nome da lista'), findsOneWidget);
     expect(
       tester
-          .widget<TextField>(
-            find.widgetWithText(TextField, AppStrings.nomeDaLista),
-          )
+          .widget<TextField>(find.widgetWithText(TextField, 'Nome da lista'))
           .controller
           ?.text,
       'Compras',
     );
 
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.criarLista));
+    await tester.tap(find.widgetWithText(FilledButton, 'Criar lista'));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('lista-'), findsOneWidget);
-    expect(find.text(AppStrings.listaCriada), findsOneWidget);
+    expect(find.text('Lista criada.'), findsOneWidget);
 
     final listas = await db.select(db.listaLocal).get();
     expect(listas, hasLength(2));
@@ -428,9 +416,9 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.comprarDeNovo));
+    await tester.tap(find.text('Comprar de novo'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip(AppStrings.cancelar));
+    await tester.tap(find.byTooltip('Cancelar'));
     await tester.pumpAndSettle();
 
     final listas = await db.select(db.listaLocal).get();
@@ -458,11 +446,11 @@ void main() {
     await repo.definirArquivada(lista.id, arquivada: true);
     await abrirTela(tester);
 
-    await tester.tap(find.byTooltip(AppStrings.mostrarArquivadas));
+    await tester.tap(find.byTooltip('Mostrar arquivadas'));
     await tester.pumpAndSettle();
 
     expect(find.text('Velha'), findsOneWidget);
-    expect(find.text(AppStrings.arquivada), findsOneWidget);
+    expect(find.text('Arquivada'), findsOneWidget);
     await fechar(tester);
   });
 
@@ -473,11 +461,11 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.arquivar));
+    await tester.tap(find.text('Arquivar'));
     await tester.pumpAndSettle();
 
     expect(find.text('Ativa'), findsNothing);
-    expect(find.text(AppStrings.listaArquivada), findsOneWidget);
+    expect(find.text('Lista arquivada.'), findsOneWidget);
     await fechar(tester);
   });
 
@@ -489,22 +477,22 @@ void main() {
     await repo.definirArquivada(lista.id, arquivada: true);
     await abrirTela(tester);
 
-    await tester.tap(find.byTooltip(AppStrings.mostrarArquivadas));
+    await tester.tap(find.byTooltip('Mostrar arquivadas'));
     await tester.pumpAndSettle();
     expect(find.text('Velha'), findsOneWidget);
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.desarquivar));
+    await tester.tap(find.text('Desarquivar'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.listaDesarquivada), findsOneWidget);
+    expect(find.text('Lista desarquivada.'), findsOneWidget);
 
-    await tester.tap(find.byTooltip(AppStrings.mostrarArquivadas));
+    await tester.tap(find.byTooltip('Mostrar arquivadas'));
     await tester.pumpAndSettle();
 
     expect(find.text('Velha'), findsOneWidget);
-    expect(find.text(AppStrings.arquivada), findsNothing);
+    expect(find.text('Arquivada'), findsNothing);
     await fechar(tester);
   });
 }

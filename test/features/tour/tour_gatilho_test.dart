@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/configuracoes/ui/configuracoes_screen.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
@@ -71,7 +70,7 @@ class _BoasVindasFake extends ConsumerWidget {
               await ref.read(onboardingVistoProvider.notifier).marcarVisto();
               if (context.mounted) context.pop();
             },
-            child: const Text(AppStrings.comecar),
+            child: const Text('Começar'),
           ),
         ],
       ),
@@ -106,7 +105,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(c.read(tourControllerProvider).ativo, isTrue);
-    expect(find.text(AppStrings.tourNovaListaTitulo), findsOneWidget);
+    expect(find.text('Criar sua primeira lista'), findsOneWidget);
   });
 
   testWidgets('nao_deve_iniciar_tour_etapa1_quando_flag_vista', (tester) async {
@@ -118,7 +117,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(c.read(tourControllerProvider).ativo, isFalse);
-    expect(find.text(AppStrings.tourNovaListaTitulo), findsNothing);
+    expect(find.text('Criar sua primeira lista'), findsNothing);
   });
 
   testWidgets('deve_iniciar_tour_etapa1_quando_volta_das_boas_vindas', (
@@ -141,11 +140,11 @@ void main() {
     expect(find.text('boas-vindas-fake'), findsOneWidget);
     expect(c.read(tourControllerProvider).ativo, isFalse);
 
-    await tester.tap(find.text(AppStrings.comecar));
+    await tester.tap(find.text('Começar'));
     await tester.pumpAndSettle();
 
     expect(c.read(tourControllerProvider).ativo, isTrue);
-    expect(find.text(AppStrings.tourNovaListaTitulo), findsOneWidget);
+    expect(find.text('Criar sua primeira lista'), findsOneWidget);
   });
 
   testWidgets('deve_iniciar_tour_etapa2_quando_lista_tem_item', (tester) async {
@@ -209,20 +208,20 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(MinhasListasScreen), findsOneWidget);
 
-    await tester.tap(find.text(AppStrings.configuracoes).last);
+    await tester.tap(find.text('Configurações').last);
     await tester.pumpAndSettle();
     expect(find.byType(ConfiguracoesScreen), findsOneWidget);
     expect(c.read(tourControllerProvider).ativo, isFalse);
 
-    await tester.scrollUntilVisible(find.text(AppStrings.tourAbrir), 200);
-    await tester.tap(find.text(AppStrings.tourAbrir));
+    await tester.scrollUntilVisible(find.text('Ver tutorial'), 200);
+    await tester.tap(find.text('Ver tutorial'));
     await tester.pumpAndSettle();
 
     // Navegou para a home e a etapa 1 abriu lá, com os 3 passos da tela.
     expect(find.byType(MinhasListasScreen), findsOneWidget);
     expect(c.read(tourControllerProvider).etapa, TourEtapa.primeira);
     expect(c.read(tourControllerProvider).passos.length, 3);
-    expect(find.text(AppStrings.tourNovaListaTitulo), findsOneWidget);
+    expect(find.text('Criar sua primeira lista'), findsOneWidget);
 
     // Concluir a etapa 1 encerra o tour — não encadeia a etapa 2.
     final tour = c.read(tourControllerProvider.notifier);

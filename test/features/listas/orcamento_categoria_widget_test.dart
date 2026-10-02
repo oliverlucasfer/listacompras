@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/dominio/categoria.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/data/orcamento_categoria_repository.dart';
@@ -61,12 +60,12 @@ void main() {
     await tester.tap(
       find.descendant(
         of: mercearia,
-        matching: find.widgetWithText(FilledButton, AppStrings.salvar),
+        matching: find.widgetWithText(FilledButton, 'Salvar'),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.erroOrcamentoInvalido), findsOneWidget);
+    expect(find.text('Valor de orçamento inválido.'), findsOneWidget);
     expect(await limitesRepo.limites(), isEmpty);
 
     await fechar(tester);
@@ -85,13 +84,13 @@ void main() {
     await tester.tap(
       find.descendant(
         of: mercearia,
-        matching: find.widgetWithText(FilledButton, AppStrings.salvar),
+        matching: find.widgetWithText(FilledButton, 'Salvar'),
       ),
     );
     await tester.pumpAndSettle();
 
     expect(await limitesRepo.limites(), {CategoriaItem.mercearia: 15000});
-    expect(find.text(AppStrings.orcamentosSalvos), findsOneWidget);
+    expect(find.text('Limites por categoria salvos.'), findsOneWidget);
 
     await fechar(tester);
   });
@@ -104,7 +103,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: mercearia,
-        matching: find.widgetWithText(TextButton, AppStrings.limpar),
+        matching: find.widgetWithText(TextButton, 'Limpar'),
       ),
     );
     await tester.pumpAndSettle();
@@ -141,10 +140,7 @@ void main() {
     await limitesRepo.definir(CategoriaItem.mercearia, centavos: 10000);
     await abrirListaComItemMarcado(tester);
 
-    expect(
-      find.textContaining(AppStrings.acimaDoLimiteDaCategoria),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Acima do limite da categoria'), findsOneWidget);
 
     await fechar(tester);
   });
@@ -152,18 +148,12 @@ void main() {
   testWidgets('deve_remover_banner_quando_limite_limpo', (tester) async {
     await limitesRepo.definir(CategoriaItem.mercearia, centavos: 10000);
     await abrirListaComItemMarcado(tester);
-    expect(
-      find.textContaining(AppStrings.acimaDoLimiteDaCategoria),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Acima do limite da categoria'), findsOneWidget);
 
     await limitesRepo.definir(CategoriaItem.mercearia, centavos: null);
     await tester.pumpAndSettle();
 
-    expect(
-      find.textContaining(AppStrings.acimaDoLimiteDaCategoria),
-      findsNothing,
-    );
+    expect(find.textContaining('Acima do limite da categoria'), findsNothing);
 
     await fechar(tester);
   });

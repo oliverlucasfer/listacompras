@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/core/dominio/unidade.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/listas/data/historico_precos_repository.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
@@ -71,12 +70,12 @@ void main() {
   Future<void> abrirEditor(WidgetTester tester) async {
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.editarItem), findsOneWidget);
+    expect(find.text('Editar item'), findsOneWidget);
   }
 
   Future<void> digitarPreco(WidgetTester tester, String texto) async {
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.preco),
+      find.widgetWithText(TextField, 'Preço (R\$)'),
       texto,
     );
     await tester.pumpAndSettle();
@@ -106,10 +105,10 @@ void main() {
     await abrirEditor(tester);
 
     expect(
-      find.text(AppStrings.ultimaCompra('R\$ 5,00', dataEsperada())),
+      find.text('Última compra: R\$ 5,00 (${dataEsperada()})'),
       findsOneWidget,
     );
-    expect(find.text(AppStrings.mesmoPreco), findsNothing);
+    expect(find.text('Mesmo preço'), findsNothing);
     expect(find.textContaining('↑'), findsNothing);
     expect(find.textContaining('↓'), findsNothing);
 
@@ -130,10 +129,10 @@ void main() {
     await digitarPreco(tester, '6,00');
 
     expect(
-      find.text(AppStrings.ultimaCompra('R\$ 5,00', dataEsperada())),
+      find.text('Última compra: R\$ 5,00 (${dataEsperada()})'),
       findsOneWidget,
     );
-    expect(find.text(AppStrings.precoSubiu('R\$ 1,00')), findsOneWidget);
+    expect(find.text('↑ R\$ 1,00'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));
@@ -151,7 +150,7 @@ void main() {
     await abrirEditor(tester);
     await digitarPreco(tester, '4,00');
 
-    expect(find.text(AppStrings.precoBaixou('R\$ 1,00')), findsOneWidget);
+    expect(find.text('↓ R\$ 1,00'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));
@@ -169,7 +168,7 @@ void main() {
     await abrirEditor(tester);
     await digitarPreco(tester, '5,00');
 
-    expect(find.text(AppStrings.mesmoPreco), findsOneWidget);
+    expect(find.text('Mesmo preço'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));
@@ -185,11 +184,11 @@ void main() {
     await abrirEditor(tester);
 
     await digitarPreco(tester, '6,00');
-    expect(find.text(AppStrings.precoSubiu('R\$ 1,00')), findsOneWidget);
+    expect(find.text('↑ R\$ 1,00'), findsOneWidget);
 
     await digitarPreco(tester, '4,00');
-    expect(find.text(AppStrings.precoSubiu('R\$ 1,00')), findsNothing);
-    expect(find.text(AppStrings.precoBaixou('R\$ 1,00')), findsOneWidget);
+    expect(find.text('↑ R\$ 1,00'), findsNothing);
+    expect(find.text('↓ R\$ 1,00'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));
@@ -208,10 +207,10 @@ void main() {
     await digitarPreco(tester, '6,00');
 
     expect(
-      find.text(AppStrings.ultimaCompra('R\$ 5,00', dataEsperada())),
+      find.text('Última compra: R\$ 5,00 (${dataEsperada()})'),
       findsOneWidget,
     );
-    expect(find.text(AppStrings.mesmoPreco), findsNothing);
+    expect(find.text('Mesmo preço'), findsNothing);
     expect(find.textContaining('↑'), findsNothing);
     expect(find.textContaining('↓'), findsNothing);
 
@@ -227,9 +226,9 @@ void main() {
     // graças ao autoDispose do provider).
     await abrirEditor(tester);
     expect(find.textContaining('Última compra'), findsNothing);
-    await tester.tap(find.widgetWithText(TextButton, AppStrings.cancelar));
+    await tester.tap(find.widgetWithText(TextButton, 'Cancelar'));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.editarItem), findsNothing);
+    expect(find.text('Editar item'), findsNothing);
 
     // Registra o histórico (equivale a concluir a compra com preço).
     await registrarHistorico(
@@ -241,7 +240,7 @@ void main() {
     // Reabrir deve re-ler o histórico novo.
     await abrirEditor(tester);
     expect(
-      find.text(AppStrings.ultimaCompra('R\$ 5,00', dataEsperada())),
+      find.text('Última compra: R\$ 5,00 (${dataEsperada()})'),
       findsOneWidget,
     );
 

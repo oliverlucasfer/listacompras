@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/config/usuario_local.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 
 import 'fluxo_harness.dart';
@@ -19,9 +18,7 @@ void main() {
 
     await tester.tap(find.text('Compras'));
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.widgetWithText(OutlinedButton, AppStrings.importarLista),
-    );
+    await tester.tap(find.widgetWithText(OutlinedButton, 'Importar lista'));
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -32,15 +29,11 @@ void main() {
       '1kg de arroz, 2 leites',
     );
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.importExtrairItens),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Extrair itens'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.importConfirmeItens), findsOneWidget);
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.importAdicionarN(2)),
-    );
+    expect(find.text('Confirme os itens'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Adicionar 2'));
     await tester.pumpAndSettle();
 
     expect(find.text('Arroz'), findsOneWidget);

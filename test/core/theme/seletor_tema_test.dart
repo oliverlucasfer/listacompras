@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/theme/seletor_tema.dart';
 import 'package:lista_compras/core/theme/theme_mode_provider.dart';
 import 'package:lista_compras/core/widgets/app_dropdown.dart';
@@ -25,7 +24,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text(AppStrings.temaEscuro));
+    await tester.tap(find.text('Escuro'));
     await tester.pumpAndSettle();
 
     expect(container.read(temaModoProvider).value, ThemeMode.dark);
@@ -74,7 +73,7 @@ void main() {
     // O dropdown também muda o tema.
     await tester.tap(find.byType(AppDropdown<ThemeMode>));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.temaEscuro).last);
+    await tester.tap(find.text('Escuro').last);
     await tester.pumpAndSettle();
     expect(container.read(temaModoProvider).value, ThemeMode.dark);
   });
@@ -136,7 +135,7 @@ void main() {
 
     await tester.tap(find.byType(AppDropdown<ThemeMode>));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.temaEscuro).last);
+    await tester.tap(find.text('Escuro').last);
     await tester.pumpAndSettle();
     expect(container.read(temaModoProvider).value, ThemeMode.dark);
   });

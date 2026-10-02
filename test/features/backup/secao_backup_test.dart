@@ -5,7 +5,6 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/backup/data/backup_repository.dart';
 import 'package:lista_compras/features/backup/providers/backup_providers.dart';
@@ -53,8 +52,8 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.backupExportar), findsOneWidget);
-    expect(find.text(AppStrings.backupImportar), findsOneWidget);
+    expect(find.text('Exportar backup'), findsOneWidget);
+    expect(find.text('Importar backup'), findsOneWidget);
   });
 
   testWidgets('deve_exportar_quando_toca_em_exportar_backup', (tester) async {
@@ -72,7 +71,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text(AppStrings.backupExportar));
+    await tester.tap(find.text('Exportar backup'));
     await tester.pump();
 
     expect(fake.exportou, isTrue);

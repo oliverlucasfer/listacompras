@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/importacao/resposta_import.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/widgets/app_banner.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/importacao/ui/modal_importar.dart';
@@ -162,7 +161,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Tirar foto'));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.ocrFalha), findsOneWidget);
+    expect(find.text('Não foi possível ler a foto.'), findsOneWidget);
     expect(
       tester.widget<AppBanner>(find.byType(AppBanner)).tipo,
       AppBannerTipo.erro,
@@ -183,7 +182,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Tirar foto'));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.ocrFalha), findsOneWidget);
+    expect(find.text('Não foi possível ler a foto.'), findsOneWidget);
     expect(
       tester.widget<AppBanner>(find.byType(AppBanner)).tipo,
       AppBannerTipo.erro,
@@ -206,7 +205,7 @@ void main() {
     await tester.tap(find.text('Tirar foto'));
     await tester.pumpAndSettle();
     expect(find.text('arroz'), findsOneWidget);
-    expect(find.text(AppStrings.ocrNenhumTexto), findsNothing);
+    expect(find.text('Nenhum texto reconhecido na foto.'), findsNothing);
     debugDefaultTargetPlatformOverride = null;
   });
 
@@ -231,9 +230,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Tirar foto'));
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.importExtrairItens),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Extrair itens'));
     await tester.pumpAndSettle();
     expect(recebida, isNotNull);
     expect(recebida!.itens, hasLength(1));

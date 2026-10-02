@@ -2,7 +2,6 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
@@ -57,7 +56,7 @@ void main() {
   Future<void> abrirDialogoOrcamento(WidgetTester tester) async {
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.orcamento));
+    await tester.tap(find.text('Orçamento'));
     await tester.pumpAndSettle();
   }
 
@@ -72,16 +71,16 @@ void main() {
     final listaId = await abrirLista(tester);
 
     await abrirDialogoOrcamento(tester);
-    expect(find.text(AppStrings.campoOrcamento), findsOneWidget);
+    expect(find.text('Orçamento (R\$)'), findsOneWidget);
 
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.campoOrcamento),
+      find.widgetWithText(TextField, 'Orçamento (R\$)'),
       '150,00',
     );
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.orcamentoDefinido), findsOneWidget);
+    expect(find.text('Orçamento salvo.'), findsOneWidget);
     expect(await orcamentoNoBanco(listaId), 15000);
 
     await fechar(tester);
@@ -94,12 +93,10 @@ void main() {
     // Campo pré-preenchido com o orçamento atual (formatarReais).
     expect(find.text('R\$ 30,00'), findsOneWidget);
 
-    await tester.tap(
-      find.widgetWithText(TextButton, AppStrings.removerOrcamento),
-    );
+    await tester.tap(find.widgetWithText(TextButton, 'Remover orçamento'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.orcamentoRemovido), findsOneWidget);
+    expect(find.text('Orçamento removido.'), findsOneWidget);
     expect(await orcamentoNoBanco(listaId), isNull);
 
     await fechar(tester);
@@ -110,16 +107,16 @@ void main() {
 
     await abrirDialogoOrcamento(tester);
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.campoOrcamento),
+      find.widgetWithText(TextField, 'Orçamento (R\$)'),
       'abc',
     );
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.erroOrcamentoInvalido), findsOneWidget);
+    expect(find.text('Valor de orçamento inválido.'), findsOneWidget);
     // Diálogo permanece aberto e nada foi persistido.
     expect(find.byType(AlertDialog), findsOneWidget);
-    expect(find.text(AppStrings.orcamentoDefinido), findsNothing);
+    expect(find.text('Orçamento salvo.'), findsNothing);
     expect(await orcamentoNoBanco(listaId), isNull);
 
     await fechar(tester);

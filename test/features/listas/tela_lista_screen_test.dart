@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import 'package:lista_compras/core/categorias/sugestao_categorias.dart';
 import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/core/dominio/unidade.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/widgets/app_botao.dart';
 import 'package:lista_compras/core/widgets/app_campo_texto.dart';
 import 'package:lista_compras/core/widgets/app_dropdown.dart';
@@ -154,10 +153,10 @@ void main() {
     // Grupos por categoria com contagem (F6-T04); sem cabeçalho global.
     expect(find.text('Mercearia (1)'), findsOneWidget);
     expect(find.text('Laticínios (1)'), findsOneWidget);
-    expect(find.text('${AppStrings.itens} (2)'), findsNothing);
-    expect(find.text('${AppStrings.itensConcluidos} (1)'), findsOneWidget);
+    expect(find.text('Itens (2)'), findsNothing);
+    expect(find.text('Itens concluídos (1)'), findsOneWidget);
 
-    await tester.tap(find.text('${AppStrings.itensConcluidos} (1)'));
+    await tester.tap(find.text('Itens concluídos (1)'));
     await tester.pumpAndSettle();
     // O nome também aparece como chip de sugestão (RF-19); a asserção é
     // restrita à linha do item concluído.
@@ -182,7 +181,7 @@ void main() {
     );
     await montarTela(tester, lista.id);
 
-    expect(find.text(AppStrings.nenhumItem), findsOneWidget);
+    expect(find.text('Nenhum item ainda'), findsOneWidget);
     expect(
       find.text('Adicione no campo acima ou importe uma lista.'),
       findsOneWidget,
@@ -276,7 +275,7 @@ void main() {
     await listaComItens(tester);
 
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      find.widgetWithText(TextField, 'Adicionar item'),
       'Café',
     );
     await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -293,23 +292,23 @@ void main() {
     await listaComItens(tester);
 
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      find.widgetWithText(TextField, 'Adicionar item'),
       '.',
     );
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.naoEntendiItem), findsOneWidget);
+    expect(find.text('Não entendi o item'), findsOneWidget);
     // Nada foi adicionado.
     expect(find.text('Mercearia (1)'), findsOneWidget);
 
     // O erro some ao digitar de novo.
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      find.widgetWithText(TextField, 'Adicionar item'),
       'Café',
     );
     await tester.pump();
-    expect(find.text(AppStrings.naoEntendiItem), findsNothing);
+    expect(find.text('Não entendi o item'), findsNothing);
 
     await fechar(tester);
   });
@@ -320,7 +319,7 @@ void main() {
     await listaComItens(tester);
 
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      find.widgetWithText(TextField, 'Adicionar item'),
       'Detergente',
     );
     await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -339,7 +338,7 @@ void main() {
     await listaComItens(tester);
 
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      find.widgetWithText(TextField, 'Adicionar item'),
       'Arroz',
     );
     await tester.tap(find.byIcon(Icons.add));
@@ -358,7 +357,7 @@ void main() {
     await listaComItens(tester);
 
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      find.widgetWithText(TextField, 'Adicionar item'),
       'banana',
     );
     await tester.tap(find.text('un'));
@@ -380,7 +379,7 @@ void main() {
     await listaComItens(tester);
 
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      find.widgetWithText(TextField, 'Adicionar item'),
       '1kg de banana',
     );
     await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -402,7 +401,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      find.widgetWithText(TextField, 'Adicionar item'),
       '1kg de banana',
     );
     await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -419,7 +418,7 @@ void main() {
     await listaComItens(tester);
 
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      find.widgetWithText(TextField, 'Adicionar item'),
       '2kg de arroz',
     );
     await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -427,7 +426,7 @@ void main() {
 
     expect(find.text('Arroz'), findsOneWidget);
     expect(find.text('2 kg'), findsOneWidget);
-    expect(find.textContaining(AppStrings.itemAtualizado), findsOneWidget);
+    expect(find.textContaining('Item atualizado.'), findsOneWidget);
 
     await fechar(tester);
   });
@@ -437,15 +436,15 @@ void main() {
 
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.editarItem), findsOneWidget);
+    expect(find.text('Editar item'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(TextButton, AppStrings.removerItem));
+    await tester.tap(find.widgetWithText(TextButton, 'Remover'));
     await tester.pumpAndSettle();
 
     expect(find.text('Arroz'), findsNothing);
-    expect(find.text(AppStrings.itemRemovido), findsOneWidget);
+    expect(find.text('Item removido'), findsOneWidget);
 
-    await tester.tap(find.text(AppStrings.desfazer));
+    await tester.tap(find.text('Desfazer'));
     await tester.pumpAndSettle();
     expect(find.text('Arroz'), findsOneWidget);
 
@@ -456,19 +455,13 @@ void main() {
     await listaComItens(tester);
 
     // Entrada rápida mantém "Adicionar item".
-    expect(
-      find.widgetWithText(TextField, AppStrings.adicionarItem),
-      findsOneWidget,
-    );
+    expect(find.widgetWithText(TextField, 'Adicionar item'), findsOneWidget);
 
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.editarItem), findsOneWidget);
-    expect(
-      find.widgetWithText(TextField, AppStrings.nomeDoItem),
-      findsOneWidget,
-    );
+    expect(find.text('Editar item'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Nome do item'), findsOneWidget);
 
     await fechar(tester);
   });
@@ -487,9 +480,9 @@ void main() {
 
     expect(find.text('Laticínios (1)'), findsOneWidget);
     expect(find.text('Mercearia (1)'), findsNothing);
-    expect(find.text('${AppStrings.itensConcluidos} (1)'), findsOneWidget);
+    expect(find.text('Itens concluídos (1)'), findsOneWidget);
 
-    await tester.tap(find.text('${AppStrings.itensConcluidos} (1)'));
+    await tester.tap(find.text('Itens concluídos (1)'));
     await tester.pumpAndSettle();
     await tester.tap(
       find.descendant(
@@ -515,9 +508,9 @@ void main() {
 
     expect(find.text('Arroz'), findsNothing);
     expect(find.text('Laticínios (1)'), findsOneWidget);
-    expect(find.text(AppStrings.itemRemovido), findsOneWidget);
+    expect(find.text('Item removido'), findsOneWidget);
 
-    await tester.tap(find.text(AppStrings.desfazer));
+    await tester.tap(find.text('Desfazer'));
     await tester.pumpAndSettle();
 
     expect(find.text('Arroz'), findsOneWidget);
@@ -534,21 +527,18 @@ void main() {
     await tester.drag(find.text('Arroz'), const Offset(500, 0));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.editarItem), findsOneWidget);
+    expect(find.text('Editar item'), findsOneWidget);
 
-    await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.quantidade),
-      '3',
-    );
+    await tester.enterText(find.widgetWithText(TextField, 'Quantidade'), '3');
     await tester.tap(find.byType(DropdownButtonFormField<Unidade>));
     await tester.pumpAndSettle();
     await tester.tap(find.text('kg').last);
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
     await tester.pumpAndSettle();
 
     expect(find.text('3 kg'), findsOneWidget);
-    expect(find.text(AppStrings.editarItem), findsNothing);
+    expect(find.text('Editar item'), findsNothing);
 
     await fechar(tester);
   });
@@ -559,11 +549,8 @@ void main() {
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.quantidade),
-      '1/2',
-    );
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.enterText(find.widgetWithText(TextField, 'Quantidade'), '1/2');
+    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
     await tester.pumpAndSettle();
 
     final itens = await (db.select(
@@ -583,21 +570,15 @@ void main() {
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.nomeDoItem),
-      '',
-    );
-    await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.quantidade),
-      '0',
-    );
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.enterText(find.widgetWithText(TextField, 'Nome do item'), '');
+    await tester.enterText(find.widgetWithText(TextField, 'Quantidade'), '0');
+    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.erroNomeVazio), findsOneWidget);
-    expect(find.text(AppStrings.erroQuantidadeInvalida), findsOneWidget);
+    expect(find.text('Informe um nome.'), findsOneWidget);
+    expect(find.text('Informe uma quantidade maior que zero.'), findsOneWidget);
     // O diálogo permanece aberto (nada foi salvo).
-    expect(find.text(AppStrings.editarItem), findsOneWidget);
+    expect(find.text('Editar item'), findsOneWidget);
     expect(find.text('Arroz'), findsOneWidget);
 
     await fechar(tester);
@@ -611,19 +592,16 @@ void main() {
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.quantidade),
-      '0',
-    );
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.enterText(find.widgetWithText(TextField, 'Quantidade'), '0');
+    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.erroQuantidadeInvalida), findsOneWidget);
+    expect(find.text('Informe uma quantidade maior que zero.'), findsOneWidget);
 
-    await tester.tap(find.byTooltip(AppStrings.aumentar));
+    await tester.tap(find.byTooltip('Aumentar'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.erroQuantidadeInvalida), findsNothing);
+    expect(find.text('Informe uma quantidade maior que zero.'), findsNothing);
 
     await fechar(tester);
   });
@@ -644,11 +622,11 @@ void main() {
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.editarItem), findsOneWidget);
+    expect(find.text('Editar item'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     // Salvar precisa continuar alcançável (rodapé sem estouro).
-    final salvar = find.widgetWithText(FilledButton, AppStrings.salvar);
+    final salvar = find.widgetWithText(FilledButton, 'Salvar');
     expect(salvar, findsOneWidget);
     await tester.ensureVisible(salvar);
     await tester.pumpAndSettle();
@@ -669,12 +647,12 @@ void main() {
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.editarItem), findsOneWidget);
+    expect(find.text('Editar item'), findsOneWidget);
     // As três ações estão presentes (caso que estourava).
-    expect(find.text(AppStrings.removerItem), findsOneWidget);
+    expect(find.text('Remover'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
-    final salvar = find.widgetWithText(FilledButton, AppStrings.salvar);
+    final salvar = find.widgetWithText(FilledButton, 'Salvar');
     expect(salvar, findsOneWidget);
     await tester.ensureVisible(salvar);
     await tester.pumpAndSettle();
@@ -690,11 +668,11 @@ void main() {
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.editarItem), findsOneWidget);
+    expect(find.text('Editar item'), findsOneWidget);
 
-    final remover = find.widgetWithText(TextButton, AppStrings.removerItem);
-    final cancelar = find.widgetWithText(TextButton, AppStrings.cancelar);
-    final salvar = find.widgetWithText(FilledButton, AppStrings.salvar);
+    final remover = find.widgetWithText(TextButton, 'Remover');
+    final cancelar = find.widgetWithText(TextButton, 'Cancelar');
+    final salvar = find.widgetWithText(FilledButton, 'Salvar');
     expect(remover, findsOneWidget);
     expect(cancelar, findsOneWidget);
     expect(salvar, findsOneWidget);
@@ -729,12 +707,12 @@ void main() {
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.editarItem), findsOneWidget);
+    expect(find.text('Editar item'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     // Salvar continua alcançável e **acima da área do teclado** (sem o inset ele
     // ficaria atrás do teclado).
-    final salvar = find.widgetWithText(FilledButton, AppStrings.salvar);
+    final salvar = find.widgetWithText(FilledButton, 'Salvar');
     expect(salvar, findsOneWidget);
     await tester.ensureVisible(salvar);
     await tester.pumpAndSettle();
@@ -745,7 +723,7 @@ void main() {
     await tester.tap(salvar);
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    expect(find.text(AppStrings.editarItem), findsNothing);
+    expect(find.text('Editar item'), findsNothing);
 
     await fechar(tester);
   });
@@ -761,7 +739,7 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.desmarcarTodos));
+    await tester.tap(find.text('Desmarcar todos'));
     await tester.pumpAndSettle();
 
     expect(find.text('Mercearia (1)'), findsOneWidget);
@@ -778,11 +756,14 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.limparConcluidos));
+    await tester.tap(find.text('Limpar concluídos'));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.limparConcluidosMensagem), findsOneWidget);
+    expect(
+      find.text('Os itens concluídos serão removidos da lista.'),
+      findsOneWidget,
+    );
 
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.limpar));
+    await tester.tap(find.widgetWithText(FilledButton, 'Limpar'));
     await tester.pumpAndSettle();
 
     expect(find.text('Mercearia (1)'), findsOneWidget);
@@ -800,18 +781,18 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.limparConcluidos));
+    await tester.tap(find.text('Limpar concluídos'));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.limpar));
+    await tester.tap(find.widgetWithText(FilledButton, 'Limpar'));
     await tester.pumpAndSettle();
 
     expect(find.text('Detergente'), findsNothing);
-    expect(find.text(AppStrings.concluidosRemovidos), findsOneWidget);
+    expect(find.text('Itens concluídos removidos.'), findsOneWidget);
 
-    await tester.tap(find.text(AppStrings.desfazer));
+    await tester.tap(find.text('Desfazer'));
     await tester.pumpAndSettle();
 
-    expect(find.text('${AppStrings.itensConcluidos} (1)'), findsOneWidget);
+    expect(find.text('Itens concluídos (1)'), findsOneWidget);
 
     await fechar(tester);
   });
@@ -849,12 +830,15 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.limparConcluidos));
+    await tester.tap(find.text('Limpar concluídos'));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.limpar));
+    await tester.tap(find.widgetWithText(FilledButton, 'Limpar'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.erroGenerico), findsOneWidget);
+    expect(
+      find.text('Não foi possível concluir. Tente novamente.'),
+      findsOneWidget,
+    );
 
     await fechar(tester);
   });
@@ -891,20 +875,20 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.excluirLista));
+    await tester.tap(find.text('Excluir lista'));
     await tester.pumpAndSettle();
     expect(find.text('Excluir "Compras da Semana"?'), findsOneWidget);
     expect(find.text('O item será removido.'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.excluir));
+    await tester.tap(find.widgetWithText(FilledButton, 'Excluir'));
     await tester.pumpAndSettle();
 
     final local = await (db.select(
       db.listaLocal,
     )..where((l) => l.id.equals(lista.id))).getSingle();
     expect(local.deletadoEm, isNotNull);
-    expect(find.text(AppStrings.minhasListas), findsOneWidget);
-    expect(find.text(AppStrings.nenhumaLista), findsOneWidget);
+    expect(find.text('Minhas Listas'), findsOneWidget);
+    expect(find.text('Nenhuma lista por aqui'), findsOneWidget);
 
     await fechar(tester);
   });
@@ -914,18 +898,18 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.renomearLista));
+    await tester.tap(find.text('Renomear lista'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.nomeDaLista),
+      find.widgetWithText(TextField, 'Nome da lista'),
       'Churrasco',
     );
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
     await tester.pumpAndSettle();
 
     expect(find.text('Churrasco'), findsOneWidget);
     expect(find.text('Compras da Semana'), findsNothing);
-    expect(find.text(AppStrings.listaRenomeada), findsOneWidget);
+    expect(find.text('Lista renomeada.'), findsOneWidget);
 
     await fechar(tester);
   });
@@ -938,11 +922,11 @@ void main() {
     );
     await montarTela(tester, lista.id);
 
-    await tester.tap(find.text(AppStrings.importarLista));
+    await tester.tap(find.text('Importar lista'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.importColeOuDigite), findsOneWidget);
-    expect(find.text(AppStrings.importExtrairItens), findsOneWidget);
+    expect(find.text('Cole ou digite sua lista:'), findsOneWidget);
+    expect(find.text('Extrair itens'), findsOneWidget);
 
     await fechar(tester);
   });
@@ -1024,7 +1008,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.erroGenerico), findsOneWidget);
+    expect(
+      find.text('Não foi possível concluir. Tente novamente.'),
+      findsOneWidget,
+    );
 
     await fechar(tester);
   });
@@ -1061,13 +1048,13 @@ void main() {
     await tester.drag(find.text('Arroz'), const Offset(500, 0));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.editarItem), findsOneWidget);
+    expect(find.text('Editar item'), findsOneWidget);
 
     await tester.tap(find.byType(DropdownButtonFormField<CategoriaItem>));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Frios').last);
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
     await tester.pumpAndSettle();
 
     // Arroz saiu de Mercearia e entrou em Frios.
@@ -1108,13 +1095,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text(AppStrings.lista), findsOneWidget);
-      expect(find.text(AppStrings.listaNaoEncontrada), findsOneWidget);
+      expect(find.text('Lista'), findsOneWidget);
+      expect(find.text('Lista não encontrada.'), findsOneWidget);
 
       // CTA do estado vazio (F14-T04): volta ao painel sem precisar da seta.
-      await tester.tap(find.text(AppStrings.voltarParaListas));
+      await tester.tap(find.text('Voltar para as listas'));
       await tester.pumpAndSettle();
-      expect(find.text(AppStrings.minhasListas), findsOneWidget);
+      expect(find.text('Minhas Listas'), findsOneWidget);
 
       await fechar(tester);
     },
@@ -1147,7 +1134,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(AppEstadoErro), findsOneWidget);
-    expect(find.text(AppStrings.tentarNovamente), findsOneWidget);
+    expect(find.text('Tentar novamente'), findsOneWidget);
   });
 
   testWidgets('deve_mostrar_esqueleto_quando_itens_carregando', (tester) async {
@@ -1231,10 +1218,7 @@ void main() {
 
     await listaComItens(tester);
 
-    expect(
-      find.widgetWithText(TextField, AppStrings.adicionarItem),
-      findsOneWidget,
-    );
+    expect(find.widgetWithText(TextField, 'Adicionar item'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     await fechar(tester);
@@ -1260,10 +1244,10 @@ void main() {
   ) async {
     await listaComItens(tester); // Arroz (Mercearia), Leite (Laticínios)
 
-    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.tap(find.byTooltip('Buscar'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.buscarItem),
+      find.widgetWithText(TextField, 'Buscar item'),
       'arr',
     );
     await tester.pumpAndSettle();
@@ -1283,16 +1267,16 @@ void main() {
   ) async {
     await listaComItens(tester);
 
-    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.tap(find.byTooltip('Buscar'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.buscarItem),
+      find.widgetWithText(TextField, 'Buscar item'),
       'zzz',
     );
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.nenhumItemEncontrado), findsOneWidget);
-    expect(find.text(AppStrings.limparBusca), findsOneWidget);
+    expect(find.text('Nenhum item encontrado'), findsOneWidget);
+    expect(find.text('Limpar busca'), findsOneWidget);
 
     await fechar(tester);
   });
@@ -1300,16 +1284,16 @@ void main() {
   testWidgets('deve_limpar_busca_quando_adicionar_item', (tester) async {
     await listaComItens(tester);
 
-    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.tap(find.byTooltip('Buscar'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.buscarItem),
+      find.widgetWithText(TextField, 'Buscar item'),
       'arr',
     );
     await tester.pumpAndSettle();
 
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.adicionarItem),
+      find.widgetWithText(TextField, 'Adicionar item'),
       'Café',
     );
     await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -1318,7 +1302,7 @@ void main() {
     // Busca fechada e itens todos visíveis de novo.
     expect(find.text('Leite'), findsOneWidget);
     expect(find.text('Café'), findsOneWidget);
-    expect(find.widgetWithText(TextField, AppStrings.buscarItem), findsNothing);
+    expect(find.widgetWithText(TextField, 'Buscar item'), findsNothing);
 
     await fechar(tester);
   });
@@ -1326,10 +1310,10 @@ void main() {
   testWidgets('deve_manter_edicao_quando_filtrando_item', (tester) async {
     await listaComItens(tester);
 
-    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.tap(find.byTooltip('Buscar'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.buscarItem),
+      find.widgetWithText(TextField, 'Buscar item'),
       'arr',
     );
     await tester.pumpAndSettle();
@@ -1350,25 +1334,22 @@ void main() {
   ) async {
     await listaComItens(tester);
 
-    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.tap(find.byTooltip('Buscar'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.buscarItem),
+      find.widgetWithText(TextField, 'Buscar item'),
       'zzz',
     );
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.nenhumItemEncontrado), findsOneWidget);
+    expect(find.text('Nenhum item encontrado'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(TextButton, AppStrings.limparBusca));
+    await tester.tap(find.widgetWithText(TextButton, 'Limpar busca'));
     await tester.pumpAndSettle();
 
     // Campo segue aberto e a lista volta ao normal.
-    expect(
-      find.widgetWithText(TextField, AppStrings.buscarItem),
-      findsOneWidget,
-    );
+    expect(find.widgetWithText(TextField, 'Buscar item'), findsOneWidget);
     expect(find.text('Arroz'), findsOneWidget);
-    expect(find.text(AppStrings.nenhumItemEncontrado), findsNothing);
+    expect(find.text('Nenhum item encontrado'), findsNothing);
 
     await fechar(tester);
   });
@@ -1376,15 +1357,15 @@ void main() {
   testWidgets('deve_filtrar_concluidos_quando_buscar', (tester) async {
     await listaComItens(tester, comConcluido: true); // Detergente concluído
 
-    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.tap(find.byTooltip('Buscar'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.buscarItem),
+      find.widgetWithText(TextField, 'Buscar item'),
       'deter',
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('${AppStrings.itensConcluidos} (1)'), findsOneWidget);
+    expect(find.text('Itens concluídos (1)'), findsOneWidget);
     expect(find.text('Arroz'), findsNothing);
 
     await fechar(tester);
@@ -1393,10 +1374,10 @@ void main() {
   testWidgets('deve_abrir_editor_quando_tocar_item_filtrado', (tester) async {
     await listaComItens(tester);
 
-    await tester.tap(find.byTooltip(AppStrings.buscar));
+    await tester.tap(find.byTooltip('Buscar'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.buscarItem),
+      find.widgetWithText(TextField, 'Buscar item'),
       'arr',
     );
     await tester.pumpAndSettle();
@@ -1404,7 +1385,7 @@ void main() {
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.editarItem), findsOneWidget);
+    expect(find.text('Editar item'), findsOneWidget);
 
     await fechar(tester);
   });
@@ -1553,7 +1534,7 @@ void main() {
     tester,
   ) async {
     await listaComItens(tester);
-    expect(find.byTooltip(AppStrings.modoMercado), findsOneWidget);
+    expect(find.byTooltip('Modo mercado'), findsOneWidget);
     await fechar(tester);
   });
 
@@ -1613,7 +1594,7 @@ void main() {
     await montarTela(tester, lista.id);
 
     expect(
-      find.text(AppStrings.totalNoCarrinho(formatarReais(549), 1)),
+      find.text('No carrinho: ${formatarReais(549)} · 1 sem preço'),
       findsOneWidget,
     );
     expect(find.textContaining(r'R$ 999,00'), findsNothing);
@@ -1629,7 +1610,7 @@ void main() {
 
   testWidgets('deve_alertar_quando_total_ultrapassa_orcamento', (tester) async {
     await abrirListaComPreco(tester, marcado: true, orcamentoCentavos: 300);
-    expect(find.text(AppStrings.acimaDoOrcamento), findsOneWidget);
+    expect(find.text('Acima do orçamento'), findsOneWidget);
     expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
     await fechar(tester);
   });
@@ -1642,10 +1623,10 @@ void main() {
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.preco),
+      find.widgetWithText(TextField, 'Preço (R\$)'),
       '12,34',
     );
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
     await tester.pumpAndSettle();
 
     final item = (await db.select(db.itemLocal).get()).single;
@@ -1659,14 +1640,14 @@ void main() {
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.preco),
+      find.widgetWithText(TextField, 'Preço (R\$)'),
       'abc',
     );
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.salvar));
+    await tester.tap(find.widgetWithText(FilledButton, 'Salvar'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.erroPrecoInvalido), findsOneWidget);
-    expect(find.text(AppStrings.editarItem), findsOneWidget); // segue aberto
+    expect(find.text('Preço inválido.'), findsOneWidget);
+    expect(find.text('Editar item'), findsOneWidget); // segue aberto
     final item = (await db.select(db.itemLocal).get()).single;
     expect(item.precoCentavos, 549); // inalterado
     await fechar(tester);
@@ -1684,10 +1665,10 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.adicionarDeOutraLista), findsOneWidget);
-    await tester.tap(find.text(AppStrings.adicionarDeOutraLista));
+    expect(find.text('Adicionar de outra lista'), findsOneWidget);
+    await tester.tap(find.text('Adicionar de outra lista'));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.escolherListaOrigem), findsOneWidget);
+    expect(find.text('Lista de origem'), findsOneWidget);
 
     await fechar(tester);
   });
@@ -1702,16 +1683,14 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.adicionarDeOutraLista));
+    await tester.tap(find.text('Adicionar de outra lista'));
     await tester.pumpAndSettle();
     // Quantidade inteira é exibida sem casa decimal (2, não "2.0").
     expect(find.text('2 un'), findsOneWidget);
     expect(find.text('2.0 un'), findsNothing);
-    await tester.tap(find.text(AppStrings.selecionarTodos));
+    await tester.tap(find.text('Selecionar todos'));
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.adicionarSelecionados),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Adicionar'));
     await tester.pumpAndSettle();
 
     final itens = await (db.select(
@@ -1726,7 +1705,7 @@ void main() {
     final arroz = itens.where((i) => i.nome == 'Arroz').toList();
     expect(arroz, hasLength(1));
     expect(arroz.single.quantidade, 3);
-    expect(find.text(AppStrings.itensAdicionadosDeOutra(2)), findsOneWidget);
+    expect(find.text('2 itens adicionados de outra lista.'), findsOneWidget);
 
     await fechar(tester);
   });
@@ -1741,9 +1720,9 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.adicionarDeOutraLista));
+    await tester.tap(find.text('Adicionar de outra lista'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.selecionarTodos));
+    await tester.tap(find.text('Selecionar todos'));
     await tester.pumpAndSettle();
 
     final checkboxes = find.descendant(
@@ -1755,7 +1734,7 @@ void main() {
       expect(tester.widget<Checkbox>(checkboxes.at(i)).value, isTrue);
     }
     final confirmar = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, AppStrings.adicionarSelecionados),
+      find.widgetWithText(FilledButton, 'Adicionar'),
     );
     expect(confirmar.onPressed, isNotNull);
 
@@ -1773,20 +1752,17 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.adicionarDeOutraLista));
+    await tester.tap(find.text('Adicionar de outra lista'));
     await tester.pumpAndSettle();
 
-    final confirmar = find.widgetWithText(
-      FilledButton,
-      AppStrings.adicionarSelecionados,
-    );
+    final confirmar = find.widgetWithText(FilledButton, 'Adicionar');
     expect(tester.widget<FilledButton>(confirmar).onPressed, isNull);
 
     await tester.tap(confirmar);
     await tester.pumpAndSettle();
 
     // Nada foi adicionado e o modal segue aberto.
-    expect(find.text(AppStrings.escolherListaOrigem), findsOneWidget);
+    expect(find.text('Lista de origem'), findsOneWidget);
     final itens = await (db.select(
       db.itemLocal,
     )..where((i) => i.listaId.equals(atual.id))).get();
@@ -1804,7 +1780,7 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.adicionarDeOutraLista));
+    await tester.tap(find.text('Adicionar de outra lista'));
     await tester.pumpAndSettle();
 
     final dropdown = tester.widget<AppDropdown<String>>(
@@ -1832,7 +1808,7 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.adicionarDeOutraLista));
+    await tester.tap(find.text('Adicionar de outra lista'));
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
@@ -1849,11 +1825,11 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.adicionarDeOutraLista));
+    await tester.tap(find.text('Adicionar de outra lista'));
     await tester.pumpAndSettle();
 
-    // O rótulo combina título + "Arquivada" (AppStrings.arquivada).
-    final rotulo = AppStrings.tituloListaArquivada('Outra');
+    // O rótulo combina título + "Arquivada" (Arquivada).
+    final rotulo = 'Outra · Arquivada';
     final dropdown = tester.widget<AppDropdown<String>>(
       find.byType(AppDropdown<String>),
     );
@@ -1883,7 +1859,7 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.adicionarDeOutraLista));
+    await tester.tap(find.text('Adicionar de outra lista'));
     await tester.pumpAndSettle();
 
     final dialogo = find.byType(AlertDialog);
@@ -1915,14 +1891,11 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.adicionarDeOutraLista));
+    await tester.tap(find.text('Adicionar de outra lista'));
     await tester.pumpAndSettle();
 
-    final confirmar = find.widgetWithText(
-      FilledButton,
-      AppStrings.adicionarSelecionados,
-    );
-    await tester.tap(find.text(AppStrings.selecionarTodos));
+    final confirmar = find.widgetWithText(FilledButton, 'Adicionar');
+    await tester.tap(find.text('Selecionar todos'));
     await tester.pumpAndSettle();
     expect(tester.widget<FilledButton>(confirmar).onPressed, isNotNull);
 
@@ -1943,16 +1916,14 @@ void main() {
     final fake = FakeReconhecimentoVoz();
     await abrirListaComItem(tester, reconhecimento: fake);
 
-    await tester.tap(find.byTooltip(AppStrings.ditarItem));
+    await tester.tap(find.byTooltip('Ditar item'));
     await tester.pump();
     fake.emitir('meio quilo de queijo');
     await tester.pump();
 
     expect(
       tester
-          .widget<TextField>(
-            find.widgetWithText(TextField, AppStrings.adicionarItem),
-          )
+          .widget<TextField>(find.widgetWithText(TextField, 'Adicionar item'))
           .controller!
           .text,
       'meio quilo de queijo',
@@ -1964,10 +1935,13 @@ void main() {
     final fake = FakeReconhecimentoVoz(disponivel: false);
     await abrirListaComItem(tester, reconhecimento: fake);
 
-    await tester.tap(find.byTooltip(AppStrings.ditarItem));
+    await tester.tap(find.byTooltip('Ditar item'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.vozIndisponivel), findsOneWidget);
+    expect(
+      find.text('Reconhecimento de voz indisponível neste aparelho.'),
+      findsOneWidget,
+    );
     await fechar(tester);
   });
 
@@ -1975,9 +1949,9 @@ void main() {
     final fake = FakeReconhecimentoVoz();
     await abrirListaComItem(tester, reconhecimento: fake);
 
-    await tester.tap(find.byTooltip(AppStrings.ditarItem));
+    await tester.tap(find.byTooltip('Ditar item'));
     await tester.pump();
-    await tester.tap(find.byTooltip(AppStrings.ditarItem));
+    await tester.tap(find.byTooltip('Ditar item'));
     await tester.pump();
 
     expect(fake.parou, isTrue);
@@ -1990,7 +1964,7 @@ void main() {
     final fake = FakeReconhecimentoVoz();
     await abrirListaComItem(tester, reconhecimento: fake);
 
-    await tester.tap(find.byTooltip(AppStrings.ditarItem));
+    await tester.tap(find.byTooltip('Ditar item'));
     await tester.pump();
     expect(fake.cancelou, isFalse);
 
@@ -2007,7 +1981,7 @@ void main() {
     await abrirListaComItem(tester, reconhecimento: fake);
 
     // `iniciar` fica pendente: a tela ainda não está `ouvindo`.
-    await tester.tap(find.byTooltip(AppStrings.ditarItem));
+    await tester.tap(find.byTooltip('Ditar item'));
     await tester.pump();
     expect(fake.cancelou, isFalse);
 
@@ -2022,13 +1996,13 @@ void main() {
     final fake = FakeReconhecimentoVoz();
     final listaId = await abrirListaComItem(tester, reconhecimento: fake);
 
-    await tester.tap(find.byTooltip(AppStrings.ditarItem));
+    await tester.tap(find.byTooltip('Ditar item'));
     await tester.pump();
     fake.emitir('2 kg de arroz', finalizado: true);
     await tester.pump();
 
     // Confirma pelo teclado (Enter) no campo preenchido pela voz.
-    await tester.tap(find.widgetWithText(TextField, AppStrings.adicionarItem));
+    await tester.tap(find.widgetWithText(TextField, 'Adicionar item'));
     await tester.pump();
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
@@ -2048,10 +2022,7 @@ void main() {
   ) async {
     await listaComItens(tester, comConcluido: true);
 
-    expect(
-      find.widgetWithText(AppBotao, AppStrings.finalizarCompra),
-      findsOneWidget,
-    );
+    expect(find.widgetWithText(AppBotao, 'Finalizar compra'), findsOneWidget);
 
     await fechar(tester);
   });
@@ -2061,10 +2032,7 @@ void main() {
   ) async {
     await listaComItens(tester);
 
-    expect(
-      find.widgetWithText(AppBotao, AppStrings.finalizarCompra),
-      findsNothing,
-    );
+    expect(find.widgetWithText(AppBotao, 'Finalizar compra'), findsNothing);
 
     await fechar(tester);
   });
@@ -2077,7 +2045,7 @@ void main() {
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
     expect(
-      find.widgetWithText(PopupMenuItem<String>, AppStrings.finalizarCompra),
+      find.widgetWithText(PopupMenuItem<String>, 'Finalizar compra'),
       findsOneWidget,
     );
 
@@ -2091,7 +2059,7 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.finalizarCompra), findsNothing);
+    expect(find.text('Finalizar compra'), findsNothing);
 
     await fechar(tester);
   });

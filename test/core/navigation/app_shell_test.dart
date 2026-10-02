@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/config/usuario_local.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
@@ -59,12 +58,12 @@ void main() {
     await montar(tester, tamanho: const Size(500, 800));
 
     expect(find.byType(NavigationBar), findsOneWidget);
-    expect(find.text(AppStrings.abaMinhas), findsOneWidget);
-    expect(find.text(AppStrings.configuracoes), findsOneWidget);
+    expect(find.text('Minhas'), findsOneWidget);
+    expect(find.text('Configurações'), findsOneWidget);
 
-    await tester.tap(find.text(AppStrings.configuracoes));
+    await tester.tap(find.text('Configurações'));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.aparencia), findsOneWidget);
+    expect(find.text('Aparência'), findsOneWidget);
 
     await fechar(tester);
   });
@@ -95,7 +94,7 @@ void main() {
     expect(find.byType(BackButton), findsOneWidget);
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.abaMinhas), findsOneWidget);
+    expect(find.text('Minhas'), findsOneWidget);
 
     await fechar(tester);
   });

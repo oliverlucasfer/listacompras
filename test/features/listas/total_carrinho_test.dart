@@ -2,7 +2,6 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/domain/preco.dart';
@@ -68,10 +67,7 @@ void main() {
     tester,
   ) async {
     await abrir(tester, precos: const [549]);
-    expect(
-      find.text(AppStrings.totalNoCarrinho(formatarReais(549), 0)),
-      findsOneWidget,
-    );
+    expect(find.text('No carrinho: ${formatarReais(549)}'), findsOneWidget);
     expect(find.byType(LinearProgressIndicator), findsNothing);
     await fechar(tester);
   });
@@ -82,13 +78,7 @@ void main() {
     await abrir(tester, precos: const [549], orcamentoCentavos: 1000);
 
     expect(
-      find.text(
-        AppStrings.totalComOrcamento(
-          formatarReais(549),
-          formatarReais(1000),
-          0,
-        ),
-      ),
+      find.text('No carrinho: ${formatarReais(549)} de ${formatarReais(1000)}'),
       findsOneWidget,
     );
     final barra = tester.widget<LinearProgressIndicator>(
@@ -96,7 +86,7 @@ void main() {
     );
     expect(barra.value, closeTo(0.549, 0.001));
     expect(find.byIcon(Icons.warning_amber_rounded), findsNothing);
-    expect(find.text(AppStrings.acimaDoOrcamento), findsNothing);
+    expect(find.text('Acima do orçamento'), findsNothing);
     await fechar(tester);
   });
 
@@ -104,7 +94,7 @@ void main() {
     await abrir(tester, precos: const [549], orcamentoCentavos: 300);
 
     expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
-    expect(find.text(AppStrings.acimaDoOrcamento), findsOneWidget);
+    expect(find.text('Acima do orçamento'), findsOneWidget);
     final barra = tester.widget<LinearProgressIndicator>(
       find.byType(LinearProgressIndicator),
     );
@@ -117,7 +107,7 @@ void main() {
   ) async {
     await abrir(tester, precos: const [549], orcamentoCentavos: 0);
 
-    expect(find.text(AppStrings.acimaDoOrcamento), findsOneWidget);
+    expect(find.text('Acima do orçamento'), findsOneWidget);
     // Orçamento zero não tem barra de progresso.
     expect(find.byType(LinearProgressIndicator), findsNothing);
     await fechar(tester);
@@ -128,11 +118,7 @@ void main() {
 
     expect(
       find.text(
-        AppStrings.totalComOrcamento(
-          formatarReais(549),
-          formatarReais(1000),
-          1,
-        ),
+        'No carrinho: ${formatarReais(549)} de ${formatarReais(1000)} · 1 sem preço',
       ),
       findsOneWidget,
     );

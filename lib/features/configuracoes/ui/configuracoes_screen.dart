@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-import '../../../core/l10n/app_strings.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/seletor_tema.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
@@ -45,10 +44,10 @@ class ConfiguracoesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.configuracoes)),
+      appBar: AppBar(title: Text(context.l10n.configuracoes)),
       body: ListView(
         children: [
-          const AppCabecalhoSecao(AppStrings.aparencia),
+          AppCabecalhoSecao(context.l10n.aparencia),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             child: SeletorTema(),
@@ -60,35 +59,35 @@ class ConfiguracoesScreen extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.reorder),
-            title: const Text(AppStrings.ordenarCategorias),
+            title: Text(context.l10n.ordenarCategorias),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/categorias'),
           ),
           ListTile(
             leading: const Icon(Icons.savings_outlined),
-            title: const Text(AppStrings.orcamentoPorCategoria),
+            title: Text(context.l10n.orcamentoPorCategoria),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/orcamento-categorias'),
           ),
-          const AppCabecalhoSecao(AppStrings.sobre),
+          AppCabecalhoSecao(context.l10n.sobre),
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined),
-            title: const Text(AppStrings.politicaPrivacidade),
+            title: Text(context.l10n.politicaPrivacidade),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => abrirPoliticaPrivacidade(context),
           ),
           ListTile(
             leading: const Icon(Icons.info_outline),
-            title: const Text(AppStrings.versao),
+            title: Text(context.l10n.versao),
             trailing: FutureBuilder<PackageInfo>(
               future: PackageInfo.fromPlatform(),
               builder: (context, snapshot) =>
-                  Text(snapshot.data?.version ?? AppStrings.semValor),
+                  Text(snapshot.data?.version ?? context.l10n.semValor),
             ),
           ),
           ListTile(
             leading: const Icon(Icons.school_outlined),
-            title: const Text(AppStrings.tourAbrir),
+            title: Text(context.l10n.tourAbrir),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _abrirTour(ref, context),
           ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/l10n/app_strings.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_elevation.dart';
 import '../../../core/theme/tokens/app_motion.dart';
@@ -322,7 +321,7 @@ class _Bolha extends StatelessWidget {
       container: true,
       liveRegion: true,
       explicitChildNodes: true,
-      label: AppStrings.tourPasso(numero, total),
+      label: context.l10n.tourPasso(numero, total),
       child: Material(
         color: cores.surfaceContainerHigh,
         elevation: AppElevation.nivel3,
@@ -356,21 +355,21 @@ class _Bolha extends StatelessWidget {
                 alignment: WrapAlignment.end,
                 children: [
                   AppBotao(
-                    rotulo: AppStrings.tourPular,
+                    rotulo: context.l10n.tourPular,
                     variante: AppBotaoVariante.texto,
                     expandido: false,
                     onPressed: onPular,
                   ),
                   AppBotao(
-                    rotulo: AppStrings.tourAnterior,
+                    rotulo: context.l10n.tourAnterior,
                     variante: AppBotaoVariante.outlined,
                     expandido: false,
                     onPressed: onAnterior,
                   ),
                   AppBotao(
                     rotulo: ultimo
-                        ? AppStrings.tourConcluir
-                        : AppStrings.tourProximo,
+                        ? context.l10n.tourConcluir
+                        : context.l10n.tourProximo,
                     expandido: false,
                     onPressed: onProximo,
                   ),

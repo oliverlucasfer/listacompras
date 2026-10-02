@@ -2,7 +2,6 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/domain/preco.dart';
@@ -59,18 +58,12 @@ void main() {
     await abrir(tester, precoCentavos: 500, orcamentoCentavos: 1000);
 
     expect(
-      find.text(
-        AppStrings.totalComOrcamento(
-          formatarReais(500),
-          formatarReais(1000),
-          0,
-        ),
-      ),
+      find.text('No carrinho: ${formatarReais(500)} de ${formatarReais(1000)}'),
       findsOneWidget,
     );
-    expect(find.text(AppStrings.orcamentoAtencao), findsNothing);
+    expect(find.text('Perto do orçamento'), findsNothing);
     expect(find.byIcon(Icons.notification_important_outlined), findsNothing);
-    expect(find.text(AppStrings.acimaDoOrcamento), findsNothing);
+    expect(find.text('Acima do orçamento'), findsNothing);
     expect(find.byIcon(Icons.warning_amber_rounded), findsNothing);
     await fechar(tester);
   });
@@ -78,9 +71,9 @@ void main() {
   testWidgets('deve_avisar_quando_proximo_do_orcamento', (tester) async {
     await abrir(tester, precoCentavos: 800, orcamentoCentavos: 1000);
 
-    expect(find.text(AppStrings.orcamentoAtencao), findsOneWidget);
+    expect(find.text('Perto do orçamento'), findsOneWidget);
     expect(find.byIcon(Icons.notification_important_outlined), findsOneWidget);
-    expect(find.text(AppStrings.acimaDoOrcamento), findsNothing);
+    expect(find.text('Acima do orçamento'), findsNothing);
     expect(find.byIcon(Icons.warning_amber_rounded), findsNothing);
     await fechar(tester);
   });
@@ -88,9 +81,9 @@ void main() {
   testWidgets('deve_alertar_quando_acima_do_orcamento', (tester) async {
     await abrir(tester, precoCentavos: 1001, orcamentoCentavos: 1000);
 
-    expect(find.text(AppStrings.acimaDoOrcamento), findsOneWidget);
+    expect(find.text('Acima do orçamento'), findsOneWidget);
     expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
-    expect(find.text(AppStrings.orcamentoAtencao), findsNothing);
+    expect(find.text('Perto do orçamento'), findsNothing);
     expect(find.byIcon(Icons.notification_important_outlined), findsNothing);
     await fechar(tester);
   });

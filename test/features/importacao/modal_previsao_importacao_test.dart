@@ -2,7 +2,6 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/core/importacao/resposta_import.dart';
 import 'package:lista_compras/features/importacao/ui/modal_previsao_importacao.dart';
@@ -80,16 +79,19 @@ void main() {
   ) async {
     await abrir(tester, RespostaParse(itens: const [], aviso: null));
 
-    expect(find.text(AppStrings.nadaReconhecido), findsOneWidget);
-    expect(find.text(AppStrings.separarItensDica), findsOneWidget);
+    expect(find.text('Nada foi reconhecido'), findsOneWidget);
+    expect(
+      find.text('Separe os itens por vírgula ou linha e tente de novo.'),
+      findsOneWidget,
+    );
     // Sem rodapé/ação de adicionar quando não há nada a adicionar.
-    expect(find.text(AppStrings.importAdicionarN(0)), findsNothing);
+    expect(find.text('Adicionar 0'), findsNothing);
   });
 
   testWidgets('deve_voltar_e_editar_quando_nada_reconhecido', (tester) async {
     await abrir(tester, RespostaParse(itens: const [], aviso: null));
 
-    await tester.tap(find.text(AppStrings.voltarEEditar));
+    await tester.tap(find.text('Voltar e editar'));
     await tester.pumpAndSettle();
 
     // Modal fechado: voltou à tela de entrada da importação.
@@ -111,9 +113,12 @@ void main() {
     expect(find.text('Leite'), findsOneWidget);
     expect(find.text('Queijo prato'), findsOneWidget);
     expect(find.text('Café'), findsOneWidget);
-    expect(find.text(AppStrings.importLocalAvisoPadrao), findsOneWidget);
-    expect(find.text(AppStrings.importSeraoAdicionados(4, 4)), findsOneWidget);
-    expect(find.text(AppStrings.importAdicionarN(4)), findsOneWidget);
+    expect(
+      find.text('Itens sem quantidade entraram com 1 un.'),
+      findsOneWidget,
+    );
+    expect(find.text('4 de 4 serão adicionados'), findsOneWidget);
+    expect(find.text('Adicionar 4'), findsOneWidget);
     expect(checkboxDe(tester, 'Arroz').value, isTrue);
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -124,11 +129,9 @@ void main() {
     await abrir(tester, resposta4);
 
     await alternar(tester, 'Café');
-    expect(find.text(AppStrings.importSeraoAdicionados(3, 4)), findsOneWidget);
+    expect(find.text('3 de 4 serão adicionados'), findsOneWidget);
 
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.importAdicionarN(3)),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Adicionar 3'));
     await tester.pumpAndSettle();
 
     expect(recebida, isNotNull);
@@ -147,9 +150,9 @@ void main() {
     for (final nome in ['Arroz', 'Leite', 'Queijo prato', 'Café']) {
       await alternar(tester, nome);
     }
-    expect(find.text(AppStrings.importSeraoAdicionados(0, 4)), findsOneWidget);
+    expect(find.text('0 de 4 serão adicionados'), findsOneWidget);
     final botao = tester.widget<FilledButton>(
-      find.widgetWithText(FilledButton, AppStrings.importAdicionarN(0)),
+      find.widgetWithText(FilledButton, 'Adicionar 0'),
     );
     expect(botao.onPressed, isNull);
 
@@ -160,11 +163,11 @@ void main() {
     recebida = null;
     await abrir(tester, resposta4);
 
-    await tester.tap(find.text(AppStrings.cancelar));
+    await tester.tap(find.text('Cancelar'));
     await tester.pumpAndSettle();
 
     expect(recebida, isNull);
-    expect(find.text(AppStrings.importConfirmeItens), findsNothing);
+    expect(find.text('Confirme os itens'), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -189,9 +192,7 @@ void main() {
 
     expect(find.text('3 l'), findsOneWidget);
 
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.importAdicionarN(4)),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Adicionar 4'));
     await tester.pumpAndSettle();
 
     final arroz = recebida!.first;
@@ -213,7 +214,7 @@ void main() {
     await tester.enterText(find.byType(TextField).first, '');
     await tester.pump();
 
-    expect(find.text(AppStrings.erroNomeVazio), findsOneWidget);
+    expect(find.text('Informe um nome.'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -229,7 +230,7 @@ void main() {
     await tester.enterText(find.byType(TextField).at(1), '0');
     await tester.pump();
 
-    expect(find.text(AppStrings.erroQuantidadeInvalida), findsOneWidget);
+    expect(find.text('Informe uma quantidade maior que zero.'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -244,11 +245,11 @@ void main() {
 
     await tester.enterText(find.byType(TextField).first, '');
     await tester.pump();
-    expect(find.text(AppStrings.erroNomeVazio), findsOneWidget);
+    expect(find.text('Informe um nome.'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField).first, 'Arroz integral');
     await tester.pump();
-    expect(find.text(AppStrings.erroNomeVazio), findsNothing);
+    expect(find.text('Informe um nome.'), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -263,11 +264,11 @@ void main() {
 
     await tester.enterText(find.byType(TextField).at(1), '0');
     await tester.pump();
-    expect(find.text(AppStrings.erroQuantidadeInvalida), findsOneWidget);
+    expect(find.text('Informe uma quantidade maior que zero.'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField).at(1), '3');
     await tester.pump();
-    expect(find.text(AppStrings.erroQuantidadeInvalida), findsNothing);
+    expect(find.text('Informe uma quantidade maior que zero.'), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -290,12 +291,12 @@ void main() {
     // Campo semeado com o glifo ½ (formatarQuantidade).
     expect(find.widgetWithText(TextField, '½'), findsOneWidget);
 
-    await tester.tap(find.byTooltip(AppStrings.aumentar));
+    await tester.tap(find.byTooltip('Aumentar'));
     await tester.pumpAndSettle();
 
     // ½ + 1 = 1½ (e não 2): prova que a fração semeada foi lida de volta.
     expect(find.widgetWithText(TextField, '1½'), findsOneWidget);
-    expect(find.text(AppStrings.erroQuantidadeInvalida), findsNothing);
+    expect(find.text('Informe uma quantidade maior que zero.'), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -318,9 +319,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await alternar(tester, 'Café');
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.importAdicionarN(3)),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Adicionar 3'));
     await tester.pumpAndSettle();
 
     final itens = await (db.select(
@@ -335,7 +334,7 @@ void main() {
       itens.where((i) => i.nome == 'Queijo prato').single.quantidade,
       500.0,
     );
-    expect(find.text(AppStrings.itensExtraidos(3)), findsOneWidget);
+    expect(find.text('3 itens extraídos.'), findsOneWidget);
   });
 
   testWidgets(
@@ -366,9 +365,7 @@ void main() {
       await tester.tap(find.text('abrir'));
       await tester.pumpAndSettle();
 
-      await tester.tap(
-        find.widgetWithText(FilledButton, AppStrings.importAdicionarN(3)),
-      );
+      await tester.tap(find.widgetWithText(FilledButton, 'Adicionar 3'));
       await tester.pumpAndSettle();
 
       final itens = await (db.select(
@@ -398,7 +395,7 @@ void main() {
     await tester.tap(find.text('abrir'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text(AppStrings.cancelar));
+    await tester.tap(find.text('Cancelar'));
     await tester.pumpAndSettle();
 
     final itens = await (db.select(
@@ -421,9 +418,7 @@ void main() {
     await tester.tap(find.text('Laticínios').last);
     await tester.pumpAndSettle();
 
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.importAdicionarN(2)),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Adicionar 2'));
     await tester.pumpAndSettle();
 
     expect(recebida!.first.categoria, CategoriaItem.laticinios);
@@ -450,9 +445,7 @@ void main() {
     );
     await tester.tap(find.text('abrir'));
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.importAdicionarN(2)),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Adicionar 2'));
     await tester.pumpAndSettle();
 
     final itens = await (db.select(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/theme/app_theme.dart';
 import 'package:lista_compras/core/widgets/app_estado_erro.dart';
 import 'package:lista_compras/core/widgets/app_estado_vazio.dart';
@@ -31,7 +30,7 @@ void main() {
         AppEstadoErro(mensagem: 'Falhou', onRetentar: () => retentou = true),
       ),
     );
-    await tester.tap(find.text(AppStrings.tentarNovamente));
+    await tester.tap(find.text('Tentar novamente'));
     expect(retentou, isTrue);
   });
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 
 import 'fluxo_harness.dart';
 
@@ -11,17 +10,13 @@ void main() {
       final app = await montarApp(tester);
 
       // Criar lista
-      await tester.tap(
-        find.widgetWithText(FloatingActionButton, AppStrings.novaLista),
-      );
+      await tester.tap(find.widgetWithText(FloatingActionButton, 'Nova lista'));
       await tester.pumpAndSettle();
       await tester.enterText(
-        find.widgetWithText(TextField, AppStrings.nomeDaLista),
+        find.widgetWithText(TextField, 'Nome da lista'),
         'Compras',
       );
-      await tester.tap(
-        find.widgetWithText(FilledButton, AppStrings.criarLista),
-      );
+      await tester.tap(find.widgetWithText(FilledButton, 'Criar lista'));
       await tester.pumpAndSettle();
       expect(find.text('Compras'), findsOneWidget);
 
@@ -29,7 +24,7 @@ void main() {
       await tester.tap(find.text('Compras'));
       await tester.pumpAndSettle();
       await tester.enterText(
-        find.widgetWithText(TextField, AppStrings.adicionarItem),
+        find.widgetWithText(TextField, 'Adicionar item'),
         'Arroz',
       );
       await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -42,7 +37,7 @@ void main() {
 
       // Expandir "Itens concluídos" para o item ficar onstage: sem isso a
       // asserção após limpar seria vácua (já era `findsNothing` offstage).
-      await tester.tap(find.text('${AppStrings.itensConcluidos} (1)'));
+      await tester.tap(find.text('Itens concluídos (1)'));
       await tester.pumpAndSettle();
       // Escopo no ExpansionTile: o chip de sugestão também mostra "Arroz".
       expect(
@@ -58,9 +53,9 @@ void main() {
       // Limpar concluídos (menu ⋮) e desfazer
       await tester.tap(find.byIcon(Icons.more_vert));
       await tester.pumpAndSettle();
-      await tester.tap(find.text(AppStrings.limparConcluidos));
+      await tester.tap(find.text('Limpar concluídos'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(FilledButton, AppStrings.limpar));
+      await tester.tap(find.widgetWithText(FilledButton, 'Limpar'));
       await tester.pumpAndSettle();
 
       // UI: sumiu de fato (estava onstage antes de limpar).
@@ -77,13 +72,13 @@ void main() {
         isNotNull,
       );
 
-      await tester.tap(find.text(AppStrings.desfazer));
+      await tester.tap(find.text('Desfazer'));
       await tester.pumpAndSettle();
 
       // O item restaurado volta concluído, dentro de "Itens concluídos".
       // Recolhido, o ExpansionTile nem constrói os filhos — reabre para
       // provar que o item voltou à lista.
-      await tester.tap(find.text('${AppStrings.itensConcluidos} (1)'));
+      await tester.tap(find.text('Itens concluídos (1)'));
       await tester.pumpAndSettle();
       expect(
         find.descendant(

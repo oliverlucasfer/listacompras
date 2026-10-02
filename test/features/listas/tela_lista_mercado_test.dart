@@ -2,7 +2,6 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/historico/data/historico_compras_repository.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
@@ -98,11 +97,11 @@ void main() {
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.porMercado), findsOneWidget);
+    expect(find.text('Por mercado'), findsOneWidget);
     expect(find.text('Mercado A: ${formatarReais(700)}'), findsOneWidget);
     // O mais barato (Mercado B) aparece com o destaque.
     expect(
-      find.text('Mercado B: ${formatarReais(500)} (${AppStrings.maisBarato})'),
+      find.text('Mercado B: ${formatarReais(500)} (mais barato)'),
       findsOneWidget,
     );
 

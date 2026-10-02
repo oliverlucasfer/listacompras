@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/compartilhamento/domain/lista_compartilhada.dart';
 import 'package:lista_compras/features/compartilhamento/ui/sheet_compartilhar.dart';
@@ -68,7 +67,7 @@ void main() {
     await tester.tap(find.text('QR code'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.compartilharQrGrande), findsOneWidget);
+    expect(find.text('Lista grande — use texto ou arquivo.'), findsOneWidget);
     expect(find.byType(QrImageView), findsNothing);
   });
 
@@ -100,12 +99,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(QrImageView), findsOneWidget);
 
-    await tester.tap(find.text(AppStrings.copiarCodigo));
+    await tester.tap(find.text('Copiar código'));
     await tester.pumpAndSettle();
 
     final copia = chamadas.singleWhere((c) => c.method == 'Clipboard.setData');
     final texto = (copia.arguments as Map)['text'] as String;
     expect(texto, startsWith(ListaCompartilhada.prefixo));
-    expect(find.text(AppStrings.codigoCopiado), findsOneWidget);
+    expect(find.text('Código copiado.'), findsOneWidget);
   });
 }

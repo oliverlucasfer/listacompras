@@ -2,7 +2,6 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/domain/preco.dart';
@@ -70,7 +69,7 @@ void main() {
     await tester.tap(find.byType(Checkbox).first);
     await tester.pumpAndSettle();
     expect(
-      find.text(AppStrings.orcamentoCruzado(formatarReais(1200))),
+      find.text('Você passou do orçamento: ${formatarReais(1200)}'),
       findsNothing,
     );
 
@@ -78,7 +77,7 @@ void main() {
     await tester.tap(find.byType(Checkbox).first);
     await tester.pumpAndSettle();
     expect(
-      find.text(AppStrings.orcamentoCruzado(formatarReais(1200))),
+      find.text('Você passou do orçamento: ${formatarReais(1200)}'),
       findsOneWidget,
     );
 
@@ -99,7 +98,7 @@ void main() {
     await tester.tap(find.byType(Checkbox).first);
     await tester.pumpAndSettle();
     expect(
-      find.text(AppStrings.orcamentoCruzado(formatarReais(1200))),
+      find.text('Você passou do orçamento: ${formatarReais(1200)}'),
       findsOneWidget,
     );
 
@@ -109,7 +108,7 @@ void main() {
     await tester.tap(find.byType(Checkbox).first);
     await tester.pumpAndSettle();
     expect(
-      find.text(AppStrings.orcamentoCruzado(formatarReais(1800))),
+      find.text('Você passou do orçamento: ${formatarReais(1800)}'),
       findsNothing,
     );
 
@@ -129,14 +128,14 @@ void main() {
     await tester.tap(find.text('Item 1'));
     await tester.pumpAndSettle();
     expect(
-      find.text(AppStrings.orcamentoCruzado(formatarReais(1200))),
+      find.text('Você passou do orçamento: ${formatarReais(1200)}'),
       findsNothing,
     );
 
     await tester.tap(find.text('Item 2'));
     await tester.pumpAndSettle();
     expect(
-      find.text(AppStrings.orcamentoCruzado(formatarReais(1200))),
+      find.text('Você passou do orçamento: ${formatarReais(1200)}'),
       findsOneWidget,
     );
 

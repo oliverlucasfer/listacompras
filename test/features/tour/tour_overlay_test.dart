@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/theme/app_theme.dart';
 import 'package:lista_compras/features/tour/tour_controller.dart';
 import 'package:lista_compras/features/tour/tour_keys.dart';
@@ -52,7 +51,7 @@ Future<void> _montar(WidgetTester tester) async {
 }
 
 Future<void> _avancarParaUltimo(WidgetTester tester) async {
-  await tester.tap(find.text(AppStrings.tourProximo));
+  await tester.tap(find.text('Próximo'));
   await tester.pumpAndSettle();
 }
 
@@ -60,32 +59,32 @@ void main() {
   testWidgets('deve_mostrar_bolha_e_avancar_quando_proximo', (tester) async {
     await _montar(tester);
 
-    expect(find.text(AppStrings.tourNovaListaTitulo), findsOneWidget);
-    expect(find.text(AppStrings.tourPular), findsOneWidget);
+    expect(find.text('Criar sua primeira lista'), findsOneWidget);
+    expect(find.text('Pular'), findsOneWidget);
     expect(find.text('1/2'), findsOneWidget);
-    expect(find.text(AppStrings.tourConcluir), findsNothing);
+    expect(find.text('Concluir'), findsNothing);
 
     await _avancarParaUltimo(tester);
 
-    expect(find.text(AppStrings.tourBuscaTitulo), findsOneWidget);
+    expect(find.text('Busca e filtros'), findsOneWidget);
     expect(find.text('2/2'), findsOneWidget);
-    expect(find.text(AppStrings.tourConcluir), findsOneWidget);
-    expect(find.text(AppStrings.tourProximo), findsNothing);
-    expect(find.text(AppStrings.tourNovaListaTitulo), findsNothing);
+    expect(find.text('Concluir'), findsOneWidget);
+    expect(find.text('Próximo'), findsNothing);
+    expect(find.text('Criar sua primeira lista'), findsNothing);
   });
 
   testWidgets('deve_desabilitar_anterior_no_primeiro_passo', (tester) async {
     await _montar(tester);
 
     final anterior = tester.widget<OutlinedButton>(
-      find.widgetWithText(OutlinedButton, AppStrings.tourAnterior),
+      find.widgetWithText(OutlinedButton, 'Anterior'),
     );
     expect(anterior.onPressed, isNull);
 
     await _avancarParaUltimo(tester);
 
     final anteriorDepois = tester.widget<OutlinedButton>(
-      find.widgetWithText(OutlinedButton, AppStrings.tourAnterior),
+      find.widgetWithText(OutlinedButton, 'Anterior'),
     );
     expect(anteriorDepois.onPressed, isNotNull);
   });
@@ -97,11 +96,11 @@ void main() {
     await _montar(tester);
     await _avancarParaUltimo(tester);
 
-    await tester.tap(find.text(AppStrings.tourConcluir));
+    await tester.tap(find.text('Concluir'));
     await tester.pumpAndSettle();
 
     expect(_container.read(tourControllerProvider).ativo, isFalse);
-    expect(find.text(AppStrings.tourBuscaTitulo), findsNothing);
+    expect(find.text('Busca e filtros'), findsNothing);
     expect(
       await _container.read(tourEtapaVistaProvider(TourEtapa.primeira).future),
       isTrue,
@@ -114,7 +113,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await _montar(tester);
 
-    await tester.tap(find.text(AppStrings.tourPular));
+    await tester.tap(find.text('Pular'));
     await tester.pumpAndSettle();
 
     expect(_container.read(tourControllerProvider).ativo, isFalse);
@@ -128,7 +127,7 @@ void main() {
     final handle = tester.ensureSemantics();
     await _montar(tester);
 
-    final rotulo = AppStrings.tourPasso(1, 2);
+    final rotulo = 'Passo 1 de 2';
     expect(find.bySemanticsLabel(rotulo), findsOneWidget);
     expect(
       tester.getSemantics(find.bySemanticsLabel(rotulo)),
@@ -145,7 +144,7 @@ void main() {
     await tester.pump();
 
     expect(_container.read(tourControllerProvider).indice, 0);
-    expect(find.text(AppStrings.tourNovaListaTitulo), findsOneWidget);
+    expect(find.text('Criar sua primeira lista'), findsOneWidget);
   });
 
   testWidgets('deve_nao_renderizar_quando_inativo', (tester) async {
@@ -154,8 +153,8 @@ void main() {
     await _container.read(tourControllerProvider.notifier).pular();
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.tourNovaListaTitulo), findsNothing);
-    expect(find.text(AppStrings.tourPular), findsNothing);
+    expect(find.text('Criar sua primeira lista'), findsNothing);
+    expect(find.text('Pular'), findsNothing);
   });
 
   testWidgets('deve_nao_estourar_com_escala_2x_e_manter_alvos_acessiveis', (
@@ -172,7 +171,7 @@ void main() {
     await _montar(tester);
 
     expect(tester.takeException(), isNull);
-    expect(find.text(AppStrings.tourNovaListaTitulo), findsOneWidget);
+    expect(find.text('Criar sua primeira lista'), findsOneWidget);
     await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
     await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
 
@@ -189,6 +188,6 @@ void main() {
     await _montar(tester);
 
     expect(tester.takeException(), isNull);
-    expect(find.text(AppStrings.tourNovaListaTitulo), findsOneWidget);
+    expect(find.text('Criar sua primeira lista'), findsOneWidget);
   });
 }

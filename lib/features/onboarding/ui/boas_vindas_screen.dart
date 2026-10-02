@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_logo.dart';
@@ -29,41 +29,41 @@ class BoasVindasScreen extends ConsumerWidget {
                   const Center(child: AppLogo()),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
-                    AppStrings.boasVindasTitulo,
+                    context.l10n.boasVindasTitulo,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    AppStrings.boasVindasSubtitulo,
+                    context.l10n.boasVindasSubtitulo,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  const _Destaque(
+                  _Destaque(
                     icone: Icons.cloud_off_outlined,
-                    titulo: AppStrings.boasVindasOffline,
-                    dica: AppStrings.boasVindasOfflineDica,
+                    titulo: context.l10n.boasVindasOffline,
+                    dica: context.l10n.boasVindasOfflineDica,
                   ),
-                  const _Destaque(
+                  _Destaque(
                     icone: Icons.save_alt_outlined,
-                    titulo: AppStrings.boasVindasBackup,
-                    dica: AppStrings.boasVindasBackupDica,
+                    titulo: context.l10n.boasVindasBackup,
+                    dica: context.l10n.boasVindasBackupDica,
                   ),
-                  const _Destaque(
+                  _Destaque(
                     icone: Icons.playlist_add,
-                    titulo: AppStrings.boasVindasImportar,
-                    dica: AppStrings.boasVindasImportarDica,
+                    titulo: context.l10n.boasVindasImportar,
+                    dica: context.l10n.boasVindasImportarDica,
                   ),
                   if (plataformaComVoz())
-                    const _Destaque(
+                    _Destaque(
                       icone: Icons.mic_none,
-                      titulo: AppStrings.boasVindasDitar,
-                      dica: AppStrings.boasVindasDitarDica,
+                      titulo: context.l10n.boasVindasDitar,
+                      dica: context.l10n.boasVindasDitarDica,
                     ),
                   const SizedBox(height: AppSpacing.xl),
                   AppBotao(
-                    rotulo: AppStrings.comecar,
+                    rotulo: context.l10n.comecar,
                     onPressed: () async {
                       await ref
                           .read(onboardingVistoProvider.notifier)

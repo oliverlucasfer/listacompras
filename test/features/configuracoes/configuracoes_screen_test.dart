@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/features/configuracoes/ui/configuracoes_screen.dart';
 import 'package:lista_compras/features/listas/ui/tela_ordenar_categorias.dart';
 import 'package:lista_compras/l10n/app_localizations.dart';
@@ -56,22 +55,22 @@ void main() {
 
   testWidgets('deve_abrir_ordenar_categorias_quando_toca', (tester) async {
     await abrirComCategorias(tester);
-    await tester.tap(find.text(AppStrings.ordenarCategorias));
+    await tester.tap(find.text('Ordenar categorias'));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.restaurarPadrao), findsOneWidget);
+    expect(find.text('Restaurar padrão'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
   testWidgets('deve_exibir_secoes_quando_abrir', (tester) async {
     await abrir(tester);
 
-    expect(find.text(AppStrings.aparencia), findsOneWidget);
-    expect(find.text(AppStrings.sobre), findsOneWidget);
-    expect(find.text(AppStrings.politicaPrivacidade), findsOneWidget);
-    expect(find.text(AppStrings.versao), findsOneWidget);
+    expect(find.text('Aparência'), findsOneWidget);
+    expect(find.text('Sobre'), findsOneWidget);
+    expect(find.text('Política de Privacidade'), findsOneWidget);
+    expect(find.text('Versão'), findsOneWidget);
 
-    await tester.scrollUntilVisible(find.text(AppStrings.backup), 300);
-    expect(find.text(AppStrings.backup), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Backup'), 300);
+    expect(find.text('Backup'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -79,7 +78,7 @@ void main() {
   testWidgets('deve_abrir_politica_privacidade_quando_tocar', (tester) async {
     await abrir(tester);
 
-    await tester.tap(find.text(AppStrings.politicaPrivacidade));
+    await tester.tap(find.text('Política de Privacidade'));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Dados que coletamos'), findsOneWidget);

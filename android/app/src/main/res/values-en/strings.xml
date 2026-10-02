@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_sem_lista">Create first list</string>
+    <string name="widget_adicionar_item">Add item</string>
+    <plurals name="widget_pendentes">
+        <item quantity="one">%d pending</item>
+        <item quantity="other">%d pending</item>
+    </plurals>
+</resources>

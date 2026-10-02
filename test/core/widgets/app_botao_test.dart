@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/theme/app_theme.dart';
 import 'package:lista_compras/core/widgets/app_botao.dart';
 
@@ -43,7 +42,7 @@ void main() {
     await tester.pumpWidget(
       _app(
         AppBotao(
-          rotulo: AppStrings.excluir,
+          rotulo: 'Excluir',
           variante: AppBotaoVariante.destrutivo,
           onPressed: () {},
         ),

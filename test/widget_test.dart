@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lista_compras/app.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/router.dart';
@@ -36,7 +35,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.minhasListas), findsOneWidget);
+    expect(find.text('Minhas Listas'), findsOneWidget);
   });
 
   testWidgets('deve_aplicar_tema_escuro_quando_sistema_esta_escuro', (
@@ -52,7 +51,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    final context = tester.element(find.text(AppStrings.minhasListas));
+    final context = tester.element(find.text('Minhas Listas'));
     expect(Theme.of(context).brightness, Brightness.dark);
   });
 

@@ -2,7 +2,6 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/historico/data/historico_compras_repository.dart';
 import 'package:lista_compras/features/historico/ui/modal_finalizar_compra.dart';
@@ -75,14 +74,14 @@ void main() {
     final r = await subir(tester);
 
     await tester.enterText(
-      find.widgetWithText(TextField, AppStrings.mercadoOpcional),
+      find.widgetWithText(TextField, 'Mercado (opcional)'),
       'Mercado A',
     );
-    await tester.tap(find.text(AppStrings.finalizarCompra));
+    await tester.tap(find.text('Finalizar compra'));
     await tester.pumpAndSettle();
 
     // Dialogo pos-finalizar: manter a lista.
-    await tester.tap(find.text(AppStrings.finalizarManter));
+    await tester.tap(find.text('Manter a lista'));
     await tester.pumpAndSettle();
 
     final idas = await r.db.select(r.db.idaCompra).get();
@@ -96,9 +95,9 @@ void main() {
   testWidgets('deve_gravar_sem_mercado_quando_campo_vazio', (tester) async {
     final r = await subir(tester);
 
-    await tester.tap(find.text(AppStrings.finalizarCompra));
+    await tester.tap(find.text('Finalizar compra'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.finalizarManter));
+    await tester.tap(find.text('Manter a lista'));
     await tester.pumpAndSettle();
 
     final idas = await r.db.select(r.db.idaCompra).get();
@@ -117,7 +116,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final campo = tester.widget<TextField>(
-      find.widgetWithText(TextField, AppStrings.mercadoOpcional),
+      find.widgetWithText(TextField, 'Mercado (opcional)'),
     );
     expect(campo.controller!.text, 'Mercado A');
 

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/features/listas/ui/sheet_titulo_lista.dart';
 
 import '../../support/app_teste.dart';
@@ -19,8 +18,8 @@ void main() {
               child: FilledButton(
                 onPressed: () => abrirSheetTitulo(
                   context,
-                  titulo: AppStrings.novaLista,
-                  rotuloBotao: AppStrings.criarLista,
+                  titulo: 'Nova lista',
+                  rotuloBotao: 'Criar lista',
                   valorInicial: valorInicial,
                   onSalvar: (nome) async => onSalvar?.call(nome),
                 ),
@@ -54,7 +53,7 @@ void main() {
 
     await tester.enterText(find.byType(TextField), 'a' * 200);
     await tester.pump();
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.criarLista));
+    await tester.tap(find.widgetWithText(FilledButton, 'Criar lista'));
     await tester.pumpAndSettle();
 
     expect(salvo, isNotNull);
@@ -86,7 +85,7 @@ void main() {
     expect(campo.controller!.text.length, 120);
     expect(find.text('120/120'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(FilledButton, AppStrings.criarLista));
+    await tester.tap(find.widgetWithText(FilledButton, 'Criar lista'));
     await tester.pumpAndSettle();
 
     expect(salvo, isNotNull);

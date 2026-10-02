@@ -8,7 +8,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/core/dominio/unidade.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/compartilhamento/domain/codec_lista.dart';
 import 'package:lista_compras/features/compartilhamento/domain/leitor_qr.dart';
@@ -65,9 +64,9 @@ ListaCompartilhada _entrada(String titulo, String nome) => ListaCompartilhada(
 
 Future<void> _colarEConfirmar(WidgetTester tester, String texto) async {
   await tester.enterText(find.byType(TextField).first, texto);
-  await tester.tap(find.text(AppStrings.receberContinuar));
+  await tester.tap(find.text('Continuar'));
   await tester.pumpAndSettle();
-  await tester.tap(find.text(AppStrings.receberConfirmar));
+  await tester.tap(find.text('Criar lista'));
   await tester.pumpAndSettle();
 }
 
@@ -91,9 +90,9 @@ void main() {
     addTearDown(db.close);
     await tester.pumpWidget(_app(db));
     await tester.enterText(find.byType(TextField).first, 'ML1:***');
-    await tester.tap(find.text(AppStrings.receberContinuar));
+    await tester.tap(find.text('Continuar'));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.receberInvalido), findsOneWidget);
+    expect(find.text('Código ou arquivo inválido.'), findsOneWidget);
     expect(find.byType(AlertDialog), findsNothing);
   });
 
@@ -122,7 +121,7 @@ void main() {
 
     final listas = await db.select(db.listaLocal).get();
     expect(listas, hasLength(1));
-    expect(listas.single.titulo, AppStrings.listaCompartilhada);
+    expect(listas.single.titulo, 'Lista compartilhada');
     final itens = await db.select(db.itemLocal).get();
     expect(itens.single.nome, 'Arroz');
     expect(itens.single.quantidade, 1);
@@ -137,7 +136,7 @@ void main() {
 
     await tester.pumpWidget(_app(db));
     await tester.enterText(find.byType(TextField).first, codigo);
-    await tester.tap(find.text(AppStrings.receberContinuar));
+    await tester.tap(find.text('Continuar'));
     await tester.pumpAndSettle();
 
     final campoTitulo = find.descendant(
@@ -146,7 +145,7 @@ void main() {
     );
     await tester.enterText(campoTitulo, 'Minha lista nova');
     await tester.pump();
-    await tester.tap(find.text(AppStrings.receberConfirmar));
+    await tester.tap(find.text('Criar lista'));
     await tester.pumpAndSettle();
 
     final listas = await db.select(db.listaLocal).get();
@@ -162,9 +161,9 @@ void main() {
     final codigo = codificarLista(_entrada('Recebida qr', 'Uva'));
 
     await tester.pumpWidget(_app(db, leitorQr: _FakeLeitorQr(codigo)));
-    await tester.tap(find.text(AppStrings.escanearQr));
+    await tester.tap(find.text('Escanear QR'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text(AppStrings.receberConfirmar));
+    await tester.tap(find.text('Criar lista'));
     await tester.pumpAndSettle();
 
     final listas = await db.select(db.listaLocal).get();

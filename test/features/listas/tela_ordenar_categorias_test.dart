@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/features/listas/domain/ordem_categorias.dart';
 import 'package:lista_compras/features/listas/ui/tela_ordenar_categorias.dart';
@@ -62,14 +61,12 @@ void main() {
       lessThan(dyDe(tester, CategoriaItem.hortifruti)),
     );
 
-    await tester.tap(find.text(AppStrings.restaurarPadrao));
+    await tester.tap(find.text('Restaurar padrão'));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.restaurarPadraoTitulo), findsOneWidget);
-    expect(find.text(AppStrings.restaurarPadraoMensagem), findsOneWidget);
+    expect(find.text('Restaurar a ordem padrão?'), findsOneWidget);
+    expect(find.text('As categorias voltam à ordem original.'), findsOneWidget);
 
-    await tester.tap(
-      find.widgetWithText(FilledButton, AppStrings.restaurarPadrao),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Restaurar padrão'));
     await tester.pumpAndSettle();
 
     expect(
@@ -88,9 +85,9 @@ void main() {
     });
     await abrir(tester);
 
-    await tester.tap(find.text(AppStrings.restaurarPadrao));
+    await tester.tap(find.text('Restaurar padrão'));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(TextButton, AppStrings.cancelar));
+    await tester.tap(find.widgetWithText(TextButton, 'Cancelar'));
     await tester.pumpAndSettle();
 
     expect(

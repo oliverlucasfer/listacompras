@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/core/dominio/unidade.dart';
-import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
@@ -105,7 +104,7 @@ void main() {
     );
     await repo.editarItem(item.id, concluido: true);
     await abrir(tester, lista.id);
-    expect(find.text(AppStrings.mercadoTudoComprado), findsOneWidget);
+    expect(find.text('Tudo comprado!'), findsOneWidget);
     await fechar(tester);
   });
 
@@ -143,7 +142,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.text('${AppStrings.mercadoMarcados} (11)'), findsOneWidget);
+    expect(find.text('Marcados (11)'), findsOneWidget);
     await fechar(tester);
   });
 
@@ -157,14 +156,14 @@ void main() {
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
     expect(find.text('1 de 1'), findsOneWidget);
-    expect(find.text('${AppStrings.mercadoMarcados} (1)'), findsOneWidget);
+    expect(find.text('Marcados (1)'), findsOneWidget);
 
     // A faixa abriu sozinha; tocar no item marcado o devolve aos pendentes.
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
 
     expect(find.text('0 de 1'), findsOneWidget);
-    expect(find.text(AppStrings.mercadoMarcados), findsNothing);
+    expect(find.text('Marcados'), findsNothing);
     expect(find.text('Arroz'), findsOneWidget);
     await fechar(tester);
   });
@@ -177,7 +176,10 @@ void main() {
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.erroGenerico), findsOneWidget);
+    expect(
+      find.text('Não foi possível concluir. Tente novamente.'),
+      findsOneWidget,
+    );
     expect(find.text('0 de 1'), findsOneWidget);
     final item = (await db.select(db.itemLocal).get()).single;
     expect(item.concluido, isFalse);
@@ -195,12 +197,15 @@ void main() {
     await repo.editarItem(item.id, concluido: true);
     await abrir(tester, lista.id, escritaFalha: true);
 
-    await tester.tap(find.text('${AppStrings.mercadoMarcados} (1)'));
+    await tester.tap(find.text('Marcados (1)'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
 
-    expect(find.text(AppStrings.erroGenerico), findsOneWidget);
+    expect(
+      find.text('Não foi possível concluir. Tente novamente.'),
+      findsOneWidget,
+    );
     expect(find.text('0 de 1'), findsOneWidget);
     final persistido = (await db.select(db.itemLocal).get()).single;
     expect(persistido.concluido, isTrue);
@@ -263,7 +268,7 @@ void main() {
 
     await abrir(tester, lista.id);
 
-    final marcados = find.text('${AppStrings.mercadoMarcados} (1)');
+    final marcados = find.text('Marcados (1)');
     expect(marcados, findsOneWidget);
     final material = find
         .ancestor(of: marcados, matching: find.byType(Material))
@@ -290,7 +295,7 @@ void main() {
 
     await abrir(tester, lista.id);
 
-    expect(find.text('${AppStrings.mercadoMarcados} (1)'), findsOneWidget);
+    expect(find.text('Marcados (1)'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await fechar(tester);
   });
