@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/dominio/quantidade.dart';
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_esqueleto.dart';
 import '../../../core/widgets/app_estado_erro.dart';
@@ -23,19 +23,19 @@ class IdaDetalheScreen extends ConsumerWidget {
     final itensAsync = ref.watch(itensDaIdaProvider(idaId));
     return Scaffold(
       appBar: AppBar(
-        title: Text(idaAsync.value?.titulo ?? AppStrings.historico),
+        title: Text(idaAsync.value?.titulo ?? context.l10n.historico),
       ),
       body: idaAsync.when(
         loading: () => const AppEsqueleto(linhas: 4),
         error: (_, _) => AppEstadoErro(
-          mensagem: AppStrings.erroGenerico,
+          mensagem: context.l10n.erroGenerico,
           onRetentar: () => ref.invalidate(idaProvider(idaId)),
         ),
         data: (ida) {
           if (ida == null) {
-            return const AppEstadoVazio(
+            return AppEstadoVazio(
               icone: Icons.search_off,
-              titulo: AppStrings.idaNaoEncontrada,
+              titulo: context.l10n.idaNaoEncontrada,
             );
           }
           return Column(
@@ -45,7 +45,7 @@ class IdaDetalheScreen extends ConsumerWidget {
                 child: itensAsync.when(
                   loading: () => const AppEsqueleto(linhas: 4),
                   error: (_, _) => AppEstadoErro(
-                    mensagem: AppStrings.erroGenerico,
+                    mensagem: context.l10n.erroGenerico,
                     onRetentar: () => ref.invalidate(itensDaIdaProvider(idaId)),
                   ),
                   data: (itens) => ListView.separated(
@@ -82,7 +82,7 @@ class _Item extends StatelessWidget {
         '${daIda.categoria.rotulo}',
       ),
       trailing: Text(
-        preco == null ? AppStrings.semValor : formatarReais(preco),
+        preco == null ? context.l10n.semValor : formatarReais(preco),
       ),
     );
   }
@@ -122,7 +122,7 @@ class _RodapeTotal extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(AppStrings.totalGasto, style: tema.textTheme.titleMedium),
+              Text(context.l10n.totalGasto, style: tema.textTheme.titleMedium),
               Text(
                 formatarReais(totalCentavos),
                 style: tema.textTheme.titleMedium?.copyWith(

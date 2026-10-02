@@ -12,6 +12,8 @@ import 'package:lista_compras/features/backup/providers/backup_providers.dart';
 import 'package:lista_compras/features/backup/ui/secao_backup.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 
+import '../../support/app_teste.dart';
+
 class _BackupRepositoryFake implements BackupRepository {
   bool exportou = false;
   bool importou = false;
@@ -47,7 +49,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],
-        child: const MaterialApp(home: Scaffold(body: SecaoBackup())),
+        child: appTeste(const Scaffold(body: SecaoBackup())),
       ),
     );
     await tester.pumpAndSettle();
@@ -65,7 +67,7 @@ void main() {
           appDatabaseProvider.overrideWithValue(db),
           backupRepositoryProvider.overrideWithValue(fake),
         ],
-        child: const MaterialApp(home: Scaffold(body: SecaoBackup())),
+        child: appTeste(const Scaffold(body: SecaoBackup())),
       ),
     );
     await tester.pumpAndSettle();

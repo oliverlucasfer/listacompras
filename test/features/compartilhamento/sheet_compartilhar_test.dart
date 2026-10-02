@@ -11,6 +11,8 @@ import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../support/app_teste.dart';
+
 Future<void> _bombearEAbrir(
   WidgetTester tester,
   AppDatabase db,
@@ -19,8 +21,8 @@ Future<void> _bombearEAbrir(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [appDatabaseProvider.overrideWithValue(db)],
-      child: MaterialApp(
-        home: Builder(
+      child: appTeste(
+        Builder(
           builder: (context) => Scaffold(
             body: Consumer(
               builder: (context, ref, _) => TextButton(

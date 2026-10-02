@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/importacao/parser_lista_local.dart';
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/app_botao.dart';
@@ -57,6 +57,7 @@ class _ReceberListaScreenState extends ConsumerState<ReceberListaScreen> {
       throw const CompartilhamentoInvalidoException('');
     }
     final sugestao = ref.read(sugestaoCategoriasProvider);
+    final titulo = context.l10n.listaCompartilhada;
     final itens = <ItemCompartilhado>[];
     var ordem = 0;
     for (final i in parse.itens) {
@@ -71,10 +72,7 @@ class _ReceberListaScreenState extends ConsumerState<ReceberListaScreen> {
         ),
       );
     }
-    return ListaCompartilhada(
-      titulo: AppStrings.listaCompartilhada,
-      itens: itens,
-    );
+    return ListaCompartilhada(titulo: titulo, itens: itens);
   }
 
   Future<void> _confirmar() async {
@@ -83,10 +81,10 @@ class _ReceberListaScreenState extends ConsumerState<ReceberListaScreen> {
     try {
       entrada = await _lerEntrada();
     } on CompartilhamentoInvalidoException {
-      if (mounted) setState(() => _erro = AppStrings.receberInvalido);
+      if (mounted) setState(() => _erro = context.l10n.receberInvalido);
       return;
     } catch (_) {
-      if (mounted) setState(() => _erro = AppStrings.erroGenerico);
+      if (mounted) setState(() => _erro = context.l10n.erroGenerico);
       return;
     }
     if (!mounted) return;
@@ -102,7 +100,7 @@ class _ReceberListaScreenState extends ConsumerState<ReceberListaScreen> {
           );
       if (mounted) context.go('/lista/${lista.id}');
     } catch (_) {
-      if (mounted) setState(() => _erro = AppStrings.erroGenerico);
+      if (mounted) setState(() => _erro = context.l10n.erroGenerico);
     } finally {
       if (mounted) setState(() => _carregando = false);
     }
@@ -115,10 +113,10 @@ class _ReceberListaScreenState extends ConsumerState<ReceberListaScreen> {
       if (arquivo == null) return;
       texto = await arquivo.readAsString();
     } on FormatException {
-      if (mounted) setState(() => _erro = AppStrings.receberInvalido);
+      if (mounted) setState(() => _erro = context.l10n.receberInvalido);
       return;
     } catch (_) {
-      if (mounted) setState(() => _erro = AppStrings.erroGenerico);
+      if (mounted) setState(() => _erro = context.l10n.erroGenerico);
       return;
     }
     if (!mounted) return;
@@ -131,7 +129,7 @@ class _ReceberListaScreenState extends ConsumerState<ReceberListaScreen> {
     try {
       codigo = await ref.read(leitorQrProvider).escanear(context);
     } catch (_) {
-      if (mounted) setState(() => _erro = AppStrings.erroGenerico);
+      if (mounted) setState(() => _erro = context.l10n.erroGenerico);
       return;
     }
     if (codigo == null || !mounted) return;
@@ -143,7 +141,7 @@ class _ReceberListaScreenState extends ConsumerState<ReceberListaScreen> {
   Widget build(BuildContext context) {
     final comCamera = plataformaComCamera();
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.receberLista)),
+      appBar: AppBar(title: Text(context.l10n.receberLista)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -151,7 +149,7 @@ class _ReceberListaScreenState extends ConsumerState<ReceberListaScreen> {
           children: [
             AppCampoTexto(
               controller: _controller,
-              label: AppStrings.receberCodigoOuTexto,
+              label: context.l10n.receberCodigoOuTexto,
               minLines: 5,
               maxLines: 8,
               onChanged: (_) => setState(() => _erro = null),
@@ -162,13 +160,13 @@ class _ReceberListaScreenState extends ConsumerState<ReceberListaScreen> {
             ],
             const SizedBox(height: AppSpacing.md),
             AppBotao(
-              rotulo: AppStrings.receberContinuar,
+              rotulo: context.l10n.receberContinuar,
               carregando: _carregando,
               onPressed: _confirmar,
             ),
             const SizedBox(height: AppSpacing.sm),
             AppBotao(
-              rotulo: AppStrings.receberArquivo,
+              rotulo: context.l10n.receberArquivo,
               variante: AppBotaoVariante.outlined,
               icone: Icons.folder_open,
               onPressed: _arquivo,
@@ -176,7 +174,7 @@ class _ReceberListaScreenState extends ConsumerState<ReceberListaScreen> {
             if (comCamera) ...[
               const SizedBox(height: AppSpacing.sm),
               AppBotao(
-                rotulo: AppStrings.escanearQr,
+                rotulo: context.l10n.escanearQr,
                 variante: AppBotaoVariante.outlined,
                 icone: Icons.qr_code_scanner,
                 onPressed: _escanear,

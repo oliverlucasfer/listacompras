@@ -10,6 +10,8 @@ import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/importacao/ui/modal_importar.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 
+import '../../support/app_teste.dart';
+
 class _SugestaoQueFalha extends SugestaoCategorias {
   _SugestaoQueFalha(super.db);
 
@@ -38,7 +40,7 @@ void main() {
           if (sugestao != null)
             sugestaoCategoriasProvider.overrideWithValue(sugestao),
         ],
-        child: MaterialApp(home: _TelaAbrirModal(onResultado: onResultado)),
+        child: appTeste(_TelaAbrirModal(onResultado: onResultado)),
       ),
     );
     await tester.tap(find.text('abrir'));

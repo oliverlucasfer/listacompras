@@ -2,7 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_cabecalho_secao.dart';
 import '../../../core/widgets/app_dropdown.dart';
@@ -31,15 +31,15 @@ class _EstatisticasTabState extends ConsumerState<EstatisticasTab> {
     return ListView(
       padding: const EdgeInsets.only(bottom: AppSpacing.xl),
       children: [
-        const AppCabecalhoSecao(AppStrings.gastoPorPeriodo),
+        AppCabecalhoSecao(context.l10n.gastoPorPeriodo),
         const _SecaoGastoPorPeriodo(maxMeses: _maxMeses),
-        const AppCabecalhoSecao(AppStrings.gastoPorCategoria),
+        AppCabecalhoSecao(context.l10n.gastoPorCategoria),
         const _SecaoGastoPorCategoria(),
-        const AppCabecalhoSecao(AppStrings.gastoPorMercado),
+        AppCabecalhoSecao(context.l10n.gastoPorMercado),
         const _SecaoGastoPorMercado(),
-        const AppCabecalhoSecao(AppStrings.itensMaisComprados),
+        AppCabecalhoSecao(context.l10n.itensMaisComprados),
         const _SecaoItensMaisComprados(),
-        const AppCabecalhoSecao(AppStrings.evolucaoDePreco),
+        AppCabecalhoSecao(context.l10n.evolucaoDePreco),
         _SecaoEvolucaoPreco(
           nomeSelecionado: _nomeSelecionado,
           onSelecionar: (nome) => setState(() => _nomeSelecionado = nome),
@@ -60,7 +60,7 @@ class _SecaoGastoPorPeriodo extends ConsumerWidget {
     return dados.when(
       loading: () => const AppEsqueleto(linhas: 2, altura: 40),
       error: (_, _) => AppEstadoErro(
-        mensagem: AppStrings.erroGenerico,
+        mensagem: context.l10n.erroGenerico,
         onRetentar: () => ref.invalidate(gastoPorMesProvider),
       ),
       data: (meses) {
@@ -76,7 +76,7 @@ class _SecaoGastoPorPeriodo extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: Text(
-                AppStrings.totalNoPeriodo(formatarReais(total)),
+                context.l10n.totalNoPeriodo(formatarReais(total)),
                 style: Theme.of(context).textTheme.titleSmall,
               ),
             ),
@@ -96,7 +96,7 @@ class _SecaoGastoPorCategoria extends ConsumerWidget {
     return dados.when(
       loading: () => const AppEsqueleto(linhas: 2, altura: 40),
       error: (_, _) => AppEstadoErro(
-        mensagem: AppStrings.erroGenerico,
+        mensagem: context.l10n.erroGenerico,
         onRetentar: () => ref.invalidate(gastoPorCategoriaProvider),
       ),
       data: (categorias) {
@@ -132,7 +132,7 @@ class _SecaoGastoPorMercado extends ConsumerWidget {
     return dados.when(
       loading: () => const AppEsqueleto(linhas: 2, altura: 40),
       error: (_, _) => AppEstadoErro(
-        mensagem: AppStrings.erroGenerico,
+        mensagem: context.l10n.erroGenerico,
         onRetentar: () => ref.invalidate(gastoPorMercadoProvider),
       ),
       data: (mercados) {
@@ -142,7 +142,7 @@ class _SecaoGastoPorMercado extends ConsumerWidget {
             for (final m in mercados)
               ListTile(
                 dense: true,
-                title: Text(m.mercado ?? AppStrings.semMercado),
+                title: Text(m.mercado ?? context.l10n.semMercado),
                 trailing: Text(formatarReais(m.totalCentavos)),
               ),
           ],
@@ -170,7 +170,7 @@ class _SecaoItensMaisCompradosState
     return dados.when(
       loading: () => const AppEsqueleto(linhas: 2, altura: 40),
       error: (_, _) => AppEstadoErro(
-        mensagem: AppStrings.erroGenerico,
+        mensagem: context.l10n.erroGenerico,
         onRetentar: () => ref.invalidate(itensMaisCompradosProvider),
       ),
       data: (itens) {
@@ -190,14 +190,14 @@ class _SecaoItensMaisCompradosState
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: SegmentedButton<_OrdemItens>(
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: _OrdemItens.frequencia,
-                    label: Text(AppStrings.porFrequencia),
+                    label: Text(context.l10n.porFrequencia),
                   ),
                   ButtonSegment(
                     value: _OrdemItens.gasto,
-                    label: Text(AppStrings.porGasto),
+                    label: Text(context.l10n.porGasto),
                   ),
                 ],
                 selected: {_ordem},
@@ -237,7 +237,7 @@ class _SecaoEvolucaoPreco extends ConsumerWidget {
     return nomesAsync.when(
       loading: () => const AppEsqueleto(linhas: 2, altura: 40),
       error: (_, _) => AppEstadoErro(
-        mensagem: AppStrings.erroGenerico,
+        mensagem: context.l10n.erroGenerico,
         onRetentar: () => ref.invalidate(nomesCompradosProvider),
       ),
       data: (nomes) {
@@ -252,7 +252,7 @@ class _SecaoEvolucaoPreco extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               AppDropdown<String?>(
-                label: AppStrings.evolucaoDePreco,
+                label: context.l10n.evolucaoDePreco,
                 valor: selecao,
                 expandido: true,
                 itens: [
@@ -287,7 +287,7 @@ class _SeriePreco extends ConsumerWidget {
     return unidadeAsync.when(
       loading: () => const AppEsqueleto(linhas: 2, altura: 32),
       error: (_, _) => AppEstadoErro(
-        mensagem: AppStrings.erroGenerico,
+        mensagem: context.l10n.erroGenerico,
         onRetentar: () => ref.invalidate(unidadeRecenteProvider(nome)),
       ),
       data: (unidade) {
@@ -296,7 +296,7 @@ class _SeriePreco extends ConsumerWidget {
         return serieAsync.when(
           loading: () => const AppEsqueleto(linhas: 2, altura: 32),
           error: (_, _) => AppEstadoErro(
-            mensagem: AppStrings.erroGenerico,
+            mensagem: context.l10n.erroGenerico,
             onRetentar: () =>
                 ref.invalidate(evolucaoPrecoProvider((nome, unidade))),
           ),
@@ -342,7 +342,7 @@ class _MiniGraficoPreco extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     return Semantics(
-      label: AppStrings.semanticaEvolucaoPreco(
+      label: context.l10n.semanticaEvolucaoPreco(
         formatarReais(pontos.last.precoCentavos),
       ),
       excludeSemantics: true,
@@ -397,7 +397,7 @@ class _SemDados extends StatelessWidget {
         vertical: AppSpacing.md,
       ),
       child: Text(
-        AppStrings.semDadosAinda,
+        context.l10n.semDadosAinda,
         style: tema.textTheme.bodyMedium?.copyWith(
           color: tema.colorScheme.onSurfaceVariant,
         ),

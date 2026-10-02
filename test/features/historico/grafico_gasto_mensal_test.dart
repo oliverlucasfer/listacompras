@@ -5,11 +5,13 @@ import 'package:lista_compras/features/historico/domain/estatisticas.dart';
 import 'package:lista_compras/features/historico/ui/grafico_gasto_mensal.dart';
 import 'package:lista_compras/features/listas/domain/preco.dart';
 
+import '../../support/app_teste.dart';
+
 void main() {
   testWidgets('deve_renderizar_barras_quando_ha_dados', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
+      appTeste(
+        Scaffold(
           body: GraficoGastoMensal(
             dados: [
               GastoPorMes(mes: DateTime.utc(2026, 8, 1), totalCentavos: 5000),
@@ -27,8 +29,8 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
+      appTeste(
+        Scaffold(
           body: GraficoGastoMensal(
             dados: [
               GastoPorMes(mes: DateTime.utc(2026, 8, 1), totalCentavos: 5000),
@@ -53,8 +55,8 @@ void main() {
   ) async {
     final handle = tester.ensureSemantics();
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
+      appTeste(
+        Scaffold(
           body: GraficoGastoMensal(
             dados: [
               GastoPorMes(mes: DateTime.utc(2026, 8, 1), totalCentavos: 5000),
@@ -71,9 +73,7 @@ void main() {
 
   testWidgets('deve_mostrar_vazio_quando_sem_dados', (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
-        home: Scaffold(body: GraficoGastoMensal(dados: [])),
-      ),
+      appTeste(const Scaffold(body: GraficoGastoMensal(dados: []))),
     );
     await tester.pumpAndSettle();
     expect(find.text('Sem dados ainda.'), findsOneWidget);

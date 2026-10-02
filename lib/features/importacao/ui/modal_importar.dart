@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/importacao/erro_importacao.dart';
 import '../../../core/importacao/parser_lista_local.dart';
 import '../../../core/importacao/resposta_import.dart';
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/app_botao.dart';
@@ -74,12 +74,12 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_camera_outlined),
-              title: const Text(AppStrings.tirarFoto),
+              title: Text(context.l10n.tirarFoto),
               onTap: () => Navigator.pop(context, 'camera'),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
-              title: const Text(AppStrings.escolherDaGaleria),
+              title: Text(context.l10n.escolherDaGaleria),
               onTap: () => Navigator.pop(context, 'galeria'),
             ),
           ],
@@ -97,7 +97,7 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _erro = AppStrings.ocrFalha;
+          _erro = context.l10n.ocrFalha;
           _tipoErro = AppBannerTipo.erro;
         });
       }
@@ -118,7 +118,7 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _erro = AppStrings.ocrFalha;
+          _erro = context.l10n.ocrFalha;
           _tipoErro = AppBannerTipo.erro;
         });
       }
@@ -132,7 +132,7 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
     final limpo = texto.trim();
     if (limpo.isEmpty) {
       setState(() {
-        _erro = AppStrings.ocrNenhumTexto;
+        _erro = context.l10n.ocrNenhumTexto;
         _tipoErro = AppBannerTipo.aviso;
       });
     } else {
@@ -154,7 +154,7 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
     } on ErroImportacao catch (e) {
       if (mounted) setState(() => _erro = e.mensagem);
     } catch (_) {
-      if (mounted) setState(() => _erro = AppStrings.erroGenerico);
+      if (mounted) setState(() => _erro = context.l10n.erroGenerico);
     } finally {
       if (mounted) setState(() => _carregando = false);
     }
@@ -164,7 +164,7 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
   Future<RespostaParse> _extrairLocal(String texto) async {
     final parse = analisarListaLocal(texto);
     if (parse.itens.isEmpty) {
-      throw const ErroImportacao(AppStrings.importRespostaInvalida);
+      throw ErroImportacao(context.l10n.importRespostaInvalida);
     }
     final sugestao = ref.read(sugestaoCategoriasProvider);
     final enriquecidos = <ItemExtraido>[];
@@ -188,9 +188,9 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
     return AlertDialog(
       title: Row(
         children: [
-          const Expanded(child: Text(AppStrings.importarLista)),
+          Expanded(child: Text(context.l10n.importarLista)),
           IconButton(
-            tooltip: AppStrings.fechar,
+            tooltip: context.l10n.fechar,
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
           ),
@@ -201,11 +201,11 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(AppStrings.importColeOuDigite),
+            Text(context.l10n.importColeOuDigite),
             const SizedBox(height: AppSpacing.sm),
             AppCampoTexto(
               controller: _controller,
-              hint: AppStrings.importExemplo,
+              hint: context.l10n.importExemplo,
               teclado: TextInputType.multiline,
               textInputAction: TextInputAction.newline,
               maxLength: _limite,
@@ -224,7 +224,7 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
             if (plataformaComOcr()) ...[
               const SizedBox(height: AppSpacing.sm),
               AppBotao(
-                rotulo: _lendoFoto ? AppStrings.ocrLendo : AppStrings.foto,
+                rotulo: _lendoFoto ? context.l10n.ocrLendo : context.l10n.foto,
                 icone: Icons.photo_camera_outlined,
                 variante: AppBotaoVariante.outlined,
                 carregando: _lendoFoto,
@@ -238,8 +238,8 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
             const SizedBox(height: AppSpacing.md),
             AppBotao(
               rotulo: _carregando
-                  ? AppStrings.importLendo
-                  : AppStrings.importExtrairItens,
+                  ? context.l10n.importLendo
+                  : context.l10n.importExtrairItens,
               icone: Icons.bolt_outlined,
               carregando: _carregando,
               onPressed: _podeExtrair ? _extrair : null,

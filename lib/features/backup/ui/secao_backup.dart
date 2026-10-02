@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/widgets/app_cabecalho_secao.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../data/backup_repository.dart';
@@ -23,17 +23,17 @@ class SecaoBackup extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const AppCabecalhoSecao(AppStrings.backup),
+        AppCabecalhoSecao(context.l10n.backup),
         ListTile(
           leading: const Icon(Icons.upload_file_outlined),
-          title: const Text(AppStrings.backupExportar),
-          subtitle: const Text(AppStrings.backupExportarAjuda),
+          title: Text(context.l10n.backupExportar),
+          subtitle: Text(context.l10n.backupExportarAjuda),
           onTap: () => _exportar(context, ref),
         ),
         ListTile(
           leading: const Icon(Icons.download_outlined),
-          title: const Text(AppStrings.backupImportar),
-          subtitle: const Text(AppStrings.backupImportarAjuda),
+          title: Text(context.l10n.backupImportar),
+          subtitle: Text(context.l10n.backupImportarAjuda),
           onTap: () => _importar(context, ref),
         ),
       ],
@@ -59,20 +59,20 @@ class SecaoBackup extends ConsumerWidget {
         ShareParams(files: [arquivo], fileNameOverrides: [nome]),
       );
       if (context.mounted) {
-        mostrarSnackBar(context, AppStrings.backupExportado);
+        mostrarSnackBar(context, context.l10n.backupExportado);
       }
     } on MissingPluginException {
       // Compartilhamento indisponível neste dispositivo (desktop/web sem plugin).
       if (context.mounted) {
-        mostrarSnackBar(context, AppStrings.compartilharIndisponivel);
+        mostrarSnackBar(context, context.l10n.compartilharIndisponivel);
       }
     } on UnimplementedError {
       if (context.mounted) {
-        mostrarSnackBar(context, AppStrings.compartilharIndisponivel);
+        mostrarSnackBar(context, context.l10n.compartilharIndisponivel);
       }
     } catch (_) {
       if (context.mounted) {
-        mostrarSnackBar(context, AppStrings.erroGenerico);
+        mostrarSnackBar(context, context.l10n.erroGenerico);
       }
     }
   }
@@ -96,7 +96,7 @@ class SecaoBackup extends ConsumerWidget {
     } catch (_) {
       // O próprio seletor falhou (plugin indisponível/permissão).
       if (context.mounted) {
-        mostrarSnackBar(context, AppStrings.backupLeituraErro);
+        mostrarSnackBar(context, context.l10n.backupLeituraErro);
       }
       return;
     }
@@ -105,13 +105,13 @@ class SecaoBackup extends ConsumerWidget {
       case ResultadoImportacaoBackup.cancelado:
         return;
       case ResultadoImportacaoBackup.importado:
-        mostrarSnackBar(context, AppStrings.backupImportado);
+        mostrarSnackBar(context, context.l10n.backupImportado);
       case ResultadoImportacaoBackup.invalido:
-        mostrarSnackBar(context, AppStrings.backupInvalido);
+        mostrarSnackBar(context, context.l10n.backupInvalido);
       case ResultadoImportacaoBackup.restauracaoErro:
-        mostrarSnackBar(context, AppStrings.backupRestauracaoErro);
+        mostrarSnackBar(context, context.l10n.backupRestauracaoErro);
       case ResultadoImportacaoBackup.leituraErro:
-        mostrarSnackBar(context, AppStrings.backupLeituraErro);
+        mostrarSnackBar(context, context.l10n.backupLeituraErro);
     }
   }
 }

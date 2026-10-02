@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../domain/codec_lista.dart';
@@ -41,15 +41,15 @@ class _SheetCompartilhar extends StatelessWidget {
       await SharePlus.instance.share(ShareParams(text: gerarTextoLista(lista)));
     } on MissingPluginException {
       if (context.mounted) {
-        mostrarSnackBar(context, AppStrings.compartilharIndisponivelLista);
+        mostrarSnackBar(context, context.l10n.compartilharIndisponivelLista);
       }
     } on UnimplementedError {
       if (context.mounted) {
-        mostrarSnackBar(context, AppStrings.compartilharIndisponivelLista);
+        mostrarSnackBar(context, context.l10n.compartilharIndisponivelLista);
       }
     } catch (_) {
       if (context.mounted) {
-        mostrarSnackBar(context, AppStrings.erroGenerico);
+        mostrarSnackBar(context, context.l10n.erroGenerico);
       }
     }
   }
@@ -68,15 +68,15 @@ class _SheetCompartilhar extends StatelessWidget {
       );
     } on MissingPluginException {
       if (context.mounted) {
-        mostrarSnackBar(context, AppStrings.compartilharIndisponivelLista);
+        mostrarSnackBar(context, context.l10n.compartilharIndisponivelLista);
       }
     } on UnimplementedError {
       if (context.mounted) {
-        mostrarSnackBar(context, AppStrings.compartilharIndisponivelLista);
+        mostrarSnackBar(context, context.l10n.compartilharIndisponivelLista);
       }
     } catch (_) {
       if (context.mounted) {
-        mostrarSnackBar(context, AppStrings.erroGenerico);
+        mostrarSnackBar(context, context.l10n.erroGenerico);
       }
     }
   }
@@ -84,7 +84,7 @@ class _SheetCompartilhar extends StatelessWidget {
   Future<void> _qr(BuildContext context) async {
     final codigo = codificarLista(lista);
     if (codigo.length > limiteCodigoBytes) {
-      mostrarSnackBar(context, AppStrings.compartilharQrGrande);
+      mostrarSnackBar(context, context.l10n.compartilharQrGrande);
       return;
     }
     await AppSheet.mostrar<void>(
@@ -96,11 +96,11 @@ class _SheetCompartilhar extends StatelessWidget {
           const SizedBox(height: 12),
           TextButton.icon(
             icon: const Icon(Icons.copy),
-            label: const Text(AppStrings.copiarCodigo),
+            label: Text(context.l10n.copiarCodigo),
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: codigo));
               if (context.mounted) {
-                mostrarSnackBar(context, AppStrings.codigoCopiado);
+                mostrarSnackBar(context, context.l10n.codigoCopiado);
               }
             },
           ),
@@ -118,17 +118,17 @@ class _SheetCompartilhar extends StatelessWidget {
         Text(lista.titulo, style: Theme.of(context).textTheme.titleMedium),
         ListTile(
           leading: const Icon(Icons.chat_outlined),
-          title: const Text(AppStrings.compartilharTexto),
+          title: Text(context.l10n.compartilharTexto),
           onTap: () => _texto(context),
         ),
         ListTile(
           leading: const Icon(Icons.upload_file_outlined),
-          title: const Text(AppStrings.compartilharArquivo),
+          title: Text(context.l10n.compartilharArquivo),
           onTap: () => _arquivo(context),
         ),
         ListTile(
           leading: const Icon(Icons.qr_code_2),
-          title: const Text(AppStrings.compartilharQr),
+          title: Text(context.l10n.compartilharQr),
           onTap: () => _qr(context),
         ),
       ],

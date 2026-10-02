@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/dominio/quantidade.dart';
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
@@ -68,9 +68,9 @@ class _ModalPrevisaoReceberState extends State<ModalPrevisaoReceber> {
     return AlertDialog(
       title: Row(
         children: [
-          const Expanded(child: Text(AppStrings.importConfirmeItens)),
+          Expanded(child: Text(context.l10n.importConfirmeItens)),
           IconButton(
-            tooltip: AppStrings.fechar,
+            tooltip: context.l10n.fechar,
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
           ),
@@ -84,7 +84,7 @@ class _ModalPrevisaoReceberState extends State<ModalPrevisaoReceber> {
           children: [
             AppCampoTexto(
               controller: _titulo,
-              label: AppStrings.nomeDaLista,
+              label: context.l10n.nomeDaLista,
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -114,10 +114,10 @@ class _ModalPrevisaoReceberState extends State<ModalPrevisaoReceber> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text(AppStrings.cancelar),
+          child: Text(context.l10n.cancelar),
         ),
         AppBotao(
-          rotulo: AppStrings.receberConfirmar,
+          rotulo: context.l10n.receberConfirmar,
           expandido: false,
           onPressed: _podeConfirmar ? _confirmar : null,
         ),

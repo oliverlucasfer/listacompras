@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_campo_texto.dart';
 import '../../../core/widgets/app_snack_bar.dart';
@@ -24,7 +24,7 @@ Future<void> abrirFinalizarCompra(
   final resultado = await showDialog<({bool confirmar, String? mercado})>(
     context: context,
     builder: (_) => _DialogoFinalizar(
-      resumo: AppStrings.finalizarResumo(
+      resumo: context.l10n.finalizarResumo(
         marcados.length,
         formatarReais(total),
         semPreco,
@@ -38,24 +38,24 @@ Future<void> abrirFinalizarCompra(
         .read(historicoComprasRepositoryProvider)
         .finalizar(listaId, mercado: resultado.mercado);
   } catch (_) {
-    if (context.mounted) mostrarSnackBar(context, AppStrings.erroGenerico);
+    if (context.mounted) mostrarSnackBar(context, context.l10n.erroGenerico);
     return;
   }
   if (!context.mounted) return;
-  mostrarSnackBar(context, AppStrings.compraRegistrada);
+  mostrarSnackBar(context, context.l10n.compraRegistrada);
 
   final limpar = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text(AppStrings.compraRegistrada),
+      title: Text(context.l10n.compraRegistrada),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx, false),
-          child: const Text(AppStrings.finalizarManter),
+          child: Text(context.l10n.finalizarManter),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(ctx, true),
-          child: const Text(AppStrings.finalizarLimpar),
+          child: Text(context.l10n.finalizarLimpar),
         ),
       ],
     ),
@@ -64,7 +64,9 @@ Future<void> abrirFinalizarCompra(
     try {
       await ref.read(listasRepositoryProvider).limparConcluidos(listaId);
     } catch (_) {
-      if (context.mounted) mostrarSnackBar(context, AppStrings.erroGenerico);
+      if (context.mounted) {
+        mostrarSnackBar(context, context.l10n.erroGenerico);
+      }
     }
   }
 }
@@ -94,7 +96,7 @@ class _DialogoFinalizarState extends ConsumerState<_DialogoFinalizar> {
     final sugestoes =
         ref.watch(mercadosUsadosProvider).value ?? const <String>[];
     return AlertDialog(
-      title: const Text(AppStrings.finalizarConfirmarTitulo),
+      title: Text(context.l10n.finalizarConfirmarTitulo),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -104,12 +106,12 @@ class _DialogoFinalizarState extends ConsumerState<_DialogoFinalizar> {
             const SizedBox(height: AppSpacing.md),
             AppCampoTexto(
               controller: _mercado,
-              label: AppStrings.mercadoOpcional,
+              label: context.l10n.mercadoOpcional,
             ),
             if (sugestoes.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.sm),
               Semantics(
-                label: AppStrings.mercadosSugeridos,
+                label: context.l10n.mercadosSugeridos,
                 child: Wrap(
                   spacing: AppSpacing.sm,
                   runSpacing: AppSpacing.xs,
@@ -131,14 +133,14 @@ class _DialogoFinalizarState extends ConsumerState<_DialogoFinalizar> {
         TextButton(
           onPressed: () =>
               Navigator.pop(context, (confirmar: false, mercado: null)),
-          child: const Text(AppStrings.cancelar),
+          child: Text(context.l10n.cancelar),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context, (
             confirmar: true,
             mercado: _mercado.text.trim(),
           )),
-          child: const Text(AppStrings.finalizarCompra),
+          child: Text(context.l10n.finalizarCompra),
         ),
       ],
     );

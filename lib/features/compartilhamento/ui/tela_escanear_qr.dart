@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 
 /// Scanner em tela cheia; `pop` devolve o primeiro código lido (ou `null`).
 class TelaEscanearQr extends StatefulWidget {
@@ -34,7 +34,7 @@ class _TelaEscanearQrState extends State<TelaEscanearQr> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.escanearQr)),
+      appBar: AppBar(title: Text(context.l10n.escanearQr)),
       body: MobileScanner(controller: _controller, onDetect: _aoDetectar),
     );
   }

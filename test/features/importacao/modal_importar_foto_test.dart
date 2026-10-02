@@ -13,6 +13,8 @@ import 'package:lista_compras/features/ocr/domain/fonte_imagem.dart';
 import 'package:lista_compras/features/ocr/domain/ocr_texto.dart';
 import 'package:lista_compras/features/ocr/providers/ocr_providers.dart';
 
+import '../../support/app_teste.dart';
+
 class _OcrFake implements OcrTexto {
   _OcrFake(this._texto);
   final String _texto;
@@ -64,9 +66,7 @@ Widget _app(
         fonte ?? _FonteFake(caminho: caminho),
       ),
     ],
-    child: MaterialApp(
-      home: Scaffold(body: _Abrir(onResultado: onResultado)),
-    ),
+    child: appTeste(Scaffold(body: _Abrir(onResultado: onResultado))),
   );
 }
 

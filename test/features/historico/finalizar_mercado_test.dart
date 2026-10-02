@@ -9,6 +9,8 @@ import 'package:lista_compras/features/historico/ui/modal_finalizar_compra.dart'
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 
+import '../../support/app_teste.dart';
+
 void main() {
   /// Cria uma lista com 1 item concluído e monta um botão que abre o modal.
   /// O `ref.watch` imita a tela real (botão de rodapé): sem ele o stream do
@@ -39,8 +41,8 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],
-        child: MaterialApp(
-          home: Builder(
+        child: appTeste(
+          Builder(
             builder: (context) => Scaffold(
               body: Consumer(
                 builder: (context, ref, _) {

@@ -11,6 +11,8 @@ import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/core/dominio/unidade.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 
+import '../../support/app_teste.dart';
+
 void main() {
   final resposta4 = RespostaParse(
     itens: const [
@@ -44,8 +46,8 @@ void main() {
 
   Future<void> abrir(WidgetTester tester, RespostaParse resposta) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: _TelaAbrirPrevisao(
+      appTeste(
+        _TelaAbrirPrevisao(
           resposta: resposta,
           onResultado: (r) => recebida = r,
         ),
@@ -309,9 +311,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],
-        child: MaterialApp(
-          home: _TelaConfirmar(listaId: lista.id, resposta: resposta4),
-        ),
+        child: appTeste(_TelaConfirmar(listaId: lista.id, resposta: resposta4)),
       ),
     );
     await tester.tap(find.text('abrir'));
@@ -358,11 +358,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [appDatabaseProvider.overrideWithValue(db)],
-          child: MaterialApp(
-            home: _TelaConfirmar(
-              listaId: lista.id,
-              resposta: respostaDuplicada,
-            ),
+          child: appTeste(
+            _TelaConfirmar(listaId: lista.id, resposta: respostaDuplicada),
           ),
         ),
       );
@@ -395,9 +392,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],
-        child: MaterialApp(
-          home: _TelaConfirmar(listaId: lista.id, resposta: resposta4),
-        ),
+        child: appTeste(_TelaConfirmar(listaId: lista.id, resposta: resposta4)),
       ),
     );
     await tester.tap(find.text('abrir'));
@@ -448,11 +443,8 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],
-        child: MaterialApp(
-          home: _TelaConfirmar(
-            listaId: lista.id,
-            resposta: respostaComCategoria,
-          ),
+        child: appTeste(
+          _TelaConfirmar(listaId: lista.id, resposta: respostaComCategoria),
         ),
       ),
     );

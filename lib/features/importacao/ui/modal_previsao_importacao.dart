@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/importacao/resposta_import.dart';
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_banner.dart';
 import '../../../core/widgets/app_campo_texto.dart';
@@ -41,7 +41,7 @@ Future<void> confirmarItensImportados(
     );
   }
   if (context.mounted) {
-    mostrarSnackBar(context, AppStrings.itensExtraidos(selecionados.length));
+    mostrarSnackBar(context, context.l10n.itensExtraidos(selecionados.length));
   }
 }
 
@@ -93,9 +93,9 @@ class _ModalPrevisaoImportacaoState extends State<ModalPrevisaoImportacao> {
     return AlertDialog(
       title: Row(
         children: [
-          const Expanded(child: Text(AppStrings.importConfirmeItens)),
+          Expanded(child: Text(context.l10n.importConfirmeItens)),
           IconButton(
-            tooltip: AppStrings.fechar,
+            tooltip: context.l10n.fechar,
             icon: const Icon(Icons.close),
             onPressed: () => Navigator.pop(context),
           ),
@@ -106,10 +106,10 @@ class _ModalPrevisaoImportacaoState extends State<ModalPrevisaoImportacao> {
         child: vazio
             // Nada reconhecido (F14-T04): instrução + "Voltar e editar".
             ? AppEstadoVazio(
-                titulo: AppStrings.nadaReconhecido,
-                descricao: AppStrings.separarItensDica,
+                titulo: context.l10n.nadaReconhecido,
+                descricao: context.l10n.separarItensDica,
                 acao: AppBotao(
-                  rotulo: AppStrings.voltarEEditar,
+                  rotulo: context.l10n.voltarEEditar,
                   variante: AppBotaoVariante.texto,
                   expandido: false,
                   onPressed: () => Navigator.pop(context),
@@ -126,7 +126,7 @@ class _ModalPrevisaoImportacaoState extends State<ModalPrevisaoImportacao> {
                         tipo: AppBannerTipo.aviso,
                         mensagem: switch (widget.resposta.aviso!) {
                           AvisoImportacao.quantidadePadrao =>
-                            AppStrings.importLocalAvisoPadrao,
+                            context.l10n.importLocalAvisoPadrao,
                         },
                       ),
                     ),
@@ -162,7 +162,7 @@ class _ModalPrevisaoImportacaoState extends State<ModalPrevisaoImportacao> {
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
-                    AppStrings.importSeraoAdicionados(
+                    context.l10n.importSeraoAdicionados(
                       selecionados.length,
                       _linhas.length,
                     ),
@@ -175,10 +175,10 @@ class _ModalPrevisaoImportacaoState extends State<ModalPrevisaoImportacao> {
           : [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text(AppStrings.cancelar),
+                child: Text(context.l10n.cancelar),
               ),
               AppBotao(
-                rotulo: AppStrings.importAdicionarN(selecionados.length),
+                rotulo: context.l10n.importAdicionarN(selecionados.length),
                 expandido: false,
                 onPressed: selecionados.isEmpty
                     ? null
@@ -212,7 +212,7 @@ class _LinhaItem extends StatelessWidget {
             '${formatarQuantidade(linha.quantidade)} ${linha.unidade.valor}',
           ),
           IconButton(
-            tooltip: AppStrings.editarItem,
+            tooltip: context.l10n.editarItem,
             icon: Icon(linha.editando ? Icons.expand_less : Icons.expand_more),
             onPressed: onAlternarEdicao,
           ),
@@ -265,10 +265,10 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
   void _notificar({double? quantidade}) {
     final lida = _quantidadeLida();
     final erroNome = _nome.text.trim().isEmpty
-        ? AppStrings.erroNomeVazio
+        ? context.l10n.erroNomeVazio
         : null;
     final erroQuantidade = lida == null
-        ? AppStrings.erroQuantidadeInvalida
+        ? context.l10n.erroQuantidadeInvalida
         : null;
     if (erroNome != _erroNome || erroQuantidade != _erroQuantidade) {
       setState(() {
@@ -312,7 +312,7 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
           Row(
             children: [
               IconButton(
-                tooltip: AppStrings.diminuir,
+                tooltip: context.l10n.diminuir,
                 icon: const Icon(Icons.remove_circle_outline),
                 onPressed: () => _passo(-1),
               ),
@@ -325,7 +325,7 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
                 ),
               ),
               IconButton(
-                tooltip: AppStrings.aumentar,
+                tooltip: context.l10n.aumentar,
                 icon: const Icon(Icons.add_circle_outline),
                 onPressed: () => _passo(1),
               ),
@@ -351,7 +351,7 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
           // Categoria (F6-T05, spec §5.2): sugestão local editável antes
           // de gravar na lista.
           AppDropdown<CategoriaItem>(
-            label: AppStrings.categoria,
+            label: context.l10n.categoria,
             valor: _categoria,
             compacto: true,
             itens: [

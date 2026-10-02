@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_esqueleto.dart';
 import '../../../core/widgets/app_estado_erro.dart';
@@ -23,15 +23,15 @@ class HistoricoScreen extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(title: const Text(AppStrings.historico)),
-        body: const Column(
+        appBar: AppBar(title: Text(context.l10n.historico)),
+        body: Column(
           children: [
             _Resumo(),
             Divider(height: 1),
             TabBar(
               tabs: [
-                Tab(text: AppStrings.abaIdas),
-                Tab(text: AppStrings.estatisticas),
+                Tab(text: context.l10n.abaIdas),
+                Tab(text: context.l10n.estatisticas),
               ],
             ),
             Expanded(
@@ -53,15 +53,15 @@ class _AbaIdas extends ConsumerWidget {
     return idasAsync.when(
       loading: () => const AppEsqueleto(linhas: 4),
       error: (_, _) => AppEstadoErro(
-        mensagem: AppStrings.erroGenerico,
+        mensagem: context.l10n.erroGenerico,
         onRetentar: () => ref.invalidate(idasProvider),
       ),
       data: (idas) {
         if (idas.isEmpty) {
-          return const AppEstadoVazio(
+          return AppEstadoVazio(
             icone: Icons.history,
-            titulo: AppStrings.historicoVazio,
-            descricao: AppStrings.historicoVazioDica,
+            titulo: context.l10n.historicoVazio,
+            descricao: context.l10n.historicoVazioDica,
           );
         }
         return ListView.separated(
@@ -86,24 +86,24 @@ class _Resumo extends ConsumerWidget {
       child: Row(
         children: [
           _Metrica(
-            rotulo: AppStrings.totalGasto,
+            rotulo: context.l10n.totalGasto,
             valor: resumo.maybeWhen(
               data: (r) => formatarReais(r.totalGeralCentavos),
-              orElse: () => AppStrings.semValor,
+              orElse: () => context.l10n.semValor,
             ),
           ),
           _Metrica(
-            rotulo: AppStrings.ticketMedio,
+            rotulo: context.l10n.ticketMedio,
             valor: resumo.maybeWhen(
               data: (r) => formatarReais(r.ticketMedioCentavos),
-              orElse: () => AppStrings.semValor,
+              orElse: () => context.l10n.semValor,
             ),
           ),
           _Metrica(
-            rotulo: AppStrings.numeroIdas,
+            rotulo: context.l10n.numeroIdas,
             valor: resumo.maybeWhen(
               data: (r) => r.nIdas.toString(),
-              orElse: () => AppStrings.semValor,
+              orElse: () => context.l10n.semValor,
             ),
           ),
         ],
@@ -149,7 +149,7 @@ class _ItemIda extends StatelessWidget {
     return ListTile(
       title: Text(ida.titulo),
       subtitle: Text(
-        '${_formatarData(ida.finalizadaEm)} · ${AppStrings.nItens(ida.itensCount)}',
+        '${_formatarData(ida.finalizadaEm)} · ${context.l10n.nItens(ida.itensCount)}',
       ),
       trailing: Text(formatarReais(ida.totalCentavos)),
       onTap: () => context.push('/historico/ida/${ida.id}'),

@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_radius.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../listas/domain/preco.dart';
@@ -17,7 +17,7 @@ class GraficoGastoMensal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (dados.isEmpty) {
-      return const Center(child: Text(AppStrings.semDadosAinda));
+      return Center(child: Text(context.l10n.semDadosAinda));
     }
     final tema = Theme.of(context);
     final maiorTotal = dados
@@ -34,7 +34,7 @@ class GraficoGastoMensal extends StatelessWidget {
       color: tema.colorScheme.onSurfaceVariant,
     );
     return Semantics(
-      label: AppStrings.semanticaGastoMensal(formatarReais(totalPeriodo)),
+      label: context.l10n.semanticaGastoMensal(formatarReais(totalPeriodo)),
       excludeSemantics: true,
       child: SizedBox(
         height: 200,

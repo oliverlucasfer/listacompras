@@ -17,6 +17,8 @@ import 'package:lista_compras/features/compartilhamento/providers/compartilhamen
 import 'package:lista_compras/features/compartilhamento/ui/receber_lista_screen.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 
+import '../../support/app_teste.dart';
+
 class _FakeLeitorQr implements LeitorQr {
   _FakeLeitorQr(this.codigo);
   final String? codigo;
@@ -43,7 +45,7 @@ Widget _app(AppDatabase db, {LeitorQr? leitorQr}) {
       appDatabaseProvider.overrideWithValue(db),
       if (leitorQr != null) leitorQrProvider.overrideWithValue(leitorQr),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: appTesteRouter(router),
   );
 }
 
