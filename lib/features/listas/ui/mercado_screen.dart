@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/navigation/voltar_para_inicio.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
@@ -48,7 +48,7 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
       setState(() {
         if (!jaContava) _marcadosNaSessao.remove(item.id);
       });
-      mostrarSnackBar(context, AppStrings.erroGenerico);
+      mostrarSnackBar(context, context.l10n.erroGenerico);
     }
   }
 
@@ -65,7 +65,7 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
       setState(() {
         if (jaContava) _marcadosNaSessao.add(item.id);
       });
-      mostrarSnackBar(context, AppStrings.erroGenerico);
+      mostrarSnackBar(context, context.l10n.erroGenerico);
     }
   }
 
@@ -112,18 +112,18 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
     return listaAsync.when(
       loading: () => Scaffold(
         appBar: AppBar(
-          title: const Text(AppStrings.modoMercado),
+          title: Text(context.l10n.modoMercado),
           leading: botaoVoltarInicio(context, '/listas'),
         ),
         body: const AppEsqueleto(linhas: 5),
       ),
       error: (_, _) => Scaffold(
         appBar: AppBar(
-          title: const Text(AppStrings.modoMercado),
+          title: Text(context.l10n.modoMercado),
           leading: botaoVoltarInicio(context, '/listas'),
         ),
         body: AppEstadoErro(
-          mensagem: AppStrings.erroGenerico,
+          mensagem: context.l10n.erroGenerico,
           onRetentar: () => ref.invalidate(listaPorIdProvider(listaId)),
         ),
       ),
@@ -131,14 +131,14 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
         if (lista == null) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text(AppStrings.modoMercado),
+              title: Text(context.l10n.modoMercado),
               leading: botaoVoltarInicio(context, '/listas'),
             ),
             body: Center(
               child: AppEstadoVazio(
-                titulo: AppStrings.listaNaoEncontrada,
+                titulo: context.l10n.listaNaoEncontrada,
                 acao: AppBotao(
-                  rotulo: AppStrings.voltarParaListas,
+                  rotulo: context.l10n.voltarParaListas,
                   variante: AppBotaoVariante.texto,
                   expandido: false,
                   onPressed: () => context.go('/listas'),
@@ -162,7 +162,7 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
                   child: itensAsync.when(
                     loading: () => const AppEsqueleto(linhas: 5),
                     error: (_, _) => AppEstadoErro(
-                      mensagem: AppStrings.erroGenerico,
+                      mensagem: context.l10n.erroGenerico,
                       onRetentar: () =>
                           ref.invalidate(itensDaListaProvider(listaId)),
                     ),
@@ -223,7 +223,7 @@ class _CorpoMercado extends StatelessWidget {
           child: Semantics(
             liveRegion: true,
             child: Text(
-              AppStrings.mercadoProgresso(marcadosNaSessao, itens.length),
+              context.l10n.mercadoProgresso(marcadosNaSessao, itens.length),
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
@@ -239,9 +239,9 @@ class _CorpoMercado extends StatelessWidget {
                       ),
                       child: AppEstadoVazio(
                         icone: Icons.shopping_cart_checkout,
-                        titulo: AppStrings.mercadoTudoComprado,
+                        titulo: context.l10n.mercadoTudoComprado,
                         acao: AppBotao(
-                          rotulo: AppStrings.voltarParaLista,
+                          rotulo: context.l10n.voltarParaLista,
                           variante: AppBotaoVariante.outlined,
                           expandido: false,
                           onPressed: onVoltarParaLista,
@@ -403,7 +403,7 @@ class _FaixaMarcadosState extends State<_FaixaMarcados> {
             child: ListTile(
               onTap: _alternar,
               title: Text(
-                '${AppStrings.mercadoMarcados} (${widget.itens.length})',
+                '${context.l10n.mercadoMarcados} (${widget.itens.length})',
               ),
               trailing: Icon(_aberta ? Icons.expand_less : Icons.expand_more),
             ),

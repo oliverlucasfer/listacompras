@@ -10,6 +10,8 @@ import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/mercado_screen.dart';
 
+import '../../support/app_teste.dart';
+
 class _RepoEditarFalha extends ListasRepository {
   _RepoEditarFalha(super.db);
 
@@ -51,7 +53,7 @@ void main() {
           if (escritaFalha)
             listasRepositoryProvider.overrideWithValue(_RepoEditarFalha(db)),
         ],
-        child: MaterialApp(home: MercadoScreen(listaId: listaId)),
+        child: appTeste(MercadoScreen(listaId: listaId)),
       ),
     );
     await tester.pumpAndSettle();

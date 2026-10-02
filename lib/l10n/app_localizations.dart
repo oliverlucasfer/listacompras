@@ -661,7 +661,7 @@ abstract class AppLocalizations {
   /// No description provided for @progressoLista.
   ///
   /// In pt, this message translates to:
-  /// **'{concluidos}/{total, plural, =1{item concluído} other{itens concluídos}}'**
+  /// **'{concluidos}/{total} {total, plural, =1{item concluído} other{itens concluídos}}'**
   String progressoLista(int concluidos, int total);
 
   /// No description provided for @desmarcarTodos.

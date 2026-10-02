@@ -4,10 +4,10 @@ import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/theme/app_theme.dart';
 import 'package:lista_compras/core/widgets/app_botao.dart';
 
-Widget _app(Widget child) => MaterialApp(
-  theme: AppTheme.claro,
-  home: Scaffold(body: child),
-);
+import '../../support/app_teste.dart';
+
+Widget _app(Widget child) =>
+    appTeste(Scaffold(body: child), theme: AppTheme.claro);
 
 void main() {
   testWidgets('deve_disparar_callback_quando_tocado', (tester) async {

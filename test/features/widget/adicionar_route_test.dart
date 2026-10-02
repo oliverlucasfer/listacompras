@@ -9,6 +9,8 @@ import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../support/app_teste.dart';
+
 /// Monta o app real (router) com Drift in-memory e a última lista gravada.
 Future<ProviderContainer> _montar(
   WidgetTester tester, {
@@ -30,8 +32,7 @@ Future<ProviderContainer> _montar(
     UncontrolledProviderScope(
       container: container,
       child: Consumer(
-        builder: (context, ref, _) =>
-            MaterialApp.router(routerConfig: ref.watch(routerProvider)),
+        builder: (context, ref, _) => appTesteRouter(ref.watch(routerProvider)),
       ),
     ),
   );

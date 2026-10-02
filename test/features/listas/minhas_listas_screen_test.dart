@@ -12,6 +12,8 @@ import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
+
+import '../../support/app_teste.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -47,7 +49,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],
-        child: MaterialApp.router(routerConfig: router),
+        child: appTesteRouter(router),
       ),
     );
     await tester.pumpAndSettle();
@@ -224,7 +226,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(BackButton), findsOneWidget);
 
-    await tester.pageBack();
+    await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
     expect(find.text('Compras'), findsOneWidget);
     expect(find.byType(BackButton), findsNothing);

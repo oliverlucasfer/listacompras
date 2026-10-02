@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_dropdown.dart';
@@ -43,12 +43,12 @@ class _ModalAdicionarDeOutraListaState
         .toList();
     if (listas.isEmpty) {
       return AlertDialog(
-        title: const Text(AppStrings.adicionarDeOutraLista),
-        content: const Text(AppStrings.nenhumaLista),
+        title: Text(context.l10n.adicionarDeOutraLista),
+        content: Text(context.l10n.nenhumaLista),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(AppStrings.cancelar),
+            child: Text(context.l10n.cancelar),
           ),
         ],
       );
@@ -59,7 +59,7 @@ class _ModalAdicionarDeOutraListaState
             .where((i) => !i.concluido)
             .toList();
     return AlertDialog(
-      title: const Text(AppStrings.adicionarDeOutraLista),
+      title: Text(context.l10n.adicionarDeOutraLista),
       content: SizedBox(
         width: 400,
         child: Column(
@@ -67,7 +67,7 @@ class _ModalAdicionarDeOutraListaState
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AppDropdown<String>(
-              label: AppStrings.escolherListaOrigem,
+              label: context.l10n.escolherListaOrigem,
               valor: origemId,
               itens: [
                 for (final c in listas)
@@ -76,7 +76,7 @@ class _ModalAdicionarDeOutraListaState
                     child: Text(
                       c.lista.arquivadaEm == null
                           ? c.lista.titulo
-                          : AppStrings.tituloListaArquivada(c.lista.titulo),
+                          : context.l10n.tituloListaArquivada(c.lista.titulo),
                     ),
                   ),
               ],
@@ -91,9 +91,9 @@ class _ModalAdicionarDeOutraListaState
             ),
             const SizedBox(height: AppSpacing.sm),
             if (pendentes.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                child: Text(AppStrings.nenhumItemPendenteNaOrigem),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                child: Text(context.l10n.nenhumItemPendenteNaOrigem),
               )
             else ...[
               TextButton(
@@ -106,7 +106,7 @@ class _ModalAdicionarDeOutraListaState
                       ..addAll(pendentes.map((i) => i.id));
                   }
                 }),
-                child: const Text(AppStrings.selecionarTodos),
+                child: Text(context.l10n.selecionarTodos),
               ),
               Flexible(
                 child: SingleChildScrollView(
@@ -139,10 +139,10 @@ class _ModalAdicionarDeOutraListaState
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text(AppStrings.cancelar),
+          child: Text(context.l10n.cancelar),
         ),
         AppBotao(
-          rotulo: AppStrings.adicionarSelecionados,
+          rotulo: context.l10n.adicionarSelecionados,
           expandido: false,
           onPressed: _selecionados.isEmpty
               ? null

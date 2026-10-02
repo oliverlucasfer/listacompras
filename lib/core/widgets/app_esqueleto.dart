@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/l10n.dart';
 import '../theme/tokens/app_radius.dart';
 import '../theme/tokens/app_spacing.dart';
 
@@ -15,7 +15,7 @@ class AppEsqueleto extends StatelessWidget {
   Widget build(BuildContext context) {
     final cor = Theme.of(context).colorScheme.surfaceContainerHighest;
     return Semantics(
-      label: AppStrings.carregando,
+      label: context.l10n.carregando,
       container: true,
       child: SingleChildScrollView(
         child: Padding(

@@ -191,7 +191,7 @@
       "a": { "type": "int" }
     }
   },
-  "progressoLista": "{concluidos}/{total, plural, =1{item concluído} other{itens concluídos}}",
+  "progressoLista": "{concluidos}/{total} {total, plural, =1{item concluído} other{itens concluídos}}",
   "@progressoLista": {
     "placeholders": {
       "concluidos": { "type": "int" },

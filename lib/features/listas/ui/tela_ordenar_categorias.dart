@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_dialog.dart';
 import '../../../core/dominio/categoria.dart';
@@ -18,8 +18,8 @@ class TelaOrdenarCategorias extends ConsumerWidget {
         ref.watch(ordemCategoriasProvider).value ?? CategoriaItem.values;
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          AppStrings.ordenarCategorias,
+        title: Text(
+          context.l10n.ordenarCategorias,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -29,7 +29,7 @@ class TelaOrdenarCategorias extends ConsumerWidget {
         children: [
           Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Text(AppStrings.ordenarCategoriasDica),
+            child: Text(context.l10n.ordenarCategoriasDica),
           ),
           // Fora da AppBar: título + ação não cabem na mesma linha em escala
           // de texto 2.0 (a Row de actions transbordava).
@@ -39,7 +39,7 @@ class TelaOrdenarCategorias extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: TextButton(
                 onPressed: () => _confirmarRestaurar(context, ref),
-                child: const Text(AppStrings.restaurarPadrao),
+                child: Text(context.l10n.restaurarPadrao),
               ),
             ),
           ),
@@ -81,9 +81,9 @@ class TelaOrdenarCategorias extends ConsumerWidget {
   Future<void> _confirmarRestaurar(BuildContext context, WidgetRef ref) async {
     final confirmou = await AppDialog.confirmarDestrutivo(
       context,
-      titulo: AppStrings.restaurarPadraoTitulo,
-      mensagem: AppStrings.restaurarPadraoMensagem,
-      confirmar: AppStrings.restaurarPadrao,
+      titulo: context.l10n.restaurarPadraoTitulo,
+      mensagem: context.l10n.restaurarPadraoMensagem,
+      confirmar: context.l10n.restaurarPadrao,
     );
     if (confirmou && context.mounted) {
       await ref.read(ordemCategoriasProvider.notifier).restaurarPadrao();

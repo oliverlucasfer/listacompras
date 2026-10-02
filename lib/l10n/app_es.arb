@@ -191,7 +191,7 @@
       "a": { "type": "int" }
     }
   },
-  "progressoLista": "{concluidos}/{total, plural, =1{artículo completado} other{artículos completados}}",
+  "progressoLista": "{concluidos}/{total} {total, plural, =1{artículo completado} other{artículos completados}}",
   "@progressoLista": {
     "placeholders": {
       "concluidos": { "type": "int" },

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../domain/item.dart';
 import '../domain/orcamento.dart';
@@ -43,7 +43,7 @@ class TotalCarrinho extends ConsumerWidget {
         child: Padding(
           padding: _padding,
           child: Text(
-            AppStrings.totalNoCarrinho(formatarReais(total), semPreco),
+            context.l10n.totalNoCarrinho(formatarReais(total), semPreco),
             style: textoEstilo,
           ),
         ),
@@ -63,8 +63,8 @@ class TotalCarrinho extends ConsumerWidget {
       EstadoOrcamento.semOrcamento || EstadoOrcamento.normal => null,
     };
     final aviso = switch (estado) {
-      EstadoOrcamento.aviso => AppStrings.orcamentoAtencao,
-      EstadoOrcamento.acima => AppStrings.acimaDoOrcamento,
+      EstadoOrcamento.aviso => context.l10n.orcamentoAtencao,
+      EstadoOrcamento.acima => context.l10n.acimaDoOrcamento,
       EstadoOrcamento.semOrcamento || EstadoOrcamento.normal => null,
     };
     return Semantics(
@@ -82,7 +82,7 @@ class TotalCarrinho extends ConsumerWidget {
                 ],
                 Expanded(
                   child: Text(
-                    AppStrings.totalComOrcamento(
+                    context.l10n.totalComOrcamento(
                       formatarReais(total),
                       formatarReais(orcamento),
                       semPreco,

@@ -11,6 +11,7 @@ import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/widget/domain/widget_service.dart';
 import 'package:lista_compras/features/widget/providers/widget_providers.dart';
 import 'package:lista_compras/features/widget/ui/widget_atualizador.dart';
+import 'package:lista_compras/l10n/app_localizations.dart';
 import 'package:lista_compras/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -108,6 +109,9 @@ Future<_Harness> _montar(
       child: Consumer(
         builder: (context, ref, _) => MaterialApp.router(
           routerConfig: ref.watch(routerProvider),
+          locale: const Locale('pt', 'BR'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           builder: (context, child) => Stack(
             children: [
               if (child != null) child else const SizedBox.shrink(),

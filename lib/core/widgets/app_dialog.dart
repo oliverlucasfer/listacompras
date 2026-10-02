@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/l10n.dart';
 import 'app_botao.dart';
 
 /// Diálogos padronizados (doc 15 §3).
@@ -10,9 +10,11 @@ abstract final class AppDialog {
     BuildContext context, {
     required String titulo,
     required String mensagem,
-    String confirmar = AppStrings.excluir,
-    String cancelar = AppStrings.cancelar,
+    String? confirmar,
+    String? cancelar,
   }) async {
+    final rotuloConfirmar = confirmar ?? context.l10n.excluir;
+    final rotuloCancelar = cancelar ?? context.l10n.cancelar;
     final resultado = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -21,10 +23,10 @@ abstract final class AppDialog {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(cancelar),
+            child: Text(rotuloCancelar),
           ),
           AppBotao(
-            rotulo: confirmar,
+            rotulo: rotuloConfirmar,
             variante: AppBotaoVariante.destrutivo,
             expandido: false,
             onPressed: () => Navigator.pop(dialogContext, true),

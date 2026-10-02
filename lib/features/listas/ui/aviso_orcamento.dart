@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../../notificacoes/providers/notificacao_providers.dart';
 import '../domain/item.dart';
@@ -34,7 +34,7 @@ Future<void> talvezAvisarCruzamento(
   if (context.mounted) {
     mostrarSnackBar(
       context,
-      AppStrings.orcamentoCruzado(formatarReais(depois)),
+      context.l10n.orcamentoCruzado(formatarReais(depois)),
     );
   }
   // Notificação local (RF-36, F53-T05): só onde o SO suporta (Android/iOS).
@@ -47,8 +47,8 @@ Future<void> talvezAvisarCruzamento(
         ref
             .read(notificacaoLocalProvider)
             .mostrar(
-              titulo: AppStrings.orcamento,
-              corpo: AppStrings.orcamentoCruzado(formatarReais(depois)),
+              titulo: context.l10n.orcamento,
+              corpo: context.l10n.orcamentoCruzado(formatarReais(depois)),
             )
             .catchError((_) {}),
       );

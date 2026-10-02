@@ -7,6 +7,8 @@ import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/tela_lista_screen.dart';
+
+import '../../support/app_teste.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Orçamento por lista na tela da lista (RF-28, F36-T03, doc 05 §6.3).
@@ -40,7 +42,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],
-        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+        child: appTeste(TelaListaScreen(listaId: lista.id)),
       ),
     );
     await tester.pumpAndSettle();

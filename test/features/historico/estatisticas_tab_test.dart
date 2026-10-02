@@ -12,6 +12,8 @@ import 'package:lista_compras/features/historico/ui/historico_screen.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 
+import '../../support/app_teste.dart';
+
 void main() {
   /// Desmonta a árvore dentro do teste: o dispose do StreamProvider cancela
   /// streams do Drift, que agendam um Timer(0) — o pump seguinte o consome,
@@ -54,7 +56,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],
-        child: const MaterialApp(home: HistoricoScreen()),
+        child: appTeste(const HistoricoScreen()),
       ),
     );
     await tester.pumpAndSettle();
@@ -127,7 +129,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [appDatabaseProvider.overrideWithValue(db)],
-          child: const MaterialApp(home: HistoricoScreen()),
+          child: appTeste(const HistoricoScreen()),
         ),
       );
       await tester.pumpAndSettle();
@@ -183,7 +185,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],
-        child: const MaterialApp(home: HistoricoScreen()),
+        child: appTeste(const HistoricoScreen()),
       ),
     );
     await tester.pumpAndSettle();

@@ -7,6 +7,8 @@ import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../support/app_teste.dart';
+
 class FluxoApp {
   FluxoApp(this.db, this.container);
   final AppDatabase db;
@@ -30,8 +32,7 @@ Future<FluxoApp> montarApp(
     UncontrolledProviderScope(
       container: container,
       child: Consumer(
-        builder: (context, ref, _) =>
-            MaterialApp.router(routerConfig: ref.watch(routerProvider)),
+        builder: (context, ref, _) => appTesteRouter(ref.watch(routerProvider)),
       ),
     ),
   );

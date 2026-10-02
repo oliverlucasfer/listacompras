@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/l10n.dart';
 import '../theme/tokens/app_spacing.dart';
 
 /// Erro de carga com retry (doc 15 §3).
@@ -26,7 +26,7 @@ class AppEstadoErro extends StatelessWidget {
               const SizedBox(height: AppSpacing.lg),
               TextButton(
                 onPressed: onRetentar,
-                child: const Text(AppStrings.tentarNovamente),
+                child: Text(context.l10n.tentarNovamente),
               ),
             ],
           ],

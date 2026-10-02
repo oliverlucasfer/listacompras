@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/config/usuario_local.dart';
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/texto/busca.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/utils/tempo_relativo.dart';
@@ -24,15 +24,16 @@ import 'sheet_titulo_lista.dart';
 
 /// Formata o tempo relativo na borda de UI (RF-39, F56): a camada de domínio
 /// devolve apenas [TempoRelativo]; o texto fica aqui.
-String _textoTempoRelativo(TempoRelativo tempo) => switch (tempo.tipo) {
-  TempoRelativoTipo.agora => AppStrings.tempoAgora,
-  TempoRelativoTipo.minutos => AppStrings.tempoMinutos(tempo.valor),
-  TempoRelativoTipo.horas => AppStrings.tempoHoras(tempo.valor),
-  TempoRelativoTipo.ontem => AppStrings.tempoOntem,
-  TempoRelativoTipo.dias => AppStrings.tempoDias(tempo.valor),
-  TempoRelativoTipo.meses => AppStrings.tempoMeses(tempo.valor),
-  TempoRelativoTipo.anos => AppStrings.tempoAnos(tempo.valor),
-};
+String _textoTempoRelativo(BuildContext context, TempoRelativo tempo) =>
+    switch (tempo.tipo) {
+      TempoRelativoTipo.agora => context.l10n.tempoAgora,
+      TempoRelativoTipo.minutos => context.l10n.tempoMinutos(tempo.valor),
+      TempoRelativoTipo.horas => context.l10n.tempoHoras(tempo.valor),
+      TempoRelativoTipo.ontem => context.l10n.tempoOntem,
+      TempoRelativoTipo.dias => context.l10n.tempoDias(tempo.valor),
+      TempoRelativoTipo.meses => context.l10n.tempoMeses(tempo.valor),
+      TempoRelativoTipo.anos => context.l10n.tempoAnos(tempo.valor),
+    };
 
 /// Painel "Minhas Listas" (doc 05 §6.2, F10): todas as listas do aparelho.
 class PainelListas extends ConsumerStatefulWidget {
@@ -83,19 +84,19 @@ class _PainelListasState extends ConsumerState<PainelListas> {
           children: [
             const AppLogo(),
             const SizedBox(width: AppSpacing.sm),
-            const Flexible(child: Text(AppStrings.minhasListas)),
+            Flexible(child: Text(context.l10n.minhasListas)),
           ],
         ),
         actions: [
           if (_buscando)
             IconButton(
-              tooltip: AppStrings.limparBusca,
+              tooltip: context.l10n.limparBusca,
               icon: const Icon(Icons.close),
               onPressed: _fecharBusca,
             )
           else ...[
             IconButton(
-              tooltip: AppStrings.mostrarArquivadas,
+              tooltip: context.l10n.mostrarArquivadas,
               icon: Icon(
                 _mostrarArquivadas
                     ? Icons.inventory_2
@@ -105,13 +106,13 @@ class _PainelListasState extends ConsumerState<PainelListas> {
                   setState(() => _mostrarArquivadas = !_mostrarArquivadas),
             ),
             IconButton(
-              tooltip: AppStrings.receberLista,
+              tooltip: context.l10n.receberLista,
               icon: const Icon(Icons.qr_code_scanner),
               onPressed: () => context.push('/receber-lista'),
             ),
             IconButton(
               key: TourKeys.lupa,
-              tooltip: AppStrings.buscar,
+              tooltip: context.l10n.buscar,
               icon: const Icon(Icons.search),
               onPressed: _abrirBusca,
             ),
@@ -130,8 +131,8 @@ class _PainelListasState extends ConsumerState<PainelListas> {
               ),
               child: AppCampoTexto(
                 controller: _busca,
-                label: AppStrings.buscarLista,
-                hint: AppStrings.nomeDaLista,
+                label: context.l10n.buscarLista,
+                hint: context.l10n.nomeDaLista,
                 autofocus: true,
                 onChanged: (_) => setState(() {}),
               ),
@@ -140,16 +141,16 @@ class _PainelListasState extends ConsumerState<PainelListas> {
             child: listasAsync.when(
               loading: () => const AppEsqueleto(linhas: 4),
               error: (_, _) => AppEstadoErro(
-                mensagem: AppStrings.erroGenerico,
+                mensagem: context.l10n.erroGenerico,
                 onRetentar: () => ref.invalidate(listasComContagemProvider),
               ),
               data: (listas) {
                 if (listas.isEmpty) {
                   return _buscando && consulta.isNotEmpty
-                      ? const AppEstadoVazio(
+                      ? AppEstadoVazio(
                           icone: Icons.search_off,
-                          titulo: AppStrings.nenhumaListaEncontrada,
-                          descricao: AppStrings.buscaSemResultadoDica,
+                          titulo: context.l10n.nenhumaListaEncontrada,
+                          descricao: context.l10n.buscaSemResultadoDica,
                         )
                       : _vazio(context, ref);
                 }
@@ -175,7 +176,7 @@ class _PainelListasState extends ConsumerState<PainelListas> {
         heroTag: 'fab-nova-lista',
         onPressed: () => abrirSheetNovaLista(context, ref),
         icon: const Icon(Icons.add),
-        label: const Text(AppStrings.novaLista),
+        label: Text(context.l10n.novaLista),
       ),
     );
   }
@@ -183,10 +184,10 @@ class _PainelListasState extends ConsumerState<PainelListas> {
   Widget _vazio(BuildContext context, WidgetRef ref) {
     return AppEstadoVazio(
       icone: Icons.sticky_note_2_outlined,
-      titulo: AppStrings.nenhumaLista,
-      descricao: AppStrings.criePrimeiraLista,
+      titulo: context.l10n.nenhumaLista,
+      descricao: context.l10n.criePrimeiraLista,
       acao: AppBotao(
-        rotulo: AppStrings.criarPrimeiraLista,
+        rotulo: context.l10n.criarPrimeiraLista,
         icone: Icons.add,
         expandido: false,
         onPressed: () => abrirSheetNovaLista(context, ref),
@@ -227,23 +228,23 @@ class _CardListaState extends ConsumerState<_CardLista> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                AppStrings.progressoLista(
+                context.l10n.progressoLista(
                   widget.contagem.concluidos,
                   widget.contagem.totalItens,
                 ),
               ),
               Text(
-                '${AppStrings.atualizada} ${_textoTempoRelativo(tempoRelativo(lista.atualizadoEm, agora: DateTime.now()))}',
+                '${context.l10n.atualizada} ${_textoTempoRelativo(context, tempoRelativo(lista.atualizadoEm, agora: DateTime.now()))}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               if (lista.arquivadaEm != null)
-                const AppChip(rotulo: AppStrings.arquivada),
+                AppChip(rotulo: context.l10n.arquivada),
             ],
           ),
         ),
         trailing: PopupMenuButton<String>(
           key: _menuKey,
-          tooltip: AppStrings.menu,
+          tooltip: context.l10n.menu,
           icon: const Icon(Icons.more_vert),
           onSelected: _acaoMenu,
           itemBuilder: (context) => _itens(context),
@@ -256,22 +257,19 @@ class _CardListaState extends ConsumerState<_CardLista> {
 
   List<PopupMenuEntry<String>> _itens(BuildContext context) => [
     if (widget.contagem.lista.arquivadaEm == null)
-      const PopupMenuItem(value: 'arquivar', child: Text(AppStrings.arquivar))
+      PopupMenuItem(value: 'arquivar', child: Text(context.l10n.arquivar))
     else
-      const PopupMenuItem(
+      PopupMenuItem(
         value: 'desarquivar',
-        child: Text(AppStrings.desarquivar),
+        child: Text(context.l10n.desarquivar),
       ),
     if (_pendentes > 0)
-      const PopupMenuItem(
-        value: 'duplicar',
-        child: Text(AppStrings.comprarDeNovo),
-      ),
-    const PopupMenuItem(value: 'renomear', child: Text(AppStrings.renomear)),
+      PopupMenuItem(value: 'duplicar', child: Text(context.l10n.comprarDeNovo)),
+    PopupMenuItem(value: 'renomear', child: Text(context.l10n.renomear)),
     PopupMenuItem(
       value: 'excluir',
       child: Text(
-        AppStrings.excluir,
+        context.l10n.excluir,
         style: TextStyle(color: Theme.of(context).colorScheme.error),
       ),
     ),
@@ -297,11 +295,11 @@ class _CardListaState extends ConsumerState<_CardLista> {
     String? criadoId;
     await abrirSheetTitulo(
       context,
-      titulo: AppStrings.comprarDeNovo,
-      descricao: AppStrings.duplicarDescricao(_pendentes),
-      rotuloBotao: AppStrings.criarLista,
+      titulo: context.l10n.comprarDeNovo,
+      descricao: context.l10n.duplicarDescricao(_pendentes),
+      rotuloBotao: context.l10n.criarLista,
       valorInicial: lista.titulo,
-      mensagemSucesso: AppStrings.listaCriada,
+      mensagemSucesso: context.l10n.listaCriada,
       onSalvar: (nome) async {
         final nova = await ref
             .read(listasRepositoryProvider)
@@ -317,10 +315,10 @@ class _CardListaState extends ConsumerState<_CardLista> {
   void _abrirSheetRenomear() {
     abrirSheetTitulo(
       context,
-      titulo: AppStrings.renomearLista,
-      rotuloBotao: AppStrings.salvar,
+      titulo: context.l10n.renomearLista,
+      rotuloBotao: context.l10n.salvar,
       valorInicial: widget.contagem.lista.titulo,
-      mensagemSucesso: AppStrings.listaRenomeada,
+      mensagemSucesso: context.l10n.listaRenomeada,
       onSalvar: (nome) => ref
           .read(listasRepositoryProvider)
           .renomearLista(id: widget.contagem.lista.id, titulo: nome),
@@ -335,11 +333,13 @@ class _CardListaState extends ConsumerState<_CardLista> {
       if (mounted) {
         mostrarSnackBar(
           context,
-          arquivada ? AppStrings.listaArquivada : AppStrings.listaDesarquivada,
+          arquivada
+              ? context.l10n.listaArquivada
+              : context.l10n.listaDesarquivada,
         );
       }
     } catch (_) {
-      if (mounted) mostrarSnackBar(context, AppStrings.erroGenerico);
+      if (mounted) mostrarSnackBar(context, context.l10n.erroGenerico);
     }
   }
 
@@ -347,11 +347,8 @@ class _CardListaState extends ConsumerState<_CardLista> {
     final contagem = widget.contagem;
     final confirmou = await AppDialog.confirmarDestrutivo(
       context,
-      titulo: AppStrings.excluirListaTitulo(contagem.lista.titulo),
-      mensagem: AppStrings.excluirListaMensagem(
-        contagem.totalItens,
-        temMembros: false,
-      ),
+      titulo: context.l10n.excluirListaTitulo(contagem.lista.titulo),
+      mensagem: context.l10n.excluirListaMensagem(contagem.totalItens, 'false'),
     );
     if (confirmou) {
       await ref.read(listasRepositoryProvider).excluirLista(contagem.lista.id);
@@ -362,9 +359,9 @@ class _CardListaState extends ConsumerState<_CardLista> {
 Future<void> abrirSheetNovaLista(BuildContext context, WidgetRef ref) {
   return abrirSheetTitulo(
     context,
-    titulo: AppStrings.novaLista,
-    rotuloBotao: AppStrings.criarLista,
-    mensagemSucesso: AppStrings.listaCriada,
+    titulo: context.l10n.novaLista,
+    rotuloBotao: context.l10n.criarLista,
+    mensagemSucesso: context.l10n.listaCriada,
     onSalvar: (nome) async {
       await ref
           .read(listasRepositoryProvider)

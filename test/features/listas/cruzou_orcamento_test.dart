@@ -9,6 +9,8 @@ import 'package:lista_compras/features/listas/domain/preco.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/mercado_screen.dart';
 import 'package:lista_compras/features/listas/ui/tela_lista_screen.dart';
+
+import '../../support/app_teste.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Aviso (SnackBar) ao cruzar o orçamento ao marcar/desmarcar (RF-36, F53-T03).
@@ -44,7 +46,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],
-        child: MaterialApp(home: tela(lista.id)),
+        child: appTeste(tela(lista.id)),
       ),
     );
     await tester.pumpAndSettle();

@@ -18,6 +18,7 @@ void main() {
       ProviderScope(
         child: MaterialApp(
           home: const ConfiguracoesScreen(),
+          locale: const Locale('pt', 'BR'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
         ),
@@ -44,6 +45,7 @@ void main() {
       ProviderScope(
         child: MaterialApp.router(
           routerConfig: router,
+          locale: const Locale('pt', 'BR'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
         ),

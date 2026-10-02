@@ -9,6 +9,8 @@ import 'package:lista_compras/features/listas/domain/preco.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/total_carrinho.dart';
 
+import '../../support/app_teste.dart';
+
 /// Estados progressivos do total do carrinho (RF-36, F53-T02).
 void main() {
   late AppDatabase db;
@@ -39,9 +41,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],
-        child: MaterialApp(
-          home: Scaffold(body: TotalCarrinho(listaId: lista.id)),
-        ),
+        child: appTeste(Scaffold(body: TotalCarrinho(listaId: lista.id))),
       ),
     );
     await tester.pumpAndSettle();

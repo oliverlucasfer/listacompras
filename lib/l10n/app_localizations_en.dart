@@ -366,7 +366,7 @@ class AppLocalizationsEn extends AppLocalizations {
       other: 'items completed',
       one: 'item completed',
     );
-    return '$concluidos/$_temp0';
+    return '$concluidos/$total $_temp0';
   }
 
   @override

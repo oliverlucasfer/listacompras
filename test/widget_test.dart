@@ -12,7 +12,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   setUp(() {
-    SharedPreferences.setMockInitialValues({'onboarding_visto': true});
+    SharedPreferences.setMockInitialValues({
+      'onboarding_visto': true,
+      'idioma_app': 'pt',
+    });
   });
 
   ProviderContainer montarContainer(AppDatabase db) {

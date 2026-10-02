@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
@@ -55,7 +55,7 @@ class _SheetTituloListaState extends State<SheetTituloLista> {
   Future<void> _salvar() async {
     final nome = _clampTitulo(_controller.text.trim());
     if (nome.isEmpty) {
-      setState(() => _erro = AppStrings.erroNomeVazio);
+      setState(() => _erro = context.l10n.erroNomeVazio);
       return;
     }
     setState(() {
@@ -74,7 +74,7 @@ class _SheetTituloListaState extends State<SheetTituloLista> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _erro = AppStrings.erroGenerico;
+          _erro = context.l10n.erroGenerico;
           _salvando = false;
         });
       }
@@ -97,7 +97,7 @@ class _SheetTituloListaState extends State<SheetTituloLista> {
                 ),
               ),
               IconButton(
-                tooltip: AppStrings.cancelar,
+                tooltip: context.l10n.cancelar,
                 icon: const Icon(Icons.close),
                 onPressed: () => Navigator.pop(context),
               ),
@@ -114,7 +114,7 @@ class _SheetTituloListaState extends State<SheetTituloLista> {
           AppCampoTexto(
             key: TourKeys.nomeLista,
             controller: _controller,
-            label: AppStrings.nomeDaLista,
+            label: context.l10n.nomeDaLista,
             erro: _erro,
             autofocus: true,
             maxLength: _limiteTitulo,

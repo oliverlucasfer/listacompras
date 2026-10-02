@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/features/listas/ui/sheet_titulo_lista.dart';
 
+import '../../support/app_teste.dart';
+
 void main() {
   Future<void> abrir(
     WidgetTester tester, {
@@ -10,8 +12,8 @@ void main() {
     String? valorInicial,
   }) async {
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
+      appTeste(
+        Scaffold(
           body: Builder(
             builder: (context) => Center(
               child: FilledButton(

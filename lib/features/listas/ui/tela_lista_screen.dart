@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/importacao/parser_lista_local.dart';
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/navigation/voltar_para_inicio.dart';
 import '../../../core/texto/busca.dart';
 import '../../../core/texto/normalizar.dart';
@@ -119,9 +119,9 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
       case 'renomear':
         abrirSheetTitulo(
           context,
-          titulo: AppStrings.renomearLista,
-          rotuloBotao: AppStrings.salvar,
-          mensagemSucesso: AppStrings.listaRenomeada,
+          titulo: context.l10n.renomearLista,
+          rotuloBotao: context.l10n.salvar,
+          mensagemSucesso: context.l10n.listaRenomeada,
           onSalvar: (nome) => repo.renomearLista(id: idLista, titulo: nome),
         );
       case 'orcamento':
@@ -178,13 +178,13 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
           .read(listasRepositoryProvider)
           .adicionarItensDedup(idLista, selecionados);
     } catch (_) {
-      if (context.mounted) mostrarSnackBar(context, AppStrings.erroGenerico);
+      if (context.mounted) mostrarSnackBar(context, context.l10n.erroGenerico);
       return;
     }
     if (context.mounted) {
       mostrarSnackBar(
         context,
-        AppStrings.itensAdicionadosDeOutra(selecionados.length),
+        context.l10n.itensAdicionadosDeOutra(selecionados.length),
       );
     }
   }
@@ -196,9 +196,9 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
   ) async {
     final confirmou = await AppDialog.confirmarDestrutivo(
       context,
-      titulo: AppStrings.limparConcluidos,
-      mensagem: AppStrings.limparConcluidosMensagem,
-      confirmar: AppStrings.limpar,
+      titulo: context.l10n.limparConcluidos,
+      mensagem: context.l10n.limparConcluidosMensagem,
+      confirmar: context.l10n.limpar,
     );
     if (!confirmou) return;
     final repo = ref.read(listasRepositoryProvider);
@@ -206,14 +206,14 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
     try {
       removidos = await repo.limparConcluidos(idLista);
     } catch (_) {
-      if (context.mounted) mostrarSnackBar(context, AppStrings.erroGenerico);
+      if (context.mounted) mostrarSnackBar(context, context.l10n.erroGenerico);
       return;
     }
     if (!context.mounted || removidos.isEmpty) return;
     mostrarSnackBar(
       context,
-      AppStrings.concluidosRemovidos,
-      rotuloAcao: AppStrings.desfazer,
+      context.l10n.concluidosRemovidos,
+      rotuloAcao: context.l10n.desfazer,
       onAcao: () {
         unawaited(() async {
           try {
@@ -222,7 +222,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
             }
           } catch (_) {
             if (context.mounted) {
-              mostrarSnackBar(context, AppStrings.erroGenerico);
+              mostrarSnackBar(context, context.l10n.erroGenerico);
             }
           }
         }());
@@ -239,8 +239,8 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
     final nItens = ref.read(itensDaListaProvider(idLista)).value?.length ?? 0;
     final confirmou = await AppDialog.confirmarDestrutivo(
       context,
-      titulo: AppStrings.excluirListaTitulo(titulo),
-      mensagem: AppStrings.excluirListaMensagem(nItens, temMembros: false),
+      titulo: context.l10n.excluirListaTitulo(titulo),
+      mensagem: context.l10n.excluirListaMensagem(nItens, 'false'),
     );
     if (!confirmou) return;
     await ref.read(listasRepositoryProvider).excluirLista(idLista);
@@ -266,19 +266,19 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
     return listaAsync.when(
       loading: () => Scaffold(
         appBar: AppBar(
-          title: const Text(AppStrings.lista),
+          title: Text(context.l10n.lista),
           leading: botaoVoltarInicio(context, '/listas'),
         ),
         body: const AppEsqueleto(linhas: 5),
       ),
       error: (_, _) => Scaffold(
         appBar: AppBar(
-          title: const Text(AppStrings.lista),
+          title: Text(context.l10n.lista),
           leading: botaoVoltarInicio(context, '/listas'),
         ),
         // Erro com retry, no padrão dos demais estados (doc 15 §3, F14-T04).
         body: AppEstadoErro(
-          mensagem: AppStrings.erroGenerico,
+          mensagem: context.l10n.erroGenerico,
           onRetentar: () => ref.invalidate(listaPorIdProvider(listaId)),
         ),
       ),
@@ -286,14 +286,14 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
         if (lista == null) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text(AppStrings.lista),
+              title: Text(context.l10n.lista),
               leading: botaoVoltarInicio(context, '/listas'),
             ),
             body: Center(
               child: AppEstadoVazio(
-                titulo: AppStrings.listaNaoEncontrada,
+                titulo: context.l10n.listaNaoEncontrada,
                 acao: AppBotao(
-                  rotulo: AppStrings.voltarParaListas,
+                  rotulo: context.l10n.voltarParaListas,
                   variante: AppBotaoVariante.texto,
                   expandido: false,
                   onPressed: () => context.go('/listas'),
@@ -320,60 +320,60 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
               actions: [
                 IconButton(
                   key: TourKeys.botaoMercado,
-                  tooltip: AppStrings.modoMercado,
+                  tooltip: context.l10n.modoMercado,
                   icon: const Icon(Icons.shopping_cart_checkout),
                   onPressed: () => context.push('/mercado/${lista.id}'),
                 ),
                 if (_buscando)
                   IconButton(
-                    tooltip: AppStrings.limparBusca,
+                    tooltip: context.l10n.limparBusca,
                     icon: const Icon(Icons.close),
                     onPressed: _fecharBusca,
                   )
                 else
                   IconButton(
-                    tooltip: AppStrings.buscar,
+                    tooltip: context.l10n.buscar,
                     icon: const Icon(Icons.search),
                     onPressed: _abrirBusca,
                   ),
                 PopupMenuButton<String>(
                   key: TourKeys.menuMais,
-                  tooltip: AppStrings.menu,
+                  tooltip: context.l10n.menu,
                   onSelected: (acao) => _acaoMenu(context, ref, lista.id, acao),
                   itemBuilder: (context) => [
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'desmarcar',
-                      child: Text(AppStrings.desmarcarTodos),
+                      child: Text(context.l10n.desmarcarTodos),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'limpar',
-                      child: Text(AppStrings.limparConcluidos),
+                      child: Text(context.l10n.limparConcluidos),
                     ),
                     if (itens.any((i) => i.concluido))
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'finalizar',
-                        child: Text(AppStrings.finalizarCompra),
+                        child: Text(context.l10n.finalizarCompra),
                       ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'renomear',
-                      child: Text(AppStrings.renomearLista),
+                      child: Text(context.l10n.renomearLista),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'orcamento',
-                      child: Text(AppStrings.orcamento),
+                      child: Text(context.l10n.orcamento),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'outraLista',
-                      child: Text(AppStrings.adicionarDeOutraLista),
+                      child: Text(context.l10n.adicionarDeOutraLista),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'compartilhar',
-                      child: Text(AppStrings.compartilharLista),
+                      child: Text(context.l10n.compartilharLista),
                     ),
                     PopupMenuItem(
                       value: 'excluir',
                       child: Text(
-                        AppStrings.excluirLista,
+                        context.l10n.excluirLista,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.error,
                         ),
@@ -411,8 +411,8 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                     ),
                     child: AppCampoTexto(
                       controller: _busca,
-                      label: AppStrings.buscarItem,
-                      hint: AppStrings.nomeDoItem,
+                      label: context.l10n.buscarItem,
+                      hint: context.l10n.nomeDoItem,
                       autofocus: true,
                       onChanged: (_) => setState(() {}),
                     ),
@@ -450,7 +450,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                               bottom: AppSpacing.xs,
                             ),
                             child: AppBotao(
-                              rotulo: AppStrings.finalizarCompra,
+                              rotulo: context.l10n.finalizarCompra,
                               icone: Icons.shopping_bag_outlined,
                               onPressed: () =>
                                   abrirFinalizarCompra(context, ref, listaId),
@@ -458,7 +458,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                           ),
                         AppBotao(
                           key: TourKeys.botaoImportar,
-                          rotulo: AppStrings.importarLista,
+                          rotulo: context.l10n.importarLista,
                           variante: AppBotaoVariante.outlined,
                           icone: Icons.playlist_add,
                           onPressed: () =>
@@ -530,7 +530,7 @@ class _AlertaOrcamentoCategorias extends ConsumerWidget {
       ),
       child: AppBanner(
         tipo: AppBannerTipo.aviso,
-        mensagem: '${AppStrings.acimaDoLimiteDaCategoria}: $nomes',
+        mensagem: '${context.l10n.acimaDoLimiteDaCategoria}: $nomes',
       ),
     );
   }
@@ -617,7 +617,7 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
         });
       },
       onIndisponivel: () {
-        if (mounted) mostrarSnackBar(context, AppStrings.vozIndisponivel);
+        if (mounted) mostrarSnackBar(context, context.l10n.vozIndisponivel);
       },
       onEstado: _aoEstadoVoz,
     );
@@ -632,7 +632,7 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
     final extra = interpretarItemAvulso(texto, unidadePadrao: _unidade);
     if (extra == null) {
       // Texto só com pontuação/separador: nada foi reconhecido (F14-T07).
-      setState(() => _erro = AppStrings.naoEntendiItem);
+      setState(() => _erro = context.l10n.naoEntendiItem);
       return;
     }
     await _adicionarItemDedup(
@@ -667,9 +667,9 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
     if (!mounted) return;
     switch (resultado) {
       case ResultadoDedup.somado:
-        mostrarSnackBar(context, '$nome ${AppStrings.itemDuplicadoSomado}');
+        mostrarSnackBar(context, '$nome ${context.l10n.itemDuplicadoSomado}');
       case ResultadoDedup.substituido:
-        mostrarSnackBar(context, '$nome: ${AppStrings.itemAtualizado}');
+        mostrarSnackBar(context, '$nome: ${context.l10n.itemAtualizado}');
       case ResultadoDedup.adicionado:
         break;
     }
@@ -706,7 +706,7 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
         children: [
           if (mostrarChips)
             Semantics(
-              label: AppStrings.sugestoes,
+              label: context.l10n.sugestoes,
               child: SizedBox(
                 height: 48,
                 child: ListView.separated(
@@ -718,7 +718,7 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
                     final s = sugestoes[i];
                     return Semantics(
                       button: true,
-                      label: AppStrings.adicionarSugerido(s.nome),
+                      label: context.l10n.adicionarSugerido(s.nome),
                       child: ActionChip(
                         label: Text(s.nome),
                         onPressed: () => _adicionarSugerido(s.nome),
@@ -731,7 +731,7 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
           AppCampoTexto(
             key: TourKeys.campoAdicionar,
             controller: _controller,
-            label: AppStrings.adicionarItem,
+            label: context.l10n.adicionarItem,
             erro: _erro,
             autofocus: widget.autofocus,
             onChanged: (_) => setState(() => _erro = null),
@@ -742,7 +742,7 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
                 Flexible(
                   child: PopupMenuButton<Unidade>(
                     key: TourKeys.seletorUnidade,
-                    tooltip: AppStrings.unidade,
+                    tooltip: context.l10n.unidade,
                     initialValue: _unidade,
                     onSelected: (u) => setState(() => _unidade = u),
                     itemBuilder: (context) => [
@@ -770,7 +770,7 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
                 ),
                 if (plataformaComVoz())
                   IconButton(
-                    tooltip: AppStrings.ditarItem,
+                    tooltip: context.l10n.ditarItem,
                     icon: Icon(
                       _estadoVoz == EstadoVoz.ouvindo
                           ? Icons.mic
@@ -779,7 +779,7 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
                     onPressed: _ditar,
                   ),
                 IconButton(
-                  tooltip: AppStrings.adicionarItem,
+                  tooltip: context.l10n.adicionarItem,
                   icon: const Icon(Icons.add),
                   onPressed: _adicionar,
                 ),
@@ -824,7 +824,7 @@ class _ListaItens extends ConsumerWidget {
         for (final i in ordenados) i.id,
       ]);
     } catch (_) {
-      if (context.mounted) mostrarSnackBar(context, AppStrings.erroGenerico);
+      if (context.mounted) mostrarSnackBar(context, context.l10n.erroGenerico);
     }
   }
 
@@ -834,15 +834,15 @@ class _ListaItens extends ConsumerWidget {
     return itensAsync.when(
       loading: () => const AppEsqueleto(linhas: 5),
       error: (_, _) => AppEstadoErro(
-        mensagem: AppStrings.erroGenerico,
+        mensagem: context.l10n.erroGenerico,
         onRetentar: () => ref.invalidate(itensDaListaProvider(listaId)),
       ),
       data: (itens) {
         if (itens.isEmpty) {
-          return const AppEstadoVazio(
+          return AppEstadoVazio(
             icone: Icons.shopping_basket_outlined,
-            titulo: AppStrings.nenhumItem,
-            descricao: AppStrings.nenhumItemDica,
+            titulo: context.l10n.nenhumItem,
+            descricao: context.l10n.nenhumItemDica,
           );
         }
         final pendentes = itens.where((i) => !i.concluido && _casa(i)).toList();
@@ -851,10 +851,10 @@ class _ListaItens extends ConsumerWidget {
         if (filtrando && pendentes.isEmpty && concluidos.isEmpty) {
           return AppEstadoVazio(
             icone: Icons.search_off,
-            titulo: AppStrings.nenhumItemEncontrado,
-            descricao: AppStrings.buscaSemResultadoDica,
+            titulo: context.l10n.nenhumItemEncontrado,
+            descricao: context.l10n.buscaSemResultadoDica,
             acao: AppBotao(
-              rotulo: AppStrings.limparBusca,
+              rotulo: context.l10n.limparBusca,
               variante: AppBotaoVariante.texto,
               expandido: false,
               onPressed: onLimparBusca,
@@ -940,7 +940,7 @@ class _ListaItens extends ConsumerWidget {
               child: ExpansionTile(
                 tilePadding: AppSpacing.horizontal,
                 title: Text(
-                  '${AppStrings.itensConcluidos} (${concluidos.length})',
+                  '${context.l10n.itensConcluidos} (${concluidos.length})',
                 ),
                 children: [
                   for (final item in concluidos)
@@ -1017,7 +1017,7 @@ class _LinhaItem extends ConsumerWidget {
                 child: Icon(
                   Icons.drag_handle,
                   size: 24,
-                  semanticLabel: AppStrings.reordenar,
+                  semanticLabel: context.l10n.reordenar,
                 ),
               ),
             ),
@@ -1074,8 +1074,8 @@ class _LinhaItem extends ConsumerWidget {
     if (!context.mounted) return;
     mostrarSnackBar(
       context,
-      AppStrings.itemRemovido,
-      rotuloAcao: AppStrings.desfazer,
+      context.l10n.itemRemovido,
+      rotuloAcao: context.l10n.desfazer,
       onAcao: () => repo.restaurarItem(item.id),
     );
   }
@@ -1161,7 +1161,7 @@ class _DialogoOrcamentoState extends State<_DialogoOrcamento> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _erro = AppStrings.erroGenerico;
+          _erro = context.l10n.erroGenerico;
           _ocupado = false;
         });
       }
@@ -1177,27 +1177,27 @@ class _DialogoOrcamentoState extends State<_DialogoOrcamento> {
     try {
       lido = parsePrecoParaCentavos(_campo.text);
     } on ArgumentError {
-      setState(() => _erro = AppStrings.erroOrcamentoInvalido);
+      setState(() => _erro = context.l10n.erroOrcamentoInvalido);
       return;
     }
     if (lido == null) {
-      setState(() => _erro = AppStrings.erroOrcamentoInvalido);
+      setState(() => _erro = context.l10n.erroOrcamentoInvalido);
       return;
     }
     final centavos = lido;
     await _executar(
       () => widget.onSalvar(centavos),
-      AppStrings.orcamentoDefinido,
+      context.l10n.orcamentoDefinido,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text(AppStrings.orcamento),
+      title: Text(context.l10n.orcamento),
       content: AppCampoTexto(
         controller: _campo,
-        label: AppStrings.campoOrcamento,
+        label: context.l10n.campoOrcamento,
         erro: _erro,
         autofocus: true,
         teclado: const TextInputType.numberWithOptions(decimal: true),
@@ -1210,19 +1210,21 @@ class _DialogoOrcamentoState extends State<_DialogoOrcamento> {
           TextButton(
             onPressed: _ocupado
                 ? null
-                : () =>
-                      _executar(widget.onRemover, AppStrings.orcamentoRemovido),
+                : () => _executar(
+                    widget.onRemover,
+                    context.l10n.orcamentoRemovido,
+                  ),
             child: Text(
-              AppStrings.removerOrcamento,
+              context.l10n.removerOrcamento,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text(AppStrings.cancelar),
+          child: Text(context.l10n.cancelar),
         ),
         AppBotao(
-          rotulo: AppStrings.salvar,
+          rotulo: context.l10n.salvar,
           expandido: false,
           carregando: _ocupado,
           onPressed: _salvar,
@@ -1304,12 +1306,12 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
     if (atual != null && _unidade.valor == hist.unidade) {
       final diff = atual - hist.precoCentavos;
       if (diff == 0) {
-        variacao = AppStrings.mesmoPreco;
+        variacao = context.l10n.mesmoPreco;
       } else if (diff > 0) {
-        variacao = AppStrings.precoSubiu(formatarReais(diff));
+        variacao = context.l10n.precoSubiu(formatarReais(diff));
         corVariacao = Theme.of(context).colorScheme.error;
       } else {
-        variacao = AppStrings.precoBaixou(formatarReais(-diff));
+        variacao = context.l10n.precoBaixou(formatarReais(-diff));
         corVariacao = Theme.of(context).colorScheme.primary;
       }
     }
@@ -1321,7 +1323,10 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppStrings.ultimaCompra(formatarReais(hist.precoCentavos), diaMes),
+            context.l10n.ultimaCompra(
+              formatarReais(hist.precoCentavos),
+              diaMes,
+            ),
             style: estilo,
           ),
           if (variacao != null)
@@ -1346,14 +1351,14 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppStrings.porMercado,
+            context.l10n.porMercado,
             style: estilo?.copyWith(fontWeight: FontWeight.bold),
           ),
           for (final p in precos)
             Text(
               p.precoCentavos == menor
                   ? '${p.mercado}: ${formatarReais(p.precoCentavos)} '
-                        '(${AppStrings.maisBarato})'
+                        '(${context.l10n.maisBarato})'
                   : '${p.mercado}: ${formatarReais(p.precoCentavos)}',
               style: p.precoCentavos == menor
                   ? estilo?.copyWith(
@@ -1378,11 +1383,11 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
       precoValido = false;
     }
     setState(() {
-      _erroNome = nome.isEmpty ? AppStrings.erroNomeVazio : null;
+      _erroNome = nome.isEmpty ? context.l10n.erroNomeVazio : null;
       _erroQuantidade = quantidade == null
-          ? AppStrings.erroQuantidadeInvalida
+          ? context.l10n.erroQuantidadeInvalida
           : null;
-      _erroPreco = precoValido ? null : AppStrings.erroPrecoInvalido;
+      _erroPreco = precoValido ? null : context.l10n.erroPrecoInvalido;
     });
     if (nome.isEmpty || quantidade == null || !precoValido) return;
     await ref
@@ -1415,13 +1420,13 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            AppStrings.editarItem,
+            context.l10n.editarItem,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: AppSpacing.md),
           AppCampoTexto(
             controller: _nome,
-            label: AppStrings.nomeDoItem,
+            label: context.l10n.nomeDoItem,
             erro: _erroNome,
             onChanged: (_) => setState(() => _erroNome = null),
           ),
@@ -1433,7 +1438,7 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
                 child: Row(
                   children: [
                     IconButton(
-                      tooltip: AppStrings.diminuir,
+                      tooltip: context.l10n.diminuir,
                       icon: const Icon(Icons.remove_circle_outline),
                       onPressed: () {
                         final atual = _quantidadeLida() ?? 1;
@@ -1448,7 +1453,7 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
                     Expanded(
                       child: AppCampoTexto(
                         controller: _quantidade,
-                        label: AppStrings.quantidade,
+                        label: context.l10n.quantidade,
                         erro: _erroQuantidade,
                         teclado: TextInputType.text,
                         onChanged: (_) {
@@ -1459,7 +1464,7 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
                       ),
                     ),
                     IconButton(
-                      tooltip: AppStrings.aumentar,
+                      tooltip: context.l10n.aumentar,
                       icon: const Icon(Icons.add_circle_outline),
                       onPressed: () {
                         final atual = _quantidadeLida() ?? 1;
@@ -1475,7 +1480,7 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: AppDropdown<Unidade>(
-                  label: AppStrings.unidade,
+                  label: context.l10n.unidade,
                   expandido: true,
                   valor: _unidade,
                   itens: [
@@ -1495,7 +1500,7 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
             children: [
               Expanded(
                 child: AppDropdown<CategoriaItem>(
-                  label: AppStrings.categoria,
+                  label: context.l10n.categoria,
                   expandido: true,
                   valor: _categoria,
                   itens: [
@@ -1511,7 +1516,7 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
               Expanded(
                 child: AppCampoTexto(
                   controller: _preco,
-                  label: AppStrings.preco,
+                  label: context.l10n.preco,
                   erro: _erroPreco,
                   teclado: const TextInputType.numberWithOptions(decimal: true),
                   onChanged: (_) => setState(() => _erroPreco = null),
@@ -1543,7 +1548,7 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
                     unawaited(widget.onRemover!());
                   },
                   child: Text(
-                    AppStrings.removerItem,
+                    context.l10n.removerItem,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
                     ),
@@ -1556,10 +1561,10 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text(AppStrings.cancelar),
+                    child: Text(context.l10n.cancelar),
                   ),
                   AppBotao(
-                    rotulo: AppStrings.salvar,
+                    rotulo: context.l10n.salvar,
                     expandido: false,
                     onPressed: _salvar,
                   ),

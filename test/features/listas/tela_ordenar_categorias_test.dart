@@ -5,6 +5,8 @@ import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/features/listas/domain/ordem_categorias.dart';
 import 'package:lista_compras/features/listas/ui/tela_ordenar_categorias.dart';
+
+import '../../support/app_teste.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -14,7 +16,7 @@ void main() {
 
   Future<void> abrir(WidgetTester tester) async {
     await tester.pumpWidget(
-      const ProviderScope(child: MaterialApp(home: TelaOrdenarCategorias())),
+      ProviderScope(child: appTeste(const TelaOrdenarCategorias())),
     );
     await tester.pumpAndSettle();
   }

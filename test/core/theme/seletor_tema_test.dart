@@ -7,6 +7,8 @@ import 'package:lista_compras/core/theme/theme_mode_provider.dart';
 import 'package:lista_compras/core/widgets/app_dropdown.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../support/app_teste.dart';
+
 void main() {
   testWidgets('deve_definir_modo_escuro_quando_tocar_em_escuro', (
     tester,
@@ -18,7 +20,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: Scaffold(body: SeletorTema())),
+        child: appTeste(const Scaffold(body: SeletorTema())),
       ),
     );
     await tester.pumpAndSettle();
@@ -56,7 +58,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const MaterialApp(home: Scaffold(body: SeletorTema())),
+        child: appTeste(const Scaffold(body: SeletorTema())),
       ),
     );
     // Largura estreita (~320dp) e fonte dobrada: o cenário que estourava.
@@ -87,8 +89,8 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: MaterialApp(
-          home: Scaffold(
+        child: appTeste(
+          Scaffold(
             body: MediaQuery(
               data: const MediaQueryData(textScaler: TextScaler.linear(2)),
               child: const SeletorTema(),
@@ -117,8 +119,8 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: MaterialApp(
-          home: Scaffold(
+        child: appTeste(
+          Scaffold(
             body: MediaQuery(
               data: const MediaQueryData(textScaler: TextScaler.linear(2)),
               child: const SeletorTema(),

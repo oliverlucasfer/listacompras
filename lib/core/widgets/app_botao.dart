@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/l10n.dart';
 import '../theme/tokens/app_spacing.dart';
 
 /// Ações padronizadas (doc 15 §3). Cobre os botões preenchidos, tonais,
@@ -68,7 +68,7 @@ class AppBotao extends StatelessWidget {
             Semantics(
               container: true,
               liveRegion: true,
-              label: AppStrings.carregando,
+              label: context.l10n.carregando,
               child: const ExcludeSemantics(
                 child: SizedBox(
                   width: 18,

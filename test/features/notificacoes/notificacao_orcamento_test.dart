@@ -11,6 +11,8 @@ import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/tela_lista_screen.dart';
 import 'package:lista_compras/features/notificacoes/domain/notificacao_local.dart';
 import 'package:lista_compras/features/notificacoes/providers/notificacao_providers.dart';
+
+import '../../support/app_teste.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Notificação local ao cruzar o orçamento (RF-36, F53-T05). O plugin real
@@ -71,7 +73,7 @@ void main() {
           appDatabaseProvider.overrideWithValue(db),
           notificacaoLocalProvider.overrideWithValue(notificacao),
         ],
-        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+        child: appTeste(TelaListaScreen(listaId: lista.id)),
       ),
     );
     await tester.pumpAndSettle();

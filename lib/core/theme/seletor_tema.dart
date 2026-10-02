@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../l10n/app_strings.dart';
+import '../l10n/l10n.dart';
 import '../widgets/app_dropdown.dart';
 import 'theme_mode_provider.dart';
 
@@ -44,21 +44,21 @@ class SeletorTema extends ConsumerWidget {
             : larguraDisponivel;
         if (usarSeletorSegmentado(largura: largura, escalaTexto: escala)) {
           return SegmentedButton<ThemeMode>(
-            segments: const [
+            segments: [
               ButtonSegment(
                 value: ThemeMode.light,
-                label: Text(AppStrings.temaClaro),
-                icon: Icon(Icons.light_mode_outlined),
+                label: Text(context.l10n.temaClaro),
+                icon: const Icon(Icons.light_mode_outlined),
               ),
               ButtonSegment(
                 value: ThemeMode.system,
-                label: Text(AppStrings.temaSistema),
-                icon: Icon(Icons.brightness_auto_outlined),
+                label: Text(context.l10n.temaSistema),
+                icon: const Icon(Icons.brightness_auto_outlined),
               ),
               ButtonSegment(
                 value: ThemeMode.dark,
-                label: Text(AppStrings.temaEscuro),
-                icon: Icon(Icons.dark_mode_outlined),
+                label: Text(context.l10n.temaEscuro),
+                icon: const Icon(Icons.dark_mode_outlined),
               ),
             ],
             selected: {atual},
@@ -66,20 +66,20 @@ class SeletorTema extends ConsumerWidget {
           );
         }
         return AppDropdown<ThemeMode>(
-          label: AppStrings.aparencia,
+          label: context.l10n.aparencia,
           valor: atual,
-          itens: const [
+          itens: [
             DropdownMenuItem(
               value: ThemeMode.light,
-              child: Text(AppStrings.temaClaro),
+              child: Text(context.l10n.temaClaro),
             ),
             DropdownMenuItem(
               value: ThemeMode.system,
-              child: Text(AppStrings.temaSistema),
+              child: Text(context.l10n.temaSistema),
             ),
             DropdownMenuItem(
               value: ThemeMode.dark,
-              child: Text(AppStrings.temaEscuro),
+              child: Text(context.l10n.temaEscuro),
             ),
           ],
           onChanged: (modo) {

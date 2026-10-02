@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/dominio/categoria.dart';
-import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
@@ -22,8 +22,8 @@ class TelaOrcamentoCategorias extends ConsumerWidget {
     final limites = limitesAsync.value;
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          AppStrings.orcamentoPorCategoria,
+        title: Text(
+          context.l10n.orcamentoPorCategoria,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -83,7 +83,7 @@ class _LinhaLimiteCategoriaState extends ConsumerState<_LinhaLimiteCategoria> {
       try {
         centavos = parsePrecoParaCentavos(texto);
       } on ArgumentError {
-        setState(() => _erro = AppStrings.erroOrcamentoInvalido);
+        setState(() => _erro = context.l10n.erroOrcamentoInvalido);
         return;
       }
     }
@@ -107,7 +107,7 @@ class _LinhaLimiteCategoriaState extends ConsumerState<_LinhaLimiteCategoria> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _erro = AppStrings.erroGenerico;
+          _erro = context.l10n.erroGenerico;
           _ocupado = false;
         });
       }
@@ -118,7 +118,7 @@ class _LinhaLimiteCategoriaState extends ConsumerState<_LinhaLimiteCategoria> {
       _ocupado = false;
       if (centavos == null) _campo.clear();
     });
-    mostrarSnackBar(context, AppStrings.orcamentosSalvos);
+    mostrarSnackBar(context, context.l10n.orcamentosSalvos);
   }
 
   @override
@@ -142,8 +142,8 @@ class _LinhaLimiteCategoriaState extends ConsumerState<_LinhaLimiteCategoria> {
             const SizedBox(height: AppSpacing.md),
             AppCampoTexto(
               controller: _campo,
-              label: AppStrings.limitePorCategoria,
-              hint: AppStrings.categoriaSemLimite,
+              label: context.l10n.limitePorCategoria,
+              hint: context.l10n.categoriaSemLimite,
               erro: _erro,
               teclado: const TextInputType.numberWithOptions(decimal: true),
               onChanged: (_) {
@@ -158,11 +158,11 @@ class _LinhaLimiteCategoriaState extends ConsumerState<_LinhaLimiteCategoria> {
                 if (widget.inicialCentavos != null)
                   TextButton(
                     onPressed: _ocupado ? null : _limpar,
-                    child: const Text(AppStrings.limpar),
+                    child: Text(context.l10n.limpar),
                   ),
                 const SizedBox(width: AppSpacing.sm),
                 AppBotao(
-                  rotulo: AppStrings.salvar,
+                  rotulo: context.l10n.salvar,
                   expandido: false,
                   carregando: _ocupado,
                   onPressed: _salvar,

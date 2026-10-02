@@ -4,15 +4,17 @@ import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/core/theme/app_theme.dart';
 import 'package:lista_compras/core/widgets/app_esqueleto.dart';
 
+import '../../support/app_teste.dart';
+
 void main() {
   testWidgets('deve_exibir_linhas_estaticas_quando_renderizado', (
     tester,
   ) async {
     final handle = tester.ensureSemantics();
     await tester.pumpWidget(
-      MaterialApp(
+      appTeste(
+        const Scaffold(body: AppEsqueleto(linhas: 3)),
         theme: AppTheme.claro,
-        home: const Scaffold(body: AppEsqueleto(linhas: 3)),
       ),
     );
 
@@ -35,10 +37,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.claro,
-        home: const Scaffold(body: AppEsqueleto()),
-      ),
+      appTeste(const Scaffold(body: AppEsqueleto()), theme: AppTheme.claro),
     );
 
     final blocos = find.descendant(

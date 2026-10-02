@@ -21,3 +21,18 @@ Widget appTeste(
     home: home,
   );
 }
+
+/// Variante de [appTeste] para testes que usam `MaterialApp.router`.
+Widget appTesteRouter(
+  RouterConfig<Object> routerConfig, {
+  Locale locale = localePadraoTeste,
+  ThemeData? theme,
+}) {
+  return MaterialApp.router(
+    routerConfig: routerConfig,
+    locale: locale,
+    supportedLocales: AppLocalizations.supportedLocales,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    theme: theme,
+  );
+}

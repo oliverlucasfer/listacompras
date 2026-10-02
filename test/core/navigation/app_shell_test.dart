@@ -38,6 +38,7 @@ void main() {
         child: Consumer(
           builder: (context, ref, _) => MaterialApp.router(
             routerConfig: ref.watch(routerProvider),
+            locale: const Locale('pt', 'BR'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
           ),
@@ -92,7 +93,7 @@ void main() {
     await tester.tap(find.text('Minha lista'));
     await tester.pumpAndSettle();
     expect(find.byType(BackButton), findsOneWidget);
-    await tester.pageBack();
+    await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
     expect(find.text(AppStrings.abaMinhas), findsOneWidget);
 

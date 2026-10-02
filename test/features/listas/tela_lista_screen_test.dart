@@ -23,6 +23,8 @@ import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
 import 'package:lista_compras/features/listas/ui/tela_lista_screen.dart';
 import 'package:lista_compras/features/voz/domain/reconhecimento_voz.dart';
 import 'package:lista_compras/features/voz/providers/reconhecimento_voz_provider.dart';
+
+import '../../support/app_teste.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../voz/fake_reconhecimento_voz.dart';
@@ -52,7 +54,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],
-        child: MaterialApp(home: TelaListaScreen(listaId: listaId)),
+        child: appTeste(TelaListaScreen(listaId: listaId)),
       ),
     );
     await tester.pumpAndSettle();
@@ -132,7 +134,7 @@ void main() {
           if (reconhecimento != null)
             reconhecimentoVozProvider.overrideWithValue(reconhecimento),
         ],
-        child: MaterialApp(home: TelaListaScreen(listaId: id)),
+        child: appTeste(TelaListaScreen(listaId: id)),
       ),
     );
     await tester.pumpAndSettle();
@@ -840,7 +842,7 @@ void main() {
           appDatabaseProvider.overrideWithValue(db),
           listasRepositoryProvider.overrideWithValue(_RepoLimparFalha(db)),
         ],
-        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+        child: appTeste(TelaListaScreen(listaId: lista.id)),
       ),
     );
     await tester.pumpAndSettle();
@@ -882,7 +884,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],
-        child: MaterialApp.router(routerConfig: router),
+        child: appTesteRouter(router),
       ),
     );
     await tester.pumpAndSettle();
@@ -1011,7 +1013,7 @@ void main() {
           appDatabaseProvider.overrideWithValue(db),
           listasRepositoryProvider.overrideWithValue(_RepoReordenarFalha(db)),
         ],
-        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+        child: appTeste(TelaListaScreen(listaId: lista.id)),
       ),
     );
     await tester.pumpAndSettle();
@@ -1101,7 +1103,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [appDatabaseProvider.overrideWithValue(db)],
-          child: MaterialApp.router(routerConfig: router),
+          child: appTesteRouter(router),
         ),
       );
       await tester.pumpAndSettle();
@@ -1139,7 +1141,7 @@ void main() {
             AsyncValue.error(Exception('cache corrompido'), StackTrace.empty),
           ),
         ],
-        child: MaterialApp.router(routerConfig: router),
+        child: appTesteRouter(router),
       ),
     );
     await tester.pumpAndSettle();
@@ -1160,7 +1162,7 @@ void main() {
           appDatabaseProvider.overrideWithValue(db),
           itensDaListaProvider(lista.id).overrideWith((ref) => itens.stream),
         ],
-        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+        child: appTeste(TelaListaScreen(listaId: lista.id)),
       ),
     );
     await tester.pumpAndSettle();
@@ -1187,7 +1189,7 @@ void main() {
           appDatabaseProvider.overrideWithValue(db),
           itensDaListaProvider(lista.id).overrideWith((ref) => itens.stream),
         ],
-        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+        child: appTeste(TelaListaScreen(listaId: lista.id)),
       ),
     );
     await tester.pumpAndSettle();
@@ -1205,7 +1207,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],
-        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+        child: appTeste(TelaListaScreen(listaId: lista.id)),
       ),
     );
     await tester.pump();

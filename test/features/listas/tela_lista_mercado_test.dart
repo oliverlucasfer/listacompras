@@ -10,6 +10,8 @@ import 'package:lista_compras/features/listas/domain/preco.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/tela_lista_screen.dart';
 
+import '../../support/app_teste.dart';
+
 void main() {
   late AppDatabase db;
   late ListasRepository listas;
@@ -40,7 +42,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],
-        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+        child: appTeste(TelaListaScreen(listaId: lista.id)),
       ),
     );
     await tester.pumpAndSettle();
@@ -88,7 +90,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],
-        child: MaterialApp(home: TelaListaScreen(listaId: lista.id)),
+        child: appTeste(TelaListaScreen(listaId: lista.id)),
       ),
     );
     await tester.pumpAndSettle();
