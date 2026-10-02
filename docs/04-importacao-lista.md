@@ -25,9 +25,9 @@ Fluxo de UX completo (modal, pré-visualização, confirmação) está em [05 §
 
 - **Entrada:** texto livre em português, até **10.000 caracteres** (`maxCaracteresImportLocal`).
 - **Saída:** `RespostaParse { itens: List<ItemExtraido>, aviso: String? }`.
-- **Erro:** quando nenhum item é reconhecido, `ErroImportacao` com mensagem amigável (`AppStrings.importRespostaInvalida`); a UI nunca vê exceção crua.
+- **Erro:** quando nenhum item é reconhecido, o parser devolve **`ErroImportacao` tipado** e a UI traduz a mensagem amigável (`context.l10n.importRespostaInvalida`); a UI nunca vê exceção crua. Camadas não-UI não localizam texto ([05 §6.18](05-app-flutter.md)).
 - **Rede:** nenhuma. Não há chamada HTTP, Edge Function, API key ou rate limit.
-- **`aviso`:** preenchido quando algum item entra com quantidade padrão (`AppStrings.importLocalAvisoPadrao`).
+- **`aviso`:** preenchido quando algum item entra com quantidade padrão (`context.l10n.importLocalAvisoPadrao`).
 
 > **Reuso no compartilhamento (RF-33, F49):** o formato **texto** do "Compartilhar lista" (envio) é exatamente uma linha por item (`"<quantidade> <unidade> <nome>"`), **sem título e sem preço** — o mesmo contrato deste parser. Por isso uma lista compartilhada como texto pode ser colada tanto no "Importar lista" (RF-16, [05 §6.4](05-app-flutter.md)) quanto no "Receber lista" (RF-33, [05 §6.12](05-app-flutter.md)), que reusa `analisarListaLocal` e a sugestão de categoria. Detalhes do compartilhamento em [05 §6.12](05-app-flutter.md).
 

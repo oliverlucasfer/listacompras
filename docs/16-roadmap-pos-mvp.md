@@ -59,7 +59,7 @@ Foco: confiabilidade e preparação para publicação séria.
 | ID | Frente | Requisito | Doc dono | Valor | Esforço | Notas |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | D1 | iOS na distribuição | Fase 6 | 06, 09 | Alto | G | Depende de conta Apple Developer |
-| D2 | i18n (en/es) | novo | 05, 15 | Médio | G | Infra de localização; hoje pt-BR único |
+| D2 | i18n (pt/en/es) | RF-39 | 05, 09, 10, 15 | Médio | G | concluído (F56-T01…T06) — gen_l10n (ARB, pt/en/es), `context.l10n` e seletor persistido; formatação de número/data/moeda continua pt-BR |
 | D3 | Widget Android / quick-add na tela inicial | RF-38 | 05, 09, 10, 12, 15 | Médio | G | concluído (F55-T01…T05, frente A13) — AppWidget de tela inicial com a última lista, nº de pendentes e botão "Adicionar item" que abre `/adicionar` (Android-only, offline) |
 | D5 | Publicação do app na Play (produção) | RF-32 | 06, 09 | Alto | M | em execução (F47) — gate F5-T06 (prod) permanece separado |
 

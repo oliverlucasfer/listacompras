@@ -1185,6 +1185,31 @@ Spec: [superpowers/specs/2026-09-30-widget-android-design.md](superpowers/specs/
 
 Nota: *(100% offline e Android-only: o widget é nativo do Android e os dados (título + pendentes) são locais — sem permissão nova e sem `INTERNET`; a atualização é best-effort. A falha pré-existente do R8/MLKit no release é a dívida **L-10** (F54), fora do escopo da F55.)*
 
+## Fase 56 — i18n pt/en/es (RF-39)
+
+Spec: [superpowers/specs/2026-09-30-i18n-design.md](superpowers/specs/2026-09-30-i18n-design.md) · Plano: [superpowers/plans/2026-09-30-i18n-fase56.md](superpowers/plans/2026-09-30-i18n-fase56.md) · Requisito: RF-39 (localização pt-BR/en/es + seletor de idioma persistido). · Docs donos: 04, 05, 09, 10, 12, 14, 15, 16.
+
+- [x] **F56-T01** — Infraestrutura de i18n + ARB + seletor
+  Dep: F55-T05 · Docs: [05 §6.18](05-app-flutter.md), [12 §2](12-prd.md), [15 §2](15-design-system.md)
+  CP: `l10n.yaml` + `lib/l10n/app_{pt,en,es}.arb` (322 chaves cada; `pt` template/fallback) + saída gerada; extensão `context.l10n`; `idiomaProvider` (enum `IdiomaApp`, chave `idioma_app`) + `SeletorIdioma`; `app.dart` com delegados/`supportedLocales`/`locale`; testes-guarda en/es verdes; `dart format .`, `flutter analyze` e `flutter test` verdes.
+- [x] **F56-T02** — Camadas não-UI + harness de teste
+  Dep: F56-T01 · Docs: [05 §2.1/§6.18](05-app-flutter.md)
+  CP: parser/utilitários/roteiro/identidade sem `AppStrings` (erros tipados + dados); `test/support/app_teste.dart` com os delegados (pt-BR padrão); suíte verde.
+- [x] **F56-T03** — Migrar UI — núcleo e listas
+  Dep: F56-T02 · Docs: [05 §6.2/§6.3/§6.5](05-app-flutter.md)
+  CP: telas/widgets do núcleo e das listas em `context.l10n` (remover `const` onde o analisador exigir); asserts em pt-BR; suíte verde.
+- [x] **F56-T04** — Migrar UI — histórico, importação, compartilhamento e backup
+  Dep: F56-T03 · Docs: [05 §6.4/§6.12/§6.13](05-app-flutter.md)
+  CP: telas dessas features em `context.l10n`; suíte verde.
+- [x] **F56-T05** — Migrar telas finais, widget nativo e remover `AppStrings`
+  Dep: F56-T04 · Docs: [05 §6.18](05-app-flutter.md), [09 §2.15](09-runbook-operacoes.md)
+  CP: configurações/onboarding/tour em `context.l10n`; `values-en`/`values-es` do widget; `AppStrings`/`politica_privacidade.dart` removidos (busca em `lib/` retorna zero); `flutter build apk --debug` OK; suíte verde.
+- [x] **F56-T06** — Docs donos e fechamento
+  Dep: F56-T05 · Docs: 04, 05, 09, 10, 12, 14, 15, 16
+  CP: RF-39 no PRD (tabela, matriz e fora de escopo); §6.18 no 05 + árvore/nota de que `AppStrings` deixou de existir; seção **Idioma** no 10 e no 15; strings nativas do widget no 09 §2.15; frente D2 concluída no 16; Fase 56 na tabela de progresso (304/302); `dart format .`, `flutter analyze` e `flutter test` verdes (615/615); sem tocar código.
+
+Nota: *(100% local e sem dependência nova (`flutter_localizations`/`intl` já no `pubspec`); `pt` é template e fallback; a **formatação** de número/data/moeda permanece pt-BR; camadas não-UI não localizam texto. O widget Android usa recursos nativos `values-en`/`values-es` e segue o idioma do **sistema**.)*
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -1242,7 +1267,8 @@ Nota: *(100% offline e Android-only: o widget é nativo do Android e os dados (t
 | F53 Alertas de orçamento | 6 | 6 |
 | F54 Importar por foto (OCR) | 3 | 3 |
 | F55 Widget Android / quick-add | 5 | 5 |
-| **Total** | **298** | **296** |
+| F56 i18n pt/en/es | 6 | 6 |
+| **Total** | **304** | **302** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

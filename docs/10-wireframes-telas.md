@@ -342,6 +342,9 @@ Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstad
 ├─────────────────────────────────┤
 │  Aparência                      │
 │  [ Claro | Sistema | Escuro ]   │ ← tema manual (doc 15)
+│  Idioma                         │
+│  [ Sistema | Português |        │ ← seletor de idioma (RF-39, F56)
+│    English | Español ]          │   (dropdown em tela estreita)
 │  Ordenar categorias      (→)    │ ← corredores; arrastar-e-soltar (RF-24)
 │  Orçamento por categoria (→)    │ ← limites em R$ por categoria (RF-36)
 │                                 │
@@ -355,7 +358,9 @@ Se a extração não reconhecer nada (0 itens), a lista dá lugar a um `AppEstad
 └─────────────────────────────────┘
 ```
 
-**Tour (RF-27/F46):** a seção "Sobre" tem o item **"Ver tutorial"** (`AppStrings.tourAbrir`, ícone `school_outlined`): tocar reabre o tour ignorando as flags — **navega para a home de listas** e inicia a etapa 1 lá (os alvos montam no próximo frame). A etapa 2 segue o fluxo normal: volta a disparar sozinha ao abrir uma lista com itens pendentes, **enquanto a flag dela ainda for falsa** ([05 §6.11](05-app-flutter.md)).
+**Idioma (RF-39/F56):** a seção **"Idioma"** exibe o `SeletorIdioma` (Sistema/Português/English/Español) logo abaixo de **Aparência**; a escolha é persistida (`idioma_app`) e aplicada na hora, sem reiniciar ([05 §6.7/§6.18](05-app-flutter.md), [15 §2](15-design-system.md)).
+
+**Tour (RF-27/F46):** a seção "Sobre" tem o item **"Ver tutorial"** (`context.l10n.tourAbrir`, ícone `school_outlined`): tocar reabre o tour ignorando as flags — **navega para a home de listas** e inicia a etapa 1 lá (os alvos montam no próximo frame). A etapa 2 segue o fluxo normal: volta a disparar sozinha ao abrir uma lista com itens pendentes, **enquanto a flag dela ainda for falsa** ([05 §6.11](05-app-flutter.md)).
 
 ### 5.1. Tela "Ordenar categorias" (RF-24, F28)
 ```
