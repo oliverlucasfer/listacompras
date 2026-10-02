@@ -74,6 +74,10 @@ class TourController extends Notifier<TourEstado> {
   /// sozinho não basta — no `IndexedStack` do shell as abas ocultas continuam
   /// montadas (offstage) e o spotlight apontaria para um widget invisível.
   bool iniciar(TourEtapa etapa) {
+    // Não clobber: uma etapa em andamento tem prioridade. Sem esta guarda, um
+    // loader de outra etapa (ex.: aba Histórico tocada no meio da etapa 1)
+    // substituiria o estado e a flag da etapa original nunca seria marcada.
+    if (state.ativo) return false;
     final lista = _passosDe(etapa).where((p) => _alvoVisivel(p.alvo)).toList();
     if (lista.isEmpty) return false;
     state = TourEstado(ativo: true, passos: lista, indice: 0, etapa: etapa);

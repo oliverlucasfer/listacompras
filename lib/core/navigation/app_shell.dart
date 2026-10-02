@@ -31,8 +31,8 @@ class AppShell extends ConsumerWidget {
     // Aba Configurações é o alvo do passo "Configurações e backup" (F46).
     final indiceConfig = rotulos.length - 1;
     GlobalKey? chaveAba(int i) => switch (i) {
-      1 => TourKeys.abaHistorico,
       _ when i == indiceConfig => TourKeys.abaConfiguracoes,
+      1 => TourKeys.abaHistorico,
       _ => null,
     };
     final largura = MediaQuery.sizeOf(context).width;

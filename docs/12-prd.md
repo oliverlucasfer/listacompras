@@ -37,7 +37,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | RF-24 | Ordem pessoal das categorias (global, local por dispositivo) | 05 §6 + 10 §5 | F28 | [05 §8](05-app-flutter.md) |
 | RF-25 | Quantidades em fração na entrada e exibição (½, 1/2, 1 1/2) | 04 §3 + 05 §6.3 | F29 | [05 §8](05-app-flutter.md) |
 | RF-26 | Adicionar item por voz (reconhecimento on-device, pt-BR, preenche o campo) | 05 §6.3 | F30 | [05 §8](05-app-flutter.md) |
-| RF-27 | Boas-vindas (uma vez) + estados vazios explicativos + **tour guiado interativo do primeiro uso (3 etapas: home, lista e Histórico)** (spotlight sobre a UI real, reabrível em Configurações) | 05 §6.8/§6.11 + 10 §2/§3/§5 | F31 · F46 · F57 | [05 §8](05-app-flutter.md) |
+| RF-27 | Boas-vindas (uma vez) + estados vazios explicativos + **tour guiado interativo do primeiro uso (3 etapas: home, lista e Histórico)** (spotlight sobre a UI real, reabrível em Configurações) | 05 §6.8/§6.11 + 10 §2/§3/§5/§8 | F31 · F46 · F57 | [05 §8](05-app-flutter.md) |
 | RF-28 | Orçamento (limite de gasto) por lista, comparado ao total do carrinho (RF-21), editável | 05 §6.3/§6.5 + 10 §3.1/§3.3 | F36 | [05 §8](05-app-flutter.md) |
 | RF-29 | Comparação de preços entre idas: "Última compra: R$ X (dd/mm)" + variação no editor, a partir do histórico **local por dispositivo** | 05 §6.3 + 10 §3.1 | F37 | [05 §8](05-app-flutter.md) |
 | RF-31 | **App único local "Minhas Listas" (Lite):** uso sem conta, 100% no aparelho (sem login, sem convites, sem sincronização, sem notificações push/remotas — a notificação **local** de orçamento é RF-36), com backup local exportar/importar; identidade visual própria (índigo/cesta, nome "Minhas Listas") | 05 §2.3 + 05 §6.10 | F48 | [05 §2.3](05-app-flutter.md) |

@@ -495,8 +495,6 @@ Comportamento em [05 §6.13](05-app-flutter.md). A aba **Histórico** fica no sh
 │  21/09/2026 · 3 itens   R$ 44,10│
 └─────────────────────────────────┘
 ```
-**Tour — etapa 3 (RF-27/F57):** dispara ao **abrir a aba Histórico** (sem navegação forçada), uma vez, se `tour_etapa3_visto` ainda for falsa — roda mesmo com histórico vazio (`_Resumo` e o `TabBar` sempre montam). O 1º passo aponta o **resumo** (`TourKeys.resumoHistorico`) e o 2º a aba **Estatísticas** (`TourKeys.abaEstatisticas`). Detalhes em [05 §6.11](05-app-flutter.md).
-
 ### 8.2. Aba "Histórico" (vazio)
 ```
 ┌─────────────────────────────────┐
@@ -514,6 +512,8 @@ Comportamento em [05 §6.13](05-app-flutter.md). A aba **Histórico** fica no sh
 └─────────────────────────────────┘
 ```
 Sem idas, o resumo mostra "—" (sem valor) e o vazio orienta como registrar a primeira ida.
+
+**Tour — etapa 3 (RF-27/F57):** dispara ao **abrir a aba Histórico** (sem navegação forçada), uma vez, se `tour_etapa3_visto` ainda for falsa — roda mesmo com histórico vazio (`_Resumo` e o `TabBar` sempre montam). O 1º passo aponta o **resumo** (`TourKeys.resumoHistorico`) e o 2º a aba **Estatísticas** (`TourKeys.abaEstatisticas`). Detalhes em [05 §6.11](05-app-flutter.md).
 
 ### 8.3. Detalhe da ida (`/historico/ida/:idaId`)
 ```

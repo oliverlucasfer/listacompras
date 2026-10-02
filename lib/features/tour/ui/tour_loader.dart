@@ -41,6 +41,9 @@ class _TourLoaderState extends ConsumerState<TourLoader> {
       if (ref.read(tourControllerProvider.notifier).iniciar(widget.etapa)) {
         return;
       }
+      // Outra etapa já está ativa: não insiste (evita timers pendentes e
+      // concorrência entre loaders). Esta etapa retoma quando a tela remontar.
+      if (ref.read(tourControllerProvider).ativo) return;
       await Future<void>.delayed(const Duration(milliseconds: 100));
     }
   }

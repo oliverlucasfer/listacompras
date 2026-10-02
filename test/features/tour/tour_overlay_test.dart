@@ -5,6 +5,7 @@ import 'package:lista_compras/core/theme/app_theme.dart';
 import 'package:lista_compras/features/tour/tour_controller.dart';
 import 'package:lista_compras/features/tour/tour_keys.dart';
 import 'package:lista_compras/features/tour/ui/tour_overlay.dart';
+import 'package:lista_compras/l10n/app_localizations_pt.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../support/app_teste.dart';
@@ -53,6 +54,35 @@ Future<void> _montar(WidgetTester tester) async {
 Future<void> _avancarParaUltimo(WidgetTester tester) async {
   await tester.tap(find.text('Próximo'));
   await tester.pumpAndSettle();
+}
+
+/// Monta apenas os [alvos] indicados (cada um visível) e o overlay por cima,
+/// sem iniciar nenhuma etapa — cada teste escolhe qual etapa iniciar.
+Future<void> _montarAlvos(WidgetTester tester, List<GlobalKey> alvos) async {
+  SharedPreferences.setMockInitialValues({});
+  _container = ProviderContainer();
+  addTearDown(_container.dispose);
+  await tester.pumpWidget(
+    UncontrolledProviderScope(
+      container: _container,
+      child: appTeste(
+        Scaffold(
+          body: Stack(
+            children: [
+              for (var i = 0; i < alvos.length; i++)
+                Positioned(
+                  left: 24,
+                  top: 48 + i * 80,
+                  child: SizedBox(key: alvos[i], width: 120, height: 48),
+                ),
+              const Positioned.fill(child: TourOverlay()),
+            ],
+          ),
+        ),
+        theme: AppTheme.claro,
+      ),
+    ),
+  );
 }
 
 void main() {
@@ -189,5 +219,75 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('Criar sua primeira lista'), findsOneWidget);
+  });
+
+  testWidgets('deve_manter_etapa_ativa_quando_outra_etapa_tenta_iniciar', (
+    tester,
+  ) async {
+    await _montarAlvos(tester, [TourKeys.novaLista, TourKeys.resumoHistorico]);
+
+    final controlador = _container.read(tourControllerProvider.notifier);
+    expect(controlador.iniciar(TourEtapa.primeira), isTrue);
+    await tester.pump();
+
+    expect(controlador.iniciar(TourEtapa.historico), isFalse);
+    await tester.pump();
+
+    final estado = _container.read(tourControllerProvider);
+    expect(estado.ativo, isTrue);
+    expect(estado.etapa, TourEtapa.primeira);
+    expect(estado.passos.single.id, 'lista.criar');
+  });
+
+  testWidgets('deve_mostrar_texto_do_menu_quando_passo_menu', (tester) async {
+    await _montarAlvos(tester, [TourKeys.menuMais]);
+
+    final controlador = _container.read(tourControllerProvider.notifier);
+    expect(controlador.iniciar(TourEtapa.recursos), isTrue);
+    await tester.pumpAndSettle();
+
+    final pt = AppLocalizationsPt();
+    expect(find.text(pt.tourMenuTitulo), findsOneWidget);
+    expect(find.text(pt.tourMenuCorpo), findsOneWidget);
+    expect(pt.tourMenuCorpo.contains('compartilhar'), isTrue);
+    expect(pt.tourMenuCorpo.contains('finalizar'), isTrue);
+  });
+
+  testWidgets('deve_nao_estourar_com_escala_2x_nas_novas_strings', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+    await _montarAlvos(tester, [
+      TourKeys.menuMais,
+      TourKeys.resumoHistorico,
+      TourKeys.abaEstatisticas,
+    ]);
+
+    final controlador = _container.read(tourControllerProvider.notifier);
+    final pt = AppLocalizationsPt();
+
+    expect(controlador.iniciar(TourEtapa.recursos), isTrue);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text(pt.tourMenuTitulo), findsOneWidget);
+
+    await controlador.pular();
+    await tester.pumpAndSettle();
+
+    expect(controlador.iniciar(TourEtapa.historico), isTrue);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text(pt.tourResumoTitulo), findsOneWidget);
+
+    await controlador.proximo();
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text(pt.tourEstatisticasTitulo), findsOneWidget);
   });
 }
