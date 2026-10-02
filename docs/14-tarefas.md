@@ -1191,7 +1191,7 @@ Spec: [superpowers/specs/2026-09-30-i18n-design.md](superpowers/specs/2026-09-30
 
 - [x] **F56-T01** — Infraestrutura de i18n + ARB + seletor
   Dep: F55-T05 · Docs: [05 §6.18](05-app-flutter.md), [12 §2](12-prd.md), [15 §2](15-design-system.md)
-  CP: `l10n.yaml` + `lib/l10n/app_{pt,en,es}.arb` (322 chaves cada; `pt` template/fallback) + saída gerada; extensão `context.l10n`; `idiomaProvider` (enum `IdiomaApp`, chave `idioma_app`) + `SeletorIdioma`; `app.dart` com delegados/`supportedLocales`/`locale`; testes-guarda en/es verdes; `dart format .`, `flutter analyze` e `flutter test` verdes.
+  CP: `l10n.yaml` + `lib/l10n/app_{pt,en,es}.arb` (253 chaves cada; `pt` template/fallback) + saída gerada; extensão `context.l10n`; `idiomaProvider` (enum `IdiomaApp`, chave `idioma_app`) + `SeletorIdioma`; `app.dart` com delegados/`supportedLocales`/`locale`; testes-guarda en/es verdes; `dart format .`, `flutter analyze` e `flutter test` verdes.
 - [x] **F56-T02** — Camadas não-UI + harness de teste
   Dep: F56-T01 · Docs: [05 §2.1/§6.18](05-app-flutter.md)
   CP: parser/utilitários/roteiro/identidade sem `AppStrings` (erros tipados + dados); `test/support/app_teste.dart` com os delegados (pt-BR padrão); suíte verde.

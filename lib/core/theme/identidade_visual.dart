@@ -4,7 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'tokens/app_colors.dart';
 
 /// Nome de marca do app (branding/nativo), independente da UI localizada
-/// (RF-39, F56). O título visível da UI usa `context.l10n.appNome`.
+/// (RF-39, F56). Alimenta o `title` do `MaterialApp`; a chave ARB `appNome`
+/// existe mas não é usada pela UI.
 const _nomeAppMarca = 'Minhas Listas';
 
 /// Identidade visual (marca) do app local "Minhas Listas" (doc 15 §6).

@@ -65,6 +65,7 @@ void main() {
     await abrir(tester);
 
     expect(find.text('Aparência'), findsOneWidget);
+    expect(find.text('Idioma'), findsOneWidget);
     expect(find.text('Sobre'), findsOneWidget);
     expect(find.text('Política de Privacidade'), findsOneWidget);
     expect(find.text('Versão'), findsOneWidget);
