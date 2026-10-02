@@ -20,10 +20,15 @@ class ItemExtraido {
   final CategoriaItem categoria;
 }
 
+/// Marcador neutro de aviso da extração local (ex.: quantidade padrão). A
+/// camada não-UI não embute texto localizado (RF-39, F56): a UI traduz via
+/// `context.l10n`.
+enum AvisoImportacao { quantidadePadrao }
+
 /// Resultado da extração: itens + aviso opcional (ex.: quantidade padrão).
 class RespostaParse {
   const RespostaParse({required this.itens, required this.aviso});
 
   final List<ItemExtraido> itens;
-  final String? aviso;
+  final AvisoImportacao? aviso;
 }

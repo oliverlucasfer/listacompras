@@ -1,4 +1,3 @@
-import '../../../core/l10n/app_strings.dart';
 import 'lista.dart';
 
 /// Lista com contagem de itens para o card do painel (wireframe 10 §2.1:
@@ -16,6 +15,4 @@ class ListaComContagem {
 
   /// Orçamento da lista em centavos (RF-28, F36); `null` = sem orçamento.
   int? get orcamentoCentavos => lista.orcamentoCentavos;
-
-  String get contagem => AppStrings.progressoLista(concluidos, totalItens);
 }

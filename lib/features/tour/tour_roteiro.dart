@@ -1,28 +1,30 @@
-import '../../core/l10n/app_strings.dart';
 import 'tour_keys.dart';
 import 'tour_step.dart';
 
 /// Roteiro da etapa 1 (primeiro contato, na home de listas): criar lista,
 /// busca/filtros e configurações. Os demais recursos dependem da tela da lista
 /// e vivem na etapa 2.
+///
+/// O roteiro guarda ids/alvos e funções de tradução — o texto localizado é
+/// resolvido na UI (`context.l10n`), nunca embutido aqui (RF-39, F56).
 List<TourStep> get passosEtapa1 => <TourStep>[
   TourStep(
     id: 'lista.criar',
     alvo: TourKeys.novaLista,
-    titulo: AppStrings.tourNovaListaTitulo,
-    corpo: AppStrings.tourNovaListaCorpo,
+    titulo: (l) => l.tourNovaListaTitulo,
+    corpo: (l) => l.tourNovaListaCorpo,
   ),
   TourStep(
     id: 'lista.busca',
     alvo: TourKeys.lupa,
-    titulo: AppStrings.tourBuscaTitulo,
-    corpo: AppStrings.tourBuscaCorpo,
+    titulo: (l) => l.tourBuscaTitulo,
+    corpo: (l) => l.tourBuscaCorpo,
   ),
   TourStep(
     id: 'lista.config',
     alvo: TourKeys.abaConfiguracoes,
-    titulo: AppStrings.tourConfigTitulo,
-    corpo: AppStrings.tourConfigCorpo,
+    titulo: (l) => l.tourConfigTitulo,
+    corpo: (l) => l.tourConfigCorpo,
   ),
 ];
 
@@ -32,43 +34,43 @@ List<TourStep> get passosEtapa2 => <TourStep>[
   TourStep(
     id: 'recursos.nome',
     alvo: TourKeys.nomeLista,
-    titulo: AppStrings.tourNomeTitulo,
-    corpo: AppStrings.tourNomeCorpo,
+    titulo: (l) => l.tourNomeTitulo,
+    corpo: (l) => l.tourNomeCorpo,
   ),
   TourStep(
     id: 'recursos.adicionar',
     alvo: TourKeys.campoAdicionar,
-    titulo: AppStrings.tourAdicionarTitulo,
-    corpo: AppStrings.tourAdicionarCorpo,
+    titulo: (l) => l.tourAdicionarTitulo,
+    corpo: (l) => l.tourAdicionarCorpo,
   ),
   TourStep(
     id: 'recursos.unidade',
     alvo: TourKeys.seletorUnidade,
-    titulo: AppStrings.tourUnidadeTitulo,
-    corpo: AppStrings.tourUnidadeCorpo,
+    titulo: (l) => l.tourUnidadeTitulo,
+    corpo: (l) => l.tourUnidadeCorpo,
   ),
   TourStep(
     id: 'recursos.importar',
     alvo: TourKeys.botaoImportar,
-    titulo: AppStrings.tourImportarTitulo,
-    corpo: AppStrings.tourImportarCorpo,
+    titulo: (l) => l.tourImportarTitulo,
+    corpo: (l) => l.tourImportarCorpo,
   ),
   TourStep(
     id: 'recursos.marcar',
     alvo: TourKeys.itemLista,
-    titulo: AppStrings.tourMarcarTitulo,
-    corpo: AppStrings.tourMarcarCorpo,
+    titulo: (l) => l.tourMarcarTitulo,
+    corpo: (l) => l.tourMarcarCorpo,
   ),
   TourStep(
     id: 'recursos.mercado',
     alvo: TourKeys.botaoMercado,
-    titulo: AppStrings.tourMercadoTitulo,
-    corpo: AppStrings.tourMercadoCorpo,
+    titulo: (l) => l.tourMercadoTitulo,
+    corpo: (l) => l.tourMercadoCorpo,
   ),
   TourStep(
     id: 'recursos.orcamento',
     alvo: TourKeys.menuMais,
-    titulo: AppStrings.tourOrcamentoTitulo,
-    corpo: AppStrings.tourOrcamentoCorpo,
+    titulo: (l) => l.tourOrcamentoTitulo,
+    corpo: (l) => l.tourOrcamentoCorpo,
   ),
 ];

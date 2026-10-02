@@ -87,7 +87,6 @@ void main() {
     expect(contagens, hasLength(1));
     expect(contagens.single.totalItens, 2);
     expect(contagens.single.concluidos, 1);
-    expect(contagens.single.contagem, '1/2 itens concluídos');
   });
 
   test('deve_expor_orcamento_quando_watch_listas_com_contagem', () async {

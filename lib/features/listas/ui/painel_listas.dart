@@ -22,6 +22,18 @@ import '../domain/lista_com_contagem.dart';
 import '../providers/listas_providers.dart';
 import 'sheet_titulo_lista.dart';
 
+/// Formata o tempo relativo na borda de UI (RF-39, F56): a camada de domínio
+/// devolve apenas [TempoRelativo]; o texto fica aqui.
+String _textoTempoRelativo(TempoRelativo tempo) => switch (tempo.tipo) {
+  TempoRelativoTipo.agora => AppStrings.tempoAgora,
+  TempoRelativoTipo.minutos => AppStrings.tempoMinutos(tempo.valor),
+  TempoRelativoTipo.horas => AppStrings.tempoHoras(tempo.valor),
+  TempoRelativoTipo.ontem => AppStrings.tempoOntem,
+  TempoRelativoTipo.dias => AppStrings.tempoDias(tempo.valor),
+  TempoRelativoTipo.meses => AppStrings.tempoMeses(tempo.valor),
+  TempoRelativoTipo.anos => AppStrings.tempoAnos(tempo.valor),
+};
+
 /// Painel "Minhas Listas" (doc 05 §6.2, F10): todas as listas do aparelho.
 class PainelListas extends ConsumerStatefulWidget {
   const PainelListas({super.key});
@@ -214,9 +226,14 @@ class _CardListaState extends ConsumerState<_CardLista> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(widget.contagem.contagem),
               Text(
-                '${AppStrings.atualizada} ${tempoRelativo(lista.atualizadoEm, agora: DateTime.now())}',
+                AppStrings.progressoLista(
+                  widget.contagem.concluidos,
+                  widget.contagem.totalItens,
+                ),
+              ),
+              Text(
+                '${AppStrings.atualizada} ${_textoTempoRelativo(tempoRelativo(lista.atualizadoEm, agora: DateTime.now()))}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               if (lista.arquivadaEm != null)

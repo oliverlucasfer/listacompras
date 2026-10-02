@@ -124,7 +124,10 @@ class _ModalPrevisaoImportacaoState extends State<ModalPrevisaoImportacao> {
                       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                       child: AppBanner(
                         tipo: AppBannerTipo.aviso,
-                        mensagem: widget.resposta.aviso!,
+                        mensagem: switch (widget.resposta.aviso!) {
+                          AvisoImportacao.quantidadePadrao =>
+                            AppStrings.importLocalAvisoPadrao,
+                        },
                       ),
                     ),
                   Flexible(

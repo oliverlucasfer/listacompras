@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_elevation.dart';
 import '../../../core/theme/tokens/app_motion.dart';
 import '../../../core/theme/tokens/app_radius.dart';
@@ -336,13 +337,18 @@ class _Bolha extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: Text(passo.titulo, style: texto.titleMedium)),
+                  Expanded(
+                    child: Text(
+                      passo.titulo(context.l10n),
+                      style: texto.titleMedium,
+                    ),
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Text('$numero/$total', style: texto.labelMedium),
                 ],
               ),
               const SizedBox(height: AppSpacing.sm),
-              Text(passo.corpo, style: texto.bodyMedium),
+              Text(passo.corpo(context.l10n), style: texto.bodyMedium),
               const SizedBox(height: AppSpacing.lg),
               Wrap(
                 spacing: AppSpacing.sm,

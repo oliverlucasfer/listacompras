@@ -25,6 +25,7 @@ Widget _app(ProviderContainer container, Widget home) =>
       container: container,
       child: MaterialApp(
         home: home,
+        locale: const Locale('pt', 'BR'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) => Stack(
@@ -42,6 +43,7 @@ Widget _appRouter(ProviderContainer container, GoRouter router) =>
       container: container,
       child: MaterialApp.router(
         routerConfig: router,
+        locale: const Locale('pt', 'BR'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) => Stack(

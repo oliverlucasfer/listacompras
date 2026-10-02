@@ -8,6 +8,8 @@ import 'package:lista_compras/features/tour/tour_keys.dart';
 import 'package:lista_compras/features/tour/ui/tour_overlay.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../support/app_teste.dart';
+
 late ProviderContainer _container;
 
 /// Monta dois alvos elegíveis (passos 1 e 2 da etapa 1) e o overlay por cima,
@@ -19,9 +21,8 @@ Future<void> _montar(WidgetTester tester) async {
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: _container,
-      child: MaterialApp(
-        theme: AppTheme.claro,
-        home: Scaffold(
+      child: appTeste(
+        Scaffold(
           body: Stack(
             children: [
               Positioned(
@@ -42,6 +43,7 @@ Future<void> _montar(WidgetTester tester) async {
             ],
           ),
         ),
+        theme: AppTheme.claro,
       ),
     ),
   );

@@ -1,4 +1,3 @@
-import '../../core/l10n/app_strings.dart';
 import '../dominio/quantidade.dart';
 import '../dominio/unidade.dart';
 import '../texto/normalizar.dart';
@@ -69,7 +68,7 @@ RespostaParse analisarListaLocal(String texto) {
   }
   return RespostaParse(
     itens: itens,
-    aviso: algumSemNumero ? AppStrings.importLocalAvisoPadrao : null,
+    aviso: algumSemNumero ? AvisoImportacao.quantidadePadrao : null,
   );
 }
 

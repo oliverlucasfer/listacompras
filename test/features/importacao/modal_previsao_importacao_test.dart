@@ -101,7 +101,7 @@ void main() {
       tester,
       RespostaParse(
         itens: resposta4.itens,
-        aviso: 'Interpretei pct como pacote',
+        aviso: AvisoImportacao.quantidadePadrao,
       ),
     );
 
@@ -109,7 +109,7 @@ void main() {
     expect(find.text('Leite'), findsOneWidget);
     expect(find.text('Queijo prato'), findsOneWidget);
     expect(find.text('Café'), findsOneWidget);
-    expect(find.text('Interpretei pct como pacote'), findsOneWidget);
+    expect(find.text(AppStrings.importLocalAvisoPadrao), findsOneWidget);
     expect(find.text(AppStrings.importSeraoAdicionados(4, 4)), findsOneWidget);
     expect(find.text(AppStrings.importAdicionarN(4)), findsOneWidget);
     expect(checkboxDe(tester, 'Arroz').value, isTrue);
