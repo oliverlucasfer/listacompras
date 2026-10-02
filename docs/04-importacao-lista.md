@@ -24,10 +24,10 @@ Fluxo de UX completo (modal, pré-visualização, confirmação) está em [05 §
 ## 2. Contrato
 
 - **Entrada:** texto livre em português, até **10.000 caracteres** (`maxCaracteresImportLocal`).
-- **Saída:** `RespostaParse { itens: List<ItemExtraido>, aviso: String? }`.
-- **Erro:** quando nenhum item é reconhecido, o parser devolve **`ErroImportacao` tipado** e a UI traduz a mensagem amigável (`context.l10n.importRespostaInvalida`); a UI nunca vê exceção crua. Camadas não-UI não localizam texto ([05 §6.18](05-app-flutter.md)).
+- **Saída:** `RespostaParse { itens: List<ItemExtraido>, aviso: AvisoImportacao? }` — `aviso` é um **marcador neutro** (`enum AvisoImportacao`), sem texto embutido.
+- **Sem exceção no parser:** `analisarListaLocal` **nunca lança** — sempre devolve `RespostaParse`. Quando nenhum item é reconhecido, a **UI** constrói `ErroImportacao(context.l10n.importRespostaInvalida)` (em `modal_importar.dart`); `ErroImportacao` é apenas um holder de `String mensagem` (não um código). Camadas não-UI não localizam texto ([05 §6.18](05-app-flutter.md)).
 - **Rede:** nenhuma. Não há chamada HTTP, Edge Function, API key ou rate limit.
-- **`aviso`:** preenchido quando algum item entra com quantidade padrão (`context.l10n.importLocalAvisoPadrao`).
+- **`aviso`:** o parser emite `AvisoImportacao.quantidadePadrao` quando algum item entra com quantidade padrão; a **UI** traduz para `context.l10n.importLocalAvisoPadrao` na pré-visualização (`modal_previsao_importacao.dart`).
 
 > **Reuso no compartilhamento (RF-33, F49):** o formato **texto** do "Compartilhar lista" (envio) é exatamente uma linha por item (`"<quantidade> <unidade> <nome>"`), **sem título e sem preço** — o mesmo contrato deste parser. Por isso uma lista compartilhada como texto pode ser colada tanto no "Importar lista" (RF-16, [05 §6.4](05-app-flutter.md)) quanto no "Receber lista" (RF-33, [05 §6.12](05-app-flutter.md)), que reusa `analisarListaLocal` e a sugestão de categoria. Detalhes do compartilhamento em [05 §6.12](05-app-flutter.md).
 
@@ -39,11 +39,11 @@ Fluxo de UX completo (modal, pré-visualização, confirmação) está em [05 §
 
 1. Normaliza a vírgula **entre dígitos** como decimal (`1,5` → `1.5`) e só então segmenta o texto por `,`, `;`, quebra de linha e o conectivo ` e ` — vírgula entre itens continua separador (`arroz, leite` → 2 itens).
 2. Para cada segmento, lê quantidade/unidade no **início** ou no **fim** (`1kg de arroz`, `arroz 1kg`, `2 leites`, `leite 2`) — inclusive **separadas** no fim (`leite 2 kg`, `arroz 1 1/2 kg`) — desde que a última palavra seja uma unidade conhecida e a anterior uma quantidade. A quantidade aceita decimal pt-BR (`1,5`), **fração numérica** (`1/2`), **mista** (`1 1/2`) e **glifos** (`½`, `1½`) — RF-25.
-3. Sem quantidade → `1 un` e marca `aviso`; quantidade **`≤ 0`** é tratada como ausente (entra `1` com a unidade explícita do texto, ex.: `0 kg de arroz` → `1 kg`) e também marca `aviso` — `ItemExtraido.quantidade` é sempre `> 0`.
+3. Sem quantidade → `1 un` e marca o aviso (`AvisoImportacao.quantidadePadrao`); quantidade **`≤ 0`** é tratada como ausente (entra `1` com a unidade explícita do texto, ex.: `0 kg de arroz` → `1 kg`) e também marca o aviso — `ItemExtraido.quantidade` é sempre `> 0`.
 4. Converte quantidade com vírgula (`1,5` → `1.5`); capitaliza o nome; ignora segmentos vazios.
 5. `interpretarItemAvulso(texto, {unidadePadrao})` é usado pelo campo "Adicionar item" (F12-T06): unidade explícita do texto vence; sem unidade, usa a do seletor.
 
-**Frações (RF-25, F29):** a quantidade é interpretada por `parseQuantidade` (`lib/core/dominio/quantidade.dart`) e o parser reconhece fração numérica (`1/2 kg`), **mista separada** (`1 1/2 kg` → inteiro + fração) e glifos (`½ kg`, `1½ kg`), com ou sem unidade colada (`½kg`). `parseQuantidade` trata **um token único**; o misto espaçado é combinado pelo parser. Fração inválida (`1/0`) não quebra o fluxo: cai na regra de quantidade ausente (`1` + token no nome, unidade `un`, com `aviso`; a unidade explícita do texto também é descartada). O contrato vale para a **entrada rápida** e a **importação** — unidade e demais campos ficam inalterados.
+**Frações (RF-25, F29):** a quantidade é interpretada por `parseQuantidade` (`lib/core/dominio/quantidade.dart`) e o parser reconhece fração numérica (`1/2 kg`), **mista separada** (`1 1/2 kg` → inteiro + fração) e glifos (`½ kg`, `1½ kg`), com ou sem unidade colada (`½kg`). `parseQuantidade` trata **um token único**; o misto espaçado é combinado pelo parser. Fração inválida (`1/0`) não quebra o fluxo: cai na regra de quantidade ausente (`1` + token no nome, unidade `un`, com o aviso `AvisoImportacao.quantidadePadrao`; a unidade explícita do texto também é descartada). O contrato vale para a **entrada rápida** e a **importação** — unidade e demais campos ficam inalterados.
 
 ## 4. Enums
 
@@ -63,8 +63,8 @@ Cadeia local em camadas (RF-15): memória por nome → dicionário estático →
 ```
 lib/core/importacao/
 ├── parser_lista_local.dart   # parser determinístico (RF-16)
-├── resposta_import.dart      # ItemExtraido / RespostaParse / limite
-└── erro_importacao.dart      # ErroImportacao (mensagem amigável)
+├── resposta_import.dart      # ItemExtraido / RespostaParse / AvisoImportacao / limite
+└── erro_importacao.dart      # ErroImportacao (holder de mensagem pronta para a UI)
 
 test/core/importacao/parser_lista_local_test.dart
 test/features/importacao/modal_importar_test.dart
