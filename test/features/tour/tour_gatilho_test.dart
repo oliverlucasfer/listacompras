@@ -251,10 +251,10 @@ void main() {
     await tester.tap(find.text('Ver tutorial'));
     await tester.pumpAndSettle();
 
-    // Navegou para a home e a etapa 1 abriu lá, com os 3 passos da tela.
+    // Navegou para a home e a etapa 1 abriu lá, com os 4 passos da tela.
     expect(find.byType(MinhasListasScreen), findsOneWidget);
     expect(c.read(tourControllerProvider).etapa, TourEtapa.primeira);
-    expect(c.read(tourControllerProvider).passos.length, 3);
+    expect(c.read(tourControllerProvider).passos.length, 4);
     expect(find.text('Criar sua primeira lista'), findsOneWidget);
 
     // Concluir a etapa 1 encerra o tour — não encadeia a etapa 2.

@@ -21,6 +21,12 @@ List<TourStep> get passosEtapa1 => <TourStep>[
     corpo: (l) => l.tourBuscaCorpo,
   ),
   TourStep(
+    id: 'lista.historico',
+    alvo: TourKeys.abaHistorico,
+    titulo: (l) => l.tourHistoricoTitulo,
+    corpo: (l) => l.tourHistoricoCorpo,
+  ),
+  TourStep(
     id: 'lista.config',
     alvo: TourKeys.abaConfiguracoes,
     titulo: (l) => l.tourConfigTitulo,
@@ -68,10 +74,10 @@ List<TourStep> get passosEtapa2 => <TourStep>[
     corpo: (l) => l.tourMercadoCorpo,
   ),
   TourStep(
-    id: 'recursos.orcamento',
+    id: 'recursos.menu',
     alvo: TourKeys.menuMais,
-    titulo: (l) => l.tourOrcamentoTitulo,
-    corpo: (l) => l.tourOrcamentoCorpo,
+    titulo: (l) => l.tourMenuTitulo,
+    corpo: (l) => l.tourMenuCorpo,
   ),
 ];
 

@@ -860,11 +860,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose the measure (un, kg, package, pct, pt...). The app tries to guess.';
 
   @override
-  String get tourImportarTitulo => 'Import from text';
+  String get tourImportarTitulo => 'Import from text or photo';
 
   @override
   String get tourImportarCorpo =>
-      'Paste a note and the app organizes the items for you.';
+      'Type, paste a note or photograph the list; the app organizes the items for you.';
 
   @override
   String get tourBuscaTitulo => 'Search and filters';
@@ -878,7 +878,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tourConfigCorpo =>
-      'Theme, categories, backup, and where to revisit this tutorial.';
+      'Theme, language (Portuguese, English, Spanish), backup, home-screen widget and where to replay this tutorial.';
 
   @override
   String get tourMarcarTitulo => 'Check, edit, and remove';
@@ -892,13 +892,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tourMercadoCorpo =>
-      'At the store, check purchases without losing what is left.';
+      'At the store, check items off and record the price paid. The app keeps the price per store.';
 
   @override
-  String get tourOrcamentoTitulo => 'Budget and total';
+  String get tourHistoricoTitulo => 'Purchase history';
 
   @override
-  String get tourOrcamentoCorpo => 'Set a ceiling and track the cart total.';
+  String get tourHistoricoCorpo =>
+      'Your finished purchases and the statistics live in this tab.';
+
+  @override
+  String get tourMenuTitulo => 'List menu';
+
+  @override
+  String get tourMenuCorpo =>
+      'Here: budget, share (link/QR) and finish the purchase — it goes to History. If a category goes over its limit, an alert appears below the total.';
 
   @override
   String get tourResumoTitulo => 'Shopping summary';

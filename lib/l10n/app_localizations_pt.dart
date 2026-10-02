@@ -863,11 +863,11 @@ class AppLocalizationsPt extends AppLocalizations {
       'Escolha a medida (un, kg, pacote, pct, pt...). O app tenta adivinhar.';
 
   @override
-  String get tourImportarTitulo => 'Importe por texto';
+  String get tourImportarTitulo => 'Importe de texto ou foto';
 
   @override
   String get tourImportarCorpo =>
-      'Cole uma anotação e o app organiza os itens para você.';
+      'Digite, cole uma anotação ou fotografe a lista; o app organiza os itens para você.';
 
   @override
   String get tourBuscaTitulo => 'Busca e filtros';
@@ -881,7 +881,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get tourConfigCorpo =>
-      'Tema, categorias, backup e onde rever este tutorial.';
+      'Tema, idioma (português, inglês, espanhol), backup, widget da tela inicial e onde rever este tutorial.';
 
   @override
   String get tourMarcarTitulo => 'Marcar, editar e remover';
@@ -895,14 +895,21 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get tourMercadoCorpo =>
-      'No mercado, marque as compras sem perder o que falta.';
+      'No mercado, marque as compras e registre o preço pago. O app guarda o preço por mercado.';
 
   @override
-  String get tourOrcamentoTitulo => 'Orçamento e total';
+  String get tourHistoricoTitulo => 'Histórico de compras';
 
   @override
-  String get tourOrcamentoCorpo =>
-      'Defina um teto e acompanhe o total do carrinho.';
+  String get tourHistoricoCorpo =>
+      'Suas compras finalizadas e as estatísticas ficam nesta aba.';
+
+  @override
+  String get tourMenuTitulo => 'Menu da lista';
+
+  @override
+  String get tourMenuCorpo =>
+      'Aqui: orçamento, compartilhar (link/QR) e finalizar a compra — que vai para o Histórico. Se uma categoria estourar o limite, aparece um alerta abaixo do total.';
 
   @override
   String get tourResumoTitulo => 'Resumo das compras';

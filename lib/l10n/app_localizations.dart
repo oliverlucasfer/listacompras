@@ -1513,13 +1513,13 @@ abstract class AppLocalizations {
   /// No description provided for @tourImportarTitulo.
   ///
   /// In pt, this message translates to:
-  /// **'Importe por texto'**
+  /// **'Importe de texto ou foto'**
   String get tourImportarTitulo;
 
   /// No description provided for @tourImportarCorpo.
   ///
   /// In pt, this message translates to:
-  /// **'Cole uma anotação e o app organiza os itens para você.'**
+  /// **'Digite, cole uma anotação ou fotografe a lista; o app organiza os itens para você.'**
   String get tourImportarCorpo;
 
   /// No description provided for @tourBuscaTitulo.
@@ -1543,7 +1543,7 @@ abstract class AppLocalizations {
   /// No description provided for @tourConfigCorpo.
   ///
   /// In pt, this message translates to:
-  /// **'Tema, categorias, backup e onde rever este tutorial.'**
+  /// **'Tema, idioma (português, inglês, espanhol), backup, widget da tela inicial e onde rever este tutorial.'**
   String get tourConfigCorpo;
 
   /// No description provided for @tourMarcarTitulo.
@@ -1567,20 +1567,32 @@ abstract class AppLocalizations {
   /// No description provided for @tourMercadoCorpo.
   ///
   /// In pt, this message translates to:
-  /// **'No mercado, marque as compras sem perder o que falta.'**
+  /// **'No mercado, marque as compras e registre o preço pago. O app guarda o preço por mercado.'**
   String get tourMercadoCorpo;
 
-  /// No description provided for @tourOrcamentoTitulo.
+  /// No description provided for @tourHistoricoTitulo.
   ///
   /// In pt, this message translates to:
-  /// **'Orçamento e total'**
-  String get tourOrcamentoTitulo;
+  /// **'Histórico de compras'**
+  String get tourHistoricoTitulo;
 
-  /// No description provided for @tourOrcamentoCorpo.
+  /// No description provided for @tourHistoricoCorpo.
   ///
   /// In pt, this message translates to:
-  /// **'Defina um teto e acompanhe o total do carrinho.'**
-  String get tourOrcamentoCorpo;
+  /// **'Suas compras finalizadas e as estatísticas ficam nesta aba.'**
+  String get tourHistoricoCorpo;
+
+  /// No description provided for @tourMenuTitulo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Menu da lista'**
+  String get tourMenuTitulo;
+
+  /// No description provided for @tourMenuCorpo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aqui: orçamento, compartilhar (link/QR) e finalizar a compra — que vai para o Histórico. Se uma categoria estourar o limite, aparece um alerta abaixo do total.'**
+  String get tourMenuCorpo;
 
   /// No description provided for @tourResumoTitulo.
   ///
