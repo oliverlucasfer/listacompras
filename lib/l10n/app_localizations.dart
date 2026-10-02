@@ -1582,6 +1582,30 @@ abstract class AppLocalizations {
   /// **'Defina um teto e acompanhe o total do carrinho.'**
   String get tourOrcamentoCorpo;
 
+  /// No description provided for @tourResumoTitulo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Resumo das compras'**
+  String get tourResumoTitulo;
+
+  /// No description provided for @tourResumoCorpo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Total gasto, ticket médio e quantas idas você já finalizou.'**
+  String get tourResumoCorpo;
+
+  /// No description provided for @tourEstatisticasTitulo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estatísticas'**
+  String get tourEstatisticasTitulo;
+
+  /// No description provided for @tourEstatisticasCorpo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Veja gráficos de gasto por mês e os itens que você mais compra.'**
+  String get tourEstatisticasCorpo;
+
   /// No description provided for @politicaPrivacidadeTexto.
   ///
   /// In pt, this message translates to:

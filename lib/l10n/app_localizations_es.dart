@@ -908,6 +908,20 @@ class AppLocalizationsEs extends AppLocalizations {
       'Define un tope y sigue el total del carrito.';
 
   @override
+  String get tourResumoTitulo => 'Resumen de compras';
+
+  @override
+  String get tourResumoCorpo =>
+      'Total gastado, ticket medio y cuántas idas ya finalizaste.';
+
+  @override
+  String get tourEstatisticasTitulo => 'Estadísticas';
+
+  @override
+  String get tourEstatisticasCorpo =>
+      'Mira gráficos de gasto por mes y los artículos que más compras.';
+
+  @override
   String politicaPrivacidadeTexto(String email) {
     return 'Política de Privacidad — Mis listas\n\n1. Datos que recopilamos\nLa aplicación funciona enteramente en tu dispositivo.\n• Tus listas y artículos se guardan solo en tu dispositivo.\n• No creamos cuentas, no pedimos correo ni contraseña y no enviamos tus datos a nuestros servidores.\n\n2. Voz\n• La función de añadir artículos por voz usa el reconocedor de voz de tu dispositivo. Según el sistema, el audio puede ser procesado por el servicio de reconocimiento del dispositivo (que puede usar internet). No grabamos ni guardamos el audio.\n\n3. Copia de seguridad\n• Puedes exportar un archivo de copia y reimportarlo. El archivo se crea en tu dispositivo y solo sale de él por una acción tuya (compartir/guardar).\n\n4. Con quién compartimos\nNo compartimos datos con terceros. No hay publicidad ni rastreo.\n\n5. Cuánto tiempo lo guardamos\nTus datos permanecen en el dispositivo hasta que los elimines en la propia aplicación (eliminando listas o la app).\n\n6. Tus derechos\nAccedes, corriges y borras todo directamente en la aplicación. La app no está dirigida a menores de 16 años.\n\n7. Contacto\nDudas sobre privacidad: $email.';
   }

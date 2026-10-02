@@ -901,6 +901,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tourOrcamentoCorpo => 'Set a ceiling and track the cart total.';
 
   @override
+  String get tourResumoTitulo => 'Shopping summary';
+
+  @override
+  String get tourResumoCorpo =>
+      'Total spent, average ticket and how many trips you have finished.';
+
+  @override
+  String get tourEstatisticasTitulo => 'Statistics';
+
+  @override
+  String get tourEstatisticasCorpo =>
+      'See spending charts per month and the items you buy most.';
+
+  @override
   String politicaPrivacidadeTexto(String email) {
     return 'Privacy Policy — My Lists\n\n1. Data we collect\nThe app works entirely on your device.\n• Your lists and items are stored only on your device.\n• We do not create accounts, do not ask for email or password, and do not send your data to our servers.\n\n2. Voice\n• The add-items-by-voice feature uses the speech recognizer of your device. Depending on the system, audio may be processed by the device recognition service (which may use the internet). We do not record or keep the audio.\n\n3. Backup\n• You can export a backup file and reimport it. The file is created on your device and only leaves it through an action of yours (share/save).\n\n4. With whom we share\nWe do not share data with third parties. There is no advertising or tracking.\n\n5. How long we keep it\nYour data stays on the device until you delete it in the app itself (removing lists or the app).\n\n6. Your rights\nYou access, correct, and delete everything directly in the app. The app is not directed to children under 16.\n\n7. Contact\nPrivacy questions: $email.';
   }

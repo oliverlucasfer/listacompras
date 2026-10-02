@@ -74,3 +74,20 @@ List<TourStep> get passosEtapa2 => <TourStep>[
     corpo: (l) => l.tourOrcamentoCorpo,
   ),
 ];
+
+/// Roteiro da etapa 3 (ao abrir a aba Histórico): resumo das compras e a aba
+/// de estatísticas. Resolve-se na UI via `context.l10n` (RF-39, F56).
+List<TourStep> get passosEtapa3 => <TourStep>[
+  TourStep(
+    id: 'historico.resumo',
+    alvo: TourKeys.resumoHistorico,
+    titulo: (l) => l.tourResumoTitulo,
+    corpo: (l) => l.tourResumoCorpo,
+  ),
+  TourStep(
+    id: 'historico.estatisticas',
+    alvo: TourKeys.abaEstatisticas,
+    titulo: (l) => l.tourEstatisticasTitulo,
+    corpo: (l) => l.tourEstatisticasCorpo,
+  ),
+];

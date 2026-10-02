@@ -21,4 +21,11 @@ void main() {
       'recursos.orcamento',
     ]);
   });
+
+  test('deve_ter_dois_passos_na_etapa3_na_ordem_do_historico', () {
+    expect(passosEtapa3.map((p) => p.id).toList(), <String>[
+      'historico.resumo',
+      'historico.estatisticas',
+    ]);
+  });
 }

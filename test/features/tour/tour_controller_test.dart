@@ -30,4 +30,21 @@ void main() {
       isFalse,
     );
   });
+
+  test('deve_marcar_etapa3_sem_afetar_as_outras', () async {
+    SharedPreferences.setMockInitialValues({});
+    final c = ProviderContainer();
+    addTearDown(c.dispose);
+    await c
+        .read(tourEtapaVistaProvider(TourEtapa.historico).notifier)
+        .marcarVista(TourEtapa.historico);
+    expect(
+      await c.read(tourEtapaVistaProvider(TourEtapa.historico).future),
+      isTrue,
+    );
+    expect(
+      await c.read(tourEtapaVistaProvider(TourEtapa.primeira).future),
+      isFalse,
+    );
+  });
 }

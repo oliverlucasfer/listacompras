@@ -13,4 +13,7 @@ abstract final class TourKeys {
   static final itemLista = GlobalKey();
   static final botaoMercado = GlobalKey();
   static final menuMais = GlobalKey();
+  static final abaHistorico = GlobalKey();
+  static final resumoHistorico = GlobalKey();
+  static final abaEstatisticas = GlobalKey();
 }

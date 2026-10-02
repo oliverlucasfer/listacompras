@@ -5,10 +5,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'tour_roteiro.dart';
 import 'tour_step.dart';
 
-enum TourEtapa { primeira, recursos }
+enum TourEtapa { primeira, recursos, historico }
 
-String _chave(TourEtapa e) =>
-    e == TourEtapa.primeira ? 'tour_etapa1_visto' : 'tour_etapa2_visto';
+String _chave(TourEtapa e) => switch (e) {
+  TourEtapa.primeira => 'tour_etapa1_visto',
+  TourEtapa.recursos => 'tour_etapa2_visto',
+  TourEtapa.historico => 'tour_etapa3_visto',
+};
 
 /// Conclusão de cada etapa (SharedPreferences), espelho de `OnboardingNotifier`.
 class TourVistoNotifier extends AsyncNotifier<bool> {
@@ -77,8 +80,11 @@ class TourController extends Notifier<TourEstado> {
     return true;
   }
 
-  List<TourStep> _passosDe(TourEtapa etapa) =>
-      etapa == TourEtapa.primeira ? passosEtapa1 : passosEtapa2;
+  List<TourStep> _passosDe(TourEtapa etapa) => switch (etapa) {
+    TourEtapa.primeira => passosEtapa1,
+    TourEtapa.recursos => passosEtapa2,
+    TourEtapa.historico => passosEtapa3,
+  };
 
   static bool _alvoVisivel(GlobalKey alvo) {
     final ctx = alvo.currentContext;
