@@ -18,6 +18,7 @@ Projeto: app de lista de compras local e offline-first **"Minhas Listas"** (Flut
 - **Offline-first local:** o Drift é a fonte da verdade; não há rede nem sincronização. Escrita vai sempre ao Drift e IDs UUID v4 são gerados no cliente.
 - **Enum de unidades fechado:** `un, kg, g, l, ml, caixa, pacote, pct, pt, dz` — mantenha idêntico em `lib/core/dominio/unidade.dart` e no parser local (`04`).
 - **CI verde obrigatório** antes de considerar qualquer tarefa concluída ([07](docs/07-qualidade-ci.md)).
+- **Bump de versão:** ao mudar `version:` no `pubspec.yaml`, atualize **`web/version.json`** (`version` e `build_number` iguais) **e rode `flutter test`** — o guard `test/core/config/version_json_test.dart` exige paridade e o CI quebra sem isso.
 
 ## Comandos
 
