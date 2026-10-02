@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/configuracoes/ui/configuracoes_screen.dart';
+import 'package:lista_compras/features/historico/ui/historico_screen.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
@@ -183,6 +184,39 @@ void main() {
     final c = container(prefs: {'onboarding_visto': true});
 
     await tester.pumpWidget(_app(c, TelaListaScreen(listaId: lista.id)));
+    await tester.pumpAndSettle();
+
+    expect(c.read(tourControllerProvider).ativo, isFalse);
+  });
+
+  testWidgets('deve_iniciar_tour_etapa3_quando_flag_falsa', (tester) async {
+    final c = container(
+      prefs: {
+        'onboarding_visto': true,
+        'tour_etapa1_visto': true,
+        'tour_etapa2_visto': true,
+      },
+    );
+
+    await tester.pumpWidget(_app(c, const HistoricoScreen()));
+    await tester.pumpAndSettle();
+
+    expect(c.read(tourControllerProvider).ativo, isTrue);
+    expect(c.read(tourControllerProvider).etapa, TourEtapa.historico);
+    expect(c.read(tourControllerProvider).atual?.id, 'historico.resumo');
+  });
+
+  testWidgets('nao_deve_iniciar_tour_etapa3_quando_flag_vista', (tester) async {
+    final c = container(
+      prefs: {
+        'onboarding_visto': true,
+        'tour_etapa1_visto': true,
+        'tour_etapa2_visto': true,
+        'tour_etapa3_visto': true,
+      },
+    );
+
+    await tester.pumpWidget(_app(c, const HistoricoScreen()));
     await tester.pumpAndSettle();
 
     expect(c.read(tourControllerProvider).ativo, isFalse);

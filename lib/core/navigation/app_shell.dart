@@ -30,6 +30,11 @@ class AppShell extends ConsumerWidget {
     ];
     // Aba Configurações é o alvo do passo "Configurações e backup" (F46).
     final indiceConfig = rotulos.length - 1;
+    GlobalKey? chaveAba(int i) => switch (i) {
+      1 => TourKeys.abaHistorico,
+      _ when i == indiceConfig => TourKeys.abaConfiguracoes,
+      _ => null,
+    };
     final largura = MediaQuery.sizeOf(context).width;
     if (largura >= 600) {
       return Scaffold(
@@ -42,10 +47,7 @@ class AppShell extends ConsumerWidget {
               destinations: [
                 for (var i = 0; i < rotulos.length; i++)
                   NavigationRailDestination(
-                    icon: Icon(
-                      icones[i].normal,
-                      key: i == indiceConfig ? TourKeys.abaConfiguracoes : null,
-                    ),
+                    icon: Icon(icones[i].normal, key: chaveAba(i)),
                     selectedIcon: Icon(icones[i].selecionado),
                     label: Text(rotulos[i]),
                   ),
@@ -65,7 +67,7 @@ class AppShell extends ConsumerWidget {
         destinations: [
           for (var i = 0; i < rotulos.length; i++)
             NavigationDestination(
-              key: i == indiceConfig ? TourKeys.abaConfiguracoes : null,
+              key: chaveAba(i),
               icon: Icon(icones[i].normal),
               selectedIcon: Icon(icones[i].selecionado),
               label: rotulos[i],

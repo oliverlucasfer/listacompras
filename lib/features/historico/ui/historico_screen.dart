@@ -8,6 +8,9 @@ import '../../../core/widgets/app_esqueleto.dart';
 import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
 import '../../listas/domain/preco.dart';
+import '../../tour/tour_controller.dart';
+import '../../tour/tour_keys.dart';
+import '../../tour/ui/tour_loader.dart';
 import '../domain/ida.dart';
 import '../providers/historico_providers.dart';
 import 'estatisticas_tab.dart';
@@ -26,12 +29,16 @@ class HistoricoScreen extends StatelessWidget {
         appBar: AppBar(title: Text(context.l10n.historico)),
         body: Column(
           children: [
+            const TourLoader(etapa: TourEtapa.historico),
             _Resumo(),
             Divider(height: 1),
             TabBar(
               tabs: [
                 Tab(text: context.l10n.abaIdas),
-                Tab(text: context.l10n.estatisticas),
+                Tab(
+                  key: TourKeys.abaEstatisticas,
+                  text: context.l10n.estatisticas,
+                ),
               ],
             ),
             Expanded(
@@ -82,6 +89,7 @@ class _Resumo extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final resumo = ref.watch(resumoHistoricoProvider);
     return Padding(
+      key: TourKeys.resumoHistorico,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
         children: [
