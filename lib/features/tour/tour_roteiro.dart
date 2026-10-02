@@ -2,8 +2,8 @@ import 'tour_keys.dart';
 import 'tour_step.dart';
 
 /// Roteiro da etapa 1 (primeiro contato, na home de listas): criar lista,
-/// busca/filtros e configurações. Os demais recursos dependem da tela da lista
-/// e vivem na etapa 2.
+/// busca/filtros, aba Histórico e configurações. Os recursos da tela da lista
+/// vivem na etapa 2 e o tour da aba Histórico é a etapa 3.
 ///
 /// O roteiro guarda ids/alvos e funções de tradução — o texto localizado é
 /// resolvido na UI (`context.l10n`), nunca embutido aqui (RF-39, F56).
@@ -35,7 +35,8 @@ List<TourStep> get passosEtapa1 => <TourStep>[
 ];
 
 /// Roteiro da etapa 2 (ao abrir uma lista com itens pendentes): nome, adicionar,
-/// unidade, importar, marcar/editar, modo mercado e orçamento/total.
+/// unidade, importar, marcar/editar, modo mercado e menu da lista
+/// (orçamento/compartilhar/finalizar/alertas).
 List<TourStep> get passosEtapa2 => <TourStep>[
   TourStep(
     id: 'recursos.nome',

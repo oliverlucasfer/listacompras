@@ -1210,6 +1210,21 @@ Spec: [superpowers/specs/2026-09-30-i18n-design.md](superpowers/specs/2026-09-30
 
 Nota: *(100% local e sem dependência nova (`flutter_localizations`/`intl` já no `pubspec`); `pt` é template e fallback; a **formatação** de número/data/moeda permanece pt-BR; camadas não-UI não localizam texto. O widget Android usa recursos nativos `values-en`/`values-es` e segue o idioma do **sistema**.)*
 
+## Fase 57 — Atualização do tutorial para os recursos novos (RF-27)
+
+- [x] **F57-T01** — Motor: 3ª etapa (`historico`) + flag + strings da etapa 3
+  Dep: F56-T06 · Docs: [05 §6.11](05-app-flutter.md)
+  CP: `TourEtapa.historico`/`tour_etapa3_visto`; `passosEtapa3`; chaves ARB pt/en/es; testes de roteiro/controller verdes.
+- [x] **F57-T02** — Âncoras no shell/Histórico + disparo da etapa 3
+  Dep: F57-T01 · Docs: [10](10-wireframes-telas.md)
+  CP: `TourKeys.abaHistorico/resumoHistorico/abaEstatisticas` ancoradas; `TourLoader(historico)`; testes de gatilho verdes.
+- [x] **F57-T03** — Etapa 1 (+Histórico) e etapa 2 (textos novos)
+  Dep: F57-T02 · Docs: [05 §6.11](05-app-flutter.md), [10](10-wireframes-telas.md), [12](12-prd.md)
+  CP: etapa 1 com 4 passos; etapa 2 com importar/foto, preço por mercado e menu ⋮; ARB atualizado; testes verdes.
+- [x] **F57-T04** — Docs donas e fechamento
+  Dep: F57-T03 · Docs: 05, 10, 12, 14
+  CP: docs sincronizadas; `dart format lib test`/`flutter analyze`/`flutter test` verdes.
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -1268,7 +1283,8 @@ Nota: *(100% local e sem dependência nova (`flutter_localizations`/`intl` já n
 | F54 Importar por foto (OCR) | 3 | 3 |
 | F55 Widget Android / quick-add | 5 | 5 |
 | F56 i18n pt/en/es | 6 | 6 |
-| **Total** | **304** | **302** |
+| F57 Atualização do tutorial | 4 | 4 |
+| **Total** | **308** | **306** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

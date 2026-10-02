@@ -66,7 +66,7 @@ Convenções: `[ ]` campo de texto · `( )` botão · `(x)` marcado · `[≡]` �
 ```
 Os cards são separados verticalmente por **`AppSpacing.sm`** (8px); o `cardTheme` zera a margem do `Card`, então o espaçamento entre cards empilhados é responsabilidade do layout da lista (`ListView.separated`, F12-T05).
 
-**Tour — etapa 1 (RF-27/F46):** nesta tela (home de listas) ficam os spots `TourKeys` da etapa 1 — Fab "Nova lista" (`TourKeys.novaLista`), lupa (`TourKeys.lupa`) e a aba Configurações (`TourKeys.abaConfiguracoes`, na barra inferior/rail). Os recursos da tela da lista são da **etapa 2** (§3; [05 §6.11](05-app-flutter.md)).
+**Tour — etapa 1 (RF-27/F46):** nesta tela (home de listas) ficam os spots `TourKeys` da etapa 1 — Fab "Nova lista" (`TourKeys.novaLista`), lupa (`TourKeys.lupa`), a aba **Histórico** (`TourKeys.abaHistorico`) e a aba Configurações (`TourKeys.abaConfiguracoes`), ambas na barra inferior/rail. Os recursos da tela da lista são da **etapa 2** (§3) e o tour da aba Histórico é a **etapa 3** (§8; [05 §6.11](05-app-flutter.md)).
 
 **Marca no cabeçalho (F13-T02):** as telas de **topo** (Minhas Listas, sem botão voltar) mostram a marca do app (`AppLogo`, 28dp) à esquerda do título; telas internas (`push`: lista, configurações) mantêm apenas o texto. Título de tela em **24sp bold** (F13-T03, doc [15 §1](15-design-system.md)).
 
@@ -191,7 +191,7 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 
 **Carregando da lista (G-07):** enquanto `listaPorIdProvider` carrega, o corpo inteiro vira `AppEsqueleto` (doc [15 §3](15-design-system.md)) — sem spinner cru.
 
-**Tour — etapa 2 (RF-27/F46):** dispara ao abrir a primeira lista com itens **pendentes**. Spots `TourKeys` na tela: campo do sheet de nome (`nomeLista`, 1º passo — pulado se o sheet não estiver aberto), campo "Adicionar item" (`campoAdicionar`), seletor de unidade (`seletorUnidade`), botão "Importar lista" (`botaoImportar`), checkbox/linha do item (`itemLista`), botão do modo mercado (`botaoMercado`) e menu `⋮` (`menuMais`). Passos sem alvo montado são pulados ([05 §6.11](05-app-flutter.md)).
+**Tour — etapa 2 (RF-27/F46):** dispara ao abrir a primeira lista com itens **pendentes**. Spots `TourKeys` na tela: campo do sheet de nome (`nomeLista`, 1º passo — pulado se o sheet não estiver aberto), campo "Adicionar item" (`campoAdicionar`), seletor de unidade (`seletorUnidade`), botão "Importar lista" (`botaoImportar`), checkbox/linha do item (`itemLista`), botão do modo mercado (`botaoMercado`) e menu `⋮` da lista (`menuMais`, passo **"Menu da lista"** — orçamento/compartilhar/finalizar/alertas). Passos sem alvo montado são pulados ([05 §6.11](05-app-flutter.md)).
 
 **Sheet do item (F12-T06 + preço RF-21/F25 + última compra RF-29/F37):** aberto por `AppSheet.mostrar` (bottom sheet, [15 §3](15-design-system.md)), com os campos em blocos e rolagem própria; o teclado sobe o rodapé (`viewInsets`).
 ```
@@ -495,6 +495,7 @@ Comportamento em [05 §6.13](05-app-flutter.md). A aba **Histórico** fica no sh
 │  21/09/2026 · 3 itens   R$ 44,10│
 └─────────────────────────────────┘
 ```
+**Tour — etapa 3 (RF-27/F57):** dispara ao **abrir a aba Histórico** (sem navegação forçada), uma vez, se `tour_etapa3_visto` ainda for falsa — roda mesmo com histórico vazio (`_Resumo` e o `TabBar` sempre montam). O 1º passo aponta o **resumo** (`TourKeys.resumoHistorico`) e o 2º a aba **Estatísticas** (`TourKeys.abaEstatisticas`). Detalhes em [05 §6.11](05-app-flutter.md).
 
 ### 8.2. Aba "Histórico" (vazio)
 ```
