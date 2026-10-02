@@ -55,6 +55,15 @@ android {
 
     buildTypes {
         release {
+            // AGP 9 liga o R8/minify por padrão no release. As regras do MLKit
+            // OCR (RF-37, F54) ficam em proguard-rules.pro — sem elas o R8
+            // aborta por "Missing class" dos reconhecedores opcionais de
+            // chinês/devanagari/japonês/coreano (dívida L-10).
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
             // Assinatura real quando key.properties existe; debug key caso contrário,
             // para builds locais/CI seguirem funcionando sem o keystore.
             signingConfig = if (keystorePropertiesFile.exists())
