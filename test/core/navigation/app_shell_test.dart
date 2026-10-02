@@ -7,6 +7,7 @@ import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
+import 'package:lista_compras/l10n/app_localizations.dart';
 import 'package:lista_compras/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -35,8 +36,11 @@ void main() {
       UncontrolledProviderScope(
         container: container,
         child: Consumer(
-          builder: (context, ref, _) =>
-              MaterialApp.router(routerConfig: ref.watch(routerProvider)),
+          builder: (context, ref, _) => MaterialApp.router(
+            routerConfig: ref.watch(routerProvider),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+          ),
         ),
       ),
     );

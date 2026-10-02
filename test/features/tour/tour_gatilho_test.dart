@@ -14,6 +14,7 @@ import 'package:lista_compras/features/onboarding/providers/onboarding_provider.
 import 'package:lista_compras/features/tour/tour_controller.dart';
 import 'package:lista_compras/features/tour/tour_keys.dart';
 import 'package:lista_compras/features/tour/ui/tour_overlay.dart';
+import 'package:lista_compras/l10n/app_localizations.dart';
 import 'package:lista_compras/router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -24,6 +25,8 @@ Widget _app(ProviderContainer container, Widget home) =>
       container: container,
       child: MaterialApp(
         home: home,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) => Stack(
           fit: StackFit.expand,
           children: [
@@ -39,6 +42,8 @@ Widget _appRouter(ProviderContainer container, GoRouter router) =>
       container: container,
       child: MaterialApp.router(
         routerConfig: router,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) => Stack(
           fit: StackFit.expand,
           children: [

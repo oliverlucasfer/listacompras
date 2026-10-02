@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lista_compras/core/l10n/app_strings.dart';
 import 'package:lista_compras/features/configuracoes/ui/configuracoes_screen.dart';
 import 'package:lista_compras/features/listas/ui/tela_ordenar_categorias.dart';
+import 'package:lista_compras/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -14,7 +15,13 @@ void main() {
 
   Future<void> abrir(WidgetTester tester) async {
     await tester.pumpWidget(
-      const ProviderScope(child: MaterialApp(home: ConfiguracoesScreen())),
+      ProviderScope(
+        child: MaterialApp(
+          home: const ConfiguracoesScreen(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ),
     );
     await tester.pumpAndSettle();
   }
@@ -34,7 +41,13 @@ void main() {
       ],
     );
     await tester.pumpWidget(
-      ProviderScope(child: MaterialApp.router(routerConfig: router)),
+      ProviderScope(
+        child: MaterialApp.router(
+          routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      ),
     );
     await tester.pumpAndSettle();
   }

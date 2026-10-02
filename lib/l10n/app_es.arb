@@ -1,0 +1,440 @@
+{
+  "@@locale": "es",
+
+  "appNome": "Mis listas",
+  "erroGenerico": "No se pudo completar. Inténtalo de nuevo.",
+
+  "minhasListas": "Mis listas",
+  "abaMinhas": "Mías",
+  "novaLista": "Nueva lista",
+  "salvar": "Guardar",
+  "cancelar": "Cancelar",
+  "renomear": "Renombrar",
+  "excluir": "Eliminar",
+  "mostrarArquivadas": "Mostrar archivadas",
+  "arquivar": "Archivar",
+  "desarquivar": "Desarchivar",
+  "arquivada": "Archivada",
+  "listaArquivada": "Lista archivada.",
+  "listaDesarquivada": "Lista desarchivada.",
+
+  "adicionarItem": "Añadir artículo",
+  "itensConcluidos": "Artículos completados",
+  "reordenar": "Reordenar",
+  "sugestoes": "Sugerencias",
+
+  "ditarItem": "Dictar artículo",
+  "vozIndisponivel": "Reconocimiento de voz no disponible en este dispositivo.",
+  "adicionarSugerido": "Añadir {nome}",
+  "@adicionarSugerido": {
+    "placeholders": {
+      "nome": { "type": "String" }
+    }
+  },
+
+  "modoMercado": "Modo compra",
+  "mercadoProgresso": "{marcados} de {total}",
+  "@mercadoProgresso": {
+    "placeholders": {
+      "marcados": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "mercadoMarcados": "Marcados",
+  "mercadoTudoComprado": "¡Todo comprado!",
+  "voltarParaLista": "Volver a la lista",
+
+  "nenhumaLista": "No hay listas aquí",
+  "criePrimeiraLista": "Crea tu primera lista o importa desde texto.",
+  "criarPrimeiraLista": "Crear primera lista",
+  "nomeDaLista": "Nombre de la lista",
+  "criarLista": "Crear lista",
+  "renomearLista": "Renombrar lista",
+  "listaCriada": "Lista creada.",
+  "listaRenomeada": "Lista renombrada.",
+  "comprarDeNovo": "Comprar de nuevo",
+  "duplicarDescricao": "{n, plural, =1{Se copiará 1 artículo pendiente.} other{Se copiarán {n} artículos pendientes.}}",
+  "@duplicarDescricao": {
+    "placeholders": {
+      "n": { "type": "int" }
+    }
+  },
+  "excluirLista": "Eliminar lista",
+  "excluirListaTitulo": "¿Eliminar \"{titulo}\"?",
+  "@excluirListaTitulo": {
+    "placeholders": {
+      "titulo": { "type": "String" }
+    }
+  },
+  "excluirListaMensagem": "{n, plural, =0{La lista se eliminará{temMembros, select, true{ para todos los participantes} other{}}.} =1{El artículo se eliminará{temMembros, select, true{ para todos los participantes} other{}}.} other{Se eliminarán los {n} artículos{temMembros, select, true{ para todos los participantes} other{}}.}}",
+  "@excluirListaMensagem": {
+    "placeholders": {
+      "n": { "type": "int" },
+      "temMembros": { "type": "String" }
+    }
+  },
+  "atualizada": "actualizada",
+  "erroNomeVazio": "Escribe un nombre.",
+  "erroQuantidadeInvalida": "Escribe una cantidad mayor que cero.",
+
+  "itens": "Artículos",
+  "desfazer": "Deshacer",
+  "itemRemovido": "Artículo eliminado",
+  "itemDuplicadoSomado": "ya está en la lista. Cantidad aumentada.",
+  "itemAtualizado": "Artículo actualizado.",
+  "naoEntendiItem": "No entendí el artículo",
+  "removerItem": "Quitar",
+  "editarItem": "Editar artículo",
+  "nomeDoItem": "Nombre del artículo",
+  "quantidade": "Cantidad",
+  "unidade": "Unidad",
+  "categoria": "Categoría",
+  "preco": "Precio (R$)",
+  "erroPrecoInvalido": "Precio no válido.",
+
+  "ultimaCompra": "Última compra: {valor} ({data})",
+  "@ultimaCompra": {
+    "placeholders": {
+      "valor": { "type": "String" },
+      "data": { "type": "String" }
+    }
+  },
+  "mesmoPreco": "Mismo precio",
+  "precoSubiu": "↑ {diff}",
+  "@precoSubiu": {
+    "placeholders": {
+      "diff": { "type": "String" }
+    }
+  },
+  "precoBaixou": "↓ {diff}",
+  "@precoBaixou": {
+    "placeholders": {
+      "diff": { "type": "String" }
+    }
+  },
+
+  "orcamento": "Presupuesto",
+  "campoOrcamento": "Presupuesto (R$)",
+  "removerOrcamento": "Quitar presupuesto",
+  "orcamentoDefinido": "Presupuesto guardado.",
+  "orcamentoRemovido": "Presupuesto quitado.",
+  "erroOrcamentoInvalido": "Importe de presupuesto no válido.",
+  "totalNoCarrinho": "En el carrito: {valor}{semPreco, plural, =0{} other{ · {semPreco} sin precio}}",
+  "@totalNoCarrinho": {
+    "placeholders": {
+      "valor": { "type": "String" },
+      "semPreco": { "type": "int" }
+    }
+  },
+  "totalComOrcamento": "En el carrito: {valor} de {orcamento}{semPreco, plural, =0{} other{ · {semPreco} sin precio}}",
+  "@totalComOrcamento": {
+    "placeholders": {
+      "valor": { "type": "String" },
+      "orcamento": { "type": "String" },
+      "semPreco": { "type": "int" }
+    }
+  },
+  "acimaDoOrcamento": "Por encima del presupuesto",
+
+  "orcamentoAtencao": "Cerca del presupuesto",
+  "orcamentoCruzado": "Te pasaste del presupuesto: {total}",
+  "@orcamentoCruzado": {
+    "placeholders": {
+      "total": { "type": "String" }
+    }
+  },
+  "orcamentoPorCategoria": "Presupuesto por categoría",
+  "limitePorCategoria": "Límite (R$)",
+  "categoriaSemLimite": "Sin límite",
+  "orcamentosSalvos": "Límites por categoría guardados.",
+  "acimaDoLimiteDaCategoria": "Por encima del límite de la categoría",
+  "notificacoesOrcamento": "Notificaciones de presupuesto",
+
+  "diminuir": "Disminuir",
+  "aumentar": "Aumentar",
+  "menu": "Menú",
+  "lista": "Lista",
+  "listaNaoEncontrada": "Lista no encontrada.",
+  "voltarParaListas": "Volver a las listas",
+  "nenhumItem": "Aún no hay artículos",
+  "nenhumItemDica": "Añade en el campo de arriba o importa una lista.",
+
+  "tempoAgora": "ahora",
+  "tempoMinutos": "hace {m} min",
+  "@tempoMinutos": {
+    "placeholders": {
+      "m": { "type": "int" }
+    }
+  },
+  "tempoHoras": "hace {h} h",
+  "@tempoHoras": {
+    "placeholders": {
+      "h": { "type": "int" }
+    }
+  },
+  "tempoOntem": "ayer",
+  "tempoDias": "hace {d} días",
+  "@tempoDias": {
+    "placeholders": {
+      "d": { "type": "int" }
+    }
+  },
+  "tempoMeses": "hace {m} meses",
+  "@tempoMeses": {
+    "placeholders": {
+      "m": { "type": "int" }
+    }
+  },
+  "tempoAnos": "hace {a} años",
+  "@tempoAnos": {
+    "placeholders": {
+      "a": { "type": "int" }
+    }
+  },
+  "progressoLista": "{concluidos}/{total, plural, =1{artículo completado} other{artículos completados}}",
+  "@progressoLista": {
+    "placeholders": {
+      "concluidos": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "desmarcarTodos": "Desmarcar todos",
+  "limparConcluidos": "Limpiar completados",
+  "limpar": "Limpiar",
+  "limparConcluidosMensagem": "Los artículos completados se quitarán de la lista.",
+  "concluidosRemovidos": "Artículos completados eliminados.",
+
+  "fechar": "Cerrar",
+  "importColeOuDigite": "Pega o escribe tu lista:",
+  "importExemplo": "1kg de arroz, 2 leches, 500g de queso loncheado...",
+  "importExtrairItens": "Extraer artículos",
+  "importLendo": "Leyendo...",
+  "importConfirmeItens": "Confirma los artículos",
+  "importRespostaInvalida": "No entendí la lista. Intenta reescribirla.",
+  "nadaReconhecido": "No se reconoció nada",
+  "separarItensDica": "Separa los artículos por coma o línea e inténtalo de nuevo.",
+  "voltarEEditar": "Volver y editar",
+  "importAdicionarN": "Añadir {n}",
+  "@importAdicionarN": {
+    "placeholders": {
+      "n": { "type": "int" }
+    }
+  },
+  "importSeraoAdicionados": "Se añadirán {n} de {total}",
+  "@importSeraoAdicionados": {
+    "placeholders": {
+      "n": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "importarLista": "Importar lista",
+  "importLocalAvisoPadrao": "Los artículos sin cantidad se añadieron como 1 un.",
+
+  "foto": "Foto",
+  "tirarFoto": "Tomar foto",
+  "escolherDaGaleria": "Elegir de la galería",
+  "ocrLendo": "Leyendo la foto...",
+  "ocrNenhumTexto": "No se reconoció texto en la foto.",
+  "ocrFalha": "No se pudo leer la foto.",
+
+  "adicionarDeOutraLista": "Añadir de otra lista",
+  "escolherListaOrigem": "Lista de origen",
+  "selecionarTodos": "Seleccionar todo",
+  "adicionarSelecionados": "Añadir",
+  "nenhumItemPendenteNaOrigem": "No hay artículos pendientes en esta lista.",
+  "tituloListaArquivada": "{titulo} · Archivada",
+  "@tituloListaArquivada": {
+    "placeholders": {
+      "titulo": { "type": "String" }
+    }
+  },
+  "itensAdicionadosDeOutra": "{n, plural, =1{Se añadió 1 artículo de otra lista.} other{Se añadieron {n} artículos de otra lista.}}",
+  "@itensAdicionadosDeOutra": {
+    "placeholders": {
+      "n": { "type": "int" }
+    }
+  },
+
+  "buscar": "Buscar",
+  "buscarLista": "Buscar lista",
+  "buscarItem": "Buscar artículo",
+  "limparBusca": "Limpiar búsqueda",
+  "nenhumaListaEncontrada": "No se encontró ninguna lista",
+  "nenhumItemEncontrado": "No se encontró ningún artículo",
+  "buscaSemResultadoDica": "Prueba otro término.",
+  "itensExtraidos": "{n, plural, =1{1 artículo extraído.} other{{n} artículos extraídos.}}",
+  "@itensExtraidos": {
+    "placeholders": {
+      "n": { "type": "int" }
+    }
+  },
+
+  "carregando": "Cargando...",
+  "tentarNovamente": "Reintentar",
+  "semValor": "—",
+
+  "configuracoes": "Ajustes",
+  "aparencia": "Apariencia",
+  "temaClaro": "Claro",
+  "temaEscuro": "Oscuro",
+  "temaSistema": "Sistema",
+  "ordenarCategorias": "Ordenar categorías",
+  "ordenarCategoriasDica": "Arrastra para el orden de los pasillos de tu supermercado.",
+  "restaurarPadrao": "Restaurar predeterminado",
+  "restaurarPadraoTitulo": "¿Restaurar el orden predeterminado?",
+  "restaurarPadraoMensagem": "Las categorías vuelven al orden original.",
+  "sobre": "Acerca de",
+  "politicaPrivacidade": "Política de Privacidad",
+  "versao": "Versión",
+
+  "backup": "Copia de seguridad",
+  "backupExportar": "Exportar copia",
+  "backupImportar": "Importar copia",
+  "backupExportarAjuda": "Comparte un archivo con tus listas para guardar o llevar a otro dispositivo.",
+  "backupImportarAjuda": "Restaura las listas de un archivo, combinándolas con las actuales.",
+  "backupExportado": "Copia exportada.",
+  "backupImportado": "Copia importada.",
+  "backupInvalido": "Archivo de copia no válido.",
+  "backupRestauracaoErro": "No se pudo restaurar la copia en este dispositivo.",
+  "backupLeituraErro": "No se pudo leer el archivo.",
+  "compartilharIndisponivel": "Compartir no disponible aquí. Usa \"Copiar enlace\".",
+
+  "compartilharLista": "Compartir",
+  "compartilharTexto": "Enviar como texto",
+  "compartilharArquivo": "Enviar archivo",
+  "compartilharQr": "Código QR",
+  "copiarCodigo": "Copiar código",
+  "codigoCopiado": "Código copiado.",
+  "compartilharQrGrande": "Lista grande: usa texto o archivo.",
+  "listaCompartilhada": "Lista compartida",
+  "compartilharIndisponivelLista": "Compartir no disponible aquí.",
+  "escanearQr": "Escanear QR",
+  "receberLista": "Recibir lista",
+  "receberCodigoOuTexto": "Pega el código o el texto de la lista",
+  "receberArquivo": "Elegir archivo",
+  "receberContinuar": "Continuar",
+  "receberConfirmar": "Crear lista",
+  "receberInvalido": "Código o archivo no válido.",
+
+  "finalizarCompra": "Finalizar compra",
+  "finalizarConfirmarTitulo": "¿Finalizar esta compra?",
+  "finalizarResumo": "{n, plural, =1{1 artículo} other{{n} artículos}} · {total}{semPreco, plural, =0{} other{ · {semPreco} sin precio}}",
+  "@finalizarResumo": {
+    "placeholders": {
+      "n": { "type": "int" },
+      "total": { "type": "String" },
+      "semPreco": { "type": "int" }
+    }
+  },
+  "finalizarLimpar": "Limpiar completados",
+  "finalizarManter": "Mantener la lista",
+  "compraRegistrada": "Compra registrada en el historial.",
+  "historico": "Historial",
+  "historicoVazio": "Aún no hay compras finalizadas.",
+  "historicoVazioDica": "Marca artículos y usa \"Finalizar compra\" para registrar una visita.",
+  "idaNaoEncontrada": "Compra no encontrada.",
+  "nItens": "{n, plural, =1{1 artículo} other{{n} artículos}}",
+  "@nItens": {
+    "placeholders": {
+      "n": { "type": "int" }
+    }
+  },
+  "totalGasto": "Total gastado",
+  "ticketMedio": "Ticket medio",
+  "numeroIdas": "Visitas",
+
+  "mercado": "Supermercado",
+  "mercadoOpcional": "Supermercado (opcional)",
+  "porMercado": "Por supermercado",
+  "maisBarato": "más barato",
+  "gastoPorMercado": "Gasto por supermercado",
+  "semMercado": "Sin supermercado",
+  "mercadosSugeridos": "Supermercados usados",
+
+  "estatisticas": "Estadísticas",
+  "abaIdas": "Visitas",
+  "gastoPorPeriodo": "Gasto por período",
+  "gastoPorCategoria": "Gasto por categoría",
+  "itensMaisComprados": "Artículos más comprados",
+  "evolucaoDePreco": "Evolución de precio",
+  "semDadosAinda": "Aún no hay datos.",
+  "totalNoPeriodo": "Total del período: {v}",
+  "@totalNoPeriodo": {
+    "placeholders": {
+      "v": { "type": "String" }
+    }
+  },
+  "porFrequencia": "Frecuencia",
+  "porGasto": "Gasto",
+  "semanticaGastoMensal": "Gasto mensual: {v}",
+  "@semanticaGastoMensal": {
+    "placeholders": {
+      "v": { "type": "String" }
+    }
+  },
+  "semanticaEvolucaoPreco": "Evolución de precio: último {v}",
+  "@semanticaEvolucaoPreco": {
+    "placeholders": {
+      "v": { "type": "String" }
+    }
+  },
+
+  "boasVindasTitulo": "Bienvenido(a)",
+  "boasVindasSubtitulo": "Organiza tus compras en tu dispositivo.",
+  "boasVindasOffline": "Funciona sin conexión",
+  "boasVindasOfflineDica": "Tus listas se quedan en el dispositivo.",
+  "boasVindasBackup": "Copia cuando quieras",
+  "boasVindasBackupDica": "Exporta y restaura tus listas en un archivo.",
+  "boasVindasImportar": "Importa por texto",
+  "boasVindasImportarDica": "Pega una nota y la app organiza los artículos.",
+  "boasVindasDitar": "Dicta un artículo",
+  "boasVindasDitarDica": "Usa el micrófono para añadir hablando.",
+  "comecar": "Empezar",
+
+  "tourPular": "Saltar",
+  "tourAnterior": "Anterior",
+  "tourProximo": "Siguiente",
+  "tourConcluir": "Finalizar",
+  "tourPasso": "Paso {numero} de {total}",
+  "@tourPasso": {
+    "placeholders": {
+      "numero": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "tourAbrir": "Ver tutorial",
+  "tourNovaListaTitulo": "Crea tu primera lista",
+  "tourNovaListaCorpo": "Toca \"Nueva lista\" para empezar. Puedes crear todas las que quieras.",
+  "tourNomeTitulo": "Ponle un nombre",
+  "tourNomeCorpo": "El nombre aparece arriba. Opcionalmente, define un presupuesto.",
+  "tourAdicionarTitulo": "Añadir artículo",
+  "tourAdicionarCorpo": "Escribe aquí. \"1kg de arroz\" se convierte en nombre, cantidad y unidad.",
+  "tourUnidadeTitulo": "Unidad",
+  "tourUnidadeCorpo": "Elige la medida (un, kg, paquete, pct, pt...). La app intenta adivinar.",
+  "tourImportarTitulo": "Importa por texto",
+  "tourImportarCorpo": "Pega una nota y la app organiza los artículos por ti.",
+  "tourBuscaTitulo": "Búsqueda y filtros",
+  "tourBuscaCorpo": "Encuentra artículos por nombre y filtra por categoría o unidad.",
+  "tourConfigTitulo": "Ajustes",
+  "tourConfigCorpo": "Tema, categorías, copia y dónde repasar este tutorial.",
+  "tourMarcarTitulo": "Marcar, editar y quitar",
+  "tourMarcarCorpo": "Toca el artículo para editar; marca el círculo; arrastra para quitar.",
+  "tourMercadoTitulo": "Modo compra",
+  "tourMercadoCorpo": "En el supermercado, marca las compras sin perder lo que falta.",
+  "tourOrcamentoTitulo": "Presupuesto y total",
+  "tourOrcamentoCorpo": "Define un tope y sigue el total del carrito.",
+
+  "politicaPrivacidadeTexto": "Política de Privacidad — Mis listas\n\n1. Datos que recopilamos\nLa aplicación funciona enteramente en tu dispositivo.\n• Tus listas y artículos se guardan solo en tu dispositivo.\n• No creamos cuentas, no pedimos correo ni contraseña y no enviamos tus datos a nuestros servidores.\n\n2. Voz\n• La función de añadir artículos por voz usa el reconocedor de voz de tu dispositivo. Según el sistema, el audio puede ser procesado por el servicio de reconocimiento del dispositivo (que puede usar internet). No grabamos ni guardamos el audio.\n\n3. Copia de seguridad\n• Puedes exportar un archivo de copia y reimportarlo. El archivo se crea en tu dispositivo y solo sale de él por una acción tuya (compartir/guardar).\n\n4. Con quién compartimos\nNo compartimos datos con terceros. No hay publicidad ni rastreo.\n\n5. Cuánto tiempo lo guardamos\nTus datos permanecen en el dispositivo hasta que los elimines en la propia aplicación (eliminando listas o la app).\n\n6. Tus derechos\nAccedes, corriges y borras todo directamente en la aplicación. La app no está dirigida a menores de 16 años.\n\n7. Contacto\nDudas sobre privacidad: {email}.",
+  "@politicaPrivacidadeTexto": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+
+  "idiomaTitulo": "Idioma",
+  "idiomaSistema": "Sistema",
+  "idiomaPortugues": "Portugués",
+  "idiomaIngles": "Inglés",
+  "idiomaEspanhol": "Español"
+}

@@ -1,0 +1,440 @@
+{
+  "@@locale": "en",
+
+  "appNome": "My Lists",
+  "erroGenerico": "Could not complete. Please try again.",
+
+  "minhasListas": "My Lists",
+  "abaMinhas": "Mine",
+  "novaLista": "New list",
+  "salvar": "Save",
+  "cancelar": "Cancel",
+  "renomear": "Rename",
+  "excluir": "Delete",
+  "mostrarArquivadas": "Show archived",
+  "arquivar": "Archive",
+  "desarquivar": "Unarchive",
+  "arquivada": "Archived",
+  "listaArquivada": "List archived.",
+  "listaDesarquivada": "List unarchived.",
+
+  "adicionarItem": "Add item",
+  "itensConcluidos": "Completed items",
+  "reordenar": "Reorder",
+  "sugestoes": "Suggestions",
+
+  "ditarItem": "Dictate item",
+  "vozIndisponivel": "Voice recognition is unavailable on this device.",
+  "adicionarSugerido": "Add {nome}",
+  "@adicionarSugerido": {
+    "placeholders": {
+      "nome": { "type": "String" }
+    }
+  },
+
+  "modoMercado": "Shopping mode",
+  "mercadoProgresso": "{marcados} of {total}",
+  "@mercadoProgresso": {
+    "placeholders": {
+      "marcados": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "mercadoMarcados": "Checked",
+  "mercadoTudoComprado": "All done!",
+  "voltarParaLista": "Back to list",
+
+  "nenhumaLista": "No lists here",
+  "criePrimeiraLista": "Create your first list or import from text.",
+  "criarPrimeiraLista": "Create first list",
+  "nomeDaLista": "List name",
+  "criarLista": "Create list",
+  "renomearLista": "Rename list",
+  "listaCriada": "List created.",
+  "listaRenomeada": "List renamed.",
+  "comprarDeNovo": "Buy again",
+  "duplicarDescricao": "{n, plural, =1{1 pending item will be copied.} other{{n} pending items will be copied.}}",
+  "@duplicarDescricao": {
+    "placeholders": {
+      "n": { "type": "int" }
+    }
+  },
+  "excluirLista": "Delete list",
+  "excluirListaTitulo": "Delete \"{titulo}\"?",
+  "@excluirListaTitulo": {
+    "placeholders": {
+      "titulo": { "type": "String" }
+    }
+  },
+  "excluirListaMensagem": "{n, plural, =0{The list will be deleted{temMembros, select, true{ for all participants} other{}}.} =1{The item will be removed{temMembros, select, true{ for all participants} other{}}.} other{The {n} items will be removed{temMembros, select, true{ for all participants} other{}}.}}",
+  "@excluirListaMensagem": {
+    "placeholders": {
+      "n": { "type": "int" },
+      "temMembros": { "type": "String" }
+    }
+  },
+  "atualizada": "updated",
+  "erroNomeVazio": "Enter a name.",
+  "erroQuantidadeInvalida": "Enter a quantity greater than zero.",
+
+  "itens": "Items",
+  "desfazer": "Undo",
+  "itemRemovido": "Item removed",
+  "itemDuplicadoSomado": "is already on the list. Quantity increased.",
+  "itemAtualizado": "Item updated.",
+  "naoEntendiItem": "I did not understand the item",
+  "removerItem": "Remove",
+  "editarItem": "Edit item",
+  "nomeDoItem": "Item name",
+  "quantidade": "Quantity",
+  "unidade": "Unit",
+  "categoria": "Category",
+  "preco": "Price (R$)",
+  "erroPrecoInvalido": "Invalid price.",
+
+  "ultimaCompra": "Last purchase: {valor} ({data})",
+  "@ultimaCompra": {
+    "placeholders": {
+      "valor": { "type": "String" },
+      "data": { "type": "String" }
+    }
+  },
+  "mesmoPreco": "Same price",
+  "precoSubiu": "↑ {diff}",
+  "@precoSubiu": {
+    "placeholders": {
+      "diff": { "type": "String" }
+    }
+  },
+  "precoBaixou": "↓ {diff}",
+  "@precoBaixou": {
+    "placeholders": {
+      "diff": { "type": "String" }
+    }
+  },
+
+  "orcamento": "Budget",
+  "campoOrcamento": "Budget (R$)",
+  "removerOrcamento": "Remove budget",
+  "orcamentoDefinido": "Budget saved.",
+  "orcamentoRemovido": "Budget removed.",
+  "erroOrcamentoInvalido": "Invalid budget amount.",
+  "totalNoCarrinho": "In cart: {valor}{semPreco, plural, =0{} other{ · {semPreco} without price}}",
+  "@totalNoCarrinho": {
+    "placeholders": {
+      "valor": { "type": "String" },
+      "semPreco": { "type": "int" }
+    }
+  },
+  "totalComOrcamento": "In cart: {valor} of {orcamento}{semPreco, plural, =0{} other{ · {semPreco} without price}}",
+  "@totalComOrcamento": {
+    "placeholders": {
+      "valor": { "type": "String" },
+      "orcamento": { "type": "String" },
+      "semPreco": { "type": "int" }
+    }
+  },
+  "acimaDoOrcamento": "Over budget",
+
+  "orcamentoAtencao": "Near budget",
+  "orcamentoCruzado": "You went over budget: {total}",
+  "@orcamentoCruzado": {
+    "placeholders": {
+      "total": { "type": "String" }
+    }
+  },
+  "orcamentoPorCategoria": "Budget by category",
+  "limitePorCategoria": "Limit (R$)",
+  "categoriaSemLimite": "No limit",
+  "orcamentosSalvos": "Category limits saved.",
+  "acimaDoLimiteDaCategoria": "Over category limit",
+  "notificacoesOrcamento": "Budget notifications",
+
+  "diminuir": "Decrease",
+  "aumentar": "Increase",
+  "menu": "Menu",
+  "lista": "List",
+  "listaNaoEncontrada": "List not found.",
+  "voltarParaListas": "Back to lists",
+  "nenhumItem": "No items yet",
+  "nenhumItemDica": "Add in the field above or import a list.",
+
+  "tempoAgora": "now",
+  "tempoMinutos": "{m} min ago",
+  "@tempoMinutos": {
+    "placeholders": {
+      "m": { "type": "int" }
+    }
+  },
+  "tempoHoras": "{h} h ago",
+  "@tempoHoras": {
+    "placeholders": {
+      "h": { "type": "int" }
+    }
+  },
+  "tempoOntem": "yesterday",
+  "tempoDias": "{d} days ago",
+  "@tempoDias": {
+    "placeholders": {
+      "d": { "type": "int" }
+    }
+  },
+  "tempoMeses": "{m} months ago",
+  "@tempoMeses": {
+    "placeholders": {
+      "m": { "type": "int" }
+    }
+  },
+  "tempoAnos": "{a} years ago",
+  "@tempoAnos": {
+    "placeholders": {
+      "a": { "type": "int" }
+    }
+  },
+  "progressoLista": "{concluidos}/{total, plural, =1{item completed} other{items completed}}",
+  "@progressoLista": {
+    "placeholders": {
+      "concluidos": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "desmarcarTodos": "Uncheck all",
+  "limparConcluidos": "Clear completed",
+  "limpar": "Clear",
+  "limparConcluidosMensagem": "Completed items will be removed from the list.",
+  "concluidosRemovidos": "Completed items removed.",
+
+  "fechar": "Close",
+  "importColeOuDigite": "Paste or type your list:",
+  "importExemplo": "1kg of rice, 2 milks, 500g of sliced cheese...",
+  "importExtrairItens": "Extract items",
+  "importLendo": "Reading...",
+  "importConfirmeItens": "Confirm the items",
+  "importRespostaInvalida": "I could not understand the list. Try rewriting it.",
+  "nadaReconhecido": "Nothing was recognized",
+  "separarItensDica": "Separate the items by comma or line and try again.",
+  "voltarEEditar": "Back and edit",
+  "importAdicionarN": "Add {n}",
+  "@importAdicionarN": {
+    "placeholders": {
+      "n": { "type": "int" }
+    }
+  },
+  "importSeraoAdicionados": "{n} of {total} will be added",
+  "@importSeraoAdicionados": {
+    "placeholders": {
+      "n": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "importarLista": "Import list",
+  "importLocalAvisoPadrao": "Items without a quantity were added as 1 unit.",
+
+  "foto": "Photo",
+  "tirarFoto": "Take photo",
+  "escolherDaGaleria": "Choose from gallery",
+  "ocrLendo": "Reading the photo...",
+  "ocrNenhumTexto": "No text recognized in the photo.",
+  "ocrFalha": "Could not read the photo.",
+
+  "adicionarDeOutraLista": "Add from another list",
+  "escolherListaOrigem": "Source list",
+  "selecionarTodos": "Select all",
+  "adicionarSelecionados": "Add",
+  "nenhumItemPendenteNaOrigem": "No pending items in this list.",
+  "tituloListaArquivada": "{titulo} · Archived",
+  "@tituloListaArquivada": {
+    "placeholders": {
+      "titulo": { "type": "String" }
+    }
+  },
+  "itensAdicionadosDeOutra": "{n, plural, =1{1 item added from another list.} other{{n} items added from another list.}}",
+  "@itensAdicionadosDeOutra": {
+    "placeholders": {
+      "n": { "type": "int" }
+    }
+  },
+
+  "buscar": "Search",
+  "buscarLista": "Search list",
+  "buscarItem": "Search item",
+  "limparBusca": "Clear search",
+  "nenhumaListaEncontrada": "No list found",
+  "nenhumItemEncontrado": "No item found",
+  "buscaSemResultadoDica": "Try another term.",
+  "itensExtraidos": "{n, plural, =1{1 item extracted.} other{{n} items extracted.}}",
+  "@itensExtraidos": {
+    "placeholders": {
+      "n": { "type": "int" }
+    }
+  },
+
+  "carregando": "Loading...",
+  "tentarNovamente": "Try again",
+  "semValor": "—",
+
+  "configuracoes": "Settings",
+  "aparencia": "Appearance",
+  "temaClaro": "Light",
+  "temaEscuro": "Dark",
+  "temaSistema": "System",
+  "ordenarCategorias": "Sort categories",
+  "ordenarCategoriasDica": "Drag to match your store aisle order.",
+  "restaurarPadrao": "Restore default",
+  "restaurarPadraoTitulo": "Restore the default order?",
+  "restaurarPadraoMensagem": "Categories return to the original order.",
+  "sobre": "About",
+  "politicaPrivacidade": "Privacy Policy",
+  "versao": "Version",
+
+  "backup": "Backup",
+  "backupExportar": "Export backup",
+  "backupImportar": "Import backup",
+  "backupExportarAjuda": "Shares a file with your lists to keep or take to another device.",
+  "backupImportarAjuda": "Restores the lists from a file, merging with the current ones.",
+  "backupExportado": "Backup exported.",
+  "backupImportado": "Backup imported.",
+  "backupInvalido": "Invalid backup file.",
+  "backupRestauracaoErro": "Could not restore the backup on this device.",
+  "backupLeituraErro": "Could not read the file.",
+  "compartilharIndisponivel": "Sharing unavailable here. Use \"Copy link\".",
+
+  "compartilharLista": "Share",
+  "compartilharTexto": "Send as text",
+  "compartilharArquivo": "Send file",
+  "compartilharQr": "QR code",
+  "copiarCodigo": "Copy code",
+  "codigoCopiado": "Code copied.",
+  "compartilharQrGrande": "Large list — use text or file.",
+  "listaCompartilhada": "List shared",
+  "compartilharIndisponivelLista": "Sharing unavailable here.",
+  "escanearQr": "Scan QR",
+  "receberLista": "Receive list",
+  "receberCodigoOuTexto": "Paste the list code or text",
+  "receberArquivo": "Choose file",
+  "receberContinuar": "Continue",
+  "receberConfirmar": "Create list",
+  "receberInvalido": "Invalid code or file.",
+
+  "finalizarCompra": "Finish shopping",
+  "finalizarConfirmarTitulo": "Finish this shopping trip?",
+  "finalizarResumo": "{n, plural, =1{1 item} other{{n} items}} · {total}{semPreco, plural, =0{} other{ · {semPreco} without price}}",
+  "@finalizarResumo": {
+    "placeholders": {
+      "n": { "type": "int" },
+      "total": { "type": "String" },
+      "semPreco": { "type": "int" }
+    }
+  },
+  "finalizarLimpar": "Clear completed",
+  "finalizarManter": "Keep the list",
+  "compraRegistrada": "Purchase recorded in history.",
+  "historico": "History",
+  "historicoVazio": "No finished purchases yet.",
+  "historicoVazioDica": "Check items and use \"Finish shopping\" to record a trip.",
+  "idaNaoEncontrada": "Purchase not found.",
+  "nItens": "{n, plural, =1{1 item} other{{n} items}}",
+  "@nItens": {
+    "placeholders": {
+      "n": { "type": "int" }
+    }
+  },
+  "totalGasto": "Total spent",
+  "ticketMedio": "Average ticket",
+  "numeroIdas": "Trips",
+
+  "mercado": "Store",
+  "mercadoOpcional": "Store (optional)",
+  "porMercado": "By store",
+  "maisBarato": "cheapest",
+  "gastoPorMercado": "Spending by store",
+  "semMercado": "No store",
+  "mercadosSugeridos": "Stores used",
+
+  "estatisticas": "Statistics",
+  "abaIdas": "Trips",
+  "gastoPorPeriodo": "Spending by period",
+  "gastoPorCategoria": "Spending by category",
+  "itensMaisComprados": "Most purchased items",
+  "evolucaoDePreco": "Price evolution",
+  "semDadosAinda": "No data yet.",
+  "totalNoPeriodo": "Total for the period: {v}",
+  "@totalNoPeriodo": {
+    "placeholders": {
+      "v": { "type": "String" }
+    }
+  },
+  "porFrequencia": "Frequency",
+  "porGasto": "Spending",
+  "semanticaGastoMensal": "Monthly spending: {v}",
+  "@semanticaGastoMensal": {
+    "placeholders": {
+      "v": { "type": "String" }
+    }
+  },
+  "semanticaEvolucaoPreco": "Price evolution: last {v}",
+  "@semanticaEvolucaoPreco": {
+    "placeholders": {
+      "v": { "type": "String" }
+    }
+  },
+
+  "boasVindasTitulo": "Welcome",
+  "boasVindasSubtitulo": "Organize your shopping on your device.",
+  "boasVindasOffline": "Works offline",
+  "boasVindasOfflineDica": "Your lists stay on the device.",
+  "boasVindasBackup": "Backup whenever you want",
+  "boasVindasBackupDica": "Export and restore your lists in a file.",
+  "boasVindasImportar": "Import from text",
+  "boasVindasImportarDica": "Paste a note and the app organizes the items.",
+  "boasVindasDitar": "Dictate an item",
+  "boasVindasDitarDica": "Use the microphone to add by speaking.",
+  "comecar": "Get started",
+
+  "tourPular": "Skip",
+  "tourAnterior": "Previous",
+  "tourProximo": "Next",
+  "tourConcluir": "Finish",
+  "tourPasso": "Step {numero} of {total}",
+  "@tourPasso": {
+    "placeholders": {
+      "numero": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "tourAbrir": "View tutorial",
+  "tourNovaListaTitulo": "Create your first list",
+  "tourNovaListaCorpo": "Tap \"New list\" to start. You can create as many as you want.",
+  "tourNomeTitulo": "Give it a name",
+  "tourNomeCorpo": "The name appears at the top. Optionally, set a budget.",
+  "tourAdicionarTitulo": "Add item",
+  "tourAdicionarCorpo": "Type here. \"1kg of rice\" becomes name, quantity, and unit.",
+  "tourUnidadeTitulo": "Unit",
+  "tourUnidadeCorpo": "Choose the measure (un, kg, package, pct, pt...). The app tries to guess.",
+  "tourImportarTitulo": "Import from text",
+  "tourImportarCorpo": "Paste a note and the app organizes the items for you.",
+  "tourBuscaTitulo": "Search and filters",
+  "tourBuscaCorpo": "Find items by name and filter by category or unit.",
+  "tourConfigTitulo": "Settings",
+  "tourConfigCorpo": "Theme, categories, backup, and where to revisit this tutorial.",
+  "tourMarcarTitulo": "Check, edit, and remove",
+  "tourMarcarCorpo": "Tap the item to edit; check the circle; drag to remove.",
+  "tourMercadoTitulo": "Shopping mode",
+  "tourMercadoCorpo": "At the store, check purchases without losing what is left.",
+  "tourOrcamentoTitulo": "Budget and total",
+  "tourOrcamentoCorpo": "Set a ceiling and track the cart total.",
+
+  "politicaPrivacidadeTexto": "Privacy Policy — My Lists\n\n1. Data we collect\nThe app works entirely on your device.\n• Your lists and items are stored only on your device.\n• We do not create accounts, do not ask for email or password, and do not send your data to our servers.\n\n2. Voice\n• The add-items-by-voice feature uses the speech recognizer of your device. Depending on the system, audio may be processed by the device recognition service (which may use the internet). We do not record or keep the audio.\n\n3. Backup\n• You can export a backup file and reimport it. The file is created on your device and only leaves it through an action of yours (share/save).\n\n4. With whom we share\nWe do not share data with third parties. There is no advertising or tracking.\n\n5. How long we keep it\nYour data stays on the device until you delete it in the app itself (removing lists or the app).\n\n6. Your rights\nYou access, correct, and delete everything directly in the app. The app is not directed to children under 16.\n\n7. Contact\nPrivacy questions: {email}.",
+  "@politicaPrivacidadeTexto": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+
+  "idiomaTitulo": "Language",
+  "idiomaSistema": "System",
+  "idiomaPortugues": "Portuguese",
+  "idiomaIngles": "English",
+  "idiomaEspanhol": "Spanish"
+}

@@ -1,0 +1,440 @@
+{
+  "@@locale": "pt",
+
+  "appNome": "Minhas Listas",
+  "erroGenerico": "Não foi possível concluir. Tente novamente.",
+
+  "minhasListas": "Minhas Listas",
+  "abaMinhas": "Minhas",
+  "novaLista": "Nova lista",
+  "salvar": "Salvar",
+  "cancelar": "Cancelar",
+  "renomear": "Renomear",
+  "excluir": "Excluir",
+  "mostrarArquivadas": "Mostrar arquivadas",
+  "arquivar": "Arquivar",
+  "desarquivar": "Desarquivar",
+  "arquivada": "Arquivada",
+  "listaArquivada": "Lista arquivada.",
+  "listaDesarquivada": "Lista desarquivada.",
+
+  "adicionarItem": "Adicionar item",
+  "itensConcluidos": "Itens concluídos",
+  "reordenar": "Reordenar",
+  "sugestoes": "Sugestões",
+
+  "ditarItem": "Ditar item",
+  "vozIndisponivel": "Reconhecimento de voz indisponível neste aparelho.",
+  "adicionarSugerido": "Adicionar {nome}",
+  "@adicionarSugerido": {
+    "placeholders": {
+      "nome": { "type": "String" }
+    }
+  },
+
+  "modoMercado": "Modo mercado",
+  "mercadoProgresso": "{marcados} de {total}",
+  "@mercadoProgresso": {
+    "placeholders": {
+      "marcados": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "mercadoMarcados": "Marcados",
+  "mercadoTudoComprado": "Tudo comprado!",
+  "voltarParaLista": "Voltar para a lista",
+
+  "nenhumaLista": "Nenhuma lista por aqui",
+  "criePrimeiraLista": "Crie sua primeira lista ou importe por texto.",
+  "criarPrimeiraLista": "Criar primeira lista",
+  "nomeDaLista": "Nome da lista",
+  "criarLista": "Criar lista",
+  "renomearLista": "Renomear lista",
+  "listaCriada": "Lista criada.",
+  "listaRenomeada": "Lista renomeada.",
+  "comprarDeNovo": "Comprar de novo",
+  "duplicarDescricao": "{n, plural, =1{1 item pendente será copiado.} other{{n} itens pendentes serão copiados.}}",
+  "@duplicarDescricao": {
+    "placeholders": {
+      "n": { "type": "int" }
+    }
+  },
+  "excluirLista": "Excluir lista",
+  "excluirListaTitulo": "Excluir \"{titulo}\"?",
+  "@excluirListaTitulo": {
+    "placeholders": {
+      "titulo": { "type": "String" }
+    }
+  },
+  "excluirListaMensagem": "{n, plural, =0{A lista será excluída{temMembros, select, true{ para todos os participantes} other{}}.} =1{O item será removido{temMembros, select, true{ para todos os participantes} other{}}.} other{Os {n} itens serão removidos{temMembros, select, true{ para todos os participantes} other{}}.}}",
+  "@excluirListaMensagem": {
+    "placeholders": {
+      "n": { "type": "int" },
+      "temMembros": { "type": "String" }
+    }
+  },
+  "atualizada": "atualizada",
+  "erroNomeVazio": "Informe um nome.",
+  "erroQuantidadeInvalida": "Informe uma quantidade maior que zero.",
+
+  "itens": "Itens",
+  "desfazer": "Desfazer",
+  "itemRemovido": "Item removido",
+  "itemDuplicadoSomado": "já está na lista. Quantidade aumentada.",
+  "itemAtualizado": "Item atualizado.",
+  "naoEntendiItem": "Não entendi o item",
+  "removerItem": "Remover",
+  "editarItem": "Editar item",
+  "nomeDoItem": "Nome do item",
+  "quantidade": "Quantidade",
+  "unidade": "Unidade",
+  "categoria": "Categoria",
+  "preco": "Preço (R$)",
+  "erroPrecoInvalido": "Preço inválido.",
+
+  "ultimaCompra": "Última compra: {valor} ({data})",
+  "@ultimaCompra": {
+    "placeholders": {
+      "valor": { "type": "String" },
+      "data": { "type": "String" }
+    }
+  },
+  "mesmoPreco": "Mesmo preço",
+  "precoSubiu": "↑ {diff}",
+  "@precoSubiu": {
+    "placeholders": {
+      "diff": { "type": "String" }
+    }
+  },
+  "precoBaixou": "↓ {diff}",
+  "@precoBaixou": {
+    "placeholders": {
+      "diff": { "type": "String" }
+    }
+  },
+
+  "orcamento": "Orçamento",
+  "campoOrcamento": "Orçamento (R$)",
+  "removerOrcamento": "Remover orçamento",
+  "orcamentoDefinido": "Orçamento salvo.",
+  "orcamentoRemovido": "Orçamento removido.",
+  "erroOrcamentoInvalido": "Valor de orçamento inválido.",
+  "totalNoCarrinho": "No carrinho: {valor}{semPreco, plural, =0{} other{ · {semPreco} sem preço}}",
+  "@totalNoCarrinho": {
+    "placeholders": {
+      "valor": { "type": "String" },
+      "semPreco": { "type": "int" }
+    }
+  },
+  "totalComOrcamento": "No carrinho: {valor} de {orcamento}{semPreco, plural, =0{} other{ · {semPreco} sem preço}}",
+  "@totalComOrcamento": {
+    "placeholders": {
+      "valor": { "type": "String" },
+      "orcamento": { "type": "String" },
+      "semPreco": { "type": "int" }
+    }
+  },
+  "acimaDoOrcamento": "Acima do orçamento",
+
+  "orcamentoAtencao": "Perto do orçamento",
+  "orcamentoCruzado": "Você passou do orçamento: {total}",
+  "@orcamentoCruzado": {
+    "placeholders": {
+      "total": { "type": "String" }
+    }
+  },
+  "orcamentoPorCategoria": "Orçamento por categoria",
+  "limitePorCategoria": "Limite (R$)",
+  "categoriaSemLimite": "Sem limite",
+  "orcamentosSalvos": "Limites por categoria salvos.",
+  "acimaDoLimiteDaCategoria": "Acima do limite da categoria",
+  "notificacoesOrcamento": "Notificações de orçamento",
+
+  "diminuir": "Diminuir",
+  "aumentar": "Aumentar",
+  "menu": "Menu",
+  "lista": "Lista",
+  "listaNaoEncontrada": "Lista não encontrada.",
+  "voltarParaListas": "Voltar para as listas",
+  "nenhumItem": "Nenhum item ainda",
+  "nenhumItemDica": "Adicione no campo acima ou importe uma lista.",
+
+  "tempoAgora": "agora",
+  "tempoMinutos": "há {m} min",
+  "@tempoMinutos": {
+    "placeholders": {
+      "m": { "type": "int" }
+    }
+  },
+  "tempoHoras": "há {h} h",
+  "@tempoHoras": {
+    "placeholders": {
+      "h": { "type": "int" }
+    }
+  },
+  "tempoOntem": "ontem",
+  "tempoDias": "há {d} dias",
+  "@tempoDias": {
+    "placeholders": {
+      "d": { "type": "int" }
+    }
+  },
+  "tempoMeses": "há {m} meses",
+  "@tempoMeses": {
+    "placeholders": {
+      "m": { "type": "int" }
+    }
+  },
+  "tempoAnos": "há {a} anos",
+  "@tempoAnos": {
+    "placeholders": {
+      "a": { "type": "int" }
+    }
+  },
+  "progressoLista": "{concluidos}/{total, plural, =1{item concluído} other{itens concluídos}}",
+  "@progressoLista": {
+    "placeholders": {
+      "concluidos": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+  "desmarcarTodos": "Desmarcar todos",
+  "limparConcluidos": "Limpar concluídos",
+  "limpar": "Limpar",
+  "limparConcluidosMensagem": "Os itens concluídos serão removidos da lista.",
+  "concluidosRemovidos": "Itens concluídos removidos.",
+
+  "fechar": "Fechar",
+  "importColeOuDigite": "Cole ou digite sua lista:",
+  "importExemplo": "1kg de arroz, 2 leites, 500g de queijo prato...",
+  "importExtrairItens": "Extrair itens",
+  "importLendo": "Lendo...",
+  "importConfirmeItens": "Confirme os itens",
+  "importRespostaInvalida": "Não consegui entender a lista. Tente reescrever.",
+  "nadaReconhecido": "Nada foi reconhecido",
+  "separarItensDica": "Separe os itens por vírgula ou linha e tente de novo.",
+  "voltarEEditar": "Voltar e editar",
+  "importAdicionarN": "Adicionar {n}",
+  "@importAdicionarN": {
+    "placeholders": {
+      "n": { "type": "int" }
+    }
+  },
+  "importSeraoAdicionados": "{n} de {total} serão adicionados",
+  "@importSeraoAdicionados": {
+    "placeholders": {
+      "n": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "importarLista": "Importar lista",
+  "importLocalAvisoPadrao": "Itens sem quantidade entraram com 1 un.",
+
+  "foto": "Foto",
+  "tirarFoto": "Tirar foto",
+  "escolherDaGaleria": "Escolher da galeria",
+  "ocrLendo": "Lendo a foto...",
+  "ocrNenhumTexto": "Nenhum texto reconhecido na foto.",
+  "ocrFalha": "Não foi possível ler a foto.",
+
+  "adicionarDeOutraLista": "Adicionar de outra lista",
+  "escolherListaOrigem": "Lista de origem",
+  "selecionarTodos": "Selecionar todos",
+  "adicionarSelecionados": "Adicionar",
+  "nenhumItemPendenteNaOrigem": "Nenhum item pendente nesta lista.",
+  "tituloListaArquivada": "{titulo} · Arquivada",
+  "@tituloListaArquivada": {
+    "placeholders": {
+      "titulo": { "type": "String" }
+    }
+  },
+  "itensAdicionadosDeOutra": "{n, plural, =1{1 item adicionado de outra lista.} other{{n} itens adicionados de outra lista.}}",
+  "@itensAdicionadosDeOutra": {
+    "placeholders": {
+      "n": { "type": "int" }
+    }
+  },
+
+  "buscar": "Buscar",
+  "buscarLista": "Buscar lista",
+  "buscarItem": "Buscar item",
+  "limparBusca": "Limpar busca",
+  "nenhumaListaEncontrada": "Nenhuma lista encontrada",
+  "nenhumItemEncontrado": "Nenhum item encontrado",
+  "buscaSemResultadoDica": "Tente outro termo.",
+  "itensExtraidos": "{n, plural, =1{1 item extraído.} other{{n} itens extraídos.}}",
+  "@itensExtraidos": {
+    "placeholders": {
+      "n": { "type": "int" }
+    }
+  },
+
+  "carregando": "Carregando...",
+  "tentarNovamente": "Tentar novamente",
+  "semValor": "—",
+
+  "configuracoes": "Configurações",
+  "aparencia": "Aparência",
+  "temaClaro": "Claro",
+  "temaEscuro": "Escuro",
+  "temaSistema": "Sistema",
+  "ordenarCategorias": "Ordenar categorias",
+  "ordenarCategoriasDica": "Arraste para a ordem dos corredores do seu mercado.",
+  "restaurarPadrao": "Restaurar padrão",
+  "restaurarPadraoTitulo": "Restaurar a ordem padrão?",
+  "restaurarPadraoMensagem": "As categorias voltam à ordem original.",
+  "sobre": "Sobre",
+  "politicaPrivacidade": "Política de Privacidade",
+  "versao": "Versão",
+
+  "backup": "Backup",
+  "backupExportar": "Exportar backup",
+  "backupImportar": "Importar backup",
+  "backupExportarAjuda": "Compartilha um arquivo com suas listas para guardar ou levar a outro aparelho.",
+  "backupImportarAjuda": "Restaura as listas de um arquivo, mesclando com as atuais.",
+  "backupExportado": "Backup exportado.",
+  "backupImportado": "Backup importado.",
+  "backupInvalido": "Arquivo de backup inválido.",
+  "backupRestauracaoErro": "Não foi possível restaurar o backup neste aparelho.",
+  "backupLeituraErro": "Não foi possível ler o arquivo.",
+  "compartilharIndisponivel": "Compartilhamento indisponível aqui. Use \"Copiar link\".",
+
+  "compartilharLista": "Compartilhar",
+  "compartilharTexto": "Enviar como texto",
+  "compartilharArquivo": "Enviar arquivo",
+  "compartilharQr": "QR code",
+  "copiarCodigo": "Copiar código",
+  "codigoCopiado": "Código copiado.",
+  "compartilharQrGrande": "Lista grande — use texto ou arquivo.",
+  "listaCompartilhada": "Lista compartilhada",
+  "compartilharIndisponivelLista": "Compartilhamento indisponível aqui.",
+  "escanearQr": "Escanear QR",
+  "receberLista": "Receber lista",
+  "receberCodigoOuTexto": "Cole o código ou o texto da lista",
+  "receberArquivo": "Escolher arquivo",
+  "receberContinuar": "Continuar",
+  "receberConfirmar": "Criar lista",
+  "receberInvalido": "Código ou arquivo inválido.",
+
+  "finalizarCompra": "Finalizar compra",
+  "finalizarConfirmarTitulo": "Finalizar esta compra?",
+  "finalizarResumo": "{n, plural, =1{1 item} other{{n} itens}} · {total}{semPreco, plural, =0{} other{ · {semPreco} sem preço}}",
+  "@finalizarResumo": {
+    "placeholders": {
+      "n": { "type": "int" },
+      "total": { "type": "String" },
+      "semPreco": { "type": "int" }
+    }
+  },
+  "finalizarLimpar": "Limpar concluídos",
+  "finalizarManter": "Manter a lista",
+  "compraRegistrada": "Compra registrada no histórico.",
+  "historico": "Histórico",
+  "historicoVazio": "Nenhuma compra finalizada ainda.",
+  "historicoVazioDica": "Marque itens e use \"Finalizar compra\" para registrar uma ida.",
+  "idaNaoEncontrada": "Compra não encontrada.",
+  "nItens": "{n, plural, =1{1 item} other{{n} itens}}",
+  "@nItens": {
+    "placeholders": {
+      "n": { "type": "int" }
+    }
+  },
+  "totalGasto": "Total gasto",
+  "ticketMedio": "Ticket médio",
+  "numeroIdas": "Idas",
+
+  "mercado": "Mercado",
+  "mercadoOpcional": "Mercado (opcional)",
+  "porMercado": "Por mercado",
+  "maisBarato": "mais barato",
+  "gastoPorMercado": "Gasto por mercado",
+  "semMercado": "Sem mercado",
+  "mercadosSugeridos": "Mercados usados",
+
+  "estatisticas": "Estatísticas",
+  "abaIdas": "Idas",
+  "gastoPorPeriodo": "Gasto por período",
+  "gastoPorCategoria": "Gasto por categoria",
+  "itensMaisComprados": "Itens mais comprados",
+  "evolucaoDePreco": "Evolução de preço",
+  "semDadosAinda": "Sem dados ainda.",
+  "totalNoPeriodo": "Total no período: {v}",
+  "@totalNoPeriodo": {
+    "placeholders": {
+      "v": { "type": "String" }
+    }
+  },
+  "porFrequencia": "Frequência",
+  "porGasto": "Gasto",
+  "semanticaGastoMensal": "Gasto mensal: {v}",
+  "@semanticaGastoMensal": {
+    "placeholders": {
+      "v": { "type": "String" }
+    }
+  },
+  "semanticaEvolucaoPreco": "Evolução de preço: último {v}",
+  "@semanticaEvolucaoPreco": {
+    "placeholders": {
+      "v": { "type": "String" }
+    }
+  },
+
+  "boasVindasTitulo": "Bem-vindo(a)",
+  "boasVindasSubtitulo": "Organize suas compras no seu aparelho.",
+  "boasVindasOffline": "Funciona offline",
+  "boasVindasOfflineDica": "Suas listas ficam no aparelho.",
+  "boasVindasBackup": "Backup quando quiser",
+  "boasVindasBackupDica": "Exporte e restaure suas listas num arquivo.",
+  "boasVindasImportar": "Importe por texto",
+  "boasVindasImportarDica": "Cole uma anotação e o app organiza os itens.",
+  "boasVindasDitar": "Dite um item",
+  "boasVindasDitarDica": "Use o microfone para adicionar falando.",
+  "comecar": "Começar",
+
+  "tourPular": "Pular",
+  "tourAnterior": "Anterior",
+  "tourProximo": "Próximo",
+  "tourConcluir": "Concluir",
+  "tourPasso": "Passo {numero} de {total}",
+  "@tourPasso": {
+    "placeholders": {
+      "numero": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "tourAbrir": "Ver tutorial",
+  "tourNovaListaTitulo": "Criar sua primeira lista",
+  "tourNovaListaCorpo": "Toque em \"Nova lista\" para começar. Você pode criar quantas quiser.",
+  "tourNomeTitulo": "Dê um nome",
+  "tourNomeCorpo": "O nome aparece no topo. Opcionalmente, defina um orçamento.",
+  "tourAdicionarTitulo": "Adicionar item",
+  "tourAdicionarCorpo": "Digite aqui. \"1kg de arroz\" já vira nome, quantidade e unidade.",
+  "tourUnidadeTitulo": "Unidade",
+  "tourUnidadeCorpo": "Escolha a medida (un, kg, pacote, pct, pt...). O app tenta adivinhar.",
+  "tourImportarTitulo": "Importe por texto",
+  "tourImportarCorpo": "Cole uma anotação e o app organiza os itens para você.",
+  "tourBuscaTitulo": "Busca e filtros",
+  "tourBuscaCorpo": "Encontre itens por nome e filtre por categoria ou unidade.",
+  "tourConfigTitulo": "Configurações",
+  "tourConfigCorpo": "Tema, categorias, backup e onde rever este tutorial.",
+  "tourMarcarTitulo": "Marcar, editar e remover",
+  "tourMarcarCorpo": "Toque no item para editar; marque no círculo; arraste para remover.",
+  "tourMercadoTitulo": "Modo mercado",
+  "tourMercadoCorpo": "No mercado, marque as compras sem perder o que falta.",
+  "tourOrcamentoTitulo": "Orçamento e total",
+  "tourOrcamentoCorpo": "Defina um teto e acompanhe o total do carrinho.",
+
+  "politicaPrivacidadeTexto": "Política de Privacidade — Minhas Listas\n\n1. Dados que coletamos\nO aplicativo funciona inteiramente no seu aparelho.\n• Suas listas e itens ficam armazenados apenas no seu dispositivo.\n• Não criamos conta, não pedimos e-mail nem senha e não enviamos seus dados para servidores nossos.\n\n2. Voz\n• O recurso de adicionar itens por voz usa o reconhecedor de fala do seu aparelho. Conforme o sistema, o áudio pode ser processado pelo serviço de reconhecimento do dispositivo (que pode usar a internet). Não gravamos nem guardamos o áudio.\n\n3. Backup\n• Você pode exportar um arquivo de backup e reimportá-lo. O arquivo é criado no seu aparelho e só sai dele por uma ação sua (compartilhar/salvar).\n\n4. Com quem compartilhamos\nNão compartilhamos dados com terceiros. Não há publicidade nem rastreamento.\n\n5. Por quanto tempo guardamos\nSeus dados ficam no aparelho até você excluí-los no próprio aplicativo (removendo listas ou o app).\n\n6. Seus direitos\nVocê acessa, corrige e apaga tudo diretamente no aplicativo. O app não é direcionado a menores de 16 anos.\n\n7. Contato\nDúvidas sobre privacidade: {email}.",
+  "@politicaPrivacidadeTexto": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+
+  "idiomaTitulo": "Idioma",
+  "idiomaSistema": "Sistema",
+  "idiomaPortugues": "Português",
+  "idiomaIngles": "English",
+  "idiomaEspanhol": "Español"
+}

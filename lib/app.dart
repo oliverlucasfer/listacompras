@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/idioma/idioma_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/identidade_visual.dart';
 import 'core/theme/theme_mode_provider.dart';
 import 'features/tour/ui/tour_overlay.dart';
 import 'features/widget/ui/widget_atualizador.dart';
+import 'l10n/app_localizations.dart';
 import 'router.dart';
 
 final _messengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -21,9 +23,10 @@ class ListaComprasApp extends ConsumerWidget {
     final modoTema = ref.watch(temaModoProvider).value ?? ThemeMode.system;
     return MaterialApp.router(
       title: identidade.nomeApp,
-      locale: const Locale('pt', 'BR'),
-      supportedLocales: const [Locale('pt', 'BR')],
+      locale: ref.watch(idiomaProvider).value?.locale,
+      supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

@@ -12,11 +12,15 @@ void main() {
     );
   });
 
-  test('deve_configurar_material_pt_br_quando_app_inicia', () {
+  test('deve_configurar_localizacoes_quando_app_inicia', () {
     final app = File('lib/app.dart').readAsStringSync();
     expect(app, contains('package:flutter_localizations/'));
-    expect(app, contains('locale: const Locale(\'pt\', \'BR\')'));
-    expect(app, contains("supportedLocales: const [Locale('pt', 'BR')]"));
+    expect(app, contains('AppLocalizations.delegate'));
+    expect(
+      app,
+      contains('supportedLocales: AppLocalizations.supportedLocales'),
+    );
+    expect(app, contains('locale: ref.watch(idiomaProvider).value?.locale'));
     expect(app, contains('localizationsDelegates: const ['));
     expect(app, contains('GlobalMaterialLocalizations.delegate'));
     expect(app, contains('GlobalWidgetsLocalizations.delegate'));

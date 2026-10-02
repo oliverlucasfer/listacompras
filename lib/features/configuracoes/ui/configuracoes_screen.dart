@@ -4,10 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../core/l10n/app_strings.dart';
+import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/seletor_tema.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_cabecalho_secao.dart';
 import '../../../core/widgets/app_politica_privacidade.dart';
+import '../../../core/widgets/seletor_idioma.dart';
 import '../../backup/ui/secao_backup.dart';
 import '../../tour/tour_controller.dart';
 
@@ -50,6 +52,11 @@ class ConfiguracoesScreen extends ConsumerWidget {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             child: SeletorTema(),
+          ),
+          AppCabecalhoSecao(context.l10n.idiomaTitulo),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+            child: SeletorIdioma(),
           ),
           ListTile(
             leading: const Icon(Icons.reorder),
