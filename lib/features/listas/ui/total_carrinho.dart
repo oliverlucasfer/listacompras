@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
-import '../domain/item.dart';
 import '../domain/orcamento.dart';
 import '../domain/preco.dart';
 import '../providers/listas_providers.dart';
@@ -25,12 +24,10 @@ class TotalCarrinho extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final itens =
-        ref.watch(itensDaListaProvider(listaId)).value ?? const <Item>[];
-    final marcados = itens.where((i) => i.concluido).toList();
-    if (marcados.isEmpty) return const SizedBox.shrink();
-    final semPreco = marcados.where((i) => i.precoCentavos == null).length;
-    final total = totalCarrinho(itens);
+    final resumo = ref.watch(resumoCarrinhoProvider(listaId));
+    if (resumo.marcados == 0) return const SizedBox.shrink();
+    final semPreco = resumo.semPreco;
+    final total = ref.watch(totalCarrinhoProvider(listaId));
     final orcamento = ref
         .watch(listaPorIdProvider(listaId))
         .value

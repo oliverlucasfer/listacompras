@@ -503,18 +503,7 @@ class _AlertaOrcamentoCategorias extends ConsumerWidget {
         ref.watch(limitesCategoriaProvider).value ??
         const <CategoriaItem, int>{};
     if (limites.isEmpty) return const SizedBox.shrink();
-    final itens =
-        ref.watch(itensDaListaProvider(listaId)).value ?? const <Item>[];
-    final subtotais = <CategoriaItem, int>{};
-    for (final item in itens) {
-      if (!item.concluido || item.precoCentavos == null) continue;
-      final valor = subtotalMarcado(item);
-      subtotais.update(
-        item.categoria,
-        (atual) => atual + valor,
-        ifAbsent: () => valor,
-      );
-    }
+    final subtotais = ref.watch(subtotaisPorCategoriaProvider(listaId));
     final acima = categoriasAcimaDoLimite(
       subtotais: subtotais,
       limites: limites,
