@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/dominio/quantidade.dart';
+import '../../../core/utils/formatacao.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_esqueleto.dart';
@@ -78,7 +78,7 @@ class _Item extends StatelessWidget {
     return ListTile(
       title: Text(daIda.nome),
       subtitle: Text(
-        '${formatarQuantidade(daIda.quantidade)} ${daIda.unidade.valor} · '
+        '${formatarQuantidadeComUnidade(daIda.quantidade, daIda.unidade)} · '
         '${daIda.categoria.rotulo}',
       ),
       trailing: Text(

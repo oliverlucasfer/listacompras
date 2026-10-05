@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
+import '../../../core/utils/formatacao.dart';
 import '../../../core/widgets/app_cabecalho_secao.dart';
 import '../../../core/widgets/app_dropdown.dart';
 import '../../../core/widgets/app_esqueleto.dart';
@@ -318,7 +319,7 @@ class _SeriePreco extends ConsumerWidget {
                       vertical: AppSpacing.xs,
                     ),
                     child: Text(
-                      '${_formatarData(ponto.data)} · '
+                      '${formatarData(ponto.data)} · '
                       '${formatarReais(ponto.precoCentavos)}',
                     ),
                   ),
@@ -370,7 +371,7 @@ class _MiniGraficoPreco extends StatelessWidget {
               getTooltipItems: (tocados) => [
                 for (final toque in tocados)
                   LineTooltipItem(
-                    '${_formatarData(pontos[toque.x.toInt()].data)} · '
+                    '${formatarData(pontos[toque.x.toInt()].data)} · '
                     '${formatarReais(toque.y.round())}',
                     (tema.textTheme.labelMedium ?? const TextStyle()).copyWith(
                       color: tema.colorScheme.onInverseSurface,
@@ -411,7 +412,3 @@ String _percentual(int parte, int total) =>
 
 String _rotuloNome(String nome) =>
     nome.isEmpty ? nome : '${nome[0].toUpperCase()}${nome.substring(1)}';
-
-String _formatarData(DateTime d) =>
-    '${d.day.toString().padLeft(2, '0')}/'
-    '${d.month.toString().padLeft(2, '0')}/${d.year}';

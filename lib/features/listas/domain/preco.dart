@@ -1,4 +1,5 @@
 import 'item.dart';
+import 'orcamento.dart';
 
 /// Formata centavos em Real: 549 -> 'R$ 5,49'. Sem dependência de intl.
 String formatarReais(int centavos) {
@@ -7,6 +8,16 @@ String formatarReais(int centavos) {
   final reais = absoluto ~/ 100;
   final resto = absoluto % 100;
   final texto = 'R\$ ${_milhares(reais)},${resto.toString().padLeft(2, '0')}';
+  return negativo ? '-$texto' : texto;
+}
+
+/// Formata centavos sem o símbolo: 549 -> '5,49'. Sem dependência de intl.
+String formatarReaisSemSimbolo(int centavos) {
+  final negativo = centavos < 0;
+  final absoluto = centavos.abs();
+  final reais = absoluto ~/ 100;
+  final resto = absoluto % 100;
+  final texto = '${_milhares(reais)},${resto.toString().padLeft(2, '0')}';
   return negativo ? '-$texto' : texto;
 }
 
@@ -52,9 +63,8 @@ int? parsePrecoParaCentavos(String? texto) {
 int totalCarrinho(Iterable<Item> itens) {
   var total = 0;
   for (final item in itens) {
-    final preco = item.precoCentavos;
-    if (!item.concluido || preco == null) continue;
-    total += (item.quantidade * preco).round();
+    if (!item.concluido) continue;
+    total += subtotalMarcado(item);
   }
   return total;
 }

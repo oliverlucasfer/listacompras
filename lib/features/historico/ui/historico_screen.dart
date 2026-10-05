@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
+import '../../../core/utils/formatacao.dart';
 import '../../../core/widgets/app_esqueleto.dart';
 import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
@@ -157,14 +158,10 @@ class _ItemIda extends StatelessWidget {
     return ListTile(
       title: Text(ida.titulo),
       subtitle: Text(
-        '${_formatarData(ida.finalizadaEm)} · ${context.l10n.nItens(ida.itensCount)}',
+        '${formatarData(ida.finalizadaEm)} · ${context.l10n.nItens(ida.itensCount)}',
       ),
       trailing: Text(formatarReais(ida.totalCentavos)),
       onTap: () => context.push('/historico/ida/${ida.id}'),
     );
   }
 }
-
-String _formatarData(DateTime d) =>
-    '${d.day.toString().padLeft(2, '0')}/'
-    '${d.month.toString().padLeft(2, '0')}/${d.year}';

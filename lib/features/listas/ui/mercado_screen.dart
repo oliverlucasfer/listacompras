@@ -13,7 +13,7 @@ import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../domain/item.dart';
-import '../../../core/dominio/quantidade.dart';
+import '../../../core/utils/formatacao.dart';
 import '../providers/listas_providers.dart';
 import 'aviso_orcamento.dart';
 import 'total_carrinho.dart';
@@ -329,8 +329,10 @@ class _LinhaMercado extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${formatarQuantidade(item.quantidade)} '
-                      '${item.unidade.valor}',
+                      formatarQuantidadeComUnidade(
+                        item.quantidade,
+                        item.unidade,
+                      ),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: cores.onSurfaceVariant,
                       ),

@@ -40,6 +40,7 @@ import '../domain/item.dart';
 import '../domain/orcamento.dart';
 import '../domain/preco.dart';
 import '../../../core/dominio/quantidade.dart';
+import '../../../core/utils/formatacao.dart';
 import '../domain/resultado_dedup.dart';
 import '../domain/sugestao_item.dart';
 import '../../../core/dominio/unidade.dart';
@@ -1067,7 +1068,7 @@ class _LinhaItem extends ConsumerWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('${formatarQuantidade(item.quantidade)} ${item.unidade.valor}'),
+          Text(formatarQuantidadeComUnidade(item.quantidade, item.unidade)),
           if (index >= 0)
             ReorderableDragStartListener(
               index: index,
@@ -1333,9 +1334,8 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
     super.dispose();
   }
 
-  String _precoInicial(int? centavos) => centavos == null
-      ? ''
-      : (centavos / 100).toStringAsFixed(2).replaceAll('.', ',');
+  String _precoInicial(int? centavos) =>
+      centavos == null ? '' : formatarReaisSemSimbolo(centavos);
 
   double? _quantidadeLida() {
     final valor = parseQuantidade(_quantidade.text);
