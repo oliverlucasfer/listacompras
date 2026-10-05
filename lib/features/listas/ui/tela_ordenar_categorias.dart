@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/l10n/categoria_l10n.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_dialog.dart';
@@ -57,7 +58,7 @@ class TelaOrdenarCategorias extends ConsumerWidget {
                         child: Icon(Icons.drag_handle),
                       ),
                     ),
-                    title: Text(ordem[i].rotulo),
+                    title: Text(ordem[i].rotulo(context)),
                   ),
               ],
               onReorderItem: (oldIndex, newIndex) {

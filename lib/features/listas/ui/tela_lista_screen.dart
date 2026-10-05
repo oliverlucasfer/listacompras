@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/importacao/parser_lista_local.dart';
+import '../../../core/l10n/categoria_l10n.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../core/navigation/voltar_para_inicio.dart';
 import '../../../core/texto/busca.dart';
@@ -511,7 +512,7 @@ class _AlertaOrcamentoCategorias extends ConsumerWidget {
     if (acima.isEmpty) return const SizedBox.shrink();
     final nomes = CategoriaItem.values
         .where(acima.contains)
-        .map((c) => c.rotulo)
+        .map((c) => c.rotulo(context))
         .join(', ');
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -959,7 +960,10 @@ class _ListaItens extends ConsumerWidget {
       slivers
         ..add(
           SliverToBoxAdapter(
-            child: AppCabecalhoSecao(categoria.rotulo, contagem: grupo.length),
+            child: AppCabecalhoSecao(
+              categoria.rotulo(context),
+              contagem: grupo.length,
+            ),
           ),
         )
         ..add(
@@ -1564,7 +1568,10 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
                   valor: _categoria,
                   itens: [
                     for (final c in CategoriaItem.values)
-                      DropdownMenuItem(value: c, child: Text(c.rotulo)),
+                      DropdownMenuItem(
+                        value: c,
+                        child: Text(c.rotulo(context)),
+                      ),
                   ],
                   onChanged: (c) {
                     if (c != null) setState(() => _categoria = c);

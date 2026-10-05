@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/dominio/categoria.dart';
+import '../../../core/l10n/categoria_l10n.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_botao.dart';
@@ -136,7 +137,7 @@ class _LinhaLimiteCategoriaState extends ConsumerState<_LinhaLimiteCategoria> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              widget.categoria.rotulo,
+              widget.categoria.rotulo(context),
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: AppSpacing.md),

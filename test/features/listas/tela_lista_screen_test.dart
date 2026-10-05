@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lista_compras/core/categorias/sugestao_categorias.dart';
 import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/core/dominio/unidade.dart';
+import 'package:lista_compras/core/l10n/categoria_l10n.dart';
 import 'package:lista_compras/core/widgets/app_botao.dart';
 import 'package:lista_compras/core/widgets/app_campo_texto.dart';
 import 'package:lista_compras/core/widgets/app_dropdown.dart';
@@ -257,14 +258,17 @@ void main() {
     );
     await montarTela(tester, lista.id);
 
+    final context = tester.element(find.byType(TelaListaScreen));
     final dyBebidas = tester
-        .getTopLeft(find.text('${CategoriaItem.bebidas.rotulo} (1)'))
+        .getTopLeft(find.text('${CategoriaItem.bebidas.rotulo(context)} (1)'))
         .dy;
     final dyMercearia = tester
-        .getTopLeft(find.text('${CategoriaItem.mercearia.rotulo} (1)'))
+        .getTopLeft(find.text('${CategoriaItem.mercearia.rotulo(context)} (1)'))
         .dy;
     final dyHortifruti = tester
-        .getTopLeft(find.text('${CategoriaItem.hortifruti.rotulo} (1)'))
+        .getTopLeft(
+          find.text('${CategoriaItem.hortifruti.rotulo(context)} (1)'),
+        )
         .dy;
     expect(dyBebidas, lessThan(dyMercearia));
     expect(dyMercearia, lessThan(dyHortifruti));

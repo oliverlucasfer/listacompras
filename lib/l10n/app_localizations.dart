@@ -430,6 +430,72 @@ abstract class AppLocalizations {
   /// **'Categoria'**
   String get categoria;
 
+  /// No description provided for @categoriaHortifruti.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hortifrúti'**
+  String get categoriaHortifruti;
+
+  /// No description provided for @categoriaMercearia.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mercearia'**
+  String get categoriaMercearia;
+
+  /// No description provided for @categoriaFrios.
+  ///
+  /// In pt, this message translates to:
+  /// **'Frios'**
+  String get categoriaFrios;
+
+  /// No description provided for @categoriaLaticinios.
+  ///
+  /// In pt, this message translates to:
+  /// **'Laticínios'**
+  String get categoriaLaticinios;
+
+  /// No description provided for @categoriaCongelados.
+  ///
+  /// In pt, this message translates to:
+  /// **'Congelados'**
+  String get categoriaCongelados;
+
+  /// No description provided for @categoriaPadaria.
+  ///
+  /// In pt, this message translates to:
+  /// **'Padaria'**
+  String get categoriaPadaria;
+
+  /// No description provided for @categoriaBebidas.
+  ///
+  /// In pt, this message translates to:
+  /// **'Bebidas'**
+  String get categoriaBebidas;
+
+  /// No description provided for @categoriaPet.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pet'**
+  String get categoriaPet;
+
+  /// No description provided for @categoriaLimpeza.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limpeza'**
+  String get categoriaLimpeza;
+
+  /// No description provided for @categoriaHigiene.
+  ///
+  /// In pt, this message translates to:
+  /// **'Higiene'**
+  String get categoriaHigiene;
+
+  /// No description provided for @categoriaOutros.
+  ///
+  /// In pt, this message translates to:
+  /// **'Outros'**
+  String get categoriaOutros;
+
   /// No description provided for @preco.
   ///
   /// In pt, this message translates to:

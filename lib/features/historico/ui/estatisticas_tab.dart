@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/l10n/categoria_l10n.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/utils/formatacao.dart';
@@ -111,7 +112,7 @@ class _SecaoGastoPorCategoria extends ConsumerWidget {
             for (final c in categorias)
               ListTile(
                 dense: true,
-                title: Text(c.categoria.rotulo),
+                title: Text(c.categoria.rotulo(context)),
                 trailing: Text(
                   '${formatarReais(c.totalCentavos)} · '
                   '${_percentual(c.totalCentavos, total)}',

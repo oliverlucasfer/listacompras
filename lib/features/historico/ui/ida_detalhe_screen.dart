@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/formatacao.dart';
+import '../../../core/l10n/categoria_l10n.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_esqueleto.dart';
@@ -79,7 +80,7 @@ class _Item extends StatelessWidget {
       title: Text(daIda.nome),
       subtitle: Text(
         '${formatarQuantidadeComUnidade(daIda.quantidade, daIda.unidade)} · '
-        '${daIda.categoria.rotulo}',
+        '${daIda.categoria.rotulo(context)}',
       ),
       trailing: Text(
         preco == null ? context.l10n.semValor : formatarReais(preco),

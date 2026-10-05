@@ -211,6 +211,39 @@ class AppLocalizationsEs extends AppLocalizations {
   String get categoria => 'Categoría';
 
   @override
+  String get categoriaHortifruti => 'Frutas y verduras';
+
+  @override
+  String get categoriaMercearia => 'Abarrotes';
+
+  @override
+  String get categoriaFrios => 'Fiambres';
+
+  @override
+  String get categoriaLaticinios => 'Lácteos';
+
+  @override
+  String get categoriaCongelados => 'Congelados';
+
+  @override
+  String get categoriaPadaria => 'Panadería';
+
+  @override
+  String get categoriaBebidas => 'Bebidas';
+
+  @override
+  String get categoriaPet => 'Mascotas';
+
+  @override
+  String get categoriaLimpeza => 'Limpieza';
+
+  @override
+  String get categoriaHigiene => 'Higiene';
+
+  @override
+  String get categoriaOutros => 'Otros';
+
+  @override
   String get preco => 'Precio (R\$)';
 
   @override

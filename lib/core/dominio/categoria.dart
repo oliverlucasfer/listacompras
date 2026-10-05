@@ -18,20 +18,6 @@ enum CategoriaItem {
 
   final String valor;
 
-  String get rotulo => switch (this) {
-    hortifruti => 'Hortifrúti',
-    mercearia => 'Mercearia',
-    frios => 'Frios',
-    laticinios => 'Laticínios',
-    congelados => 'Congelados',
-    padaria => 'Padaria',
-    bebidas => 'Bebidas',
-    pet => 'Pet',
-    limpeza => 'Limpeza',
-    higiene => 'Higiene',
-    outros => 'Outros',
-  };
-
   static CategoriaItem fromValor(String valor) {
     for (final c in CategoriaItem.values) {
       if (c.valor == valor) return c;

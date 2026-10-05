@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/importacao/resposta_import.dart';
+import '../../../core/l10n/categoria_l10n.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../core/theme/tokens/app_spacing.dart';
 import '../../../core/widgets/app_banner.dart';
@@ -361,7 +362,7 @@ class _PainelEdicaoState extends State<_PainelEdicao> {
             compacto: true,
             itens: [
               for (final c in CategoriaItem.values)
-                DropdownMenuItem(value: c, child: Text(c.rotulo)),
+                DropdownMenuItem(value: c, child: Text(c.rotulo(context))),
             ],
             onChanged: (c) {
               if (c == null) return;

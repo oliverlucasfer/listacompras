@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/dominio/categoria.dart';
+import 'package:lista_compras/core/l10n/categoria_l10n.dart';
 import 'package:lista_compras/features/listas/domain/ordem_categorias.dart';
 import 'package:lista_compras/features/listas/ui/tela_ordenar_categorias.dart';
 
@@ -25,8 +26,10 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1));
   }
 
-  double dyDe(WidgetTester tester, CategoriaItem categoria) =>
-      tester.getTopLeft(find.text(categoria.rotulo)).dy;
+  double dyDe(WidgetTester tester, CategoriaItem categoria) {
+    final context = tester.element(find.byType(TelaOrdenarCategorias));
+    return tester.getTopLeft(find.text(categoria.rotulo(context))).dy;
+  }
 
   testWidgets('deve_exibir_categorias_na_ordem_salva_quando_abre', (
     tester,
