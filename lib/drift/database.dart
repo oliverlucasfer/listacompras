@@ -26,7 +26,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   /// Paridade com o índice único parcial `uq_item_ativo` do Postgres
   /// (`0001_init.sql:57-59`): parcial não é expressável no `@TableIndex`.
@@ -43,6 +43,14 @@ class AppDatabase extends _$AppDatabase {
     'CREATE INDEX IF NOT EXISTS idx_lista_local_ativa '
         'ON lista_local (updated_at) WHERE deletado_em IS NULL',
   ];
+
+  /// Índice para o prefilter de `sugerirCategoria` (revisão 05/10/2026): busca
+  /// global por `lower(nome)` ativo, sem varrer `item_local` a cada item
+  /// adicionado. O `uq_item_ativo` cobre `(lista_id, lower(nome))` e não serve
+  /// para a busca por nome sem lista.
+  static const _criarIndiceNomeLower =
+      'CREATE INDEX IF NOT EXISTS idx_item_local_nome_lower '
+      'ON item_local (lower(nome)) WHERE deletado_em IS NULL';
 
   /// Dedup defensivo antes de criar `uq_item_ativo` (F39): mantém 1 item ativo
   /// por `(lista_id, lower(nome))`; prefere a linha de `updated_at` mais
@@ -94,6 +102,7 @@ class AppDatabase extends _$AppDatabase {
       for (final sql in _criarIndicesDesempenho) {
         await customStatement(sql);
       }
+      await customStatement(_criarIndiceNomeLower);
     },
     onUpgrade: (m, de, para) async {
       // G-29 (F43-T08): os passos abaixo recriam `item_local` a partir da
@@ -189,6 +198,11 @@ class AppDatabase extends _$AppDatabase {
         for (final sql in _criarIndicesDesempenho) {
           await customStatement(sql);
         }
+      }
+      if (de < 16) {
+        // v15 → v16: índice de `lower(nome)` para o prefilter da sugestão de
+        // categoria (revisão 05/10/2026). Aditivo.
+        await customStatement(_criarIndiceNomeLower);
       }
     },
     beforeOpen: (details) async {
