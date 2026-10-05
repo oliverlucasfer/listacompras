@@ -12,6 +12,10 @@ import '../../../core/widgets/seletor_idioma.dart';
 import '../../backup/ui/secao_backup.dart';
 import '../../tour/tour_controller.dart';
 
+final packageInfoProvider = FutureProvider<PackageInfo>(
+  (ref) => PackageInfo.fromPlatform(),
+);
+
 /// Tela Configurações (doc 06 §3, wireframe 10 §5, RF-11): aparência, ordem das
 /// categorias, política de privacidade, versão, tour e backup local.
 class ConfiguracoesScreen extends ConsumerWidget {
@@ -79,10 +83,13 @@ class ConfiguracoesScreen extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.info_outline),
             title: Text(context.l10n.versao),
-            trailing: FutureBuilder<PackageInfo>(
-              future: PackageInfo.fromPlatform(),
-              builder: (context, snapshot) =>
-                  Text(snapshot.data?.version ?? context.l10n.semValor),
+            trailing: Text(
+              ref
+                  .watch(packageInfoProvider)
+                  .maybeWhen(
+                    data: (info) => info.version,
+                    orElse: () => context.l10n.semValor,
+                  ),
             ),
           ),
           ListTile(
