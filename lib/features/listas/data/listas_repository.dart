@@ -314,9 +314,16 @@ class ListasRepository {
   /// preço e concluído.
   Future<void> adicionarItensDedup(String listaId, Iterable<Item> itens) {
     return _db.transaction(() async {
-      final ativos = await (_db.select(
-        _db.itemLocal,
-      )..where((i) => i.listaId.equals(listaId) & i.deletadoEm.isNull())).get();
+      final ativos =
+          await (_db.select(_db.itemLocal)
+                ..where(
+                  (i) => i.listaId.equals(listaId) & i.deletadoEm.isNull(),
+                )
+                ..orderBy([
+                  (i) => OrderingTerm.asc(i.ordem),
+                  (i) => OrderingTerm.asc(i.id),
+                ]))
+              .get();
       final porNome = <String, ({String id, double qtd, String unidade})>{
         for (final i in ativos)
           normalizarTexto(i.nome): (
@@ -331,6 +338,9 @@ class ListasRepository {
       );
       final agora = DateTime.now().toUtc();
       for (final item in itens) {
+        if (item.quantidade <= 0) {
+          throw ArgumentError('quantidade deve ser maior que zero');
+        }
         final chave = normalizarTexto(item.nome);
         final existente = porNome[chave];
         if (existente != null) {
