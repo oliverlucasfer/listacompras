@@ -44,13 +44,14 @@ class PainelListas extends ConsumerStatefulWidget {
 }
 
 class _PainelListasState extends ConsumerState<PainelListas> {
-  final _busca = TextEditingController();
+  final _consulta = ValueNotifier<String>('');
+  final _buscaKey = GlobalKey<_CampoBuscaPainelState>();
   bool _buscando = false;
   bool _mostrarArquivadas = false;
 
   @override
   void dispose() {
-    _busca.dispose();
+    _consulta.dispose();
     super.dispose();
   }
 
@@ -58,25 +59,24 @@ class _PainelListasState extends ConsumerState<PainelListas> {
 
   void _fecharBusca() {
     if (!mounted) return;
-    _busca.clear();
+    _consulta.value = '';
+    _buscaKey.currentState?.limpar();
     setState(() => _buscando = false);
   }
 
+  List<ListaComContagem> _filtrar(
+    List<ListaComContagem> todas,
+    String consulta,
+    bool mostrarArquivadas,
+  ) => todas
+      .where((c) => c.lista.donoId == idLocal)
+      .where((c) => mostrarArquivadas || c.lista.arquivadaEm == null)
+      .where((c) => consulta.isEmpty || contemBusca(c.lista.titulo, consulta))
+      .toList();
+
   @override
   Widget build(BuildContext context) {
-    final consulta = _busca.text.trim();
-    final listasAsync = ref
-        .watch(listasComContagemProvider)
-        .whenData(
-          (todas) => todas
-              .where((c) => c.lista.donoId == idLocal)
-              .where((c) => _mostrarArquivadas || c.lista.arquivadaEm == null)
-              .where(
-                (c) =>
-                    consulta.isEmpty || contemBusca(c.lista.titulo, consulta),
-              )
-              .toList(),
-        );
+    final listasAsync = ref.watch(listasComContagemProvider);
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -129,44 +129,48 @@ class _PainelListasState extends ConsumerState<PainelListas> {
                 AppSpacing.lg,
                 0,
               ),
-              child: AppCampoTexto(
-                controller: _busca,
+              child: _CampoBuscaPainel(
+                key: _buscaKey,
                 label: context.l10n.buscarLista,
                 hint: context.l10n.nomeDaLista,
-                autofocus: true,
-                onChanged: (_) => setState(() {}),
+                onChanged: (valor) => _consulta.value = valor.trim(),
               ),
             ),
           Expanded(
-            child: listasAsync.when(
-              loading: () => const AppEsqueleto(linhas: 4),
-              error: (_, _) => AppEstadoErro(
-                mensagem: context.l10n.erroGenerico,
-                onRetentar: () => ref.invalidate(listasComContagemProvider),
+            child: ValueListenableBuilder<String>(
+              valueListenable: _consulta,
+              builder: (context, consulta, _) => listasAsync.when(
+                loading: () => const AppEsqueleto(linhas: 4),
+                error: (_, _) => AppEstadoErro(
+                  mensagem: context.l10n.erroGenerico,
+                  onRetentar: () => ref.invalidate(listasComContagemProvider),
+                ),
+                data: (todas) {
+                  final listas = _filtrar(todas, consulta, _mostrarArquivadas);
+                  if (listas.isEmpty) {
+                    return _buscando && consulta.isNotEmpty
+                        ? AppEstadoVazio(
+                            icone: Icons.search_off,
+                            titulo: context.l10n.nenhumaListaEncontrada,
+                            descricao: context.l10n.buscaSemResultadoDica,
+                          )
+                        : _vazio(context, ref);
+                  }
+                  return ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      AppSpacing.sm,
+                      AppSpacing.lg,
+                      AppSpacing.xxxl + AppSpacing.xxl + AppSpacing.sm,
+                    ),
+                    itemCount: listas.length,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: AppSpacing.sm),
+                    itemBuilder: (context, i) =>
+                        _CardLista(contagem: listas[i]),
+                  );
+                },
               ),
-              data: (listas) {
-                if (listas.isEmpty) {
-                  return _buscando && consulta.isNotEmpty
-                      ? AppEstadoVazio(
-                          icone: Icons.search_off,
-                          titulo: context.l10n.nenhumaListaEncontrada,
-                          descricao: context.l10n.buscaSemResultadoDica,
-                        )
-                      : _vazio(context, ref);
-                }
-                return ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.sm,
-                    AppSpacing.lg,
-                    AppSpacing.xxxl + AppSpacing.xxl + AppSpacing.sm,
-                  ),
-                  itemCount: listas.length,
-                  separatorBuilder: (_, _) =>
-                      const SizedBox(height: AppSpacing.sm),
-                  itemBuilder: (context, i) => _CardLista(contagem: listas[i]),
-                );
-              },
             ),
           ),
         ],
@@ -192,6 +196,45 @@ class _PainelListasState extends ConsumerState<PainelListas> {
         expandido: false,
         onPressed: () => abrirSheetNovaLista(context, ref),
       ),
+    );
+  }
+}
+
+class _CampoBuscaPainel extends StatefulWidget {
+  const _CampoBuscaPainel({
+    super.key,
+    required this.label,
+    required this.hint,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String hint;
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_CampoBuscaPainel> createState() => _CampoBuscaPainelState();
+}
+
+class _CampoBuscaPainelState extends State<_CampoBuscaPainel> {
+  final _campo = TextEditingController();
+
+  @override
+  void dispose() {
+    _campo.dispose();
+    super.dispose();
+  }
+
+  void limpar() => _campo.clear();
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCampoTexto(
+      controller: _campo,
+      label: widget.label,
+      hint: widget.hint,
+      autofocus: true,
+      onChanged: widget.onChanged,
     );
   }
 }
