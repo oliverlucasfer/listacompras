@@ -58,21 +58,22 @@ class HistoricoComprasRepository {
               mercado: Value(mercadoLimpo.isEmpty ? null : mercadoLimpo),
             ),
           );
-      for (final i in concluidos) {
-        await _db
-            .into(_db.itemIda)
-            .insert(
-              ItemIdaCompanion.insert(
-                id: _uuid.v4(),
-                idaId: idaId,
-                nome: i.nome,
-                quantidade: Value(i.quantidade),
-                unidade: Value(i.unidade),
-                categoria: Value(i.categoria),
-                precoCentavos: Value(i.precoCentavos),
-              ),
-            );
-      }
+      await _db.batch((b) {
+        for (final i in concluidos) {
+          b.insert(
+            _db.itemIda,
+            ItemIdaCompanion.insert(
+              id: _uuid.v4(),
+              idaId: idaId,
+              nome: i.nome,
+              quantidade: Value(i.quantidade),
+              unidade: Value(i.unidade),
+              categoria: Value(i.categoria),
+              precoCentavos: Value(i.precoCentavos),
+            ),
+          );
+        }
+      });
       return Ida(
         id: idaId,
         listaId: listaId,

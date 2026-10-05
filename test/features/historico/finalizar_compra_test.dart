@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/drift/database.dart';
+import 'package:lista_compras/features/historico/data/historico_compras_repository.dart';
 import 'package:lista_compras/features/historico/ui/modal_finalizar_compra.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
@@ -93,5 +94,43 @@ void main() {
     expect(ativos, isEmpty);
 
     await fechar(tester);
+  });
+
+  test('deve_gravar_todos_os_itens_quando_finalizar', () async {
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final listas = ListasRepository(db);
+    final historico = HistoricoComprasRepository(db);
+
+    final l = await listas.criarLista(titulo: 'Semana', donoId: 'local');
+    final a = await listas.adicionarItem(
+      listaId: l.id,
+      nome: 'Arroz',
+      quantidade: 2,
+      precoCentavos: 500,
+    );
+    final b = await listas.adicionarItem(
+      listaId: l.id,
+      nome: 'Feijão',
+      quantidade: 1,
+      precoCentavos: 800,
+    );
+    final c = await listas.adicionarItem(
+      listaId: l.id,
+      nome: 'Café',
+      quantidade: 3,
+      precoCentavos: 200,
+    );
+    await listas.editarItem(a.id, concluido: true);
+    await listas.editarItem(b.id, concluido: true);
+    await listas.editarItem(c.id, concluido: true);
+
+    final ida = await historico.finalizar(l.id);
+
+    final itens = await historico.itensDaIda(ida.id);
+    expect(itens, hasLength(3));
+    expect(itens.map((i) => i.nome).toSet(), {'Arroz', 'Feijão', 'Café'});
+    expect(ida.itensCount, 3);
+    expect(ida.totalCentavos, 2400);
   });
 }
