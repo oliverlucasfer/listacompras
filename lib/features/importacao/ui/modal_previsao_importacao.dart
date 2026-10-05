@@ -72,6 +72,10 @@ class _Linha {
 }
 
 class _ModalPrevisaoImportacaoState extends State<ModalPrevisaoImportacao> {
+  /// Acima deste número a lista é virtualizada (altura limitada + scroll); até
+  /// aqui mantém `shrinkWrap` para o diálogo encolher ao conteúdo.
+  static const _limiteVirtualizacao = 25;
+
   late final List<_Linha> _linhas = [
     for (final item in widget.resposta.itens) _Linha(item),
   ];
@@ -86,6 +90,32 @@ class _ModalPrevisaoImportacaoState extends State<ModalPrevisaoImportacao> {
           categoria: linha.categoria,
         ),
   ];
+
+  Widget _construirLinha(int i) {
+    final linha = _linhas[i];
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _LinhaItem(
+          linha: linha,
+          onIncluir: (v) => setState(() => linha.incluir = v ?? false),
+          onAlternarEdicao: () =>
+              setState(() => linha.editando = !linha.editando),
+        ),
+        if (linha.editando)
+          _PainelEdicao(
+            linha: linha,
+            onAlterar: (nome, quantidade, unidade, categoria) => setState(() {
+              linha
+                ..nome = nome
+                ..quantidade = quantidade
+                ..unidade = unidade
+                ..categoria = categoria;
+            }),
+          ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -132,39 +162,22 @@ class _ModalPrevisaoImportacaoState extends State<ModalPrevisaoImportacao> {
                       ),
                     ),
                   Flexible(
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: _linhas.length,
-                      itemBuilder: (context, i) {
-                        final linha = _linhas[i];
-                        return Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _LinhaItem(
-                              linha: linha,
-                              onIncluir: (v) =>
-                                  setState(() => linha.incluir = v ?? false),
-                              onAlternarEdicao: () => setState(
-                                () => linha.editando = !linha.editando,
-                              ),
+                    child: _linhas.length > _limiteVirtualizacao
+                        ? ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxHeight:
+                                  MediaQuery.sizeOf(context).height * 0.45,
                             ),
-                            if (linha.editando)
-                              _PainelEdicao(
-                                linha: linha,
-                                onAlterar:
-                                    (nome, quantidade, unidade, categoria) =>
-                                        setState(() {
-                                          linha
-                                            ..nome = nome
-                                            ..quantidade = quantidade
-                                            ..unidade = unidade
-                                            ..categoria = categoria;
-                                        }),
-                              ),
-                          ],
-                        );
-                      },
-                    ),
+                            child: ListView.builder(
+                              itemCount: _linhas.length,
+                              itemBuilder: (context, i) => _construirLinha(i),
+                            ),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: _linhas.length,
+                            itemBuilder: (context, i) => _construirLinha(i),
+                          ),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text(

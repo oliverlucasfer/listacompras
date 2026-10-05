@@ -40,8 +40,9 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
     super.dispose();
   }
 
-  String _precoInicial(int? centavos) =>
-      centavos == null ? '' : formatarReaisSemSimbolo(centavos);
+  String _precoInicial(int? centavos) => centavos == null
+      ? ''
+      : (centavos / 100).toStringAsFixed(2).replaceAll('.', ',');
 
   double? _quantidadeLida() {
     final valor = parseQuantidade(_quantidade.text);

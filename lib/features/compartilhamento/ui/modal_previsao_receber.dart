@@ -35,6 +35,10 @@ class ModalPrevisaoReceber extends StatefulWidget {
 }
 
 class _ModalPrevisaoReceberState extends State<ModalPrevisaoReceber> {
+  /// Acima deste número a lista é virtualizada (altura limitada + scroll); até
+  /// aqui mantém `shrinkWrap` para o diálogo encolher ao conteúdo.
+  static const _limiteVirtualizacao = 25;
+
   late final _titulo = TextEditingController(text: widget.entrada.titulo);
   late final List<bool> _incluir = List<bool>.filled(
     widget.entrada.itens.length,
@@ -63,6 +67,20 @@ class _ModalPrevisaoReceberState extends State<ModalPrevisaoReceber> {
     );
   }
 
+  Widget _construirItem(int i) {
+    final item = widget.entrada.itens[i];
+    return ListTile(
+      leading: Checkbox(
+        value: _incluir[i],
+        onChanged: (v) => setState(() => _incluir[i] = v ?? false),
+      ),
+      title: Text(item.nome),
+      trailing: Text(
+        '${formatarQuantidade(item.quantidade)} ${item.unidade.valor}',
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -85,25 +103,21 @@ class _ModalPrevisaoReceberState extends State<ModalPrevisaoReceber> {
             AppCampoTexto(controller: _titulo, label: context.l10n.nomeDaLista),
             const SizedBox(height: AppSpacing.sm),
             Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: widget.entrada.itens.length,
-                itemBuilder: (context, i) {
-                  final item = widget.entrada.itens[i];
-                  return ListTile(
-                    leading: Checkbox(
-                      value: _incluir[i],
-                      onChanged: (v) =>
-                          setState(() => _incluir[i] = v ?? false),
+              child: widget.entrada.itens.length > _limiteVirtualizacao
+                  ? ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.sizeOf(context).height * 0.45,
+                      ),
+                      child: ListView.builder(
+                        itemCount: widget.entrada.itens.length,
+                        itemBuilder: (context, i) => _construirItem(i),
+                      ),
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: widget.entrada.itens.length,
+                      itemBuilder: (context, i) => _construirItem(i),
                     ),
-                    title: Text(item.nome),
-                    trailing: Text(
-                      '${formatarQuantidade(item.quantidade)} '
-                      '${item.unidade.valor}',
-                    ),
-                  );
-                },
-              ),
             ),
           ],
         ),

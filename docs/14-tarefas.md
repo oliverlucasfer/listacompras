@@ -1271,6 +1271,12 @@ Plano: [superpowers/plans/2026-10-05-otimizacoes-revisao.md](superpowers/plans/2
   CP: teste de índices verifica colunas/predicado (não só o nome); migração v11→v16 cria os índices e preserva dados; `limparConcluidos` vazio retorna `[]`; `reordenarItens` parcial ignora id desconhecido.
 - [x] **F58-T21** — Animação de fechamento da faixa do marcados (mercado)
   CP: o conteúdo permanece montado durante o colapso (animação preservada) e é desmontado só ao fim; testes de mercado verdes.
+- [x] **F58-T22** — Dívidas de teste: `EXPLAIN QUERY PLAN` e desempate das estatísticas
+  CP: teste prova que o prefilter de `sugerirCategoria` usa `idx_item_local_nome_lower`; empate de total em `gastoPorCategoria` (por `valor`) e `gastoPorMercado` (por rótulo; "Sem mercado" por último) determinístico e testado; docs 05 anotam a ordem.
+- [x] **F58-T23** — Reverter `_precoInicial` (sem separador de milhar)
+  CP: o editor volta ao formato `toStringAsFixed(2)` com vírgula; `formatarReaisSemSimbolo` removido por ficar sem uso.
+- [x] **F58-T24** — Virtualização dos modais de pré-visualização (importar/receber)
+  CP: acima de 25 itens a lista usa altura limitada + `ListView.builder` sem `shrinkWrap`; listas curtas seguem encolhendo ao conteúdo.
 
 Nota: *(tudo 100% offline e behavior-preserving; a migração v15 é apenas de índices, sem tocar dados. O plano fica registrado em [superpowers/plans/2026-10-05-otimizacoes-revisao.md](superpowers/plans/2026-10-05-otimizacoes-revisao.md).)*
 
@@ -1333,8 +1339,8 @@ Nota: *(tudo 100% offline e behavior-preserving; a migração v15 é apenas de �
 | F55 Widget Android / quick-add | 5 | 5 |
 | F56 i18n pt/en/es | 6 | 6 |
 | F57 Atualização do tutorial | 4 | 4 |
-| F58 Otimizações da revisão | 21 | 21 |
-| **Total** | **329** | **327** |
+| F58 Otimizações da revisão | 24 | 24 |
+| **Total** | **332** | **330** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

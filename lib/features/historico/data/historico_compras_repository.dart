@@ -160,13 +160,17 @@ class HistoricoComprasRepository {
           'GROUP BY categoria',
         )
         .get();
-    final lista = [
-      for (final r in linhas)
-        GastoPorCategoria(
-          categoria: CategoriaItem.fromValor(r.read<String>('categoria')),
-          totalCentavos: r.read<int>('total'),
-        ),
-    ]..sort((a, b) => b.totalCentavos.compareTo(a.totalCentavos));
+    final lista =
+        [
+          for (final r in linhas)
+            GastoPorCategoria(
+              categoria: CategoriaItem.fromValor(r.read<String>('categoria')),
+              totalCentavos: r.read<int>('total'),
+            ),
+        ]..sort((a, b) {
+          final c = b.totalCentavos.compareTo(a.totalCentavos);
+          return c != 0 ? c : a.categoria.valor.compareTo(b.categoria.valor);
+        });
     return lista;
   }
 
@@ -322,13 +326,20 @@ class HistoricoComprasRepository {
       if (chave != null) exibicao.putIfAbsent(chave, () => m!);
       totais[chave] = (totais[chave] ?? 0) + r.read<int>('total');
     }
-    final lista = [
-      for (final e in totais.entries)
-        GastoPorMercado(
-          mercado: e.key == null ? null : exibicao[e.key]!,
-          totalCentavos: e.value,
-        ),
-    ]..sort((a, b) => b.totalCentavos.compareTo(a.totalCentavos));
+    final lista =
+        [
+          for (final e in totais.entries)
+            GastoPorMercado(
+              mercado: e.key == null ? null : exibicao[e.key]!,
+              totalCentavos: e.value,
+            ),
+        ]..sort((a, b) {
+          final c = b.totalCentavos.compareTo(a.totalCentavos);
+          if (c != 0) return c;
+          if (a.mercado == null) return 1;
+          if (b.mercado == null) return -1;
+          return a.mercado!.toLowerCase().compareTo(b.mercado!.toLowerCase());
+        });
     return lista;
   }
 }
