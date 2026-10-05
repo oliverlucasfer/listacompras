@@ -82,30 +82,27 @@ class _ModalPrevisaoReceberState extends State<ModalPrevisaoReceber> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AppCampoTexto(
-              controller: _titulo,
-              label: context.l10n.nomeDaLista,
-              onChanged: (_) => setState(() {}),
-            ),
+            AppCampoTexto(controller: _titulo, label: context.l10n.nomeDaLista),
             const SizedBox(height: AppSpacing.sm),
             Flexible(
-              child: ListView(
+              child: ListView.builder(
                 shrinkWrap: true,
-                children: [
-                  for (var i = 0; i < widget.entrada.itens.length; i++)
-                    ListTile(
-                      leading: Checkbox(
-                        value: _incluir[i],
-                        onChanged: (v) =>
-                            setState(() => _incluir[i] = v ?? false),
-                      ),
-                      title: Text(widget.entrada.itens[i].nome),
-                      trailing: Text(
-                        '${formatarQuantidade(widget.entrada.itens[i].quantidade)} '
-                        '${widget.entrada.itens[i].unidade.valor}',
-                      ),
+                itemCount: widget.entrada.itens.length,
+                itemBuilder: (context, i) {
+                  final item = widget.entrada.itens[i];
+                  return ListTile(
+                    leading: Checkbox(
+                      value: _incluir[i],
+                      onChanged: (v) =>
+                          setState(() => _incluir[i] = v ?? false),
                     ),
-                ],
+                    title: Text(item.nome),
+                    trailing: Text(
+                      '${formatarQuantidade(item.quantidade)} '
+                      '${item.unidade.valor}',
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -116,10 +113,13 @@ class _ModalPrevisaoReceberState extends State<ModalPrevisaoReceber> {
           onPressed: () => Navigator.pop(context),
           child: Text(context.l10n.cancelar),
         ),
-        AppBotao(
-          rotulo: context.l10n.receberConfirmar,
-          expandido: false,
-          onPressed: _podeConfirmar ? _confirmar : null,
+        ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _titulo,
+          builder: (context, value, child) => AppBotao(
+            rotulo: context.l10n.receberConfirmar,
+            expandido: false,
+            onPressed: _podeConfirmar ? _confirmar : null,
+          ),
         ),
       ],
     );

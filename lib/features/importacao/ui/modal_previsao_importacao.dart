@@ -131,33 +131,38 @@ class _ModalPrevisaoImportacaoState extends State<ModalPrevisaoImportacao> {
                       ),
                     ),
                   Flexible(
-                    child: ListView(
+                    child: ListView.builder(
                       shrinkWrap: true,
-                      children: [
-                        for (var i = 0; i < _linhas.length; i++) ...[
-                          _LinhaItem(
-                            linha: _linhas[i],
-                            onIncluir: (v) =>
-                                setState(() => _linhas[i].incluir = v ?? false),
-                            onAlternarEdicao: () => setState(
-                              () => _linhas[i].editando = !_linhas[i].editando,
+                      itemCount: _linhas.length,
+                      itemBuilder: (context, i) {
+                        final linha = _linhas[i];
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _LinhaItem(
+                              linha: linha,
+                              onIncluir: (v) =>
+                                  setState(() => linha.incluir = v ?? false),
+                              onAlternarEdicao: () => setState(
+                                () => linha.editando = !linha.editando,
+                              ),
                             ),
-                          ),
-                          if (_linhas[i].editando)
-                            _PainelEdicao(
-                              linha: _linhas[i],
-                              onAlterar:
-                                  (nome, quantidade, unidade, categoria) =>
-                                      setState(() {
-                                        _linhas[i]
-                                          ..nome = nome
-                                          ..quantidade = quantidade
-                                          ..unidade = unidade
-                                          ..categoria = categoria;
-                                      }),
-                            ),
-                        ],
-                      ],
+                            if (linha.editando)
+                              _PainelEdicao(
+                                linha: linha,
+                                onAlterar:
+                                    (nome, quantidade, unidade, categoria) =>
+                                        setState(() {
+                                          linha
+                                            ..nome = nome
+                                            ..quantidade = quantidade
+                                            ..unidade = unidade
+                                            ..categoria = categoria;
+                                        }),
+                              ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
