@@ -85,15 +85,15 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
   }
 
   /// Ids marcados nesta sessão que ainda existem **e** estão concluídos no
-  /// stream atual: um desmarque remoto (LWW) ou soft delete não pode deixar o
-  /// contador preso num valor obsoleto (ex.: `1 de 0`). Poda os ausentes.
+  /// stream atual. Sem mutação: apenas conta a interseção — um desmarque remoto
+  /// (LWW) ou soft delete não deixa o contador preso num valor obsoleto
+  /// (ex.: `1 de 0`).
   int _marcadosValidos(List<Item> itens) {
     final concluidos = {
       for (final item in itens)
         if (item.concluido) item.id,
     };
-    _marcadosNaSessao.removeWhere((id) => !concluidos.contains(id));
-    return _marcadosNaSessao.length;
+    return _marcadosNaSessao.where(concluidos.contains).length;
   }
 
   /// Volta à tela da lista; sem pilha (deep link), navega para a rota.
@@ -206,8 +206,11 @@ class _CorpoMercado extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pendentes = itens.where((i) => !i.concluido).toList();
-    final concluidos = itens.where((i) => i.concluido).toList();
+    final pendentes = <Item>[];
+    final concluidos = <Item>[];
+    for (final item in itens) {
+      (item.concluido ? concluidos : pendentes).add(item);
+    }
     // A faixa aberta não pode consumir o corpo inteiro: um teto de 40% da
     // tela garante espaço para a área principal mesmo com muitos concluídos.
     final maxFaixa = MediaQuery.sizeOf(context).height * 0.4;
@@ -348,9 +351,9 @@ class _LinhaMercado extends StatelessWidget {
 /// volta aos pendentes. Fecha por padrão e abre automaticamente na primeira
 /// marcação da sessão.
 ///
-/// O conteúdo fica sempre montado (altura 0 quando fechada) para preservar o
-/// estado da animação e a semântica dos itens; a altura 0 impede toque/pintura
-/// e o `ExcludeSemantics` evita anunciar itens escondidos.
+/// O conteúdo (`ListView`) só é montado quando aberta: fechada, a faixa roda
+/// `heightFactor: 0` sobre um `SizedBox.shrink`, sem materializar os itens.
+/// O `ExcludeSemantics` evita anunciar itens escondidos durante a animação.
 ///
 /// Ao abrir, a área expansível é limitada a ~40% da tela com rolagem interna
 /// (`ListView`): sem esse teto, listas reais (~9+ concluídos) estouram a
@@ -418,16 +421,19 @@ class _FaixaMarcadosState extends State<_FaixaMarcados> {
                 excluding: !_aberta,
                 child: ConstrainedBox(
                   constraints: BoxConstraints(maxHeight: widget.maxAltura),
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    padding: EdgeInsets.zero,
-                    itemCount: widget.itens.length,
-                    itemBuilder: (context, index) => _LinhaMercado(
-                      item: widget.itens[index],
-                      concluido: true,
-                      onAlternar: () => widget.onDesmarcar(widget.itens[index]),
-                    ),
-                  ),
+                  child: _aberta
+                      ? ListView.builder(
+                          shrinkWrap: true,
+                          padding: EdgeInsets.zero,
+                          itemCount: widget.itens.length,
+                          itemBuilder: (context, index) => _LinhaMercado(
+                            item: widget.itens[index],
+                            concluido: true,
+                            onAlternar: () =>
+                                widget.onDesmarcar(widget.itens[index]),
+                          ),
+                        )
+                      : const SizedBox.shrink(),
                 ),
               ),
             ),

@@ -76,6 +76,11 @@ void main() {
     await abrir(tester, lista.id);
 
     expect(find.text('Arroz'), findsOneWidget);
+    // O item concluído fica na faixa "Marcados", que só monta o conteúdo ao
+    // abrir; fechada, ele permanece virtualizado.
+    expect(find.text('Feijao'), findsNothing);
+    await tester.tap(find.text('Marcados (1)'));
+    await tester.pumpAndSettle();
     expect(find.text('Feijao'), findsOneWidget); // na faixa "Marcados"
     expect(find.text('0 de 2'), findsOneWidget);
     await fechar(tester);
