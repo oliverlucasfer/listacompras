@@ -1547,4 +1547,79 @@ void main() {
       expect(orcamento.limiteCentavos, 5000);
     },
   );
+
+  test('deve_criar_indices_de_desempenho_quando_instalacao_nova', () async {
+    final indices = await db
+        .customSelect(
+          "SELECT name FROM sqlite_master WHERE type = 'index' AND name IN ("
+          "'idx_item_ida_ida_id','idx_ida_compra_finalizada_em',"
+          "'idx_lista_local_ativa')",
+        )
+        .get();
+    expect(indices.map((r) => r.data['name']).toSet(), {
+      'idx_item_ida_ida_id',
+      'idx_ida_compra_finalizada_em',
+      'idx_lista_local_ativa',
+    });
+  });
+
+  test('deve_criar_indices_de_desempenho_quando_migrar_v14_para_v15', () async {
+    final arquivo = File(
+      '${Directory.systemTemp.path}/v14_para_v15_${DateTime.now().microsecondsSinceEpoch}.sqlite',
+    );
+    addTearDown(() {
+      if (arquivo.existsSync()) arquivo.deleteSync();
+    });
+
+    final antigo = sq3.sqlite3.open(arquivo.path);
+    antigo.execute('''
+      CREATE TABLE lista_local (
+        id TEXT NOT NULL PRIMARY KEY, created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL, titulo TEXT NOT NULL, dono_id TEXT NOT NULL,
+        deletado_em TEXT NULL, arquivada_em TEXT NULL,
+        orcamento_centavos INTEGER NULL
+      );
+      CREATE TABLE item_local (
+        id TEXT NOT NULL PRIMARY KEY, created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL, lista_id TEXT NOT NULL,
+        nome TEXT NOT NULL, quantidade REAL NOT NULL DEFAULT 1.0,
+        unidade TEXT NOT NULL DEFAULT 'un',
+        categoria TEXT NOT NULL DEFAULT 'outros',
+        preco_centavos INTEGER NULL,
+        concluido INTEGER NOT NULL DEFAULT 0,
+        ordem INTEGER NOT NULL DEFAULT 0, deletado_em TEXT NULL
+      );
+      CREATE TABLE ida_compra (
+        id TEXT NOT NULL PRIMARY KEY, lista_id TEXT NULL,
+        titulo TEXT NOT NULL, finalizada_em TEXT NOT NULL,
+        total_centavos INTEGER NOT NULL DEFAULT 0,
+        itens_count INTEGER NOT NULL DEFAULT 0, mercado TEXT NULL
+      );
+      CREATE TABLE item_ida (
+        id TEXT NOT NULL PRIMARY KEY, ida_id TEXT NOT NULL,
+        nome TEXT NOT NULL, quantidade REAL NOT NULL DEFAULT 1.0,
+        unidade TEXT NOT NULL DEFAULT 'un',
+        categoria TEXT NOT NULL DEFAULT 'outros',
+        preco_centavos INTEGER NULL
+      );
+      PRAGMA user_version = 14;
+    ''');
+    antigo.close();
+
+    final migrado = AppDatabase(NativeDatabase(arquivo));
+    addTearDown(migrado.close);
+
+    final indices = await migrado
+        .customSelect(
+          "SELECT name FROM sqlite_master WHERE type = 'index' AND name IN ("
+          "'idx_item_ida_ida_id','idx_ida_compra_finalizada_em',"
+          "'idx_lista_local_ativa')",
+        )
+        .get();
+    expect(indices.map((r) => r.data['name']).toSet(), {
+      'idx_item_ida_ida_id',
+      'idx_ida_compra_finalizada_em',
+      'idx_lista_local_ativa',
+    });
+  });
 }

@@ -26,13 +26,23 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   /// Paridade com o índice único parcial `uq_item_ativo` do Postgres
   /// (`0001_init.sql:57-59`): parcial não é expressável no `@TableIndex`.
   static const _criarIndiceItemAtivo =
       'CREATE UNIQUE INDEX IF NOT EXISTS uq_item_ativo '
       'ON item_local (lista_id, lower(nome)) WHERE deletado_em IS NULL';
+
+  /// Índices de desempenho (revisão 05/10/2026): FK de `item_ida`, ordenação
+  /// do histórico e listas ativas. Aditivos — não alteram dados.
+  static const _criarIndicesDesempenho = [
+    'CREATE INDEX IF NOT EXISTS idx_item_ida_ida_id ON item_ida (ida_id)',
+    'CREATE INDEX IF NOT EXISTS idx_ida_compra_finalizada_em '
+        'ON ida_compra (finalizada_em)',
+    'CREATE INDEX IF NOT EXISTS idx_lista_local_ativa '
+        'ON lista_local (updated_at) WHERE deletado_em IS NULL',
+  ];
 
   /// Dedup defensivo antes de criar `uq_item_ativo` (F39): mantém 1 item ativo
   /// por `(lista_id, lower(nome))`; prefere a linha de `updated_at` mais
@@ -81,6 +91,9 @@ class AppDatabase extends _$AppDatabase {
     onCreate: (m) async {
       await m.createAll();
       await customStatement(_criarIndiceItemAtivo);
+      for (final sql in _criarIndicesDesempenho) {
+        await customStatement(sql);
+      }
     },
     onUpgrade: (m, de, para) async {
       // G-29 (F43-T08): os passos abaixo recriam `item_local` a partir da
@@ -170,6 +183,12 @@ class AppDatabase extends _$AppDatabase {
         // e as idas (`de < 12`) — bancos abaixo do v14 precisam criá-la aqui,
         // já que nenhum passo anterior a cria.
         await m.createTable(orcamentoCategoria);
+      }
+      if (de < 15) {
+        // v14 → v15: índices de desempenho (revisão 05/10/2026). Aditivo.
+        for (final sql in _criarIndicesDesempenho) {
+          await customStatement(sql);
+        }
       }
     },
     beforeOpen: (details) async {
