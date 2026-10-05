@@ -95,9 +95,11 @@ final resumoCarrinhoProvider =
       return (marcados: marcados, semPreco: semPreco);
     });
 
-/// Sugestões de itens frequentes da lista (RF-19).
-final itensFrequentesProvider =
-    StreamProvider.family<List<SugestaoItem>, String>(
+/// Sugestões de itens frequentes da lista (RF-19). `autoDispose`: o ranking
+/// só é assinado enquanto os chips estão visíveis (campo vazio), descartando
+/// ao sair da tela ou começar a digitar.
+final itensFrequentesProvider = StreamProvider.autoDispose
+    .family<List<SugestaoItem>, String>(
       (ref, listaId) =>
           ref.watch(listasRepositoryProvider).watchItensFrequentes(listaId),
     );

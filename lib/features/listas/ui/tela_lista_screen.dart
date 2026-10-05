@@ -717,11 +717,6 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
 
   @override
   Widget build(BuildContext context) {
-    final sugestoes =
-        ref.watch(itensFrequentesProvider(widget.listaId)).value ??
-        const <SugestaoItem>[];
-    final mostrarChips =
-        _controller.text.trim().isEmpty && sugestoes.isNotEmpty;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
@@ -732,29 +727,10 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (mostrarChips)
-            Semantics(
-              label: context.l10n.sugestoes,
-              child: SizedBox(
-                height: 48,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: sugestoes.length,
-                  separatorBuilder: (_, _) =>
-                      const SizedBox(width: AppSpacing.sm),
-                  itemBuilder: (context, i) {
-                    final s = sugestoes[i];
-                    return Semantics(
-                      button: true,
-                      label: context.l10n.adicionarSugerido(s.nome),
-                      child: ActionChip(
-                        label: Text(s.nome),
-                        onPressed: () => _adicionarSugerido(s.nome),
-                      ),
-                    );
-                  },
-                ),
-              ),
+          if (_controller.text.trim().isEmpty)
+            _ChipsSugestoes(
+              listaId: widget.listaId,
+              onAdicionar: _adicionarSugerido,
             ),
           AppCampoTexto(
             key: TourKeys.campoAdicionar,
@@ -815,6 +791,45 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Chips de itens frequentes sugeridos (RF-19). Assina o ranking apenas
+/// enquanto montado — `_CampoAdicionar` só o insere com o campo vazio.
+class _ChipsSugestoes extends ConsumerWidget {
+  const _ChipsSugestoes({required this.listaId, required this.onAdicionar});
+
+  final String listaId;
+  final ValueChanged<String> onAdicionar;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sugestoes =
+        ref.watch(itensFrequentesProvider(listaId)).value ??
+        const <SugestaoItem>[];
+    if (sugestoes.isEmpty) return const SizedBox.shrink();
+    return Semantics(
+      label: context.l10n.sugestoes,
+      child: SizedBox(
+        height: 48,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: sugestoes.length,
+          separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
+          itemBuilder: (context, i) {
+            final s = sugestoes[i];
+            return Semantics(
+              button: true,
+              label: context.l10n.adicionarSugerido(s.nome),
+              child: ActionChip(
+                label: Text(s.nome),
+                onPressed: () => onAdicionar(s.nome),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
