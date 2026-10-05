@@ -1225,6 +1225,49 @@ Nota: *(100% local e sem dependência nova (`flutter_localizations`/`intl` já n
   Dep: F57-T03 · Docs: 05, 10, 12, 14
   CP: docs sincronizadas; `dart format lib test`/`flutter analyze`/`flutter test` verdes.
 
+## Fase 58 — Otimizações da revisão (RNF-08)
+
+Plano: [superpowers/plans/2026-10-05-otimizacoes-revisao.md](superpowers/plans/2026-10-05-otimizacoes-revisao.md) · Requisito: RNF-08 (quitar full-scans/recomputações da revisão de 05/10/2026, preservando 100% do comportamento). · Docs donos: 05, 14.
+
+- [x] **F58-T01** — Índices de desempenho + migração v15
+  CP: `schemaVersion = 15` (aditiva); índices `idx_item_ida_ida_id`, `idx_ida_compra_finalizada_em` e `idx_lista_local_ativa`; testes de schema/migração v14→v15 verdes.
+- [x] **F58-T02** — Lote em `adicionarItensDedup`/`duplicarLista`
+  CP: `adicionarItensDedup` com uma leitura + uma transação; `duplicarLista` com `batch` e `ordem` sequencial; contrato público inalterado.
+- [x] **F58-T03** — Escritas em massa (`desmarcarTodos`, `limparConcluidos`, `reordenarItens`)
+  CP: updates em massa que preservam o retorno do undo e os efeitos observáveis.
+- [x] **F58-T04** — `finalizar` com `insertAll` de `item_ida`
+  CP: snapshots gravados num único `batch`; ordem e valores idênticos.
+- [x] **F58-T05** — Agregações no SQL
+  CP: `resumo`, `gastoPorMes`, `gastoPorCategoria` e `gastoPorMercado` agregados com `SUM`/`COUNT`/`GROUP BY`; mesmos tipos e regras (só itens com preço).
+- [x] **F58-T06** — Filtro por unidade no SQL + providers `autoDispose`
+  CP: evolução/preço por mercado filtram `unidade` na consulta; providers de estatística viram `FutureProvider.autoDispose`.
+- [x] **F58-T07** — Tela da lista: busca isolada e agrupamento em passada única
+  CP: busca com `ValueNotifier`/`ValueListenableBuilder` e agrupamento numa passada; mesmos estados/grupos.
+- [x] **F58-T08** — `PainelListas`: filtro derivado e busca isolada
+  CP: filtro/ordenação em passada única e `setState` restrito ao widget de busca.
+- [x] **F58-T09** — `TotalCarrinho` e alerta via provider derivado
+  CP: `totalCarrinhoProvider`, `subtotaisPorCategoriaProvider` e `resumoCarrinhoProvider` derivados de `itensDaListaProvider`.
+- [x] **F58-T10** — `_ChipsSugestoes` só assina com o campo vazio
+  CP: `itensFrequentesProvider` `autoDispose`; chips montados apenas com o campo vazio.
+- [x] **F58-T11** — `MercadoScreen` sem mutação no build e faixa virtualizada
+  CP: poda de marcados fora do `build`; `_FaixaMarcados` com `ListView.builder` sem `shrinkWrap`.
+- [x] **F58-T12** — Configurações: `PackageInfo` em provider
+  CP: `packageInfoProvider` (`FutureProvider`) cacheia `PackageInfo`; sem chamada de canal no `build`.
+- [x] **F58-T13** — Modais virtualizados e com estado isolado
+  CP: `ListView.builder` no lugar de listas não virtualizadas; estado do título isolado onde aplicável.
+- [x] **F58-T14** — Limpeza de código morto e comentários obsoletos
+  CP: `inicioDaLista()` sem parâmetro; ramo morto de rota e comentários de sync/conta removidos.
+- [x] **F58-T15** — Helpers compartilhados (data, moeda, quantidade+unidade, total)
+  CP: `formatarData`, `formatarQuantidadeComUnidade` e `formatarReaisSemSimbolo`; `totalCarrinho` reusa `subtotalMarcado`.
+- [x] **F58-T16** — Rótulos de categoria via l10n
+  CP: 11 chaves de categoria nos ARB pt/en/es; `CategoriaItem` sem texto de UI.
+- [x] **F58-T17** — Dividir `tela_lista_screen.dart`
+  CP: widgets extraídos para `part` files; mesmo comportamento.
+- [x] **F58-T18** — Docs donas, bump e fechamento
+  CP: docs 05/14 sincronizadas; bump `1.7.0+17` com paridade em `web/version.json`; `dart format .`, `flutter analyze` e `flutter test` verdes.
+
+Nota: *(tudo 100% offline e behavior-preserving; a migração v15 é apenas de índices, sem tocar dados. O plano fica registrado em [superpowers/plans/2026-10-05-otimizacoes-revisao.md](superpowers/plans/2026-10-05-otimizacoes-revisao.md).)*
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -1284,7 +1327,8 @@ Nota: *(100% local e sem dependência nova (`flutter_localizations`/`intl` já n
 | F55 Widget Android / quick-add | 5 | 5 |
 | F56 i18n pt/en/es | 6 | 6 |
 | F57 Atualização do tutorial | 4 | 4 |
-| **Total** | **308** | **306** |
+| F58 Otimizações da revisão | 18 | 18 |
+| **Total** | **326** | **324** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

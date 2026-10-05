@@ -57,7 +57,7 @@ lib/
 │   ├── voz/                         # domain/ data/ providers/ (F30)
 │   └── widget/                      # domain/ data/ providers/ ui/ — widget Android (F55/RF-38)
 └── drift/
-    ├── database.dart                # AppDatabase (tabelas locais, schemaVersion 14)
+    ├── database.dart                # AppDatabase (tabelas locais, schemaVersion 15)
     ├── conexao/                     # abrirBancoLocal (nativa/web, ADR-012)
     └── tables/                      # ListaLocal, ItemLocal, HistoricoPrecoLocal, IdaCompra, ItemIda, OrcamentoCategoria
 ```
@@ -86,6 +86,10 @@ lib/
   **`schemaVersion 13 → 14`** (F53/RF-36) cria a tabela `orcamento_categoria` (limite local por categoria);
   por ser tabela **nova**, o passo é **acumulativo** (`de < 14`), como `historico_preco_local` (`de < 7`)
   e as idas (`de < 12`) — nenhum passo anterior a cria, então ela é criada para todo banco abaixo do v14.
+  A migração **`schemaVersion 14 → 15`** (RNF-08, revisão de 05/10/2026) é **aditiva** e apenas cria os
+  **índices de desempenho** `idx_item_ida_ida_id` (`item_ida(ida_id)`, FK), `idx_ida_compra_finalizada_em`
+  (`ida_compra(finalizada_em)`, ordenação do histórico) e `idx_lista_local_ativa` (`lista_local(updated_at)`
+  parcial `WHERE deletado_em IS NULL`) — nenhum dado é tocado.
   Os passos históricos (`de < 2 … de < 10`) permanecem para quem vem de versões antigas.
 * **`quantidade` é `real` no Drift:** a precisão efetiva da app é ≤ 3 casas decimais (tolerância 0,001, [05 §6.3]).
 
@@ -116,7 +120,10 @@ Há **um único app** (`main.dart` → `bootstrap()`), 100% local, com a identid
 | `appDatabaseProvider` | Provider | Instância única do Drift |
 | `listasProvider` | StreamProvider | Listas ativas (Drift → UI) |
 | `itensDaListaProvider(listaId)` | StreamProvider.family | Itens ativos; ordenação de exibição por categoria e `ordem` |
-| `itensFrequentesProvider(listaId)` | StreamProvider.family | Ranking de sugestões de itens frequentes derivado do Drift (F22/RF-19): agrupa por nome normalizado, peso 2 para ocorrências na lista aberta e 1 para as demais, exclui os **pendentes** da lista aberta, limiar ≥ 2 e limite de 8 |
+| `totalCarrinhoProvider(listaId)` | Provider.family | Total dos itens marcados com preço (RF-21), **derivado** de `itensDaListaProvider` — evita recomputar em widgets que já observam a lista |
+| `subtotaisPorCategoriaProvider(listaId)` | Provider.family | Subtotal marcado por categoria (RF-36/F53-T04), **derivado** de `itensDaListaProvider` |
+| `resumoCarrinhoProvider(listaId)` | Provider.family | `(marcados, semPreço)` para a faixa do total (RF-21), **derivado** de `itensDaListaProvider` |
+| `itensFrequentesProvider(listaId)` | StreamProvider.autoDispose.family | Ranking de sugestões de itens frequentes derivado do Drift (F22/RF-19): agrupa por nome normalizado, peso 2 para ocorrências na lista aberta e 1 para as demais, exclui os **pendentes** da lista aberta, limiar ≥ 2 e limite de 8. `autoDispose`: só é assinado enquanto os chips estão montados (`_ChipsSugestoes` aparece apenas com o campo vazio; ao digitar ou sair, o ranking é descartado) |
 | `sugestaoCategoriasProvider` | Provider | Cadeia de sugestão local (RF-15) |
 | `compartilhamentoRepositoryProvider` | Provider | `CompartilhamentoRepository` sobre o Drift: exportar/importar lista (F49/RF-33) |
 | `leitorQrProvider` | Provider | Leitor de QR injetável (`LeitorQr`): real via `mobile_scanner`, fake nos testes (F49/RF-33) |
@@ -125,15 +132,15 @@ Há **um único app** (`main.dart` → `bootstrap()`), 100% local, com a identid
 | `idaProvider(id)` | FutureProvider.family | Uma ida por `id` (detalhe) |
 | `itensDaIdaProvider(idaId)` | FutureProvider.family | Itens (snapshot) de uma ida, ordenados por nome |
 | `resumoHistoricoProvider` | Provider (`AsyncValue`) | Resumo do histórico **derivado do stream `idasProvider`** (atualiza a cada ida): total gasto, ticket médio e nº de idas |
-| `gastoPorMesProvider` | FutureProvider | Gasto por mês (últimos 12 meses no gráfico), derivado de `idasProvider` (F51/RF-34) |
-| `gastoPorCategoriaProvider` | FutureProvider | Gasto por categoria (soma `quantidade × preço` dos itens com preço), derivado de `idasProvider` (F51/RF-34) |
-| `itensMaisCompradosProvider` | FutureProvider | Top 10 por frequência (nome normalizado), com gasto acumulado, derivado de `idasProvider` (F51/RF-34) |
-| `nomesCompradosProvider` | FutureProvider | Nomes comprados (normalizados, distintos) que alimentam o seletor da evolução de preço (F51/RF-34) |
-| `unidadeRecenteProvider(nome)` | FutureProvider.family | Unidade da compra mais recente de um nome — define a unidade comparada na evolução (F51/RF-34) |
-| `evolucaoPrecoProvider((nome, unidade))` | FutureProvider.family | Série `(data, preço unitário)` de um item **na mesma unidade** (regra do RF-29), derivada de `idasProvider` (F51/RF-34) |
-| `mercadosUsadosProvider` | FutureProvider | Mercados distintos já usados nas idas (normalizados, exibindo a caixa da 1ª ocorrência), derivado de `idasProvider` (F52/RF-35) |
-| `precosPorMercadoProvider((nome, unidade))` | FutureProvider.family | Último preço de cada mercado para o item **na mesma unidade** (mais barato primeiro), derivado de `idasProvider` (F52/RF-35) |
-| `gastoPorMercadoProvider` | FutureProvider | Gasto por mercado (soma de `total_centavos`, com o grupo "Sem mercado"), derivado de `idasProvider` (F52/RF-35) |
+| `gastoPorMesProvider` | FutureProvider.autoDispose | Gasto por mês (últimos 12 meses no gráfico), derivado de `idasProvider` (F51/RF-34); **agregado no SQL** (`SUM ... GROUP BY`) |
+| `gastoPorCategoriaProvider` | FutureProvider.autoDispose | Gasto por categoria (soma `quantidade × preço` dos itens com preço), derivado de `idasProvider` (F51/RF-34); **agregado no SQL** (`SUM(ROUND(...)) ... GROUP BY`) |
+| `itensMaisCompradosProvider` | FutureProvider.autoDispose | Top 10 por frequência (nome normalizado), com gasto acumulado, derivado de `idasProvider` (F51/RF-34) |
+| `nomesCompradosProvider` | FutureProvider.autoDispose | Nomes comprados (normalizados, distintos) que alimentam o seletor da evolução de preço (F51/RF-34) |
+| `unidadeRecenteProvider(nome)` | FutureProvider.autoDispose.family | Unidade da compra mais recente de um nome — define a unidade comparada na evolução (F51/RF-34) |
+| `evolucaoPrecoProvider((nome, unidade))` | FutureProvider.autoDispose.family | Série `(data, preço unitário)` de um item **na mesma unidade** (regra do RF-29, filtrada no SQL), derivada de `idasProvider` (F51/RF-34) |
+| `mercadosUsadosProvider` | FutureProvider.autoDispose | Mercados distintos já usados nas idas (normalizados, exibindo a caixa da 1ª ocorrência), derivado de `idasProvider` (F52/RF-35) |
+| `precosPorMercadoProvider((nome, unidade))` | FutureProvider.autoDispose.family | Último preço de cada mercado para o item **na mesma unidade** (mais barato primeiro), derivado de `idasProvider` (F52/RF-35) |
+| `gastoPorMercadoProvider` | FutureProvider.autoDispose | Gasto por mercado (soma de `total_centavos`, com o grupo "Sem mercado"), derivado de `idasProvider` (F52/RF-35); **agregado no SQL** (`SUM ... GROUP BY`) |
 | `limitesCategoriaRepositoryProvider` | Provider | `LimitesCategoriaRepository` sobre o Drift: define/observa o limite de orçamento por categoria (F53/RF-36) |
 | `limitesCategoriaProvider` | StreamProvider | Limites por categoria (`Map<CategoriaItem, int>`), stream do Drift (F53/RF-36) |
 | `notificacaoLocalProvider` | Provider | `NotificacaoLocal` injetável (`NotificacaoLocalPlugin`): notificação local do SO; fake nos testes (F53/RF-36) |
@@ -325,7 +332,7 @@ Registrar **idas** de compra (snapshot dos itens concluídos), consultá-las num
 * **Snapshot imutável:** a ida guarda cópias dos itens com `concluido == true` e não deletados (nome, quantidade, unidade, categoria e preço) — **não** referencia `item_local`, então permanece fiel mesmo que a lista/itens sejam editados/excluídos depois. `total_centavos` soma só os itens **com preço** (`round(quantidade × preço)`), mesma regra do `totalCarrinho`; itens sem preço entram na ida e não somam. Sem concluídos → `StateError` (a UI nunca chama sem habilitar).
 * **Diálogo pós-finalizar:** após gravar, pergunta **"Limpar concluídos"** (reusa `ListasRepository.limparConcluidos`) **ou** **"Manter a lista"** — nada é removido sem essa escolha; sem "undo" (a ida já foi gravada).
 * **Tabelas Drift:** `idas_compra` (`id` uuid PK, `lista_id` nullable, `titulo`, `finalizada_em`, `total_centavos`, `itens_count`) e `itens_ida` (`id` uuid PK, `ida_id` FK `ON DELETE CASCADE`, `nome`, `quantidade` `> 0`, `unidade`/`categoria` no enum, `preco_centavos` nullable). Migração **`schemaVersion 11 → 12`** (§2.2), local e sem sync.
-* **Repositório/providers:** `HistoricoComprasRepository(db)` (`finalizar`, `watchIdas`, `ida`, `itensDaIda`, `resumo` e as agregações `gastoPorMes`, `gastoPorCategoria`, `itensMaisComprados`, `nomesComprados`, `evolucaoPreco`, `unidadeRecenteComprada`) e os providers da §3 (`historicoComprasRepositoryProvider`, `idasProvider`, `idaProvider`, `itensDaIdaProvider`, `resumoHistoricoProvider` + os de estatística). Os tipos do domínio (`GastoPorMes`, `GastoPorCategoria`, `ItemFrequente`, `PontoPreco`) ficam em `lib/features/historico/domain/estatisticas.dart`.
+* **Repositório/providers:** `HistoricoComprasRepository(db)` (`finalizar`, `watchIdas`, `ida`, `itensDaIda`, `resumo` e as agregações `gastoPorMes`, `gastoPorCategoria`, `itensMaisComprados`, `nomesComprados`, `evolucaoPreco`, `unidadeRecenteComprada`) e os providers da §3 (`historicoComprasRepositoryProvider`, `idasProvider`, `idaProvider`, `itensDaIdaProvider`, `resumoHistoricoProvider` + os de estatística). `resumo`, `gastoPorMes`, `gastoPorCategoria` e `gastoPorMercado` são **agregados no SQL** (`COUNT`/`SUM`/`GROUP BY`, com o produto `ROUND(quantidade × preço)` arredondado no próprio SQL) em vez de somar em Dart; a filtragem por unidade da evolução/preço por mercado também é feita na consulta. Os tipos do domínio (`GastoPorMes`, `GastoPorCategoria`, `ItemFrequente`, `PontoPreco`) ficam em `lib/features/historico/domain/estatisticas.dart`.
 * **Aba `/historico`** (entre "Minhas Listas" e "Configurações" no shell, §4) com **`TabBar` "Idas" | "Estatísticas"**: o **resumo** (total gasto, ticket médio = total ÷ nº de idas, nº de idas) fica **acima do `TabBar`**, visível nas **duas abas**; a aba **Idas** tem **lista de idas** por `finalizada_em` desc (data `dd/MM/yyyy` · N itens · total) e **estado vazio** explicativo (`historicoVazio` / `historicoVazioDica`). Toque numa ida abre o **detalhe** `/historico/ida/:idaId` (itens com nome, `quantidade unidade`, categoria, preço e o total no rodapé).
 * **Aba Estatísticas (F51, §6 da spec):** deriva de `idasProvider` (reativa — uma nova ida atualiza tudo). Seções (`AppCabecalhoSecao` + estado vazio `semDadosAinda`/`AppEsqueleto`/`AppEstadoErro` em cada uma, [10 §8.5](10-wireframes-telas.md)):
   * **Gasto por período:** `GraficoGastoMensal` — gráfico de **barras** (`fl_chart`) com uma barra por mês (`MM/yy` no eixo X; o valor em `formatarReais` aparece **somente na barra mais alta**, e as demais usam o tooltip de toque), limitado aos **últimos 12 meses** (`gastoPorMesProvider`), seguido do **total do período** exibido (`totalNoPeriodo`).
