@@ -11,16 +11,6 @@ String formatarReais(int centavos) {
   return negativo ? '-$texto' : texto;
 }
 
-/// Formata centavos sem o símbolo: 549 -> '5,49'. Sem dependência de intl.
-String formatarReaisSemSimbolo(int centavos) {
-  final negativo = centavos < 0;
-  final absoluto = centavos.abs();
-  final reais = absoluto ~/ 100;
-  final resto = absoluto % 100;
-  final texto = '${_milhares(reais)},${resto.toString().padLeft(2, '0')}';
-  return negativo ? '-$texto' : texto;
-}
-
 String _milhares(int n) {
   final s = n.toString();
   final buffer = StringBuffer();
