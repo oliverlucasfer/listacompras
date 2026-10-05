@@ -1265,6 +1265,12 @@ Plano: [superpowers/plans/2026-10-05-otimizacoes-revisao.md](superpowers/plans/2
   CP: widgets extraídos para `part` files; mesmo comportamento.
 - [x] **F58-T18** — Docs donas, bump e fechamento
   CP: docs 05/14 sincronizadas; bump `1.7.0+17` com paridade em `web/version.json`; `dart format .`, `flutter analyze` e `flutter test` verdes.
+- [x] **F58-T19** — Prefilter indexado em `sugerirCategoria` + migração v16
+  CP: índice `idx_item_local_nome_lower` (`item_local(lower(nome))` parcial) na migração v16 aditiva; `sugerirCategoria` resolve pelo índice no caso comum e mantém o fallback sem acento/caixa; mesma saída (testes de `sugestao_categorias` verdes); docs 05 atualizadas.
+- [x] **F58-T20** — Testes diferidos (índices, migração v11→v16, limpar/reordenar)
+  CP: teste de índices verifica colunas/predicado (não só o nome); migração v11→v16 cria os índices e preserva dados; `limparConcluidos` vazio retorna `[]`; `reordenarItens` parcial ignora id desconhecido.
+- [x] **F58-T21** — Animação de fechamento da faixa do marcados (mercado)
+  CP: o conteúdo permanece montado durante o colapso (animação preservada) e é desmontado só ao fim; testes de mercado verdes.
 
 Nota: *(tudo 100% offline e behavior-preserving; a migração v15 é apenas de índices, sem tocar dados. O plano fica registrado em [superpowers/plans/2026-10-05-otimizacoes-revisao.md](superpowers/plans/2026-10-05-otimizacoes-revisao.md).)*
 
@@ -1327,8 +1333,8 @@ Nota: *(tudo 100% offline e behavior-preserving; a migração v15 é apenas de �
 | F55 Widget Android / quick-add | 5 | 5 |
 | F56 i18n pt/en/es | 6 | 6 |
 | F57 Atualização do tutorial | 4 | 4 |
-| F58 Otimizações da revisão | 18 | 18 |
-| **Total** | **326** | **324** |
+| F58 Otimizações da revisão | 21 | 21 |
+| **Total** | **329** | **327** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
