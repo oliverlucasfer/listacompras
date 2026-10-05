@@ -31,21 +31,34 @@
 O app é **único** ("Minhas Listas", `br.com.oliverlucas.listacompras.lite`), sem flavors e sem `--dart-define`:
 
 ```bash
-# APK release de teste (assinado via android/key.properties; fallback debug se ausente)
-flutter build apk --release
-# → build/app/outputs/flutter-apk/app-release.apk
+# APK release de teste por ABI (assinado via android/key.properties; fallback debug se ausente).
+# --split-per-abi gera um APK por ABI; --target-platform exclui x86_64 (só emulador);
+# --split-debug-info remove os símbolos de debug do libapp.so (guarde build/symbols/).
+flutter build apk --release \
+  --split-per-abi \
+  --target-platform android-arm,android-arm64 \
+  --split-debug-info=build/symbols
+# → build/app/outputs/flutter-apk/app-arm64-v8a-release.apk (e -armeabi-v7a-release.apk)
 
 # AAB de publicação — assinado com a upload key (não enviar se cair no fallback debug)
-flutter build appbundle --release
+flutter build appbundle --release \
+  --target-platform android-arm,android-arm64 \
+  --split-debug-info=build/symbols
 # → build/app/outputs/bundle/release/app-release.aab
 ```
 
 Se `android/key.properties` não existir, o AAB sai assinado com a **debug key** e **não** deve ser enviado à Play.
 
+**Tamanho do app (revisão de 05/10/2026):** o APK "fat" com os três ABIs tem ~68 MB; o **arm64** (por ABI, sem símbolos) fica em **~30–35 MB** — o formato usado na distribuição. O **AAB** já é entregue **por device** pela Play e também dispensa o x86_64. Os maiores contribuintes são as libs nativas do ML Kit (`libmlkit_google_ocr_pipeline.so` do OCR, RF-37; `libbarhopper_v3.so` do QR, RF-33) e o engine (`libflutter.so`); reduzir o OCR ao modo **unbundled** economizaria ~11 MB/ABI, mas o modelo passaria a ser baixado sob demanda — **quebra o offline-first** (RF-37), então não é feito.
+
 Distribuição de builds de teste ao grupo `testadores` (canal provisório F5-T05b — Firebase App Distribution é **externo ao app**, não adiciona dependência ao projeto):
 
 ```bash
-firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk \
+# Script do repo (usa FIREBASE_APP_ID do ambiente) — build por ABI + símbolos + upload
+FIREBASE_APP_ID="<app-id no console do Firebase>" ./tool/distribuir_testeadores.sh "notas da versão"
+
+# Ou manualmente (APK arm64 gerado acima):
+firebase appdistribution:distribute build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
   --app "<app-id no console do Firebase>" --groups testadores \
   --release-notes "Minhas Listas (RF-31): app local, sem conta, com backup exportar/importar."
 ```
