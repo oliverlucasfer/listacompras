@@ -106,4 +106,57 @@ void main() {
       reason: 'compra sem preço é ignorada; resolve a kg antiga com preço',
     );
   });
+
+  test(
+    'deve_desempatar_gasto_por_categoria_por_valor_quando_totais_iguais',
+    () async {
+      await idaCom([
+        ('A', 1, Unidade.un, CategoriaItem.mercearia, 500),
+        ('B', 1, Unidade.un, CategoriaItem.frios, 500),
+      ]);
+      final cats = await historico.gastoPorCategoria();
+      expect(
+        cats.map((c) => c.categoria.valor).toList(),
+        ['frios', 'mercearia'],
+        reason: 'empate de total resolve por `valor` da categoria (asc)',
+      );
+    },
+  );
+
+  test(
+    'deve_desempatar_gasto_por_mercado_por_rotulo_quando_totais_iguais',
+    () async {
+      for (final m in ['Zona', 'Aurora']) {
+        final l = await listas.criarLista(titulo: m, donoId: 'local');
+        final i = await listas.adicionarItem(
+          listaId: l.id,
+          nome: 'X',
+          quantidade: 1,
+          precoCentavos: 500,
+        );
+        await listas.editarItem(i.id, concluido: true);
+        await historico.finalizar(l.id, mercado: m);
+      }
+      final semMercado = await listas.criarLista(
+        titulo: 'Sem',
+        donoId: 'local',
+      );
+      final i = await listas.adicionarItem(
+        listaId: semMercado.id,
+        nome: 'Y',
+        quantidade: 1,
+        precoCentavos: 500,
+      );
+      await listas.editarItem(i.id, concluido: true);
+      await historico.finalizar(semMercado.id);
+
+      final mercados = await historico.gastoPorMercado();
+      expect(
+        mercados.map((m) => m.mercado).toList(),
+        ['Aurora', 'Zona', null],
+        reason:
+            'empate resolve por rótulo (asc); "Sem mercado" (null) por último',
+      );
+    },
+  );
 }
