@@ -854,4 +854,43 @@ void main() {
       expect(itens.last.precoCentavos, 500);
     },
   );
+
+  test('deve_desmarcar_todos_quando_havia_concluidos', () async {
+    final lista = await repo.criarLista(titulo: 'Massa', donoId: 'user-a');
+    final a = await repo.adicionarItem(listaId: lista.id, nome: 'A');
+    final b = await repo.adicionarItem(listaId: lista.id, nome: 'B');
+    await repo.editarItem(a.id, concluido: true);
+    await repo.editarItem(b.id, concluido: true);
+
+    await repo.desmarcarTodos(lista.id);
+
+    final itens = await repo.watchItensDaLista(lista.id).first;
+    expect(itens.every((i) => !i.concluido), isTrue);
+  });
+
+  test('deve_retornar_itens_removidos_quando_limpar_concluidos', () async {
+    final lista = await repo.criarLista(titulo: 'Limpar', donoId: 'user-a');
+    final a = await repo.adicionarItem(listaId: lista.id, nome: 'A');
+    await repo.adicionarItem(listaId: lista.id, nome: 'B');
+    await repo.editarItem(a.id, concluido: true);
+
+    final removidos = await repo.limparConcluidos(lista.id);
+
+    expect(removidos.map((i) => i.id), [a.id]);
+    final itens = await repo.watchItensDaLista(lista.id).first;
+    expect(itens.map((i) => i.nome), ['B']);
+  });
+
+  test('deve_gravar_nova_ordem_quando_reordenar', () async {
+    final lista = await repo.criarLista(titulo: 'Ordem', donoId: 'user-a');
+    final a = await repo.adicionarItem(listaId: lista.id, nome: 'A');
+    final b = await repo.adicionarItem(listaId: lista.id, nome: 'B');
+    final c = await repo.adicionarItem(listaId: lista.id, nome: 'C');
+
+    await repo.reordenarItens(lista.id, [c.id, a.id, b.id]);
+
+    final itens = await repo.watchItensDaLista(lista.id).first;
+    expect(itens.map((i) => i.nome), ['C', 'A', 'B']);
+    expect(itens.map((i) => i.ordem), [0, 1, 2]);
+  });
 }

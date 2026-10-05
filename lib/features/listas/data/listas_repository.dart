@@ -467,39 +467,42 @@ class ListasRepository {
       final itens = await (_db.select(
         _db.itemLocal,
       )..where((i) => i.listaId.equals(listaId) & i.deletadoEm.isNull())).get();
+      final ordemAtual = {for (final i in itens) i.id: i.ordem};
       final agora = DateTime.now().toUtc();
+      final mudancas = <(String, int)>[];
       for (var posicao = 0; posicao < idsOrdenados.length; posicao++) {
         final id = idsOrdenados[posicao];
-        final item = itens.where((i) => i.id == id).firstOrNull;
-        if (item == null || item.ordem == posicao) continue;
-        await (_db.update(_db.itemLocal)..where((i) => i.id.equals(id))).write(
-          ItemLocalCompanion(ordem: Value(posicao), updatedAt: Value(agora)),
-        );
+        if (ordemAtual[id] == null || ordemAtual[id] == posicao) continue;
+        mudancas.add((id, posicao));
       }
+      if (mudancas.isEmpty) return;
+      await _db.batch((b) {
+        for (final (id, ordem) in mudancas) {
+          b.update(
+            _db.itemLocal,
+            ItemLocalCompanion(ordem: Value(ordem), updatedAt: Value(agora)),
+            where: (i) => i.id.equals(id),
+          );
+        }
+      });
     });
   }
 
   Future<void> desmarcarTodos(String listaId) {
     return _db.transaction(() async {
-      final concluidos =
-          await (_db.select(_db.itemLocal)..where(
-                (i) =>
-                    i.listaId.equals(listaId) &
-                    i.deletadoEm.isNull() &
-                    i.concluido.equals(true),
-              ))
-              .get();
       final agora = DateTime.now().toUtc();
-      for (final item in concluidos) {
-        await (_db.update(
-          _db.itemLocal,
-        )..where((i) => i.id.equals(item.id))).write(
-          ItemLocalCompanion(
-            concluido: const Value(false),
-            updatedAt: Value(agora),
-          ),
-        );
-      }
+      await (_db.update(_db.itemLocal)..where(
+            (i) =>
+                i.listaId.equals(listaId) &
+                i.deletadoEm.isNull() &
+                i.concluido.equals(true),
+          ))
+          .write(
+            ItemLocalCompanion(
+              concluido: const Value(false),
+              updatedAt: Value(agora),
+            ),
+          );
     });
   }
 
@@ -515,14 +518,12 @@ class ListasRepository {
                     i.concluido.equals(true),
               ))
               .get();
+      if (concluidos.isEmpty) return const <Item>[];
       final agora = DateTime.now().toUtc();
-      for (final item in concluidos) {
-        await (_db.update(
-          _db.itemLocal,
-        )..where((i) => i.id.equals(item.id))).write(
-          ItemLocalCompanion(deletadoEm: Value(agora), updatedAt: Value(agora)),
-        );
-      }
+      final ids = [for (final i in concluidos) i.id];
+      await (_db.update(_db.itemLocal)..where((i) => i.id.isIn(ids))).write(
+        ItemLocalCompanion(deletadoEm: Value(agora), updatedAt: Value(agora)),
+      );
       return concluidos.map(Item.fromLocal).toList();
     });
   }
