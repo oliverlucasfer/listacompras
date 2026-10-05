@@ -60,6 +60,9 @@ android {
             // aborta por "Missing class" dos reconhecedores opcionais de
             // chinês/devanagari/japonês/coreano (dívida L-10).
             isMinifyEnabled = true
+            // Remove recursos não referenciados (ex.: assets de bibliotecas não
+            // usados) — exige o R8/minify ligado acima (revisão de tamanho).
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
