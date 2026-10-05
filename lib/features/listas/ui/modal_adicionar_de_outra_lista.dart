@@ -109,26 +109,27 @@ class _ModalAdicionarDeOutraListaState
                 child: Text(context.l10n.selecionarTodos),
               ),
               Flexible(
-                child: ListView.builder(
-                  itemCount: pendentes.length,
-                  itemBuilder: (context, index) {
-                    final item = pendentes[index];
-                    return CheckboxListTile(
-                      value: _selecionados.contains(item.id),
-                      onChanged: (v) => setState(() {
-                        if (v == true) {
-                          _selecionados.add(item.id);
-                        } else {
-                          _selecionados.remove(item.id);
-                        }
-                      }),
-                      title: Text(item.nome),
-                      subtitle: Text(
-                        '${formatarQuantidade(item.quantidade)} '
-                        '${item.unidade.valor}',
-                      ),
-                    );
-                  },
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      for (final item in pendentes)
+                        CheckboxListTile(
+                          value: _selecionados.contains(item.id),
+                          onChanged: (v) => setState(() {
+                            if (v == true) {
+                              _selecionados.add(item.id);
+                            } else {
+                              _selecionados.remove(item.id);
+                            }
+                          }),
+                          title: Text(item.nome),
+                          subtitle: Text(
+                            '${formatarQuantidade(item.quantidade)} '
+                            '${item.unidade.valor}',
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ],
