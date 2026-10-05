@@ -212,7 +212,7 @@ class HistoricoComprasRepository {
   ) async {
     final consulta = _db.select(_db.itemIda).join([
       innerJoin(_db.idaCompra, _db.idaCompra.id.equalsExp(_db.itemIda.idaId)),
-    ]);
+    ])..where(_db.itemIda.unidade.equals(unidade.valor));
     final linhas = await consulta.get();
     final pontos = <PontoPreco>[];
     for (final linha in linhas) {
@@ -237,7 +237,7 @@ class HistoricoComprasRepository {
   Future<Unidade?> unidadeRecenteComprada(String nomeNormalizado) async {
     final consulta = _db.select(_db.itemIda).join([
       innerJoin(_db.idaCompra, _db.idaCompra.id.equalsExp(_db.itemIda.idaId)),
-    ]);
+    ])..where(_db.itemIda.precoCentavos.isNotNull());
     final linhas = await consulta.get();
     final pontos = <(DateTime, String)>[];
     for (final linha in linhas) {
@@ -268,9 +268,17 @@ class HistoricoComprasRepository {
     String nomeNormalizado,
     Unidade unidade,
   ) async {
-    final linhas = await _db.select(_db.itemIda).join([
-      innerJoin(_db.idaCompra, _db.idaCompra.id.equalsExp(_db.itemIda.idaId)),
-    ]).get();
+    final consulta =
+        _db.select(_db.itemIda).join([
+          innerJoin(
+            _db.idaCompra,
+            _db.idaCompra.id.equalsExp(_db.itemIda.idaId),
+          ),
+        ])..where(
+          _db.itemIda.unidade.equals(unidade.valor) &
+              _db.itemIda.precoCentavos.isNotNull(),
+        );
+    final linhas = await consulta.get();
     // Último preço por mercado (normalizado), só mesma unidade e com preço.
     final porMercado = <String, PrecoMercado>{};
     final exibicao = <String, String>{};
