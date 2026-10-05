@@ -114,9 +114,14 @@ class HistoricoComprasRepository {
   }
 
   Future<ResumoHistorico> resumo() async {
-    final idas = await _db.select(_db.idaCompra).get();
-    final total = idas.fold<int>(0, (s, i) => s + i.totalCentavos);
-    final n = idas.length;
+    final linha = await _db
+        .customSelect(
+          'SELECT COUNT(*) AS n, COALESCE(SUM(total_centavos), 0) AS total '
+          'FROM ida_compra',
+        )
+        .getSingle();
+    final n = linha.read<int>('n');
+    final total = linha.read<int>('total');
     return ResumoHistorico(
       totalGeralCentavos: total,
       ticketMedioCentavos: n == 0 ? 0 : (total / n).round(),
@@ -125,36 +130,41 @@ class HistoricoComprasRepository {
   }
 
   Future<List<GastoPorMes>> gastoPorMes() async {
-    final idas = await _db.select(_db.idaCompra).get();
-    final mapa = <String, int>{};
-    final meses = <String, DateTime>{};
-    for (final i in idas) {
-      final m = DateTime.utc(i.finalizadaEm.year, i.finalizadaEm.month, 1);
-      final chave = '${m.year}-${m.month}';
-      mapa[chave] = (mapa[chave] ?? 0) + i.totalCentavos;
-      meses[chave] = m;
-    }
-    final lista = [
-      for (final e in mapa.entries)
-        GastoPorMes(mes: meses[e.key]!, totalCentavos: e.value),
-    ]..sort((a, b) => a.mes.compareTo(b.mes));
-    return lista;
+    // `substr(1,7)` em vez de `strftime`: as datas são texto ISO-8601 do Drift
+    // (`storeDateTimeAsText`) e o parsing fica em Dart.
+    final linhas = await _db
+        .customSelect(
+          'SELECT substr(finalizada_em, 1, 7) AS ano_mes, '
+          'SUM(total_centavos) AS total FROM ida_compra '
+          'GROUP BY ano_mes ORDER BY ano_mes',
+        )
+        .get();
+    return [
+      for (final r in linhas)
+        GastoPorMes(
+          mes: DateTime.utc(
+            int.parse(r.read<String>('ano_mes').substring(0, 4)),
+            int.parse(r.read<String>('ano_mes').substring(5, 7)),
+          ),
+          totalCentavos: r.read<int>('total'),
+        ),
+    ];
   }
 
   Future<List<GastoPorCategoria>> gastoPorCategoria() async {
-    final itens = await _db.select(_db.itemIda).get();
-    final mapa = <String, int>{};
-    for (final i in itens) {
-      final preco = i.precoCentavos;
-      if (preco == null) continue;
-      final subtotal = (i.quantidade * preco).round();
-      mapa[i.categoria] = (mapa[i.categoria] ?? 0) + subtotal;
-    }
+    final linhas = await _db
+        .customSelect(
+          'SELECT categoria, '
+          'SUM(CAST(ROUND(quantidade * preco_centavos) AS INTEGER)) AS total '
+          'FROM item_ida WHERE preco_centavos IS NOT NULL '
+          'GROUP BY categoria',
+        )
+        .get();
     final lista = [
-      for (final e in mapa.entries)
+      for (final r in linhas)
         GastoPorCategoria(
-          categoria: CategoriaItem.fromValor(e.key),
-          totalCentavos: e.value,
+          categoria: CategoriaItem.fromValor(r.read<String>('categoria')),
+          totalCentavos: r.read<int>('total'),
         ),
     ]..sort((a, b) => b.totalCentavos.compareTo(a.totalCentavos));
     return lista;
@@ -290,14 +300,19 @@ class HistoricoComprasRepository {
   }
 
   Future<List<GastoPorMercado>> gastoPorMercado() async {
-    final idas = await _db.select(_db.idaCompra).get();
+    final linhas = await _db
+        .customSelect(
+          'SELECT mercado, SUM(total_centavos) AS total FROM ida_compra '
+          'GROUP BY mercado',
+        )
+        .get();
     final totais = <String?, int>{};
     final exibicao = <String, String>{};
-    for (final i in idas) {
-      final m = i.mercado;
+    for (final r in linhas) {
+      final m = r.read<String?>('mercado');
       final chave = (m == null || m.trim().isEmpty) ? null : normalizarTexto(m);
       if (chave != null) exibicao.putIfAbsent(chave, () => m!);
-      totais[chave] = (totais[chave] ?? 0) + i.totalCentavos;
+      totais[chave] = (totais[chave] ?? 0) + r.read<int>('total');
     }
     final lista = [
       for (final e in totais.entries)
