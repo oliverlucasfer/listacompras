@@ -57,7 +57,7 @@ lib/
 │   ├── voz/                         # domain/ data/ providers/ (F30)
 │   └── widget/                      # domain/ data/ providers/ ui/ — widget Android (F55/RF-38)
 └── drift/
-    ├── database.dart                # AppDatabase (tabelas locais, schemaVersion 15)
+    ├── database.dart                # AppDatabase (tabelas locais, schemaVersion 16)
     ├── conexao/                     # abrirBancoLocal (nativa/web, ADR-012)
     └── tables/                      # ListaLocal, ItemLocal, HistoricoPrecoLocal, IdaCompra, ItemIda, OrcamentoCategoria
 ```
@@ -90,6 +90,9 @@ lib/
   **índices de desempenho** `idx_item_ida_ida_id` (`item_ida(ida_id)`, FK), `idx_ida_compra_finalizada_em`
   (`ida_compra(finalizada_em)`, ordenação do histórico) e `idx_lista_local_ativa` (`lista_local(updated_at)`
   parcial `WHERE deletado_em IS NULL`) — nenhum dado é tocado.
+  A migração **`schemaVersion 15 → 16`** (revisão de 05/10/2026) também é **aditiva**: cria o índice
+  `idx_item_local_nome_lower` (`item_local(lower(nome))` parcial `WHERE deletado_em IS NULL`), usado pelo
+  prefilter da sugestão de categoria.
   Os passos históricos (`de < 2 … de < 10`) permanecem para quem vem de versões antigas.
 * **`quantidade` é `real` no Drift:** a precisão efetiva da app é ≤ 3 casas decimais (tolerância 0,001, [05 §6.3]).
 
@@ -152,7 +155,7 @@ Há **um único app** (`main.dart` → `bootstrap()`), 100% local, com a identid
 
 **Sugestão de categoria em camadas (ADR-011, spec §4)** — `SugestaoCategorias.sugerirCategoria(nome)`, zero rede:
 
-1. **Memória por nome:** categoria do item ativo mais recente com o mesmo nome (qualquer lista **ativa** no dispositivo — itens de listas com `deletado_em` não entram; comparação sem acento/caixa; `updated_at` DESC).
+1. **Memória por nome:** categoria do item ativo mais recente com o mesmo nome (qualquer lista **ativa** no dispositivo — itens de listas com `deletado_em` não entram; comparação sem acento/caixa; `updated_at` DESC). Um **prefilter indexado** (`lower(nome)` = `lower(?)` no `idx_item_local_nome_lower`) resolve o caso comum sem varrer `item_local`; só quando ele não acha (variante de acento/caixa que o `lower()` ASCII do SQLite não iguala) a camada cai na varredura+normalização — resultado idêntico, sem o full-scan a cada item.
 2. **Dicionário estático** (`core/categorias/dicionario_categorias.dart`, ~230 termos pt-BR versionados no repo): casa quando **todas** as palavras do termo aparecem no nome; multi-palavra casa antes de palavra única ("leite condensado" → Mercearia antes de "leite" → Laticínios), empate por ordem alfabética.
 3. **Fallback:** `outros`.
 

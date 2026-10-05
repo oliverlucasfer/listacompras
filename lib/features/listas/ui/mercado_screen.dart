@@ -352,9 +352,10 @@ class _LinhaMercado extends StatelessWidget {
 /// volta aos pendentes. Fecha por padrão e abre automaticamente na primeira
 /// marcação da sessão.
 ///
-/// O conteúdo (`ListView`) só é montado quando aberta: fechada, a faixa roda
-/// `heightFactor: 0` sobre um `SizedBox.shrink`, sem materializar os itens.
-/// O `ExcludeSemantics` evita anunciar itens escondidos durante a animação.
+/// O conteúdo (`ListView`) fica montado enquanto a faixa está aberta **ou**
+/// animando o fechamento; ao fim do colapso ele é desmontado (`SizedBox.shrink`),
+/// sem materializar os itens com a faixa fechada. O `ExcludeSemantics` evita
+/// anunciar itens escondidos durante a animação.
 ///
 /// Ao abrir, a área expansível é limitada a ~40% da tela com rolagem interna
 /// (`ListView`): sem esse teto, listas reais (~9+ concluídos) estouram a
@@ -381,16 +382,26 @@ class _FaixaMarcados extends StatefulWidget {
 class _FaixaMarcadosState extends State<_FaixaMarcados> {
   late bool _aberta = widget.abrirInicialmente;
 
+  /// Conteúdo montado: fica true enquanto a faixa está aberta **ou** animando
+  /// o fechamento (para a animação ter conteúdo para animar) e vira false só
+  /// quando o colapso termina — assim os itens não ficam materializados
+  /// fechados, mas o fechamento continua animado.
+  late bool _montar = widget.abrirInicialmente;
+
   @override
   void didUpdateWidget(covariant _FaixaMarcados oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.abrirInicialmente && !oldWidget.abrirInicialmente) {
       _aberta = true;
+      _montar = true;
     }
   }
 
   void _alternar() {
-    setState(() => _aberta = !_aberta);
+    setState(() {
+      _aberta = !_aberta;
+      if (_aberta) _montar = true;
+    });
   }
 
   @override
@@ -418,11 +429,16 @@ class _FaixaMarcadosState extends State<_FaixaMarcados> {
               curve: Curves.easeInOut,
               alignment: Alignment.topCenter,
               heightFactor: _aberta ? 1 : 0,
+              onEnd: () {
+                if (!_aberta && _montar && mounted) {
+                  setState(() => _montar = false);
+                }
+              },
               child: ExcludeSemantics(
                 excluding: !_aberta,
                 child: ConstrainedBox(
                   constraints: BoxConstraints(maxHeight: widget.maxAltura),
-                  child: _aberta
+                  child: _montar
                       ? ListView.builder(
                           shrinkWrap: true,
                           padding: EdgeInsets.zero,

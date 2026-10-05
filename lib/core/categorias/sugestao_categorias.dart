@@ -1,3 +1,5 @@
+import 'package:drift/drift.dart' show Variable;
+
 import '../../drift/database.dart';
 import '../dominio/categoria.dart';
 import '../texto/normalizar.dart';
@@ -20,6 +22,28 @@ class SugestaoCategorias {
     final chave = normalizarTexto(nome);
     if (chave.isEmpty) return CategoriaItem.outros;
 
+    // Prefilter indexado por `lower(nome)` (idx_item_local_nome_lower): no caso
+    // comum (mesmo nome, caixa ASCII) evita varrer `item_local` inteiro.
+    final exata = await _db
+        .customSelect(
+          '''
+    SELECT i.categoria AS categoria
+    FROM item_local i
+    JOIN lista_local l ON l.id = i.lista_id AND l.deletado_em IS NULL
+    WHERE i.deletado_em IS NULL AND lower(i.nome) = lower(?)
+    ORDER BY i.updated_at DESC
+    LIMIT 1
+  ''',
+          variables: [Variable<String>(nome)],
+          readsFrom: {_db.itemLocal, _db.listaLocal},
+        )
+        .getSingleOrNull();
+    if (exata != null) {
+      return CategoriaItem.fromValor(exata.read<String>('categoria'));
+    }
+
+    // Fallback: variantes que o `lower()` ASCII do SQLite não iguala
+    // (acentos/caixa) — mesma varredura + normalização de antes.
     final candidatos = await _db
         .customSelect(
           '''
