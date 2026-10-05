@@ -1549,18 +1549,27 @@ void main() {
   );
 
   test('deve_criar_indices_de_desempenho_quando_instalacao_nova', () async {
-    final indices = await db
+    final linhas = await db
         .customSelect(
-          "SELECT name FROM sqlite_master WHERE type = 'index' AND name IN ("
+          "SELECT name, sql FROM sqlite_master WHERE type = 'index' AND name IN ("
           "'idx_item_ida_ida_id','idx_ida_compra_finalizada_em',"
-          "'idx_lista_local_ativa')",
+          "'idx_lista_local_ativa','idx_item_local_nome_lower')",
         )
         .get();
-    expect(indices.map((r) => r.data['name']).toSet(), {
+    final sql = {
+      for (final r in linhas) r.read<String>('name'): r.read<String>('sql'),
+    };
+    expect(sql.keys.toSet(), {
       'idx_item_ida_ida_id',
       'idx_ida_compra_finalizada_em',
       'idx_lista_local_ativa',
+      'idx_item_local_nome_lower',
     });
+    expect(sql['idx_item_ida_ida_id'], contains('ida_id'));
+    expect(sql['idx_ida_compra_finalizada_em'], contains('finalizada_em'));
+    expect(sql['idx_lista_local_ativa'], contains('deletado_em IS NULL'));
+    expect(sql['idx_item_local_nome_lower'], contains('lower(nome)'));
+    expect(sql['idx_item_local_nome_lower'], contains('deletado_em IS NULL'));
   });
 
   test('deve_criar_indices_de_desempenho_quando_migrar_v14_para_v15', () async {
@@ -1620,6 +1629,86 @@ void main() {
       'idx_item_ida_ida_id',
       'idx_ida_compra_finalizada_em',
       'idx_lista_local_ativa',
+    });
+  });
+
+  test('deve_migrar_v11_para_v16_criando_indices_e_preservando_dados', () async {
+    final arquivo = File(
+      '${Directory.systemTemp.path}/v11_para_v16_${DateTime.now().microsecondsSinceEpoch}.sqlite',
+    );
+    addTearDown(() {
+      if (arquivo.existsSync()) arquivo.deleteSync();
+    });
+
+    final antigo = sq3.sqlite3.open(arquivo.path);
+    antigo.execute('''
+        CREATE TABLE lista_local (
+          id TEXT NOT NULL PRIMARY KEY, created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL, titulo TEXT NOT NULL, dono_id TEXT NOT NULL,
+          deletado_em TEXT NULL, arquivada_em TEXT NULL,
+          orcamento_centavos INTEGER NULL
+        );
+        CREATE TABLE item_local (
+          id TEXT NOT NULL PRIMARY KEY, created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          lista_id TEXT NOT NULL REFERENCES lista_local (id) ON DELETE CASCADE,
+          nome TEXT NOT NULL, quantidade REAL NOT NULL DEFAULT 1.0,
+          unidade TEXT NOT NULL DEFAULT 'un',
+          categoria TEXT NOT NULL DEFAULT 'outros',
+          concluido INTEGER NOT NULL DEFAULT 0,
+          ordem INTEGER NOT NULL DEFAULT 0, deletado_em TEXT NULL,
+          preco_centavos INTEGER NULL,
+          CHECK (quantidade > 0),
+          CHECK (quantidade <= 1000000),
+          CHECK (unidade IN ('un','kg','g','l','ml','caixa','pacote','pct','pt','dz')),
+          CHECK (categoria IN ('hortifruti','mercearia','frios','laticinios',
+            'congelados','padaria','bebidas','pet','limpeza','higiene','outros')),
+          CHECK (preco_centavos IS NULL OR
+            (preco_centavos >= 0 AND preco_centavos <= 99999999))
+        );
+        CREATE TABLE historico_preco_local (
+          nome_normalizado TEXT NOT NULL PRIMARY KEY,
+          preco_centavos INTEGER NOT NULL,
+          unidade TEXT NOT NULL, registrado_em TEXT NOT NULL
+        );
+        CREATE UNIQUE INDEX uq_item_ativo
+          ON item_local (lista_id, lower(nome)) WHERE deletado_em IS NULL;
+        PRAGMA user_version = 11;
+      ''');
+    antigo.execute(
+      "INSERT INTO lista_local (id, created_at, updated_at, titulo, dono_id) "
+      "VALUES ('11111111-0000-0000-0000-000000000001', "
+      "'2026-01-01T00:00:00.000000Z','2026-01-01T00:00:00.000000Z','Antiga','local')",
+    );
+    antigo.execute(
+      "INSERT INTO item_local (id, created_at, updated_at, lista_id, nome, "
+      "quantidade, unidade, categoria, concluido, ordem) VALUES "
+      "('11111111-0000-0000-0000-000000000002', "
+      "'2026-01-01T00:00:00.000000Z','2026-01-01T00:00:00.000000Z',"
+      "'11111111-0000-0000-0000-000000000001','Café',2.0,'kg','mercearia',0,0)",
+    );
+    antigo.close();
+
+    final migrado = AppDatabase(NativeDatabase(arquivo));
+    addTearDown(migrado.close);
+
+    expect(migrado.schemaVersion, 16);
+    final item = await migrado.select(migrado.itemLocal).getSingle();
+    expect(item.nome, 'Café');
+    expect(item.quantidade, 2.0);
+
+    final nomes = await migrado
+        .customSelect(
+          "SELECT name FROM sqlite_master WHERE type = 'index' AND name IN ("
+          "'idx_item_ida_ida_id','idx_ida_compra_finalizada_em',"
+          "'idx_lista_local_ativa','idx_item_local_nome_lower')",
+        )
+        .get();
+    expect(nomes.map((r) => r.read<String>('name')).toSet(), {
+      'idx_item_ida_ida_id',
+      'idx_ida_compra_finalizada_em',
+      'idx_lista_local_ativa',
+      'idx_item_local_nome_lower',
     });
   });
 }

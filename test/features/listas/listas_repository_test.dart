@@ -893,4 +893,22 @@ void main() {
     expect(itens.map((i) => i.nome), ['C', 'A', 'B']);
     expect(itens.map((i) => i.ordem), [0, 1, 2]);
   });
+
+  test('deve_retornar_vazio_quando_limpar_concluidos_sem_concluidos', () async {
+    final lista = await repo.criarLista(titulo: 'Vazia', donoId: 'user-a');
+    await repo.adicionarItem(listaId: lista.id, nome: 'A');
+    expect(await repo.limparConcluidos(lista.id), isEmpty);
+  });
+
+  test('deve_ignorar_ids_desconhecidos_quando_reordenar_parcial', () async {
+    final lista = await repo.criarLista(titulo: 'Parcial', donoId: 'user-a');
+    final a = await repo.adicionarItem(listaId: lista.id, nome: 'A');
+    final b = await repo.adicionarItem(listaId: lista.id, nome: 'B');
+
+    await repo.reordenarItens(lista.id, [b.id, 'id-inexistente', a.id]);
+
+    final itens = await repo.watchItensDaLista(lista.id).first;
+    expect(itens.firstWhere((i) => i.nome == 'B').ordem, 0);
+    expect(itens.firstWhere((i) => i.nome == 'A').ordem, 2);
+  });
 }
