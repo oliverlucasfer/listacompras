@@ -65,7 +65,12 @@ class TelaListaScreen extends ConsumerStatefulWidget {
 }
 
 class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
-  final _busca = TextEditingController();
+  /// Texto da busca isolado num [ValueNotifier] para o corpo reagir sem
+  /// reconstruir a AppBar e o restante da tela a cada tecla (RF-17).
+  final _consulta = ValueNotifier<String>('');
+
+  /// Permite limpar o campo controlado pelo [_CampoBusca] sem `setState`.
+  final _buscaKey = GlobalKey<_CampoBuscaState>();
   bool _buscando = false;
 
   @override
@@ -84,7 +89,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
 
   @override
   void dispose() {
-    _busca.dispose();
+    _consulta.dispose();
     super.dispose();
   }
 
@@ -92,14 +97,15 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
 
   void _fecharBusca() {
     if (!mounted) return;
-    _busca.clear();
+    _consulta.value = '';
+    _buscaKey.currentState?.limpar();
     setState(() => _buscando = false);
   }
 
   void _limparBusca() {
     if (!mounted) return;
-    _busca.clear();
-    setState(() {});
+    _consulta.value = '';
+    _buscaKey.currentState?.limpar();
   }
 
   Future<void> _acaoMenu(
@@ -409,12 +415,9 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                       AppSpacing.lg,
                       0,
                     ),
-                    child: AppCampoTexto(
-                      controller: _busca,
-                      label: context.l10n.buscarItem,
-                      hint: context.l10n.nomeDoItem,
-                      autofocus: true,
-                      onChanged: (_) => setState(() {}),
+                    child: _CampoBusca(
+                      key: _buscaKey,
+                      onChanged: (valor) => _consulta.value = valor,
                     ),
                   ),
                 _CampoAdicionar(
@@ -425,7 +428,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                 Expanded(
                   child: _ListaItens(
                     listaId: listaId,
-                    consulta: _busca.text,
+                    consulta: _consulta,
                     onLimparBusca: _limparBusca,
                   ),
                 ),
@@ -532,6 +535,42 @@ class _AlertaOrcamentoCategorias extends ConsumerWidget {
         tipo: AppBannerTipo.aviso,
         mensagem: '${context.l10n.acimaDoLimiteDaCategoria}: $nomes',
       ),
+    );
+  }
+}
+
+/// Campo de busca por nome na lista (RF-17). Dono do próprio
+/// [TextEditingController] e do `autofocus`; notifica a tela a cada tecla sem
+/// `setState` (o corpo escuta o [ValueNotifier]). Expõe [limpar] para o
+/// controlador externo zerar o campo sem reconstruir a tela.
+class _CampoBusca extends StatefulWidget {
+  const _CampoBusca({super.key, required this.onChanged});
+
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_CampoBusca> createState() => _CampoBuscaState();
+}
+
+class _CampoBuscaState extends State<_CampoBusca> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void limpar() => _controller.clear();
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCampoTexto(
+      controller: _controller,
+      label: context.l10n.buscarItem,
+      hint: context.l10n.nomeDoItem,
+      autofocus: true,
+      onChanged: widget.onChanged,
     );
   }
 }
@@ -800,11 +839,11 @@ class _ListaItens extends ConsumerWidget {
   });
 
   final String listaId;
-  final String consulta;
+  final ValueNotifier<String> consulta;
   final VoidCallback? onLimparBusca;
 
-  bool _casa(Item item) =>
-      consulta.trim().isEmpty || contemBusca(item.nome, consulta);
+  bool _casa(Item item, String valorConsulta) =>
+      valorConsulta.trim().isEmpty || contemBusca(item.nome, valorConsulta);
 
   Future<void> _reordenarGrupo(
     BuildContext context,
@@ -831,136 +870,153 @@ class _ListaItens extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final itensAsync = ref.watch(itensDaListaProvider(listaId));
+    // Grupos na ordem pessoal das categorias (RF-24), com fallback para o
+    // enum (doc 01 §3.2) enquanto a preferência carrega.
+    final ordemCategorias =
+        ref.watch(ordemCategoriasProvider).value ?? CategoriaItem.values;
     return itensAsync.when(
       loading: () => const AppEsqueleto(linhas: 5),
       error: (_, _) => AppEstadoErro(
         mensagem: context.l10n.erroGenerico,
         onRetentar: () => ref.invalidate(itensDaListaProvider(listaId)),
       ),
-      data: (itens) {
-        if (itens.isEmpty) {
-          return AppEstadoVazio(
-            icone: Icons.shopping_basket_outlined,
-            titulo: context.l10n.nenhumItem,
-            descricao: context.l10n.nenhumItemDica,
-          );
-        }
-        final pendentes = itens.where((i) => !i.concluido && _casa(i)).toList();
-        final concluidos = itens.where((i) => i.concluido && _casa(i)).toList();
-        final filtrando = consulta.trim().isNotEmpty;
-        if (filtrando && pendentes.isEmpty && concluidos.isEmpty) {
-          return AppEstadoVazio(
-            icone: Icons.search_off,
-            titulo: context.l10n.nenhumItemEncontrado,
-            descricao: context.l10n.buscaSemResultadoDica,
-            acao: AppBotao(
-              rotulo: context.l10n.limparBusca,
-              variante: AppBotaoVariante.texto,
-              expandido: false,
-              onPressed: onLimparBusca,
-            ),
-          );
-        }
-        final slivers = <Widget>[];
-        // Grupos na ordem pessoal das categorias (RF-24), com fallback para o
-        // enum (doc 01 §3.2) enquanto a preferência carrega; exibição =
-        // (categoria, ordem, id) — o stream já chega ordenado por (ordem, id).
-        final ordemCategorias =
-            ref.watch(ordemCategoriasProvider).value ?? CategoriaItem.values;
-        // Primeiro item pendente na ordem exibida: alvo do passo do tour
-        // (RF-27, F46). O loader também só existe quando há item ativo.
-        String? alvoTourId;
-        for (final categoria in ordemCategorias) {
-          for (final item in pendentes) {
-            if (item.categoria == categoria) {
-              alvoTourId = item.id;
-              break;
-            }
-          }
-          if (alvoTourId != null) break;
-        }
-        if (pendentes.isNotEmpty) {
-          slivers.add(
-            const SliverToBoxAdapter(
-              child: TourLoader(etapa: TourEtapa.recursos),
-            ),
-          );
-        }
-        for (final categoria in ordemCategorias) {
-          final grupo = pendentes
-              .where((i) => i.categoria == categoria)
-              .toList();
-          if (grupo.isEmpty) continue;
-          slivers
-            ..add(
-              SliverToBoxAdapter(
-                child: AppCabecalhoSecao(
-                  categoria.rotulo,
-                  contagem: grupo.length,
-                ),
-              ),
-            )
-            ..add(
-              !filtrando
-                  ? SliverReorderableList(
-                      itemCount: grupo.length,
-                      onReorderItem: (oldIndex, newIndex) => _reordenarGrupo(
-                        context,
-                        ref,
-                        categoria,
-                        grupo,
-                        oldIndex,
-                        newIndex,
-                      ),
-                      itemBuilder: (context, index) => _LinhaItem(
-                        key: ValueKey(grupo[index].id),
-                        listaId: listaId,
-                        item: grupo[index],
-                        index: index,
-                        tourAlvo: grupo[index].id == alvoTourId,
-                      ),
-                    )
-                  : SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _LinhaItem(
-                          key: ValueKey(grupo[index].id),
-                          listaId: listaId,
-                          item: grupo[index],
-                          index: -1,
-                          tourAlvo: grupo[index].id == alvoTourId,
-                        ),
-                        childCount: grupo.length,
-                      ),
-                    ),
-            );
-        }
-        if (concluidos.isNotEmpty) {
-          slivers.add(
-            SliverToBoxAdapter(
-              child: ExpansionTile(
-                tilePadding: AppSpacing.horizontal,
-                title: Text(
-                  '${context.l10n.itensConcluidos} (${concluidos.length})',
-                ),
-                children: [
-                  for (final item in concluidos)
-                    _LinhaItem(
-                      key: ValueKey(item.id),
-                      listaId: listaId,
-                      item: item,
-                      index: -1,
-                    ),
-                ],
-              ),
-            ),
-          );
-        }
-        slivers.add(
-          const SliverPadding(padding: EdgeInsets.only(bottom: AppSpacing.xl)),
-        );
-        return CustomScrollView(slivers: slivers);
-      },
+      // A busca fica num [ValueNotifier] próprio: digitar reconstrói só a
+      // lista filtrada, sem refazer os `ref.watch` acima nem a tela inteira.
+      data: (itens) => ValueListenableBuilder<String>(
+        valueListenable: consulta,
+        builder: (context, valorConsulta, _) =>
+            _itens(context, ref, itens, ordemCategorias, valorConsulta),
+      ),
     );
+  }
+
+  Widget _itens(
+    BuildContext context,
+    WidgetRef ref,
+    List<Item> itens,
+    List<CategoriaItem> ordemCategorias,
+    String valorConsulta,
+  ) {
+    if (itens.isEmpty) {
+      return AppEstadoVazio(
+        icone: Icons.shopping_basket_outlined,
+        titulo: context.l10n.nenhumItem,
+        descricao: context.l10n.nenhumItemDica,
+      );
+    }
+    // Passada única: separa pendentes/concluídos e monta os grupos por
+    // categoria preservando a ordem de exibição (categoria, ordem, id) —
+    // o stream já chega ordenado por (ordem, id).
+    final pendentes = <Item>[];
+    final concluidos = <Item>[];
+    final grupos = <CategoriaItem, List<Item>>{};
+    for (final item in itens) {
+      if (!_casa(item, valorConsulta)) continue;
+      if (item.concluido) {
+        concluidos.add(item);
+      } else {
+        pendentes.add(item);
+        grupos.putIfAbsent(item.categoria, () => <Item>[]).add(item);
+      }
+    }
+    final filtrando = valorConsulta.trim().isNotEmpty;
+    if (filtrando && pendentes.isEmpty && concluidos.isEmpty) {
+      return AppEstadoVazio(
+        icone: Icons.search_off,
+        titulo: context.l10n.nenhumItemEncontrado,
+        descricao: context.l10n.buscaSemResultadoDica,
+        acao: AppBotao(
+          rotulo: context.l10n.limparBusca,
+          variante: AppBotaoVariante.texto,
+          expandido: false,
+          onPressed: onLimparBusca,
+        ),
+      );
+    }
+    final slivers = <Widget>[];
+    // Primeiro item pendente na ordem exibida: alvo do passo do tour
+    // (RF-27, F46). O loader também só existe quando há item ativo.
+    String? alvoTourId;
+    for (final categoria in ordemCategorias) {
+      final grupo = grupos[categoria];
+      if (grupo != null && grupo.isNotEmpty) {
+        alvoTourId = grupo.first.id;
+        break;
+      }
+    }
+    if (pendentes.isNotEmpty) {
+      slivers.add(
+        const SliverToBoxAdapter(child: TourLoader(etapa: TourEtapa.recursos)),
+      );
+    }
+    for (final categoria in ordemCategorias) {
+      final grupo = grupos[categoria];
+      if (grupo == null || grupo.isEmpty) continue;
+      slivers
+        ..add(
+          SliverToBoxAdapter(
+            child: AppCabecalhoSecao(categoria.rotulo, contagem: grupo.length),
+          ),
+        )
+        ..add(
+          !filtrando
+              ? SliverReorderableList(
+                  itemCount: grupo.length,
+                  onReorderItem: (oldIndex, newIndex) => _reordenarGrupo(
+                    context,
+                    ref,
+                    categoria,
+                    grupo,
+                    oldIndex,
+                    newIndex,
+                  ),
+                  itemBuilder: (context, index) => _LinhaItem(
+                    key: ValueKey(grupo[index].id),
+                    listaId: listaId,
+                    item: grupo[index],
+                    index: index,
+                    tourAlvo: grupo[index].id == alvoTourId,
+                  ),
+                )
+              : SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _LinhaItem(
+                      key: ValueKey(grupo[index].id),
+                      listaId: listaId,
+                      item: grupo[index],
+                      index: -1,
+                      tourAlvo: grupo[index].id == alvoTourId,
+                    ),
+                    childCount: grupo.length,
+                  ),
+                ),
+        );
+    }
+    if (concluidos.isNotEmpty) {
+      slivers.add(
+        SliverToBoxAdapter(
+          child: ExpansionTile(
+            tilePadding: AppSpacing.horizontal,
+            title: Text(
+              '${context.l10n.itensConcluidos} (${concluidos.length})',
+            ),
+            children: [
+              for (final item in concluidos)
+                _LinhaItem(
+                  key: ValueKey(item.id),
+                  listaId: listaId,
+                  item: item,
+                  index: -1,
+                ),
+            ],
+          ),
+        ),
+      );
+    }
+    slivers.add(
+      const SliverPadding(padding: EdgeInsets.only(bottom: AppSpacing.xl)),
+    );
+    return CustomScrollView(slivers: slivers);
   }
 }
 
