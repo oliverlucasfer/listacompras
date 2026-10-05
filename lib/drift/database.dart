@@ -80,8 +80,8 @@ class AppDatabase extends _$AppDatabase {
   }
 
   /// Datas como texto ISO-8601 com microssegundos: o armazenamento padrão
-  /// (unix segundos) truncava `updated_at` e criava empates artificiais no
-  /// LWW do sync (doc 03 §5).
+  /// (unix segundos) truncava `updated_at` e criava empates artificiais de
+  /// timestamp.
   @override
   DriftDatabaseOptions get options =>
       const DriftDatabaseOptions(storeDateTimeAsText: true);

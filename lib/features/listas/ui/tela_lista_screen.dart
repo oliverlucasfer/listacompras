@@ -51,7 +51,6 @@ import 'sheet_titulo_lista.dart';
 import 'total_carrinho.dart';
 
 /// Tela da Lista de Compras (doc 05 §6.3, wireframe 10 §3.1, RF-03/RF-04).
-/// Indicador de sync (F4-T07), IA (F4-T01) e drag-and-drop (F4-T05) chegam depois.
 class TelaListaScreen extends ConsumerStatefulWidget {
   const TelaListaScreen({super.key, required this.listaId, this.foco = false});
 
@@ -308,7 +307,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
             ),
           );
         }
-        final inicio = inicioDaLista(ehDono: true);
+        final inicio = inicioDaLista();
         final itens =
             ref.watch(itensDaListaProvider(listaId)).value ?? const <Item>[];
         // Mercado da última ida desta lista (RF-35, F52): o `idasProvider` já

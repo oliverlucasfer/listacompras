@@ -85,9 +85,8 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
   }
 
   /// Ids marcados nesta sessão que ainda existem **e** estão concluídos no
-  /// stream atual. Sem mutação: apenas conta a interseção — um desmarque remoto
-  /// (LWW) ou soft delete não deixa o contador preso num valor obsoleto
-  /// (ex.: `1 de 0`).
+  /// stream atual. Sem mutação: apenas conta a interseção — um soft delete não
+  /// deixa o contador preso num valor obsoleto (ex.: `1 de 0`).
   int _marcadosValidos(List<Item> itens) {
     final concluidos = {
       for (final item in itens)
@@ -147,7 +146,7 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
             ),
           );
         }
-        final inicio = inicioDaLista(ehDono: true);
+        final inicio = inicioDaLista();
         final itensAsync = ref.watch(itensDaListaProvider(listaId));
         return PopScopeVoltarInicio(
           inicio: inicio,

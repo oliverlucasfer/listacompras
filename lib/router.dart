@@ -16,7 +16,7 @@ import 'features/listas/ui/tela_ordenar_categorias.dart';
 import 'features/onboarding/ui/boas_vindas_screen.dart';
 import 'features/widget/ui/adicionar_screen.dart';
 
-/// Rotas do app local (RF-31): sem conta, sem compartilhamento, sem sync.
+/// Rotas do app local (RF-31): sem conta nem sync.
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/listas',

@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 /// Destino de "voltar" quando não há pilha (deep link/aceite de convite):
-/// o dono volta às listas próprias; o membro, às compartilhadas.
-String inicioDaLista({required bool ehDono}) =>
-    ehDono ? '/listas' : '/compartilhadas';
+/// o app é local, então o início é sempre a tela de listas.
+String inicioDaLista() => '/listas';
 
 /// Seta do AppBar: `null` deixa a padrão (pop) quando há pilha; sem pilha,
 /// navega para [inicio].

@@ -14,7 +14,7 @@ import '../providers/backup_providers.dart';
 
 /// Seção "Backup" das Configurações (RF-31, F41): exporta o estado atual para
 /// um arquivo `.json` e importa de um arquivo, mesclando com as listas locais
-/// (LWW por `updated_at`, `backup_repository.dart`).
+/// (prevalece o `updated_at` mais recente, `backup_repository.dart`).
 class SecaoBackup extends ConsumerWidget {
   const SecaoBackup({super.key});
 

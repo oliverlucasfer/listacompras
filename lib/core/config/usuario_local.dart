@@ -1,2 +1,2 @@
-/// Dono de toda lista no app local (substitui a sessão do Supabase).
+/// Dono de toda lista no app local (não há sessão de usuário).
 const String idLocal = 'local';
