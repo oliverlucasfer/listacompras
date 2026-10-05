@@ -309,18 +309,74 @@ class ListasRepository {
     return ResultadoDedup.adicionado;
   }
 
-  /// Adiciona um lote de itens (RF-23), um a um pela dedup. Copia nome/
-  /// quantidade/unidade/categoria; **ignora preço e concluído**.
-  Future<void> adicionarItensDedup(String listaId, Iterable<Item> itens) async {
-    for (final item in itens) {
-      await adicionarItemDedup(
-        listaId: listaId,
-        nome: item.nome,
-        quantidade: item.quantidade,
-        unidade: item.unidade,
-        categoria: item.categoria,
+  /// Adiciona um lote de itens (RF-23), um a um pela dedup, em **uma** leitura
+  /// e **uma** transação. Copia nome/quantidade/unidade/categoria; ignora
+  /// preço e concluído.
+  Future<void> adicionarItensDedup(String listaId, Iterable<Item> itens) {
+    return _db.transaction(() async {
+      final ativos = await (_db.select(
+        _db.itemLocal,
+      )..where((i) => i.listaId.equals(listaId) & i.deletadoEm.isNull())).get();
+      final porNome = <String, ({String id, double qtd, String unidade})>{
+        for (final i in ativos)
+          normalizarTexto(i.nome): (
+            id: i.id,
+            qtd: i.quantidade,
+            unidade: i.unidade,
+          ),
+      };
+      var proxima = ativos.fold<int>(
+        0,
+        (maior, i) => i.ordem >= maior ? i.ordem + 1 : maior,
       );
-    }
+      final agora = DateTime.now().toUtc();
+      for (final item in itens) {
+        final chave = normalizarTexto(item.nome);
+        final existente = porNome[chave];
+        if (existente != null) {
+          final mesmaUnidade = existente.unidade == item.unidade.valor;
+          final qtd = mesmaUnidade
+              ? existente.qtd + item.quantidade
+              : item.quantidade;
+          await (_db.update(
+            _db.itemLocal,
+          )..where((i) => i.id.equals(existente.id))).write(
+            ItemLocalCompanion(
+              quantidade: Value(qtd),
+              unidade: Value(item.unidade.valor),
+              updatedAt: Value(agora),
+            ),
+          );
+          porNome[chave] = (
+            id: existente.id,
+            qtd: qtd,
+            unidade: item.unidade.valor,
+          );
+          continue;
+        }
+        final id = _uuid.v4();
+        await _db
+            .into(_db.itemLocal)
+            .insert(
+              ItemLocalCompanion.insert(
+                id: id,
+                createdAt: agora,
+                updatedAt: agora,
+                listaId: listaId,
+                nome: item.nome,
+                quantidade: Value(item.quantidade),
+                unidade: Value(item.unidade.valor),
+                categoria: Value(item.categoria.valor),
+                ordem: Value(proxima++),
+              ),
+            );
+        porNome[chave] = (
+          id: id,
+          qtd: item.quantidade,
+          unidade: item.unidade.valor,
+        );
+      }
+    });
   }
 
   Future<void> editarItem(
@@ -474,7 +530,7 @@ class ListasRepository {
   /// Duplica uma lista a partir dos itens **pendentes** (RF-20, "comprar de
   /// novo"): cria uma lista nova do `donoId` e copia nome/quantidade/unidade/
   /// categoria de cada pendente, na ordem original; a origem não é tocada.
-  /// Reusa `criarLista`/`adicionarItem`.
+  /// Insere a lista nova e os itens num único `batch`, com `ordem` 0,1,2,....
   Future<Lista> duplicarLista({
     required String origemId,
     required String titulo,
@@ -498,18 +554,46 @@ class ListasRepository {
         throw StateError('não há itens pendentes para duplicar');
       }
 
-      final nova = await criarLista(titulo: titulo, donoId: donoId);
-      for (final item in pendentes) {
-        await adicionarItem(
-          listaId: nova.id,
-          nome: item.nome,
-          quantidade: item.quantidade,
-          unidade: Unidade.fromValor(item.unidade),
-          categoria: CategoriaItem.fromValor(item.categoria),
-          precoCentavos: item.precoCentavos,
-        );
-      }
-      return nova;
+      final agora = DateTime.now().toUtc();
+      final novaId = _uuid.v4();
+      await _db
+          .into(_db.listaLocal)
+          .insert(
+            ListaLocalCompanion.insert(
+              id: novaId,
+              createdAt: agora,
+              updatedAt: agora,
+              titulo: titulo,
+              donoId: donoId,
+            ),
+          );
+      await _db.batch((b) {
+        for (var ordem = 0; ordem < pendentes.length; ordem++) {
+          final item = pendentes[ordem];
+          b.insert(
+            _db.itemLocal,
+            ItemLocalCompanion.insert(
+              id: _uuid.v4(),
+              createdAt: agora,
+              updatedAt: agora,
+              listaId: novaId,
+              nome: item.nome,
+              quantidade: Value(item.quantidade),
+              unidade: Value(item.unidade),
+              categoria: Value(item.categoria),
+              precoCentavos: Value(item.precoCentavos),
+              ordem: Value(ordem),
+            ),
+          );
+        }
+      });
+      return Lista(
+        id: novaId,
+        titulo: titulo,
+        donoId: donoId,
+        criadoEm: agora,
+        atualizadoEm: agora,
+      );
     });
   }
 

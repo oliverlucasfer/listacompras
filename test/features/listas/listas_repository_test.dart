@@ -774,4 +774,84 @@ void main() {
       expect(await db.select(db.itemLocal).get(), isEmpty);
     },
   );
+
+  Item itemLote(
+    String nome, {
+    double quantidade = 1,
+    Unidade unidade = Unidade.un,
+  }) {
+    final agora = DateTime.now().toUtc();
+    return Item(
+      id: 'lote-$nome',
+      listaId: 'l',
+      nome: nome,
+      quantidade: quantidade,
+      unidade: unidade,
+      categoria: CategoriaItem.mercearia,
+      concluido: true,
+      ordem: 0,
+      criadoEm: agora,
+      atualizadoEm: agora,
+    );
+  }
+
+  test(
+    'deve_somar_quando_unidade_igual_e_inserir_quando_novo_no_lote',
+    () async {
+      final lista = await repo.criarLista(titulo: 'Lote', donoId: 'user-a');
+      await repo.adicionarItem(listaId: lista.id, nome: 'Arroz', quantidade: 2);
+
+      await repo.adicionarItensDedup(lista.id, [
+        itemLote('arroz'),
+        itemLote('Feijão', quantidade: 3, unidade: Unidade.kg),
+      ]);
+
+      final itens = await repo.watchItensDaLista(lista.id).first;
+      expect(itens.length, 2);
+      final arroz = itens.firstWhere((i) => i.nome.toLowerCase() == 'arroz');
+      expect(arroz.quantidade, 3);
+      final feijao = itens.firstWhere((i) => i.nome == 'Feijão');
+      expect(feijao.concluido, isFalse);
+      expect(feijao.quantidade, 3);
+    },
+  );
+
+  test('deve_substituir_quando_unidade_diferente_no_lote', () async {
+    final lista = await repo.criarLista(titulo: 'Lote2', donoId: 'user-a');
+    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz', quantidade: 2);
+
+    await repo.adicionarItensDedup(lista.id, [
+      itemLote('arroz', quantidade: 1, unidade: Unidade.kg),
+    ]);
+
+    final itens = await repo.watchItensDaLista(lista.id).first;
+    final arroz = itens.single;
+    expect(arroz.quantidade, 1);
+    expect(arroz.unidade, Unidade.kg);
+  });
+
+  test(
+    'deve_copiar_pendentes_com_ordem_sequencial_quando_duplicar_lista',
+    () async {
+      final origem = await repo.criarLista(titulo: 'Origem', donoId: 'user-a');
+      await repo.adicionarItem(listaId: origem.id, nome: 'A');
+      await repo.adicionarItem(listaId: origem.id, nome: 'B');
+      await repo.adicionarItem(
+        listaId: origem.id,
+        nome: 'C',
+        precoCentavos: 500,
+      );
+
+      final nova = await repo.duplicarLista(
+        origemId: origem.id,
+        titulo: 'Copia',
+        donoId: 'user-a',
+      );
+
+      final itens = await repo.watchItensDaLista(nova.id).first;
+      expect(itens.map((i) => i.nome), ['A', 'B', 'C']);
+      expect(itens.map((i) => i.ordem), [0, 1, 2]);
+      expect(itens.last.precoCentavos, 500);
+    },
+  );
 }
