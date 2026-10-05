@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Variable;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/categorias/sugestao_categorias.dart';
@@ -117,5 +118,33 @@ void main() {
 
   test('deve_cair_em_outros_quando_nenhum_termo_casa', () {
     expect(categoriaPorDicionario('treco esquisito xyz'), CategoriaItem.outros);
+  });
+
+  test('deve_usar_indice_nome_lower_quando_prefilter', () async {
+    final lista = await repo.criarLista(titulo: 'L', donoId: 'local');
+    for (var i = 0; i < 60; i++) {
+      await repo.adicionarItem(listaId: lista.id, nome: 'item $i');
+    }
+    await db.customStatement('ANALYZE');
+
+    final plano = await db
+        .customSelect(
+          'EXPLAIN QUERY PLAN SELECT i.categoria FROM item_local i '
+          'JOIN lista_local l ON l.id = i.lista_id AND l.deletado_em IS NULL '
+          'WHERE i.deletado_em IS NULL AND lower(i.nome) = lower(?) LIMIT 1',
+          variables: [Variable<String>('item 5')],
+          readsFrom: {db.itemLocal, db.listaLocal},
+        )
+        .get();
+    final texto = plano
+        .map((r) => r.data.values.join(' '))
+        .join(' ')
+        .toLowerCase();
+    expect(
+      texto,
+      contains('idx_item_local_nome_lower'),
+      reason:
+          'o prefilter de sugerirCategoria deve usar o índice de lower(nome)',
+    );
   });
 }
