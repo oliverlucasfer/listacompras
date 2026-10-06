@@ -31,8 +31,16 @@ final _contextoKg = RegExp(
   caseSensitive: false,
 );
 
+// Marcador de moeda imediatamente antes do número (permite espaços).
+final _moedaAntes = RegExp(r'r\$\s*$', caseSensitive: false);
+
 final _letras = RegExp(r'[A-Za-zÀ-ÿ]');
 final _simbolos = RegExp(r'[\dR$.,/\-]');
+final _porPalavra = RegExp(
+  r'(?<![a-zà-ÿ])por(?![a-zà-ÿ])',
+  caseSensitive: false,
+);
+final _kgPalavra = RegExp(r'(?<![a-zà-ÿ])kg(?![a-zà-ÿ])', caseSensitive: false);
 
 /// Extrai preço (preço cheio; valor por kg como fallback) e, best-effort, o
 /// nome do produto a partir do texto do OCR. Determinístico e offline.
@@ -51,12 +59,13 @@ EtiquetaLida? analisarEtiqueta(String texto) {
   for (final linha in linhas) {
     final ehKg = _contextoKg.hasMatch(linha);
     for (final m in _numero.allMatches(linha)) {
-      final centavos = _centavos(m.group(0)!);
+      final centavos = _centavosSeMonetario(linha, m.start, m.group(0)!);
       if (centavos == null) continue;
       (ehKg ? porKg : naoKg).add(centavos);
     }
     for (final m in _aposPor.allMatches(linha)) {
-      final centavos = _centavos(m.group(1)!);
+      final inicio = m.start + m.group(0)!.indexOf(m.group(1)!);
+      final centavos = _centavosSeMonetario(linha, inicio, m.group(1)!);
       if (centavos != null) promocional.add(centavos);
     }
     nome ??= _nomeDaLinha(linha);
@@ -96,6 +105,15 @@ int? _centavos(String bruto) {
   }
 }
 
+/// Só é preço o token precedido de marcador de moeda ('R$') ou com separador
+/// decimal; um inteiro solto é quantidade/modelo/peso (ex.: '200g', '50', '5kg').
+int? _centavosSeMonetario(String linha, int inicio, String bruto) {
+  final temSeparador = bruto.contains(',') || bruto.contains('.');
+  final temMoeda = _moedaAntes.hasMatch(linha.substring(0, inicio));
+  if (!temSeparador && !temMoeda) return null;
+  return _centavos(bruto);
+}
+
 int? _maior(List<int> valores) {
   if (valores.isEmpty) return null;
   return valores.reduce((a, b) => a > b ? a : b);
@@ -103,10 +121,8 @@ int? _maior(List<int> valores) {
 
 /// Nome provável: primeira linha com ≥ 3 letras que não seja preço/promo/kg.
 String? _nomeDaLinha(String linha) {
-  final lower = linha.toLowerCase();
-  if (lower.contains(r'r$') || lower.contains('por') || lower.contains('kg')) {
-    return null;
-  }
+  if (linha.toLowerCase().contains(r'r$')) return null;
+  if (_porPalavra.hasMatch(linha) || _kgPalavra.hasMatch(linha)) return null;
   final letras = _letras.allMatches(linha.replaceAll(_simbolos, '')).length;
   return letras >= 3 ? linha : null;
 }

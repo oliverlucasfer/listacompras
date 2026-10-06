@@ -41,4 +41,30 @@ void main() {
     expect(e!.nome, isNull);
     expect(e.precoCentavos, 549);
   });
+
+  test('deve_ignorar_inteiro_solto_quando_ha_preco_com_moeda', () {
+    final e = analisarEtiqueta(
+      'QUEIJO MUSSARELA\nPESO LIQUIDO 200g\nR\$ 15,90\nR\$ 79,80/kg',
+    );
+    expect(e!.nome, 'QUEIJO MUSSARELA');
+    expect(e.precoCentavos, 1590);
+    expect(e.precoPorKgCentavos, 7980);
+  });
+
+  test('deve_ignorar_modelo_quando_ha_preco_com_moeda', () {
+    final e = analisarEtiqueta('TV 50 polegadas\nR\$ 1.234,56');
+    expect(e!.precoCentavos, 123456);
+  });
+
+  test('deve_preservar_nome_com_por_e_kg_em_substring', () {
+    final e = analisarEtiqueta('Porco\nR\$ 24,90');
+    expect(e!.nome, 'Porco');
+    expect(e.precoCentavos, 2490);
+  });
+
+  test('deve_ignorar_peso_isolado_quando_nao_ha_preco_por_kg', () {
+    final e = analisarEtiqueta('Presunto\nR\$ 24,90\n5kg');
+    expect(e!.precoCentavos, 2490);
+    expect(e.precoPorKgCentavos, isNull);
+  });
 }
