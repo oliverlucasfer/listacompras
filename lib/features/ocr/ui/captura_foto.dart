@@ -60,6 +60,10 @@ Future<ResultadoCaptura> capturarTextoDeFoto(
     ),
   );
   if (origem == null) return const CapturaCancelada();
+  // O widget pode ter sido desmontado durante o seletor (a câmera recria a
+  // Activity em aparelhos de baixa memória); tocar `ref`/`context` depois
+  // lançaria `StateError`.
+  if (!context.mounted) return const CapturaCancelada();
 
   final fonte = ref.read(fonteImagemProvider);
   String? caminho;
@@ -71,19 +75,22 @@ Future<ResultadoCaptura> capturarTextoDeFoto(
     return const CapturaFalha();
   }
   if (caminho == null) return const CapturaCancelada();
+  if (!context.mounted) return const CapturaCancelada();
 
   aoIniciarLeitura?.call();
 
-  // Mantém o provider (autoDispose) vivo durante o OCR assíncrono.
-  final assinatura = ref.listenManual(ocrTextoProvider, (_, _) {});
-  String texto;
+  // A construção do provider nativo e a leitura ficam dentro do `try` para
+  // virar `CapturaFalha` (não exceção propagada); `listenManual` mantém o
+  // provider (autoDispose) vivo durante o OCR assíncrono.
   try {
-    texto = await ref.read(ocrTextoProvider).extrair(caminho);
+    final assinatura = ref.listenManual(ocrTextoProvider, (_, _) {});
+    try {
+      final texto = (await ref.read(ocrTextoProvider).extrair(caminho)).trim();
+      return texto.isEmpty ? const CapturaVazia() : CapturaTexto(texto);
+    } finally {
+      assinatura.close();
+    }
   } catch (_) {
     return const CapturaFalha();
-  } finally {
-    assinatura.close();
   }
-  final limpo = texto.trim();
-  return limpo.isEmpty ? const CapturaVazia() : CapturaTexto(limpo);
 }

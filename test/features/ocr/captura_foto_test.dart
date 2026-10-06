@@ -26,6 +26,20 @@ class _FonteFake implements FonteImagem {
   Future<String?> daGaleria() async => caminho;
 }
 
+class _FonteQueFalha implements FonteImagem {
+  @override
+  Future<String?> daCamera() async => throw StateError('permissão negada');
+  @override
+  Future<String?> daGaleria() async => throw StateError('permissão negada');
+}
+
+class _OcrQueFalha implements OcrTexto {
+  @override
+  Future<String> extrair(String caminho) async => throw StateError('ocr');
+  @override
+  void close() {}
+}
+
 class _Hospedeiro extends ConsumerWidget {
   const _Hospedeiro({required this.onResultado});
   final ValueChanged<ResultadoCaptura> onResultado;
@@ -115,5 +129,39 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(resultado, isA<CapturaCancelada>());
+  });
+
+  testWidgets('deve_devolver_captura_falha_quando_fonte_lanca', (tester) async {
+    ResultadoCaptura? resultado;
+    await tester.pumpWidget(
+      _app(
+        ocr: _OcrFake('Arroz'),
+        fonte: _FonteQueFalha(),
+        onResultado: (r) => resultado = r,
+      ),
+    );
+    await tester.tap(find.text('capturar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tirar foto'));
+    await tester.pumpAndSettle();
+
+    expect(resultado, isA<CapturaFalha>());
+  });
+
+  testWidgets('deve_devolver_captura_falha_quando_ocr_lanca', (tester) async {
+    ResultadoCaptura? resultado;
+    await tester.pumpWidget(
+      _app(
+        ocr: _OcrQueFalha(),
+        fonte: _FonteFake(),
+        onResultado: (r) => resultado = r,
+      ),
+    );
+    await tester.tap(find.text('capturar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tirar foto'));
+    await tester.pumpAndSettle();
+
+    expect(resultado, isA<CapturaFalha>());
   });
 }
