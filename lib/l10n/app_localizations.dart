@@ -1719,6 +1719,54 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Español'**
   String get idiomaEspanhol;
+
+  /// No description provided for @etiquetaLer.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ler etiqueta da prateleira'**
+  String get etiquetaLer;
+
+  /// No description provided for @etiquetaTitulo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Etiqueta lida'**
+  String get etiquetaTitulo;
+
+  /// No description provided for @etiquetaNovoItem.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novo item'**
+  String get etiquetaNovoItem;
+
+  /// No description provided for @etiquetaItemExistente.
+  ///
+  /// In pt, this message translates to:
+  /// **'Item existente'**
+  String get etiquetaItemExistente;
+
+  /// No description provided for @etiquetaAplicar.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aplicar'**
+  String get etiquetaAplicar;
+
+  /// No description provided for @etiquetaAplicada.
+  ///
+  /// In pt, this message translates to:
+  /// **'Preço aplicado.'**
+  String get etiquetaAplicada;
+
+  /// No description provided for @etiquetaNenhumTexto.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum texto reconhecido na foto.'**
+  String get etiquetaNenhumTexto;
+
+  /// No description provided for @etiquetaNaoReconhecida.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não reconheci um preço na etiqueta.'**
+  String get etiquetaNaoReconhecida;
 }
 
 class _AppLocalizationsDelegate

@@ -138,6 +138,39 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
     );
   }
 
+  /// Lê a etiqueta (RF-40) e preenche preço/nome/unidade do editor, que já é
+  /// o preview editável. Nada é gravado aqui.
+  Future<void> _lerEtiqueta() async {
+    final resultado = await capturarTextoDeFoto(context, ref);
+    if (!mounted) return;
+    switch (resultado) {
+      case CapturaTexto(:final texto):
+        final etiqueta = analisarEtiqueta(texto);
+        if (etiqueta == null) {
+          mostrarSnackBar(context, context.l10n.etiquetaNaoReconhecida);
+          return;
+        }
+        setState(() {
+          _preco.text = _precoInicial(etiqueta.precoCentavos);
+          if (_nome.text.trim().isEmpty &&
+              (etiqueta.nome?.isNotEmpty ?? false)) {
+            _nome.text = etiqueta.nome!;
+          }
+          if (etiqueta.precoPorKgCentavos != null &&
+              etiqueta.precoPorKgCentavos == etiqueta.precoCentavos) {
+            _unidade = Unidade.kg;
+          }
+          _erroPreco = null;
+        });
+      case CapturaVazia():
+        mostrarSnackBar(context, context.l10n.etiquetaNenhumTexto);
+      case CapturaFalha():
+        mostrarSnackBar(context, context.l10n.ocrFalha);
+      case CapturaCancelada():
+        break;
+    }
+  }
+
   Future<void> _salvar() async {
     final nome = _nome.text.trim();
     final quantidade = _quantidadeLida();
@@ -288,6 +321,13 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
                   label: context.l10n.preco,
                   erro: _erroPreco,
                   teclado: const TextInputType.numberWithOptions(decimal: true),
+                  sufixo: plataformaComOcr()
+                      ? IconButton(
+                          tooltip: context.l10n.etiquetaLer,
+                          icon: const Icon(Icons.photo_camera_outlined),
+                          onPressed: _lerEtiqueta,
+                        )
+                      : null,
                   onChanged: (_) => setState(() => _erroPreco = null),
                 ),
               ),

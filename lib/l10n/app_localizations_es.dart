@@ -980,4 +980,28 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get idiomaEspanhol => 'Español';
+
+  @override
+  String get etiquetaLer => 'Leer etiqueta';
+
+  @override
+  String get etiquetaTitulo => 'Etiqueta leída';
+
+  @override
+  String get etiquetaNovoItem => 'Nuevo artículo';
+
+  @override
+  String get etiquetaItemExistente => 'Artículo existente';
+
+  @override
+  String get etiquetaAplicar => 'Aplicar';
+
+  @override
+  String get etiquetaAplicada => 'Precio aplicado.';
+
+  @override
+  String get etiquetaNenhumTexto => 'No se reconoció texto en la foto.';
+
+  @override
+  String get etiquetaNaoReconhecida => 'No reconocí un precio en la etiqueta.';
 }

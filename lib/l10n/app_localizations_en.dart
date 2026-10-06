@@ -974,4 +974,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get idiomaEspanhol => 'Spanish';
+
+  @override
+  String get etiquetaLer => 'Scan shelf label';
+
+  @override
+  String get etiquetaTitulo => 'Label read';
+
+  @override
+  String get etiquetaNovoItem => 'New item';
+
+  @override
+  String get etiquetaItemExistente => 'Existing item';
+
+  @override
+  String get etiquetaAplicar => 'Apply';
+
+  @override
+  String get etiquetaAplicada => 'Price applied.';
+
+  @override
+  String get etiquetaNenhumTexto => 'No text recognized in the photo.';
+
+  @override
+  String get etiquetaNaoReconhecida =>
+      'I couldn\'t recognize a price on the label.';
 }

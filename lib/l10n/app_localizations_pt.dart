@@ -977,4 +977,28 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get idiomaEspanhol => 'Español';
+
+  @override
+  String get etiquetaLer => 'Ler etiqueta da prateleira';
+
+  @override
+  String get etiquetaTitulo => 'Etiqueta lida';
+
+  @override
+  String get etiquetaNovoItem => 'Novo item';
+
+  @override
+  String get etiquetaItemExistente => 'Item existente';
+
+  @override
+  String get etiquetaAplicar => 'Aplicar';
+
+  @override
+  String get etiquetaAplicada => 'Preço aplicado.';
+
+  @override
+  String get etiquetaNenhumTexto => 'Nenhum texto reconhecido na foto.';
+
+  @override
+  String get etiquetaNaoReconhecida => 'Não reconheci um preço na etiqueta.';
 }
