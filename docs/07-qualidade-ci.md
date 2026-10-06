@@ -56,7 +56,8 @@ Pipeline único `.github/workflows/ci.yml`, disparado em PR e push em `main`:
 ```
 
 * **Branch protection de `main`:** o único status obrigatório é o job **`flutter`** do GitHub Actions (`strict: true`, exige o CI verde do HEAD do PR). O job `desktop` **não** é exigido (é matriz — o check real é `desktop (ubuntu-latest)`/`desktop (windows-latest)`). **Administradores não podem ignorar** (`enforce_admins`), então push direto em `main` é rejeitado: o fluxo é **branch → PR → `flutter` verde → merge**. O check histórico `supabase` foi removido na F48 (não existe mais job).
-* **Builds (F18-T05, ADR-012; F48/F49):** o job `flutter` compila o Web (`flutter build web --release`), o **apk Android em debug** e o **AAB release** — **sem `--flavor` e sem `--dart-define`** (o app é único). O `appbundle` roda com o **R8 do AGP 9** e depende de **`android/app/proguard-rules.pro`** (regras do **MLKit OCR**, RF-37/F54 — dívida **L-10**, [09 §2.9](09-runbook-operacoes.md)): sem elas o release aborta com *"Missing class"* dos reconhecedores opcionais de chinês/devanagari/japonês/coreano. Em seguida **verifica o manifest mergeado** (`build/app/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml`): o passo falha se aparecerem `INTERNET`, `com.google.android.c2dm` ou os nós do **SDK do Firebase** (`FirebaseInitProvider`, `com.google.firebase.components.ComponentDiscoveryService`, `com.google.firebase.messaging`, `com.google.firebase.iid`, `com.google.firebase.installations`, `com.google.firebase.datatransport`, `io.flutter.plugins.firebase.*`, `FlutterFirebaseMessagingInitProvider`), se `allowBackup` não for `false`, se `RECORD_AUDIO` sumir (voz, RF-26) ou se o `MlKitComponentDiscoveryService` sumir (QR, RF-33). **Exceção deliberada (F49):** o `mobile_scanner` (QR) usa o MLKit bundled, que embute o registrar **local** do `firebase-components` — logo o guard proíbe os **nós do SDK/rede**, e não o literal `com.google.firebase` (o MLKit não adiciona `INTERNET`; [09 §2.11](09-runbook-operacoes.md)). O job `desktop` valida `flutter build linux` (ubuntu-latest, instala `clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev`) e `flutter build windows` (windows-latest) numa matriz com `fail-fast: false`.
+* **Builds (F18-T05, ADR-012; F48/F49):** o job `flutter` compila o Web (`flutter build web --release`), o **apk Android em debug** e o **AAB release** — **sem `--flavor` e sem `--dart-define`** (o app é único). O `appbundle` roda com o **R8 do AGP 9** e depende de **`android/app/proguard-rules.pro`** (regras do **MLKit OCR**, RF-37/F54 — dívida **L-10**, [09 §2.9](09-runbook-operacoes.md)): sem elas o release aborta com *"Missing class"* dos reconhecedores opcionais de chinês/devanagari/japonês/coreano. Em seguida **verifica o manifest mergeado** (`build/app/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml`): o passo falha se aparecerem `INTERNET`, `com.google.android.c2dm` ou os nós do **SDK do Firebase** (`FirebaseInitProvider`, `com.google.firebase.components.ComponentDiscoveryService`, `com.google.firebase.messaging`, `com.google.firebase.iid`, `com.google.firebase.installations`, `com.google.firebase.datatransport`, `io.flutter.plugins.firebase.*`, `FlutterFirebaseMessagingInitProvider`), se `allowBackup` não for `false`, se `RECORD_AUDIO` sumir (voz, RF-26) ou se o `MlKitComponentDiscoveryService` sumir (QR, RF-33). **Exceção deliberada (F49):** o `mobile_scanner` (QR) usa o MLKit bundled, que embute o registrar **local** do `firebase-components` — logo o guard proíbe os **nós do SDK/rede**, e não o literal `com.google.firebase` (o MLKit não adiciona `INTERNET`; [09 §2.11](09-runbook-operacoes.md)). O job `desktop` valida `flutter build linux` (ubuntu-24.04, instala `clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev`) e `flutter build windows` (windows-2025) numa matriz com `fail-fast: false`.
+* **Imagens de runner fixadas:** `ubuntu-24.04` (job `flutter` e Linux do `desktop`) e `windows-2025` (Windows do `desktop`) — em vez de `ubuntu-latest`/`windows-latest`. Evita que a migração automática do `ubuntu-latest` para Ubuntu 26 (a partir de 19/10/2026) quebre o build sem aviso e reduz flakiness de alocação de runner. Ao trocar a imagem, o `if: matrix.os == 'ubuntu-24.04'` (deps do Linux) deve acompanhar.
 * **Assets WASM do Drift versionados (F18-T01):** `web/drift_worker.js` e `web/sqlite3.wasm` são cópias fiéis da release oficial `drift-2.34.4` (mesma versão pinada em `pubspec.lock`), necessárias ao banco no navegador (`WasmDatabase`/OPFS-IndexedDB, [05 §2.1](05-app-flutter.md), ADR-012). Para regenerar (ex.: subir o Drift), baixar da release correspondente e substituir os dois arquivos:
   ```bash
   curl -L -o web/drift_worker.js https://github.com/simolus3/drift/releases/download/drift-2.34.4/drift_worker.js
@@ -78,7 +79,7 @@ on:
 
 jobs:
   flutter:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
@@ -114,14 +115,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-latest,  comando: flutter build linux }
-          - { os: windows-latest, comando: flutter build windows }
+          - { os: ubuntu-24.04,  comando: flutter build linux }
+          - { os: windows-2025, comando: flutter build windows }
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with: { channel: stable, flutter-version: 3.44.5 }
-      - if: matrix.os == 'ubuntu-latest'
+      - if: matrix.os == 'ubuntu-24.04'
         run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
       - run: ${{ matrix.comando }}
 ```
