@@ -141,4 +141,47 @@ void main() {
 
     await fechar(tester);
   });
+
+  testWidgets('deve_avisar_quando_editar_preco_cruza_o_orcamento', (
+    tester,
+  ) async {
+    await abrirComItens(
+      tester,
+      precos: [600],
+      orcamentoCentavos: 1000,
+      tela: (id) => TelaListaScreen(listaId: id),
+    );
+
+    // Marca o item (R$ 6,00 de R$ 10,00): ainda não cruzou.
+    await tester.tap(find.byType(Checkbox).first);
+    await tester.pumpAndSettle();
+
+    // Abre os concluídos e o editor do item marcado.
+    await tester.tap(find.text('Itens concluídos (1)'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(ExpansionTile),
+            matching: find.text('Item 1'),
+          )
+          .first,
+    );
+    await tester.pumpAndSettle();
+
+    // Sobe o preço para R$ 12,00 → cruza o orçamento de R$ 10,00.
+    final campoPreco = find.byWidgetPredicate(
+      (w) => w is TextField && w.decoration?.labelText == 'Preço (R\$)',
+    );
+    await tester.enterText(campoPreco, '12,00');
+    await tester.pump();
+    await tester.tap(find.text('Salvar'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Você passou do orçamento: ${formatarReais(1200)}'),
+      findsOneWidget,
+    );
+    await fechar(tester);
+  });
 }

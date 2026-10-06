@@ -156,6 +156,21 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
       _erroPreco = precoValido ? null : context.l10n.erroPrecoInvalido;
     });
     if (nome.isEmpty || quantidade == null || !precoValido) return;
+    // Avisa (RF-36) se o novo preço fizer o total dos marcados cruzar o
+    // orçamento — o editor não passa pelo toggle de concluído.
+    if (widget.item.concluido) {
+      final itens =
+          ref.read(itensDaListaProvider(widget.item.listaId)).value ??
+          const <Item>[];
+      await talvezAvisarCruzamentoPreco(
+        context,
+        ref,
+        widget.item.listaId,
+        itens: itens,
+        item: widget.item,
+        novoPreco: preco,
+      );
+    }
     try {
       await ref
           .read(listasRepositoryProvider)

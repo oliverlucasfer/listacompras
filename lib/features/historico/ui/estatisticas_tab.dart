@@ -164,6 +164,7 @@ class _SecaoItensMaisComprados extends ConsumerStatefulWidget {
 
 class _SecaoItensMaisCompradosState
     extends ConsumerState<_SecaoItensMaisComprados> {
+  static const _maxItens = 10;
   _OrdemItens _ordem = _OrdemItens.frequencia;
 
   @override
@@ -177,15 +178,19 @@ class _SecaoItensMaisCompradosState
       ),
       data: (itens) {
         if (itens.isEmpty) return const _SemDados();
-        final ordenados = [...itens]
-          ..sort((a, b) {
-            if (_ordem == _OrdemItens.gasto) {
-              final c = b.totalCentavos.compareTo(a.totalCentavos);
-              return c != 0 ? c : a.nome.compareTo(b.nome);
-            }
-            final c = b.vezes.compareTo(a.vezes);
-            return c != 0 ? c : a.nome.compareTo(b.nome);
-          });
+        // Ordena sobre o **universo completo** e só então recorta o top-10:
+        // "por gasto" não pode ficar preso ao top-N de frequência (F51).
+        final ordenados =
+            ([...itens]..sort((a, b) {
+                  if (_ordem == _OrdemItens.gasto) {
+                    final c = b.totalCentavos.compareTo(a.totalCentavos);
+                    return c != 0 ? c : a.nome.compareTo(b.nome);
+                  }
+                  final c = b.vezes.compareTo(a.vezes);
+                  return c != 0 ? c : a.nome.compareTo(b.nome);
+                }))
+                .take(_maxItens)
+                .toList();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -259,10 +264,7 @@ class _SecaoEvolucaoPreco extends ConsumerWidget {
                 expandido: true,
                 itens: [
                   for (final nome in nomes)
-                    DropdownMenuItem<String?>(
-                      value: nome,
-                      child: Text(_rotuloNome(nome)),
-                    ),
+                    DropdownMenuItem<String?>(value: nome, child: Text(nome)),
                 ],
                 onChanged: onSelecionar,
               ),
@@ -410,6 +412,3 @@ class _SemDados extends StatelessWidget {
 
 String _percentual(int parte, int total) =>
     total == 0 ? '0%' : '${((parte / total) * 100).round()}%';
-
-String _rotuloNome(String nome) =>
-    nome.isEmpty ? nome : '${nome[0].toUpperCase()}${nome.substring(1)}';
