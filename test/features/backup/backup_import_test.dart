@@ -1,8 +1,10 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/drift/database.dart';
 import 'package:lista_compras/features/backup/data/backup_repository.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
+import 'package:lista_compras/features/listas/data/orcamento_categoria_repository.dart';
 
 void main() {
   test('deve_restaurar_listas_e_itens_quando_backup_valido', () async {
@@ -54,6 +56,35 @@ void main() {
     );
     expect(await db.select(db.listaLocal).get(), isEmpty);
   });
+
+  test('deve_restaurar_orcamento_por_categoria_quando_backup', () async {
+    final origem = AppDatabase(NativeDatabase.memory());
+    addTearDown(origem.close);
+    await LimitesCategoriaRepository(
+      origem,
+    ).definir(CategoriaItem.bebidas, centavos: 5000);
+    final json = await BackupRepository(origem).exportarJson();
+
+    final destino = AppDatabase(NativeDatabase.memory());
+    addTearDown(destino.close);
+    await BackupRepository(destino).importarJson(json);
+
+    final limites = await LimitesCategoriaRepository(destino).limites();
+    expect(limites[CategoriaItem.bebidas], 5000);
+  });
+
+  test(
+    'deve_importar_backup_sem_orcamento_categoria_quando_retrocompat',
+    () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+      await BackupRepository(db).importarJson(
+        '{"versao":2,"exportadoEm":"2026-01-01T00:00:00Z","listas":[],"itens":[],'
+        '"historicoPrecos":[],"idas":[],"itensIda":[]}',
+      );
+      expect(await db.select(db.orcamentoCategoria).get(), isEmpty);
+    },
+  );
 
   test('deve_forcar_dono_local_quando_importar', () async {
     final origem = AppDatabase(NativeDatabase.memory());
