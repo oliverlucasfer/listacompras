@@ -40,6 +40,8 @@ App local (Drift): ListaLocal 1───N ItemLocal
 | `itens_lista` (local) | id (uuid, cliente), lista_id, nome, quantidade>0, unidade (enum), categoria (enum), concluido, ordem, preco_centavos, updated_at, deletado_em | índice único parcial `uq_item_ativo` |
 | `historico_precos` (local) | nome, unidade, preco_centavos, registrado_em | local por dispositivo (RF-29) |
 
+> **Preço por etiqueta (RF-40, F59):** não cria entidade/tabela — o parser `analisarEtiqueta` é **puro** (sem Drift, sem rede) e a gravação reusa `itens_lista` (`adicionarItemDedup`/`editarItem`). Detalhe em [05 §6.19](05-app-flutter.md).
+
 **Enum de unidades (fechado):** `un, kg, g, l, ml, caixa, pacote, pct, pt, dz` — fonte única `lib/core/dominio/unidade.dart` (usada pelo app e pelo parser local).
 
 **Enum de categorias (fechado, ADR-011):** `hortifruti, mercearia, frios, laticinios, congelados, padaria, bebidas, pet, limpeza, higiene, outros` — fonte única `lib/core/dominio/categoria.dart`; a ordem do enum define a ordem dos grupos na UI. Sugestão **local em camadas** (memória por nome → dicionário estático → `outros`).
@@ -55,6 +57,9 @@ App → parser local determinístico (`lib/core/importacao/parser_lista_local.da
 ### F6 — Backup local
 Configurações → **Exportar backup** (`.json` fiel ao banco) → **Importar backup** (merge por `id` + LWW por `updated_at`). [05 §6.10](05-app-flutter.md)
 
+### F7 — Preço por etiqueta (OCR, RF-40)
+Câmera (modo mercado §6.5 / editor §6.3) → helper `capturarTextoDeFoto` (`lib/features/ocr/ui/captura_foto.dart`, reusa `OcrTexto`/`FonteImagem`) → `analisarEtiqueta` (`lib/features/etiqueta/domain/etiqueta.dart`: preço cheio; valor por kg só como *fallback*) → **preview editável** (`SheetEtiqueta` no mercado; o próprio editor no item) → grava local (`adicionarItemDedup(..., precoCentavos:)` ou `editarItem(..., precoCentavos:)`). Offline; a imagem **não é armazenada**. [05 §6.19](05-app-flutter.md)
+
 ## 5. Contratos rápidos
 
 **Importação local (resumo — [04 §2](04-importacao-lista.md)):**
@@ -62,6 +67,12 @@ Configurações → **Exportar backup** (`.json` fiel ao banco) → **Importar b
 parser local determinístico — offline, sem rede
 entrada: texto colado, até maxCaracteresImportLocal (10.000)
 saída: { "itens": [...], "aviso": null }
+```
+
+**Preço por etiqueta (resumo — [05 §6.19](05-app-flutter.md)):**
+```
+analisarEtiqueta(texto do OCR) -> EtiquetaLida?   // puro, determinístico, offline
+EtiquetaLida { nome?, precoCentavos, precoPorKgCentavos? }
 ```
 
 **Dono e sessão:** não há conta. O dono de toda lista é a constante `idLocal = 'local'` ([05 §2.3](05-app-flutter.md)).

@@ -11,6 +11,7 @@ import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_campo_texto.dart';
 import '../../listas/providers/listas_providers.dart';
 import '../../ocr/providers/ocr_providers.dart';
+import '../../ocr/ui/captura_foto.dart';
 
 /// Abre o modal de entrada da importação de lista (doc 04, wireframe 10 §4.1,
 /// RF-16). Retorna os itens extraídos, ou null se cancelado.
@@ -66,79 +67,36 @@ class _ModalImportarState extends ConsumerState<ModalImportar> {
   /// OCR on-device (RF-37): escolhe câmera/galeria, lê a imagem e preenche o
   /// campo editável. A imagem não é armazenada; só o texto entra no fluxo RF-16.
   Future<void> _lerFoto() async {
-    final origem = await showModalBottomSheet<String>(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_camera_outlined),
-              title: Text(context.l10n.tirarFoto),
-              onTap: () => Navigator.pop(context, 'camera'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined),
-              title: Text(context.l10n.escolherDaGaleria),
-              onTap: () => Navigator.pop(context, 'galeria'),
-            ),
-          ],
-        ),
-      ),
+    final resultado = await capturarTextoDeFoto(
+      context,
+      ref,
+      aoIniciarLeitura: () {
+        if (!mounted) return;
+        setState(() {
+          _lendoFoto = true;
+          _erro = null;
+        });
+      },
     );
-    if (origem == null || !mounted) return;
-
-    final fonte = ref.read(fonteImagemProvider);
-    String? caminho;
-    try {
-      caminho = origem == 'camera'
-          ? await fonte.daCamera()
-          : await fonte.daGaleria();
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _erro = context.l10n.ocrFalha;
-          _tipoErro = AppBannerTipo.erro;
-        });
-      }
-      return;
-    }
-    if (caminho == null || !mounted) return;
-
-    setState(() {
-      _lendoFoto = true;
-      _erro = null;
-    });
-    var texto = '';
-    // Mantém o provider (autoDispose) vivo durante o OCR assíncrono; sem isso o
-    // `TextRecognizer` poderia ser fechado antes de `extrair` terminar.
-    final assinatura = ref.listenManual(ocrTextoProvider, (_, _) {});
-    try {
-      texto = await ref.read(ocrTextoProvider).extrair(caminho);
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _erro = context.l10n.ocrFalha;
-          _tipoErro = AppBannerTipo.erro;
-        });
-      }
-      return;
-    } finally {
-      assinatura.close();
-      if (mounted) setState(() => _lendoFoto = false);
-    }
     if (!mounted) return;
-
-    final limpo = texto.trim();
-    if (limpo.isEmpty) {
-      setState(() {
-        _erro = context.l10n.ocrNenhumTexto;
-        _tipoErro = AppBannerTipo.aviso;
-      });
-    } else {
-      _controller.text = _controller.text.trim().isEmpty
-          ? limpo
-          : '${_controller.text}\n$limpo';
+    setState(() => _lendoFoto = false);
+    switch (resultado) {
+      case CapturaTexto(:final texto):
+        _controller.text = _controller.text.trim().isEmpty
+            ? texto
+            : '${_controller.text}\n$texto';
+      case CapturaVazia():
+        setState(() {
+          _erro = context.l10n.ocrNenhumTexto;
+          _tipoErro = AppBannerTipo.aviso;
+        });
+      case CapturaFalha():
+        setState(() {
+          _erro = context.l10n.ocrFalha;
+          _tipoErro = AppBannerTipo.erro;
+        });
+      case CapturaCancelada():
+        break;
     }
   }
 

@@ -453,5 +453,15 @@
   "idiomaSistema": "Sistema",
   "idiomaPortugues": "Portugués",
   "idiomaIngles": "Inglés",
-  "idiomaEspanhol": "Español"
+  "idiomaEspanhol": "Español",
+
+  "etiquetaLer": "Leer etiqueta",
+  "etiquetaTitulo": "Etiqueta leída",
+  "etiquetaNovoItem": "Nuevo artículo",
+  "etiquetaItemExistente": "Artículo existente",
+  "etiquetaAplicar": "Aplicar",
+  "etiquetaAplicada": "Precio aplicado.",
+  "etiquetaNenhumTexto": "No se reconoció texto en la foto.",
+  "etiquetaNaoReconhecida": "No reconocí un precio en la etiqueta.",
+  "etiquetaEscolherItem": "Elige el artículo"
 }

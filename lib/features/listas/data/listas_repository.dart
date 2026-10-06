@@ -271,6 +271,7 @@ class ListasRepository {
     required double quantidade,
     required Unidade unidade,
     required CategoriaItem categoria,
+    int? precoCentavos,
   }) {
     // RF-10: a leitura dos itens ativos e a escrita devem ser atômicas; sem a
     // transação, duas chamadas concorrentes poderiam não achar o nome e inserir,
@@ -300,6 +301,7 @@ class ListasRepository {
           await editarItem(
             existente.id,
             quantidade: existente.quantidade + quantidade,
+            precoCentavos: precoCentavos,
           );
           return ResultadoDedup.somado;
         }
@@ -307,6 +309,7 @@ class ListasRepository {
           existente.id,
           quantidade: quantidade,
           unidade: unidade,
+          precoCentavos: precoCentavos,
         );
         return ResultadoDedup.substituido;
       }
@@ -316,6 +319,7 @@ class ListasRepository {
         quantidade: quantidade,
         unidade: unidade,
         categoria: categoria,
+        precoCentavos: precoCentavos,
       );
       return ResultadoDedup.adicionado;
     });

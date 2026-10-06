@@ -453,5 +453,15 @@
   "idiomaSistema": "System",
   "idiomaPortugues": "Portuguese",
   "idiomaIngles": "English",
-  "idiomaEspanhol": "Spanish"
+  "idiomaEspanhol": "Spanish",
+
+  "etiquetaLer": "Scan shelf label",
+  "etiquetaTitulo": "Label read",
+  "etiquetaNovoItem": "New item",
+  "etiquetaItemExistente": "Existing item",
+  "etiquetaAplicar": "Apply",
+  "etiquetaAplicada": "Price applied.",
+  "etiquetaNenhumTexto": "No text recognized in the photo.",
+  "etiquetaNaoReconhecida": "I couldn't recognize a price on the label.",
+  "etiquetaEscolherItem": "Choose the item"
 }

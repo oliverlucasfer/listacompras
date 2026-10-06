@@ -6,6 +6,7 @@ class AppDropdown<T> extends StatelessWidget {
   const AppDropdown({
     super.key,
     this.label,
+    this.hint,
     required this.valor,
     required this.itens,
     required this.onChanged,
@@ -14,7 +15,10 @@ class AppDropdown<T> extends StatelessWidget {
   });
 
   final String? label;
-  final T valor;
+
+  /// Texto exibido quando [valor] é nulo (nenhuma seleção ainda).
+  final String? hint;
+  final T? valor;
   final List<DropdownMenuItem<T>> itens;
   final ValueChanged<T?> onChanged;
   final bool compacto;
@@ -28,6 +32,7 @@ class AppDropdown<T> extends StatelessWidget {
     return DropdownButtonFormField<T>(
       initialValue: valor,
       isExpanded: expandido,
+      hint: hint == null ? null : Text(hint!),
       decoration: InputDecoration(labelText: label, isDense: compacto),
       items: itens,
       onChanged: onChanged,

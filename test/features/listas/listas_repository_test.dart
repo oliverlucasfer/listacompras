@@ -911,4 +911,37 @@ void main() {
     expect(itens.firstWhere((i) => i.nome == 'B').ordem, 0);
     expect(itens.firstWhere((i) => i.nome == 'A').ordem, 2);
   });
+
+  test('deve_aplicar_preco_quando_dedup_com_preco', () async {
+    final lista = await repo.criarLista(titulo: 'L', donoId: 'local');
+    await repo.adicionarItemDedup(
+      listaId: lista.id,
+      nome: 'Arroz',
+      quantidade: 1,
+      unidade: Unidade.un,
+      categoria: CategoriaItem.mercearia,
+      precoCentavos: 549,
+    );
+    final item = (await db.select(db.itemLocal).get()).single;
+    expect(item.precoCentavos, 549);
+  });
+
+  test('deve_atualizar_preco_quando_dedup_em_item_existente', () async {
+    final lista = await repo.criarLista(titulo: 'L', donoId: 'local');
+    await repo.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      precoCentavos: 100,
+    );
+    await repo.adicionarItemDedup(
+      listaId: lista.id,
+      nome: 'Arroz',
+      quantidade: 1,
+      unidade: Unidade.un,
+      categoria: CategoriaItem.mercearia,
+      precoCentavos: 549,
+    );
+    final item = (await db.select(db.itemLocal).get()).single;
+    expect(item.precoCentavos, 549);
+  });
 }

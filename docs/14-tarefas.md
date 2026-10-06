@@ -1282,6 +1282,31 @@ Plano: [superpowers/plans/2026-10-05-otimizacoes-revisao.md](superpowers/plans/2
 
 Nota: *(tudo 100% offline e behavior-preserving; a migração v15 é apenas de índices, sem tocar dados. O plano fica registrado em [superpowers/plans/2026-10-05-otimizacoes-revisao.md](superpowers/plans/2026-10-05-otimizacoes-revisao.md).)*
 
+## Fase 59 — Preço por etiqueta (OCR) (RF-40)
+
+Spec: [superpowers/specs/2026-10-06-etiqueta-preco-camera-design.md](superpowers/specs/2026-10-06-etiqueta-preco-camera-design.md) · Plano: [superpowers/plans/2026-10-06-etiqueta-preco-camera.md](superpowers/plans/2026-10-06-etiqueta-preco-camera.md) · Requisito: RF-40 (ler a etiqueta de prateleira por OCR on-device e criar/aplicar/preencher o preço). · Docs donos: 05, 09, 10, 12, 13, 14, 15, 16.
+
+- [x] **F59-T01** — Domínio `analisarEtiqueta` (parser puro)
+  Dep: — · Docs: [05 §6.19](05-app-flutter.md), [13 §5](13-premodelo-tecnico.md)
+  CP: `EtiquetaLida{nome?, precoCentavos, precoPorKgCentavos?}` e `analisarEtiqueta` puros/offline; só é valor o token com `R$` ou separador decimal (inteiro solto = quantidade/modelo); preço cheio (promo "por" vence; senão o maior não-kg) e valor por kg só como fallback; sem preço → `null`; testes unit verdes.
+- [x] **F59-T02** — Repositório: preço opcional na dedup
+  Dep: F59-T01 · Docs: [05 §6.19](05-app-flutter.md)
+  CP: `adicionarItemDedup({..., int? precoCentavos})` opcional; comportamento da dedup **inalterado** quando omitido; testes de repositório verdes.
+- [x] **F59-T03** — Helper de captura compartilhado (refatoração do OCR)
+  Dep: F59-T02 · Docs: [05 §6.16/§6.19](05-app-flutter.md)
+  CP: `ResultadoCaptura` (`CapturaTexto`/`CapturaCancelada`/`CapturaVazia`/`CapturaFalha`) e `capturarTextoDeFoto(context, ref, {aoIniciarLeitura})` em `lib/features/ocr/ui/captura_foto.dart`; o **"Importar por foto" (RF-37) passa a usá-lo sem mudar de comportamento**; regressão do OCR verde.
+- [x] **F59-T04** — Editor do item: câmera no campo de preço
+  Dep: F59-T03 · Docs: [05 §6.3/§6.19](05-app-flutter.md), [10 §3.1](10-wireframes-telas.md)
+  CP: ícone de câmera no campo "Preço (R$)" só com `plataformaComOcr()`; preenche o preço, o nome **só quando vazio** e a unidade `kg` **só** no fallback por kg; o editor é o preview; strings ARB pt/en/es; testes de widget verdes.
+- [x] **F59-T05** — Modo mercado: botão de câmera + preview "Etiqueta lida"
+  Dep: F59-T04 · Docs: [05 §6.5/§6.19](05-app-flutter.md), [10 §3.3](10-wireframes-telas.md), [15 §3](15-design-system.md)
+  CP: botão de câmera na `AppBar` só com `plataformaComOcr()`; preview `SheetEtiqueta` com `SegmentedButton` de origem ("Novo item"/"Item existente"): novo grava por `adicionarItemDedup(..., precoCentavos:)` e existente por `editarItem(id, precoCentavos:)`; R4 documentado no 15 (`AppDropdown` com `valor` anulável + `hint`, retrocompatível; string `etiquetaEscolherItem`); testes de widget verdes.
+- [x] **F59-T06** — Docs donos, bump e fechamento
+  Dep: F59-T05 · Docs: 05, 09, 10, 12, 13, 14, 15, 16
+  CP: RF-40 no PRD (tabela, matriz e fora de escopo); §6.19 no 05 + referências em §6.3/§6.5 + árvore; wireframes no 10; nota no 09 §2.14; resumo no 13; componentes/R4 no 15; frentes A14/C3 no 16; Fase 59 na tabela de progresso (339/337); bump `1.8.0+21` com paridade em `web/version.json`; `dart format .`, `flutter analyze` e `flutter test` verdes; sem tocar código.
+
+Nota: *(100% offline e sem dependência/permissão nova — reusa o OCR on-device do RF-37 (F54) atrás de `OcrTexto`/`FonteImagem`; a imagem **não é armazenada**. O parser `analisarEtiqueta` é puro e determinístico; a feature **não** é leitura de código de barras, que segue fora de escopo.)*
+
 ## Fase 60 — Revisão geral: correções e dívidas (RNF-08)
 
 Relatório: [relatorio-revisao-geral-3.md](relatorio-revisao-geral-3.md) · Requisitos: RNF-08 (qualidade), RNF-05 (privacidade/backup), RF-31 (backup local) · Docs donos: 05, 12, 14.
@@ -1292,10 +1317,10 @@ Relatório: [relatorio-revisao-geral-3.md](relatorio-revisao-geral-3.md) · Requ
   CP: leitura dos ativos + escrita numa única transação; testes de dedup verdes.
 - [x] **F60-T03** — Backup: exportar/restaurar `orcamento_categoria`
   CP: `BackupArquivo.orcamentoCategoria` (opcional, retrocompatível) + export/import; testes de round-trip e de retrocompat; doc 05 §6.10 atualizado.
-- [ ] **F60-T04** — P1 histórico/estatísticas: meses vazios no gráfico, ordenação "por gasto" sobre o universo, nome de exibição no seletor de evolução, alerta ao cruzar orçamento editando preço
-- [ ] **F60-T05** — P1 UI/estado: `autoDispose` nos providers `family`, fim do full-scan do histórico na tela (chip de mercado), fim da query por tecla no editor, `try/catch` nas escritas, importação parcial silenciosa
-- [ ] **F60-T06** — P1 plataforma: gate do `WidgetAtualizador` (Web/Desktop), voz pelo locale do idioma, identidade nativa ("Minhas Listas" em iOS/Windows/Linux/macOS), guarda `mounted`/providers no helper de captura
-- [ ] **F60-T07** — P1 parser: reconhecer `kilo(s)`, determinismo de `parseQuantidade` na web, peso decimal (`1,5kg`) na etiqueta, separador decimal pt-BR em `formatarQuantidade`
+- [x] **F60-T04** — P1 histórico/estatísticas: meses vazios no gráfico, ordenação "por gasto" sobre o universo, nome de exibição no seletor de evolução, alerta ao cruzar orçamento editando preço
+- [x] **F60-T05** — P1 UI/estado: `autoDispose` nos providers `family`, fim do full-scan do histórico na tela (chip de mercado), fim da query por tecla no editor, `try/catch` nas escritas, importação parcial silenciosa
+- [x] **F60-T06** — P1 plataforma: gate do `WidgetAtualizador` (Web/Desktop), voz pelo locale do idioma, identidade nativa ("Minhas Listas" em iOS/Windows/Linux/macOS), guarda `mounted`/providers no helper de captura
+- [x] **F60-T07** — P1 parser: reconhecer `kilo(s)`, determinismo de `parseQuantidade` na web, peso decimal (`1,5kg`) na etiqueta, separador decimal pt-BR em `formatarQuantidade`
 - [ ] **F60-T08** — P2: export de backup transacional e merge por nome na restauração, índice normalizado em `item_ida`, higiene de testes (`addTearDown`), sincronizar docs (07/05/README) e link do PRD (F59-T06)
 
 Nota: *(correções P0 aplicadas na branch `fix/revisao-geral-p0`; P1/P2 registrados como tarefas. 100% offline; sem dependência nova.)*
@@ -1360,8 +1385,9 @@ Nota: *(correções P0 aplicadas na branch `fix/revisao-geral-p0`; P1/P2 registr
 | F56 i18n pt/en/es | 6 | 6 |
 | F57 Atualização do tutorial | 4 | 4 |
 | F58 Otimizações da revisão | 25 | 25 |
-| F60 Revisão geral — correções | 8 | 3 |
-| **Total** | **341** | **334** |
+| F59 Preço por etiqueta (OCR) | 6 | 6 |
+| F60 Revisão geral — correções | 8 | 7 |
+| **Total** | **347** | **344** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
