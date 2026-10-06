@@ -109,27 +109,27 @@ class _ModalAdicionarDeOutraListaState
                 child: Text(context.l10n.selecionarTodos),
               ),
               Flexible(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      for (final item in pendentes)
-                        CheckboxListTile(
-                          value: _selecionados.contains(item.id),
-                          onChanged: (v) => setState(() {
-                            if (v == true) {
-                              _selecionados.add(item.id);
-                            } else {
-                              _selecionados.remove(item.id);
-                            }
-                          }),
-                          title: Text(item.nome),
-                          subtitle: Text(
-                            '${formatarQuantidade(item.quantidade)} '
-                            '${item.unidade.valor}',
-                          ),
-                        ),
-                    ],
-                  ),
+                child: ListView.builder(
+                  padding: EdgeInsets.zero,
+                  itemCount: pendentes.length,
+                  itemBuilder: (context, i) {
+                    final item = pendentes[i];
+                    return CheckboxListTile(
+                      value: _selecionados.contains(item.id),
+                      onChanged: (v) => setState(() {
+                        if (v == true) {
+                          _selecionados.add(item.id);
+                        } else {
+                          _selecionados.remove(item.id);
+                        }
+                      }),
+                      title: Text(item.nome),
+                      subtitle: Text(
+                        '${formatarQuantidade(item.quantidade)} '
+                        '${item.unidade.valor}',
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
