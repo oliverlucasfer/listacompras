@@ -151,6 +151,7 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 │  LATICÍNIOS (2)                 │    drag restrito ao grupo
 │  ☐ Leite            2 un    ≡   │ ← editar: dropdown de categoria
 │  ☐ Queijo prato     500 g   ≡   │    + campo Preço (R$) (RF-21/F25)
+│                                 │    + câmera da etiqueta (RF-40/F59)
 │                                 │
 │  ▼ Itens Concluídos (3)         │ ← seção única, sem categorias
 │    ☑ Detergente     2 un        │
@@ -203,7 +204,8 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 │  [Arroz_____________________ ]  │ ← erro inline se vazio
 │  [ − ] [ 1 ]   |  Unidade ▾     │ ← bloco quantidade
 │  [ Categoria ▾ |  Preço (R$)  ] │ ← bloco categoria + preço;
-│                                 │    opcional; inválido → erro
+│                                 │    opcional; inválido → erro;
+│                                 │    câmera lê a etiqueta (RF-40/F59)
 │  Última compra: R$ 4,99 (12/09) │ ← histórico local por dispositivo
 │  ↑ R$ 0,50                      │    (RF-29/F37); ↑/↓ só com a
 │                                 │    mesma unidade
@@ -218,6 +220,8 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 **Última compra (RF-29/F37):** abaixo do campo de preço, quando há histórico local para o nome, aparece "Última compra: R$ X (dd/mm)" e — se o preço atual existir **e** a unidade atual for a mesma do registro — a variação (`↑`/`↓ R$diferença` ou "Mesmo preço"); com unidade diferente ou sem preço atual, só a linha do último preço. O histórico é **local por dispositivo**.
 
 **Preço por mercado (RF-35/F52):** abaixo da "Última compra", a linha "Por mercado" lista o **último preço de cada mercado** para o item **na mesma unidade** atual (do mais barato ao mais caro), com o mais barato em destaque ("mais barato"); fica **oculta** quando não há histórico com mercado. Os preços são **derivados das idas** — não há tabela de preços.
+
+**Preço por etiqueta no editor (RF-40/F59):** em Android/iOS, o campo **"Preço (R$)"** do sheet do item ganha um **ícone de câmera** (`photo_camera_outlined`, tooltip "Ler etiqueta da prateleira"); toque lê a etiqueta por OCR on-device e **preenche o preço** (o nome só quando vazio; a unidade vira `kg` apenas no fallback por kg). O editor **é o preview editável** — nada é gravado até **Salvar**. Web/Desktop não mostram o ícone.
 
 ### 3.2. Diálogo "Excluir lista"
 ```
@@ -234,12 +238,13 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 ### 3.3. Modo mercado (F22/RF-18 — [05 §6.5](05-app-flutter.md))
 ```
 ┌─────────────────────────────────┐
-│  ← Compras da Semana            │ ← sem menu/busca/drag/importação
-├─────────────────────────────────┤
-│  3 de 12                        │ ← marcados nesta sessão / total ativo
-│  No carrinho: R$ 15,98          │    (live region); faixa do total
-│                                 │    (RF-21/F25) logo abaixo; com
-│                                 │    orçamento: "de R$ Y" + barra
+│  ← Compras da Semana     [📷]   │ ← voltar; ação de câmera (RF-40/
+├─────────────────────────────────┤    F59) lê a etiqueta; sem menu/
+│  3 de 12                        │    busca/drag/importação
+│  No carrinho: R$ 15,98          │ ← marcados nesta sessão / total
+│                                 │    ativo (live region); faixa do
+│                                 │    total (RF-21/F25) logo abaixo;
+│                                 │    com orçamento: "de R$ Y" + barra
 │                                 │    progressiva (RF-28/RF-36:
 │                                 │    aviso ≥80%, acima >100%)
 │  ☐ Arroz            1 kg        │ ← lista generosa de pendentes;
@@ -251,7 +256,25 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 │    ☑ Queijo prato   500 g       │
 └─────────────────────────────────┘
 ```
-Com 0 pendentes, a área principal dá lugar ao vazio "Tudo comprado" com CTA para voltar à lista. A seta de voltar retorna à tela da lista (push); sem pilha, vai para `/listas`. A faixa "Marcados" fica dentro de `SafeArea(top: false)`, sem encostar na área segura inferior (G-37).
+Com 0 pendentes, a área principal dá lugar ao vazio "Tudo comprado" com CTA para voltar à lista. A seta de voltar retorna à tela da lista (push); sem pilha, vai para `/listas`. A faixa "Marcados" fica dentro de `SafeArea(top: false)`, sem encostar à área segura inferior (G-37).
+
+**Preço por etiqueta no mercado (RF-40/F59 — [05 §6.19](05-app-flutter.md)):** em Android/iOS a AppBar ganha o **ícone de câmera** (`photo_camera_outlined`, tooltip "Ler etiqueta da prateleira"); toque → OCR on-device → `analisarEtiqueta`. Sem texto → aviso "Nenhum texto reconhecido na foto."; sem preço → "Não reconheci um preço na etiqueta."; cancelar → sem efeito. Com preço, abre o **bottom sheet "Etiqueta lida"** (preview editável):
+```
+┌─────────────────────────────────┐
+│  ▁▁▁▁ (arraste para baixo)      │ ← bottom sheet padrão
+├─────────────────────────────────┤
+│  Etiqueta lida                  │
+│  [ Novo item | Item existente ] │ ← SegmentedButton de origem
+│  Nome do item                   │    (RF-40/F59): novo item usa
+│  [___________________________ ] │    dedup; existente escolhe um
+│  [ 1 ]        |  Unidade ▾       │    item da lista no dropdown
+│  [ Categoria ▾                  │    (hint "Escolha o item")
+│  Preço (R$)                     │
+│  [ 6,99______________________ ] │ ← validado como no editor;
+│  (Cancelar)         (Salvar)    │    "Salvar" vira "Aplicar" no
+└─────────────────────────────────┘    item existente (RF-40/F59)
+```
+Web/Desktop não mostram o ícone (sem OCR).
 
 ### 3.4. Chips de itens frequentes na lista (F22/RF-19)
 Acima do campo de adicionar, uma faixa horizontal rolável de `ActionChip` (alvo ≥48dp, com `Semantics` de ação "Adicionar <nome>") mostra até 8 sugestões quando o campo está vazio; tocar adiciona o item. O ranking vem do histórico local do Drift (peso 2 para a lista aberta, exclui pendentes, limiar ≥2) — nenhum dado de rede.

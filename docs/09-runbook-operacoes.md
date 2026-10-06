@@ -122,6 +122,7 @@ A **importação por foto** (RF-37) reconhece o texto de uma imagem no próprio 
 * **Permissões:** **sem** permissão Android nova (o `image_picker` moderno usa o Photo Picker; a `CAMERA` já existe desde a RF-33). No iOS, adicionar **`NSPhotoLibraryUsageDescription`** em `ios/Runner/Info.plist` (pt-BR: *"Acessar suas fotos para importar a lista de compras."*); a `NSCameraUsageDescription` já existe. A imagem **não é armazenada** nem enviada a lugar algum.
 * **iOS mínimo:** o plugin do ML Kit exige **iOS 15.5** (o Flutter gerava 13.0). O `IPHONEOS_DEPLOYMENT_TARGET` foi elevado para **15.5** nas 3 ocorrências de `ios/Runner.xcodeproj/project.pbxproj` e o `ios/Podfile` fixa `platform :ios, '15.5'`. Sem isso, `pod install`/`flutter build ios` aborta. Aparelhos com iOS < 15.5 ficam fora de escopo.
 * **Declaração de Dados (Play):** inalterada — nenhum dado coletado; a imagem é processada localmente e descartada (só o texto reconhecido entra no campo).
+* **Preço por etiqueta (RF-40, F59):** a leitura da **etiqueta de prateleira** **reusa** `google_mlkit_text_recognition` e `image_picker` (já presentes, RF-37) atrás dos mesmos contratos `OcrTexto`/`FonteImagem` — **sem dependência nova, sem permissão nova e sem mudança no tamanho do app**; o gate continua `plataformaComOcr()` e a imagem **não é armazenada** ([05 §6.19](05-app-flutter.md)).
 
 ### 2.15. Widget Android / quick-add (RF-38, F55)
 
