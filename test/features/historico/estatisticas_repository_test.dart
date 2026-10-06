@@ -75,14 +75,28 @@ void main() {
     await idaCom([('Arroz', 1, Unidade.kg, CategoriaItem.mercearia, 500)]);
     await idaCom([('Leite', 1, Unidade.l, CategoriaItem.laticinios, 400)]);
     final porMes = await historico.gastoPorMes();
-    expect(porMes, hasLength(1)); // ambas as idas no mês corrente
-    expect(porMes.single.totalCentavos, 900);
+    // Janela de 12 meses (mês corrente + 11), preenchendo zeros.
+    expect(porMes, hasLength(12));
+    expect(porMes.fold<int>(0, (s, m) => s + m.totalCentavos), 900);
+    expect(porMes.last.totalCentavos, 900); // ambas as idas no mês corrente
+  });
+
+  test('deve_retornar_vazio_quando_sem_idas_no_gasto_por_mes', () async {
+    expect(await historico.gastoPorMes(), isEmpty);
   });
 
   test('deve_listar_nomes_comprados_uma_vez_quando_repete', () async {
     await idaCom([('Arroz', 1, Unidade.kg, CategoriaItem.mercearia, 500)]);
     await idaCom([('arroz', 1, Unidade.kg, CategoriaItem.mercearia, 500)]);
-    expect(await historico.nomesComprados(), ['arroz']);
+    expect(await historico.nomesComprados(), ['Arroz']); // nome de exibição
+  });
+
+  test('deve_usar_nome_original_no_seletor_quando_acentuado', () async {
+    await idaCom([('Açúcar', 1, Unidade.un, CategoriaItem.mercearia, 500)]);
+    expect(await historico.nomesComprados(), ['Açúcar']);
+    // O nome de exibição é aceito direto na evolução (normaliza internamente).
+    final serie = await historico.evolucaoPreco('Açúcar', Unidade.un);
+    expect(serie.map((p) => p.precoCentavos), [500]);
   });
 
   test('deve_usar_unidade_da_compra_com_preco_mais_recente', () async {

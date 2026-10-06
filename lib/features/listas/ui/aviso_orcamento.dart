@@ -30,6 +30,54 @@ Future<void> talvezAvisarCruzamento(
   final antes = totalCarrinho(itens);
   final subtotal = subtotalMarcado(item);
   final depois = marcando ? antes + subtotal : antes - subtotal;
+  await _talvezAvisar(
+    context,
+    ref,
+    antes: antes,
+    depois: depois,
+    orcamento: orcamento,
+  );
+}
+
+/// Avisa quando **editar o preço** de um item marcado faz o total dos marcados
+/// cruzar o orçamento (RF-36): o editor não passa pelo toggle de concluído.
+/// Chamar **antes** da escrita, com os itens atuais e o item (preço antigo).
+Future<void> talvezAvisarCruzamentoPreco(
+  BuildContext context,
+  WidgetRef ref,
+  String listaId, {
+  required List<Item> itens,
+  required Item item,
+  required int? novoPreco,
+}) async {
+  if (!item.concluido) return;
+  final orcamento = ref
+      .read(listaPorIdProvider(listaId))
+      .value
+      ?.orcamentoCentavos;
+  if (orcamento == null) return;
+  final antes = totalCarrinho(itens);
+  final subtotalAntigo = subtotalMarcado(item);
+  final novoSubtotal = novoPreco == null
+      ? 0
+      : (item.quantidade * novoPreco).round();
+  final depois = antes - subtotalAntigo + novoSubtotal;
+  await _talvezAvisar(
+    context,
+    ref,
+    antes: antes,
+    depois: depois,
+    orcamento: orcamento,
+  );
+}
+
+Future<void> _talvezAvisar(
+  BuildContext context,
+  WidgetRef ref, {
+  required int antes,
+  required int depois,
+  required int orcamento,
+}) async {
   if (!cruzouLimite(antes: antes, depois: depois, orcamento: orcamento)) return;
   if (context.mounted) {
     mostrarSnackBar(

@@ -13,6 +13,11 @@ import '../domain/reconhecimento_voz.dart';
 /// Erros permanentes (modelo ausente, permissão negada) viram [onIndisponivel];
 /// erros transitórios apenas param o estado.
 class ReconhecimentoVozPlugin implements ReconhecimentoVoz {
+  ReconhecimentoVozPlugin({this.localeId = 'pt_BR'});
+
+  /// Locale do reconhecedor on-device (RF-39): segue o idioma do app.
+  final String localeId;
+
   final _speech = stt.SpeechToText();
 
   /// Cancelamento pedido durante o `await initialize`: impede o `listen`
@@ -63,7 +68,7 @@ class ReconhecimentoVozPlugin implements ReconhecimentoVoz {
         onResult: (r) => onTexto(r.recognizedWords, r.finalResult),
         listenOptions: stt.SpeechListenOptions(
           onDevice: true,
-          localeId: 'pt_BR',
+          localeId: localeId,
           partialResults: true,
         ),
       );

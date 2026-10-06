@@ -40,7 +40,12 @@ int? parsePrecoParaCentavos(String? texto) {
     normalizado = bruto;
   }
   final valor = double.tryParse(normalizado);
-  if (valor == null) throw ArgumentError('preço inválido: $texto');
+  // `double.tryParse` aceita 'NaN'/'Infinity'/notação científica que estoura
+  // ('1e400'); sem o `isFinite`, o `.round()` abaixo lançaria `UnsupportedError`
+  // em vez do `ArgumentError` que todo call site captura.
+  if (valor == null || !valor.isFinite) {
+    throw ArgumentError('preço inválido: $texto');
+  }
   if (valor < 0) throw ArgumentError('preço negativo: $texto');
   final centavos = (valor * 100).round();
   // Teto do CHECK de `preco_centavos` no Postgres (doc 01 §4.3, RF-21):
