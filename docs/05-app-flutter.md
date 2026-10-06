@@ -294,9 +294,11 @@ Primeiro acesso ao app — apresenta o valor em **uma** página (rolável, escal
 ### 6.10. Backup local (RF-31)
 
 Em Configurações → "Backup": **Exportar backup** gera um `.json` **versão 2** (versão + listas + itens +
-histórico de preços + **idas de compra e seus itens**, RF-34) e **Importar backup** restaura com merge por `id`
-(e LWW por `updated_at` para listas/itens). O arquivo é **retrocompatível**: backups **versão 1** (sem
-`idas`/`itensIda`) importam normalmente — as idas ficam vazias.
+histórico de preços + **idas de compra e seus itens**, RF-34 + **limites de orçamento por categoria**, RF-36) e
+**Importar backup** restaura com merge por `id` (e LWW por `updated_at` para listas/itens); os **limites por
+categoria** são **sobrescritos pelo backup** (a tabela `orcamento_categoria` não tem `updated_at`), como as idas.
+O arquivo é **retrocompatível**: backups **versão 1** (sem `idas`/`itensIda`) e backups **sem
+`orcamentoCategoria`** importam normalmente — os campos ausentes ficam vazios.
 
 O export é **fiel ao banco**: inclui listas e itens com `deletado_em` preenchido (soft delete), para que
 a restauração nunca encontre item órfão de lista e viole a FK. A UI separa **arquivo inválido**

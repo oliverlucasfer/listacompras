@@ -53,6 +53,15 @@ void main() {
     expect(() => parsePrecoParaCentavos('abc'), throwsArgumentError);
   });
 
+  test('deve_rejeitar_quando_preco_nao_finito', () {
+    // `double.tryParse` aceita estes; sem o guard de `isFinite` o `.round()`
+    // lançaria `UnsupportedError` (que escapa dos `on ArgumentError`).
+    expect(() => parsePrecoParaCentavos('NaN'), throwsArgumentError);
+    expect(() => parsePrecoParaCentavos('Infinity'), throwsArgumentError);
+    expect(() => parsePrecoParaCentavos('-Infinity'), throwsArgumentError);
+    expect(() => parsePrecoParaCentavos('1e400'), throwsArgumentError);
+  });
+
   test('deve_formatar_negativo_quando_centavos_negativos', () {
     expect(formatarReais(-549), r'-R$ 5,49');
   });
