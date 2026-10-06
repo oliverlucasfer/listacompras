@@ -25,7 +25,7 @@ fonte da verdade) e nada depende de rede, conta ou sincronização. O produto fi
 
 - **Offline-first:** criar, marcar e finalizar compras sem conexão; os dados persistem ao fechar/reabrir.
 - **Privacidade (LGPD):** nenhum dado sai do aparelho — sem conta, sem analytics, sem anúncios (RNF-05).
-- **Backup local:** exportar/importar um `.json` fiel ao banco (listas, itens e histórico de preços).
+- **Backup local:** exportar/importar um `.json` fiel ao banco (listas, itens, histórico de preços e idas de compra com seus itens e o mercado).
 
 ## Recursos
 
