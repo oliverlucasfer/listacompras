@@ -394,7 +394,13 @@ class _CardListaState extends ConsumerState<_CardLista> {
       mensagem: context.l10n.excluirListaMensagem(contagem.totalItens, 'false'),
     );
     if (confirmou) {
-      await ref.read(listasRepositoryProvider).excluirLista(contagem.lista.id);
+      try {
+        await ref
+            .read(listasRepositoryProvider)
+            .excluirLista(contagem.lista.id);
+      } catch (_) {
+        if (mounted) mostrarSnackBar(context, context.l10n.erroGenerico);
+      }
     }
   }
 }

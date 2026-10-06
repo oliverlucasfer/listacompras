@@ -52,8 +52,8 @@ void main() {
   });
 
   test('deve_cortar_decimais_quando_nao_e_glifo_comum', () {
-    expect(formatarQuantidade(1.2), '1.2');
-    expect(formatarQuantidade(1 / 7), '0.143');
+    expect(formatarQuantidade(1.2), '1,2');
+    expect(formatarQuantidade(1 / 7), '0,143');
     expect(formatarQuantidade(0.3333), '⅓'); // tolerância casa 1/3
   });
 

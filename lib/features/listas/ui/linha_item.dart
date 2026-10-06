@@ -77,8 +77,7 @@ class _LinhaItem extends ConsumerWidget {
           _abrirSheetEditar(context, ref);
           return false;
         }
-        await _removerComUndo(context, ref);
-        return true;
+        return _removerComUndo(context, ref);
       },
       child: linha,
     );
@@ -98,22 +97,33 @@ class _LinhaItem extends ConsumerWidget {
       item: item,
       marcando: marcando,
     );
-    await ref
-        .read(listasRepositoryProvider)
-        .editarItem(item.id, concluido: marcando);
+    try {
+      await ref
+          .read(listasRepositoryProvider)
+          .editarItem(item.id, concluido: marcando);
+    } catch (_) {
+      if (context.mounted) mostrarSnackBar(context, context.l10n.erroGenerico);
+    }
   }
 
   /// Remove o item e oferece Desfazer (usado pelo swipe e pelo diálogo).
-  Future<void> _removerComUndo(BuildContext context, WidgetRef ref) async {
+  /// Devolve `false` se a escrita falhar (o swipe não confirma a remoção).
+  Future<bool> _removerComUndo(BuildContext context, WidgetRef ref) async {
     final repo = ref.read(listasRepositoryProvider);
-    await repo.removerItem(item.id);
-    if (!context.mounted) return;
+    try {
+      await repo.removerItem(item.id);
+    } catch (_) {
+      if (context.mounted) mostrarSnackBar(context, context.l10n.erroGenerico);
+      return false;
+    }
+    if (!context.mounted) return true;
     mostrarSnackBar(
       context,
       context.l10n.itemRemovido,
       rotuloAcao: context.l10n.desfazer,
       onAcao: () => repo.restaurarItem(item.id),
     );
+    return true;
   }
 
   Future<void> _abrirSheetEditar(BuildContext context, WidgetRef ref) async {
