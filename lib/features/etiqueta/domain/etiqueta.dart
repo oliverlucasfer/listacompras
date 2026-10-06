@@ -33,6 +33,12 @@ final _contextoKg = RegExp(
   caseSensitive: false,
 );
 
+// Unidade de massa/volume **colada** logo após o número (ex.: "1,5kg", "0,5 l"):
+// é peso/quantidade, não preço. Diferente de "/kg"/"por kg" (preço por unidade).
+// O `\d*` cobre pesos com 3 casas ("0,750kg"), cujo excesso de casas escapa do
+// padrão de preço (2 casas) e sobra como dígitos antes da unidade.
+final _pesoApos = RegExp(r'^\s*\d*\s*(?:kg|g|ml|l)\b', caseSensitive: false);
+
 // Marcador de moeda imediatamente antes do número (permite espaços).
 final _moedaAntes = RegExp(r'r\$\s*$', caseSensitive: false);
 
@@ -65,7 +71,10 @@ EtiquetaLida? analisarEtiqueta(String texto) {
     for (final m in _numero.allMatches(linha)) {
       final centavos = _centavosSeMonetario(linha, m.start, m.group(0)!);
       if (centavos == null) continue;
-      final ehKg = _contextoKg.hasMatch(linha.substring(m.end));
+      final depois = linha.substring(m.end);
+      // Peso/volume colado (ex.: "1,5kg") não é preço nem preço por unidade.
+      if (_pesoApos.hasMatch(depois)) continue;
+      final ehKg = _contextoKg.hasMatch(depois);
       (ehKg ? porKg : naoKg).add(centavos);
     }
     for (final m in _aposPor.allMatches(linha)) {
@@ -135,6 +144,10 @@ String? _nomeDaLinha(String linha) {
     break;
   }
   candidato = candidato.replaceAll(_moedaNoFim, '').trim();
+  // Linha com peso/volume colado (ex.: "1,5kg") não é nome de produto.
+  for (final m in _numero.allMatches(linha)) {
+    if (_pesoApos.hasMatch(linha.substring(m.end))) return null;
+  }
   if (_porPalavra.hasMatch(candidato) || _kgPalavra.hasMatch(candidato)) {
     return null;
   }

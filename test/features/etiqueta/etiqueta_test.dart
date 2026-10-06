@@ -80,4 +80,16 @@ void main() {
     expect(e!.precoCentavos, 2490);
     expect(e.precoPorKgCentavos, isNull);
   });
+
+  test('deve_ignorar_peso_decimal_quando_so_peso', () {
+    // Peso de balança com decimal não é preço: sem preço, a etiqueta é nula.
+    expect(analisarEtiqueta('Batata\n1,5kg'), isNull);
+    expect(analisarEtiqueta('0,750kg'), isNull);
+  });
+
+  test('deve_ignorar_peso_decimal_quando_ha_preco', () {
+    final e = analisarEtiqueta('PESO 1,5kg\nR\$ 8,90');
+    expect(e!.precoCentavos, 890);
+    expect(e.precoPorKgCentavos, isNull);
+  });
 }
