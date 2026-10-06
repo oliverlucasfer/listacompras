@@ -31,98 +31,106 @@ class BackupRepository {
 
   String _iso(DateTime d) => d.toUtc().toIso8601String();
 
-  Future<String> exportarJson() async {
-    final listas = await _db.select(_db.listaLocal).get();
-    final itens = await _db.select(_db.itemLocal).get();
-    final historico = await _db.select(_db.historicoPrecoLocal).get();
-    final idas = await _db.select(_db.idaCompra).get();
-    final itensIda = await _db.select(_db.itemIda).get();
-    final orcamentoCategoria = await _db.select(_db.orcamentoCategoria).get();
+  Future<String> exportarJson() {
+    // Snapshot atômico (RF-31): lê todas as tabelas numa transação para o
+    // `.json` não sair inconsistente se uma escrita concorrer.
+    return _db.transaction(() async {
+      final listas = await _db.select(_db.listaLocal).get();
+      final itens = await _db.select(_db.itemLocal).get();
+      final historico = await _db.select(_db.historicoPrecoLocal).get();
+      final idas = await _db.select(_db.idaCompra).get();
+      final itensIda = await _db.select(_db.itemIda).get();
+      final orcamentoCategoria = await _db.select(_db.orcamentoCategoria).get();
 
-    final arquivo = BackupArquivo(
-      exportadoEm: DateTime.now().toUtc(),
-      listas: listas
-          .map(
-            (l) => <String, Object?>{
-              'id': l.id,
-              'titulo': l.titulo,
-              'dono_id': l.donoId,
-              'created_at': _iso(l.createdAt),
-              'updated_at': _iso(l.updatedAt),
-              'arquivada_em': l.arquivadaEm == null
-                  ? null
-                  : _iso(l.arquivadaEm!),
-              'orcamento_centavos': l.orcamentoCentavos,
-              'deletado_em': l.deletadoEm == null ? null : _iso(l.deletadoEm!),
-            },
-          )
-          .toList(),
-      itens: itens
-          .map(
-            (i) => <String, Object?>{
-              'id': i.id,
-              'lista_id': i.listaId,
-              'nome': i.nome,
-              'quantidade': i.quantidade,
-              'unidade': i.unidade,
-              'categoria': i.categoria,
-              'preco_centavos': i.precoCentavos,
-              'concluido': i.concluido,
-              'ordem': i.ordem,
-              'created_at': _iso(i.createdAt),
-              'updated_at': _iso(i.updatedAt),
-              'deletado_em': i.deletadoEm == null ? null : _iso(i.deletadoEm!),
-            },
-          )
-          .toList(),
-      historicoPrecos: historico
-          .map(
-            (h) => <String, Object?>{
-              'nome_normalizado': h.nomeNormalizado,
-              'preco_centavos': h.precoCentavos,
-              'unidade': h.unidade,
-              'registrado_em': _iso(h.registradoEm),
-            },
-          )
-          .toList(),
-      idas: idas
-          .map(
-            (i) => <String, Object?>{
-              'id': i.id,
-              'lista_id': i.listaId,
-              'titulo': i.titulo,
-              'finalizada_em': _iso(i.finalizadaEm),
-              'total_centavos': i.totalCentavos,
-              'itens_count': i.itensCount,
-              'mercado': i.mercado,
-            },
-          )
-          .toList(),
-      itensIda: itensIda
-          .map(
-            (i) => <String, Object?>{
-              'id': i.id,
-              'ida_id': i.idaId,
-              'nome': i.nome,
-              'quantidade': i.quantidade,
-              'unidade': i.unidade,
-              'categoria': i.categoria,
-              'preco_centavos': i.precoCentavos,
-            },
-          )
-          .toList(),
-      // Orçamento por categoria (RF-36): limites locais; backup sobrescreve o
-      // alvo (a tabela não tem `updated_at`), como as idas por `id`.
-      orcamentoCategoria: orcamentoCategoria
-          .map(
-            (o) => <String, Object?>{
-              'categoria': o.categoria,
-              'limite_centavos': o.limiteCentavos,
-            },
-          )
-          .toList(),
-    );
-    return jsonEncode(arquivo.toJson());
+      final arquivo = BackupArquivo(
+        exportadoEm: DateTime.now().toUtc(),
+        listas: listas
+            .map(
+              (l) => <String, Object?>{
+                'id': l.id,
+                'titulo': l.titulo,
+                'dono_id': l.donoId,
+                'created_at': _iso(l.createdAt),
+                'updated_at': _iso(l.updatedAt),
+                'arquivada_em': l.arquivadaEm == null
+                    ? null
+                    : _iso(l.arquivadaEm!),
+                'orcamento_centavos': l.orcamentoCentavos,
+                'deletado_em': l.deletadoEm == null
+                    ? null
+                    : _iso(l.deletadoEm!),
+              },
+            )
+            .toList(),
+        itens: itens
+            .map(
+              (i) => <String, Object?>{
+                'id': i.id,
+                'lista_id': i.listaId,
+                'nome': i.nome,
+                'quantidade': i.quantidade,
+                'unidade': i.unidade,
+                'categoria': i.categoria,
+                'preco_centavos': i.precoCentavos,
+                'concluido': i.concluido,
+                'ordem': i.ordem,
+                'created_at': _iso(i.createdAt),
+                'updated_at': _iso(i.updatedAt),
+                'deletado_em': i.deletadoEm == null
+                    ? null
+                    : _iso(i.deletadoEm!),
+              },
+            )
+            .toList(),
+        historicoPrecos: historico
+            .map(
+              (h) => <String, Object?>{
+                'nome_normalizado': h.nomeNormalizado,
+                'preco_centavos': h.precoCentavos,
+                'unidade': h.unidade,
+                'registrado_em': _iso(h.registradoEm),
+              },
+            )
+            .toList(),
+        idas: idas
+            .map(
+              (i) => <String, Object?>{
+                'id': i.id,
+                'lista_id': i.listaId,
+                'titulo': i.titulo,
+                'finalizada_em': _iso(i.finalizadaEm),
+                'total_centavos': i.totalCentavos,
+                'itens_count': i.itensCount,
+                'mercado': i.mercado,
+              },
+            )
+            .toList(),
+        itensIda: itensIda
+            .map(
+              (i) => <String, Object?>{
+                'id': i.id,
+                'ida_id': i.idaId,
+                'nome': i.nome,
+                'quantidade': i.quantidade,
+                'unidade': i.unidade,
+                'categoria': i.categoria,
+                'preco_centavos': i.precoCentavos,
+              },
+            )
+            .toList(),
+        // Orçamento por categoria (RF-36): limites locais; backup sobrescreve o
+        // alvo (a tabela não tem `updated_at`), como as idas por `id`.
+        orcamentoCategoria: orcamentoCategoria
+            .map(
+              (o) => <String, Object?>{
+                'categoria': o.categoria,
+                'limite_centavos': o.limiteCentavos,
+              },
+            )
+            .toList(),
+      );
+      return jsonEncode(arquivo.toJson());
+    });
   }
 
   DateTime? _parseOpt(Object? v) =>

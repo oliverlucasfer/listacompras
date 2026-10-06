@@ -94,6 +94,24 @@ class HistoricoComprasRepository {
           .watch()
           .map((rows) => rows.map(Ida.fromLocal).toList());
 
+  /// Mercado da ida mais recente de [listaId] (RF-35), ou `null` se não houver
+  /// ida ou a mais recente não tiver mercado. Consulta **uma linha** — não
+  /// varre o histórico inteiro.
+  Stream<String?> watchMercadoUltimaIda(String listaId) {
+    return (_db.select(_db.idaCompra)
+          ..where((t) => t.listaId.equals(listaId))
+          ..orderBy([
+            (t) => OrderingTerm.desc(t.finalizadaEm),
+            (t) => OrderingTerm.asc(t.id),
+          ])
+          ..limit(1))
+        .watchSingleOrNull()
+        .map((row) {
+          final m = row?.mercado?.trim();
+          return (m == null || m.isEmpty) ? null : m;
+        });
+  }
+
   Future<Ida?> ida(String id) async {
     final row = await (_db.select(
       _db.idaCompra,

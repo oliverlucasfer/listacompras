@@ -32,8 +32,14 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
   String? _erroQuantidade;
   String? _erroPreco;
 
+  /// Nome usado na consulta "por mercado", atualizado com **debounce** — evita
+  /// uma consulta ao banco a cada tecla digitada no nome.
+  late String _nomeConsulta = normalizarTexto(widget.item.nome);
+  Timer? _debounceNome;
+
   @override
   void dispose() {
+    _debounceNome?.cancel();
     _nome.dispose();
     _quantidade.dispose();
     _preco.dispose();
@@ -194,11 +200,7 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
   Widget build(BuildContext context) {
     final hist = ref.watch(historicoPrecoProvider(widget.item.nome)).value;
     final precos =
-        ref
-            .watch(
-              precosPorMercadoProvider((normalizarTexto(_nome.text), _unidade)),
-            )
-            .value ??
+        ref.watch(precosPorMercadoProvider((_nomeConsulta, _unidade))).value ??
         const <PrecoMercado>[];
     return SingleChildScrollView(
       child: Column(
@@ -214,7 +216,18 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
             controller: _nome,
             label: context.l10n.nomeDoItem,
             erro: _erroNome,
-            onChanged: (_) => setState(() => _erroNome = null),
+            onChanged: (_) {
+              if (_erroNome != null) setState(() => _erroNome = null);
+              // Reconsulta "por mercado" só após uma pausa na digitação.
+              _debounceNome?.cancel();
+              _debounceNome = Timer(const Duration(milliseconds: 400), () {
+                if (!mounted) return;
+                final novo = normalizarTexto(_nome.text);
+                if (novo != _nomeConsulta) {
+                  setState(() => _nomeConsulta = novo);
+                }
+              });
+            },
           ),
           const SizedBox(height: AppSpacing.md),
           Row(
