@@ -32,17 +32,26 @@ Future<void> confirmarItensImportados(
   );
   if (selecionados == null || selecionados.isEmpty || !context.mounted) return;
   final repo = ref.read(listasRepositoryProvider);
-  for (final item in selecionados) {
-    await repo.adicionarItemDedup(
-      listaId: listaId,
-      nome: item.nome,
-      quantidade: item.quantidade,
-      unidade: item.unidade,
-      categoria: item.categoria,
-    );
+  var gravados = 0;
+  try {
+    for (final item in selecionados) {
+      await repo.adicionarItemDedup(
+        listaId: listaId,
+        nome: item.nome,
+        quantidade: item.quantidade,
+        unidade: item.unidade,
+        categoria: item.categoria,
+      );
+      gravados++;
+    }
+  } catch (_) {
+    // Gravação parcial: informa em vez de silenciar (a lista fica com o que
+    // já entrou; o usuário pode reimportar o restante).
+    if (context.mounted) mostrarSnackBar(context, context.l10n.erroGenerico);
+    return;
   }
   if (context.mounted) {
-    mostrarSnackBar(context, context.l10n.itensExtraidos(selecionados.length));
+    mostrarSnackBar(context, context.l10n.itensExtraidos(gravados));
   }
 }
 

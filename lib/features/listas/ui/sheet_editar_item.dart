@@ -32,8 +32,14 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
   String? _erroQuantidade;
   String? _erroPreco;
 
+  /// Nome usado na consulta "por mercado", atualizado com **debounce** — evita
+  /// uma consulta ao banco a cada tecla digitada no nome.
+  late String _nomeConsulta = normalizarTexto(widget.item.nome);
+  Timer? _debounceNome;
+
   @override
   void dispose() {
+    _debounceNome?.cancel();
     _nome.dispose();
     _quantidade.dispose();
     _preco.dispose();
@@ -189,17 +195,37 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
       _erroPreco = precoValido ? null : context.l10n.erroPrecoInvalido;
     });
     if (nome.isEmpty || quantidade == null || !precoValido) return;
-    await ref
-        .read(listasRepositoryProvider)
-        .editarItem(
-          widget.item.id,
-          nome: nome,
-          quantidade: quantidade,
-          unidade: _unidade,
-          categoria: _categoria,
-          precoCentavos: preco,
-          limparPreco: preco == null,
-        );
+    // Avisa (RF-36) se o novo preço fizer o total dos marcados cruzar o
+    // orçamento — o editor não passa pelo toggle de concluído.
+    if (widget.item.concluido) {
+      final itens =
+          ref.read(itensDaListaProvider(widget.item.listaId)).value ??
+          const <Item>[];
+      await talvezAvisarCruzamentoPreco(
+        context,
+        ref,
+        widget.item.listaId,
+        itens: itens,
+        item: widget.item,
+        novoPreco: preco,
+      );
+    }
+    try {
+      await ref
+          .read(listasRepositoryProvider)
+          .editarItem(
+            widget.item.id,
+            nome: nome,
+            quantidade: quantidade,
+            unidade: _unidade,
+            categoria: _categoria,
+            precoCentavos: preco,
+            limparPreco: preco == null,
+          );
+    } catch (_) {
+      if (mounted) mostrarSnackBar(context, context.l10n.erroGenerico);
+      return;
+    }
     if (mounted) Navigator.pop(context);
   }
 
@@ -207,11 +233,7 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
   Widget build(BuildContext context) {
     final hist = ref.watch(historicoPrecoProvider(widget.item.nome)).value;
     final precos =
-        ref
-            .watch(
-              precosPorMercadoProvider((normalizarTexto(_nome.text), _unidade)),
-            )
-            .value ??
+        ref.watch(precosPorMercadoProvider((_nomeConsulta, _unidade))).value ??
         const <PrecoMercado>[];
     return SingleChildScrollView(
       child: Column(
@@ -227,7 +249,18 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
             controller: _nome,
             label: context.l10n.nomeDoItem,
             erro: _erroNome,
-            onChanged: (_) => setState(() => _erroNome = null),
+            onChanged: (_) {
+              if (_erroNome != null) setState(() => _erroNome = null);
+              // Reconsulta "por mercado" só após uma pausa na digitação.
+              _debounceNome?.cancel();
+              _debounceNome = Timer(const Duration(milliseconds: 400), () {
+                if (!mounted) return;
+                final novo = normalizarTexto(_nome.text);
+                if (novo != _nomeConsulta) {
+                  setState(() => _nomeConsulta = novo);
+                }
+              });
+            },
           ),
           const SizedBox(height: AppSpacing.md),
           Row(

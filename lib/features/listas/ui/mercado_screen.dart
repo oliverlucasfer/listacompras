@@ -339,45 +339,41 @@ class _LinhaMercado extends StatelessWidget {
             horizontal: AppSpacing.lg,
             vertical: AppSpacing.sm,
           ),
-          child: Row(
-            children: [
-              MergeSemantics(
-                child: Semantics(
-                  label: item.nome,
-                  child: Checkbox(
-                    value: concluido,
-                    onChanged: (_) => onAlternar(),
+          // Um único nó semântico para a linha: o leitor anuncia o nome (uma
+          // vez), a quantidade e o estado da caixa de seleção.
+          child: MergeSemantics(
+            child: Row(
+              children: [
+                Checkbox(value: concluido, onChanged: (_) => onAlternar()),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.nome,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          decoration: concluido
+                              ? TextDecoration.lineThrough
+                              : null,
+                          color: concluido ? cores.onSurfaceVariant : null,
+                        ),
+                      ),
+                      Text(
+                        formatarQuantidadeComUnidade(
+                          item.quantidade,
+                          item.unidade,
+                        ),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: cores.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.nome,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        decoration: concluido
-                            ? TextDecoration.lineThrough
-                            : null,
-                        color: concluido ? cores.onSurfaceVariant : null,
-                      ),
-                    ),
-                    Text(
-                      formatarQuantidadeComUnidade(
-                        item.quantidade,
-                        item.unidade,
-                      ),
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: cores.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

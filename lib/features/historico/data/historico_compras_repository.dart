@@ -94,6 +94,24 @@ class HistoricoComprasRepository {
           .watch()
           .map((rows) => rows.map(Ida.fromLocal).toList());
 
+  /// Mercado da ida mais recente de [listaId] (RF-35), ou `null` se não houver
+  /// ida ou a mais recente não tiver mercado. Consulta **uma linha** — não
+  /// varre o histórico inteiro.
+  Stream<String?> watchMercadoUltimaIda(String listaId) {
+    return (_db.select(_db.idaCompra)
+          ..where((t) => t.listaId.equals(listaId))
+          ..orderBy([
+            (t) => OrderingTerm.desc(t.finalizadaEm),
+            (t) => OrderingTerm.asc(t.id),
+          ])
+          ..limit(1))
+        .watchSingleOrNull()
+        .map((row) {
+          final m = row?.mercado?.trim();
+          return (m == null || m.isEmpty) ? null : m;
+        });
+  }
+
   Future<Ida?> ida(String id) async {
     final row = await (_db.select(
       _db.idaCompra,
@@ -129,7 +147,10 @@ class HistoricoComprasRepository {
     );
   }
 
-  Future<List<GastoPorMes>> gastoPorMes() async {
+  /// Gasto por mês dos **últimos 12 meses** (mês corrente + 11 anteriores),
+  /// preenchendo com zero os meses sem ida (RF-34/F51). Sem idas → vazio (a UI
+  /// mostra "sem dados"). [agora] é injetável para testes determinísticos.
+  Future<List<GastoPorMes>> gastoPorMes({DateTime? agora}) async {
     // `substr(1,7)` em vez de `strftime`: as datas são texto ISO-8601 do Drift
     // (`storeDateTimeAsText`) e o parsing fica em Dart.
     final linhas = await _db
@@ -139,16 +160,23 @@ class HistoricoComprasRepository {
           'GROUP BY ano_mes ORDER BY ano_mes',
         )
         .get();
+    final porMes = <String, int>{
+      for (final r in linhas) r.read<String>('ano_mes'): r.read<int>('total'),
+    };
+    if (porMes.isEmpty) return const [];
+    final ref = agora ?? DateTime.now();
+    final base = DateTime.utc(ref.year, ref.month);
     return [
-      for (final r in linhas)
-        GastoPorMes(
-          mes: DateTime.utc(
-            int.parse(r.read<String>('ano_mes').substring(0, 4)),
-            int.parse(r.read<String>('ano_mes').substring(5, 7)),
-          ),
-          totalCentavos: r.read<int>('total'),
-        ),
+      for (var k = 11; k >= 0; k--)
+        _mesDaJanela(porMes, DateTime.utc(base.year, base.month - k)),
     ];
+  }
+
+  static GastoPorMes _mesDaJanela(Map<String, int> porMes, DateTime mes) {
+    final chave =
+        '${mes.year.toString().padLeft(4, '0')}-'
+        '${mes.month.toString().padLeft(2, '0')}';
+    return GastoPorMes(mes: mes, totalCentavos: porMes[chave] ?? 0);
   }
 
   Future<List<GastoPorCategoria>> gastoPorCategoria() async {
@@ -174,7 +202,11 @@ class HistoricoComprasRepository {
     return lista;
   }
 
-  Future<List<ItemFrequente>> itensMaisComprados({int limite = 10}) async {
+  /// Itens mais comprados (agregados por nome normalizado). Sem [limite]
+  /// devolve **todos** — a UI decide o recorte depois de escolher a ordenação
+  /// (frequência vs. gasto), para "por gasto" não ficar preso ao top-N de
+  /// frequência (F51).
+  Future<List<ItemFrequente>> itensMaisComprados({int? limite}) async {
     final itens = await _db.select(_db.itemIda).get();
     final vezes = <String, int>{};
     final totais = <String, int>{};
@@ -200,20 +232,26 @@ class HistoricoComprasRepository {
           final c = b.vezes.compareTo(a.vezes);
           return c != 0 ? c : a.nome.compareTo(b.nome);
         });
-    return lista.take(limite).toList();
+    return limite == null ? lista : lista.take(limite).toList();
   }
 
+  /// Nomes comprados (distintos) para o seletor de evolução, já no **nome de
+  /// exibição** (caixa/acento originais) — a chave normalizada serve só ao
+  /// agrupamento. Filtra os que têm ao menos uma compra com preço.
   Future<List<String>> nomesComprados() async {
     final itens = await _db.select(_db.itemIda).get();
-    final chaves = {for (final i in itens) normalizarTexto(i.nome)};
-    final lista = chaves.toList()..sort();
+    final nomes = <String, String>{}; // normalizado -> exibição
+    for (final i in itens) {
+      if (i.precoCentavos == null) continue;
+      nomes.putIfAbsent(normalizarTexto(i.nome), () => i.nome);
+    }
+    final lista = nomes.values.toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     return lista;
   }
 
-  Future<List<PontoPreco>> evolucaoPreco(
-    String nomeNormalizado,
-    Unidade unidade,
-  ) async {
+  Future<List<PontoPreco>> evolucaoPreco(String nome, Unidade unidade) async {
+    final alvo = normalizarTexto(nome);
     final consulta = _db.select(_db.itemIda).join([
       innerJoin(_db.idaCompra, _db.idaCompra.id.equalsExp(_db.itemIda.idaId)),
     ])..where(_db.itemIda.unidade.equals(unidade.valor));
@@ -222,7 +260,7 @@ class HistoricoComprasRepository {
     for (final linha in linhas) {
       final i = linha.readTable(_db.itemIda);
       final ida = linha.readTable(_db.idaCompra);
-      if (normalizarTexto(i.nome) != nomeNormalizado) continue;
+      if (normalizarTexto(i.nome) != alvo) continue;
       if (i.unidade != unidade.valor) continue;
       final preco = i.precoCentavos;
       if (preco == null) continue;
@@ -238,7 +276,8 @@ class HistoricoComprasRepository {
     return pontos;
   }
 
-  Future<Unidade?> unidadeRecenteComprada(String nomeNormalizado) async {
+  Future<Unidade?> unidadeRecenteComprada(String nome) async {
+    final alvo = normalizarTexto(nome);
     final consulta = _db.select(_db.itemIda).join([
       innerJoin(_db.idaCompra, _db.idaCompra.id.equalsExp(_db.itemIda.idaId)),
     ])..where(_db.itemIda.precoCentavos.isNotNull());
@@ -246,7 +285,7 @@ class HistoricoComprasRepository {
     final pontos = <(DateTime, String)>[];
     for (final linha in linhas) {
       final i = linha.readTable(_db.itemIda);
-      if (normalizarTexto(i.nome) != nomeNormalizado) continue;
+      if (normalizarTexto(i.nome) != alvo) continue;
       if (i.precoCentavos == null) continue;
       pontos.add((linha.readTable(_db.idaCompra).finalizadaEm, i.unidade));
     }
@@ -269,9 +308,10 @@ class HistoricoComprasRepository {
   }
 
   Future<List<PrecoMercado>> precosPorMercado(
-    String nomeNormalizado,
+    String nome,
     Unidade unidade,
   ) async {
+    final alvo = normalizarTexto(nome);
     final consulta =
         _db.select(_db.itemIda).join([
           innerJoin(
@@ -291,7 +331,7 @@ class HistoricoComprasRepository {
       final ida = linha.readTable(_db.idaCompra);
       final m = ida.mercado;
       if (m == null || m.trim().isEmpty) continue;
-      if (normalizarTexto(i.nome) != nomeNormalizado) continue;
+      if (normalizarTexto(i.nome) != alvo) continue;
       if (i.unidade != unidade.valor) continue;
       final preco = i.precoCentavos;
       if (preco == null) continue;

@@ -259,9 +259,13 @@ class _ChipsSugestoes extends ConsumerWidget {
             return Semantics(
               button: true,
               label: context.l10n.adicionarSugerido(s.nome),
-              child: ActionChip(
-                label: Text(s.nome),
-                onPressed: () => onAdicionar(s.nome),
+              // Exclui a semântica própria do chip para não anunciar o rótulo
+              // duas vezes (nó único com o label "Adicionar <nome>").
+              child: ExcludeSemantics(
+                child: ActionChip(
+                  label: Text(s.nome),
+                  onPressed: () => onAdicionar(s.nome),
+                ),
               ),
             );
           },

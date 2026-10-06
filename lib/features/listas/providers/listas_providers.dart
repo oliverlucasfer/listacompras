@@ -45,30 +45,31 @@ final listasComContagemProvider = StreamProvider<List<ListaComContagem>>(
   (ref) => ref.watch(listasRepositoryProvider).watchListasComContagem(),
 );
 
-final listaPorIdProvider = StreamProvider.family<Lista?, String>((
+final listaPorIdProvider = StreamProvider.autoDispose.family<Lista?, String>((
   ref,
   listaId,
 ) {
   return ref.watch(listasRepositoryProvider).watchLista(listaId);
 });
 
-final itensDaListaProvider = StreamProvider.family<List<Item>, String>((
+final itensDaListaProvider = StreamProvider.autoDispose
+    .family<List<Item>, String>((ref, listaId) {
+      return ref.watch(listasRepositoryProvider).watchItensDaLista(listaId);
+    });
+
+/// Total dos itens marcados com preço (RF-21): derivado da lista de itens.
+final totalCarrinhoProvider = Provider.autoDispose.family<int, String>((
   ref,
   listaId,
 ) {
-  return ref.watch(listasRepositoryProvider).watchItensDaLista(listaId);
-});
-
-/// Total dos itens marcados com preço (RF-21): derivado da lista de itens.
-final totalCarrinhoProvider = Provider.family<int, String>((ref, listaId) {
   final itens =
       ref.watch(itensDaListaProvider(listaId)).value ?? const <Item>[];
   return totalCarrinho(itens);
 });
 
 /// Subtotal marcado por categoria (RF-36, F53-T04): derivado da lista.
-final subtotaisPorCategoriaProvider =
-    Provider.family<Map<CategoriaItem, int>, String>((ref, listaId) {
+final subtotaisPorCategoriaProvider = Provider.autoDispose
+    .family<Map<CategoriaItem, int>, String>((ref, listaId) {
       final itens =
           ref.watch(itensDaListaProvider(listaId)).value ?? const <Item>[];
       final mapa = <CategoriaItem, int>{};
@@ -81,8 +82,8 @@ final subtotaisPorCategoriaProvider =
     });
 
 /// (marcados, semPreço) para a faixa do total (RF-21): derivado da lista.
-final resumoCarrinhoProvider =
-    Provider.family<({int marcados, int semPreco}), String>((ref, listaId) {
+final resumoCarrinhoProvider = Provider.autoDispose
+    .family<({int marcados, int semPreco}), String>((ref, listaId) {
       final itens =
           ref.watch(itensDaListaProvider(listaId)).value ?? const <Item>[];
       var marcados = 0;

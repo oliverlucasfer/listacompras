@@ -28,7 +28,7 @@
 
 | Testado | Aceito sem teste (MVP) |
 | :--- | :--- |
-| Repositórios, parser local, widgets críticos, fluxos críticos | UI de detalhe (animações), theming visual, i18n (pt-BR único), performance fino |
+| Repositórios, parser local, widgets críticos, fluxos críticos | UI de detalhe (animações), theming visual, performance fino. A **localização pt/en/es** tem guardas (`arb_paridade_test`, `localizacao_test`, `idioma_test`) |
 
 **Voz (RF-26):** a abstração `ReconhecimentoVoz` é testada com fake; o **reconhecimento real no device** é smoke manual, não roda no CI.
 

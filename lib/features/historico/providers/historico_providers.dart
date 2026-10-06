@@ -15,6 +15,15 @@ final idasProvider = StreamProvider<List<Ida>>(
   (ref) => ref.watch(historicoComprasRepositoryProvider).watchIdas(),
 );
 
+/// Mercado da última ida de uma lista (RF-35, F52) — chip na tela da lista.
+/// `autoDispose`: consulta escopada de uma linha, sem assinar todo o histórico.
+final mercadoUltimaIdaProvider = StreamProvider.autoDispose
+    .family<String?, String>((ref, listaId) {
+      return ref
+          .watch(historicoComprasRepositoryProvider)
+          .watchMercadoUltimaIda(listaId);
+    });
+
 final idaProvider = FutureProvider.family<Ida?, String>(
   (ref, id) => ref.watch(historicoComprasRepositoryProvider).ida(id),
 );

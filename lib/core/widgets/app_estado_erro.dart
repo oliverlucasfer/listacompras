@@ -16,20 +16,24 @@ class AppEstadoErro extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline, size: 48, color: scheme.error),
-            const SizedBox(height: AppSpacing.md),
-            Text(mensagem, textAlign: TextAlign.center),
-            if (onRetentar != null) ...[
-              const SizedBox(height: AppSpacing.lg),
-              TextButton(
-                onPressed: onRetentar,
-                child: Text(context.l10n.tentarNovamente),
-              ),
+        // `liveRegion`: leitores de tela anunciam a falha de carga (RNF-06).
+        child: Semantics(
+          liveRegion: true,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline, size: 48, color: scheme.error),
+              const SizedBox(height: AppSpacing.md),
+              Text(mensagem, textAlign: TextAlign.center),
+              if (onRetentar != null) ...[
+                const SizedBox(height: AppSpacing.lg),
+                TextButton(
+                  onPressed: onRetentar,
+                  child: Text(context.l10n.tentarNovamente),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

@@ -1307,6 +1307,24 @@ Spec: [superpowers/specs/2026-10-06-etiqueta-preco-camera-design.md](superpowers
 
 Nota: *(100% offline e sem dependência/permissão nova — reusa o OCR on-device do RF-37 (F54) atrás de `OcrTexto`/`FonteImagem`; a imagem **não é armazenada**. O parser `analisarEtiqueta` é puro e determinístico; a feature **não** é leitura de código de barras, que segue fora de escopo.)*
 
+## Fase 60 — Revisão geral: correções e dívidas (RNF-08)
+
+Relatório: [relatorio-revisao-geral-3.md](relatorio-revisao-geral-3.md) · Requisitos: RNF-08 (qualidade), RNF-05 (privacidade/backup), RF-31 (backup local) · Docs donos: 05, 12, 14.
+
+- [x] **F60-T01** — Preço: rejeitar valores não finitos (`NaN`/`Infinity`/`1e400`) com `ArgumentError`
+  CP: `parsePrecoParaCentavos` valida `isFinite` antes do `round`; teste `deve_rejeitar_quando_preco_nao_finito`; lint/testes verdes.
+- [x] **F60-T02** — Dedup atômica (`adicionarItemDedup`)
+  CP: leitura dos ativos + escrita numa única transação; testes de dedup verdes.
+- [x] **F60-T03** — Backup: exportar/restaurar `orcamento_categoria`
+  CP: `BackupArquivo.orcamentoCategoria` (opcional, retrocompatível) + export/import; testes de round-trip e de retrocompat; doc 05 §6.10 atualizado.
+- [x] **F60-T04** — P1 histórico/estatísticas: meses vazios no gráfico, ordenação "por gasto" sobre o universo, nome de exibição no seletor de evolução, alerta ao cruzar orçamento editando preço
+- [x] **F60-T05** — P1 UI/estado: `autoDispose` nos providers `family`, fim do full-scan do histórico na tela (chip de mercado), fim da query por tecla no editor, `try/catch` nas escritas, importação parcial silenciosa
+- [x] **F60-T06** — P1 plataforma: gate do `WidgetAtualizador` (Web/Desktop), voz pelo locale do idioma, identidade nativa ("Minhas Listas" em iOS/Windows/Linux/macOS), guarda `mounted`/providers no helper de captura
+- [x] **F60-T07** — P1 parser: reconhecer `kilo(s)`, determinismo de `parseQuantidade` na web, peso decimal (`1,5kg`) na etiqueta, separador decimal pt-BR em `formatarQuantidade`
+- [ ] **F60-T08** — P2: export de backup transacional e merge por nome na restauração, índice normalizado em `item_ida`, higiene de testes (`addTearDown`), sincronizar docs (07/05/README) e link do PRD (F59-T06)
+
+Nota: *(correções P0 aplicadas na branch `fix/revisao-geral-p0`; P1/P2 registrados como tarefas. 100% offline; sem dependência nova.)*
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -1368,7 +1386,8 @@ Nota: *(100% offline e sem dependência/permissão nova — reusa o OCR on-devic
 | F57 Atualização do tutorial | 4 | 4 |
 | F58 Otimizações da revisão | 25 | 25 |
 | F59 Preço por etiqueta (OCR) | 6 | 6 |
-| **Total** | **339** | **337** |
+| F60 Revisão geral — correções | 8 | 7 |
+| **Total** | **347** | **344** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

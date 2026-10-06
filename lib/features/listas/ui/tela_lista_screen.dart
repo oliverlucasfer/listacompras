@@ -26,7 +26,6 @@ import '../../compartilhamento/ui/sheet_compartilhar.dart';
 import '../../etiqueta/domain/etiqueta.dart';
 import '../../ocr/providers/ocr_providers.dart';
 import '../../ocr/ui/captura_foto.dart';
-import '../../historico/domain/ida.dart';
 import '../../historico/domain/mercado.dart';
 import '../../historico/providers/historico_providers.dart';
 import '../../historico/ui/modal_finalizar_compra.dart';
@@ -128,7 +127,13 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
     final repo = ref.read(listasRepositoryProvider);
     switch (acao) {
       case 'desmarcar':
-        repo.desmarcarTodos(idLista);
+        try {
+          await repo.desmarcarTodos(idLista);
+        } catch (_) {
+          if (context.mounted) {
+            mostrarSnackBar(context, context.l10n.erroGenerico);
+          }
+        }
       case 'limpar':
         _confirmarLimparConcluidos(context, ref, idLista);
       case 'finalizar':
@@ -260,7 +265,12 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
       mensagem: context.l10n.excluirListaMensagem(nItens, 'false'),
     );
     if (!confirmou) return;
-    await ref.read(listasRepositoryProvider).excluirLista(idLista);
+    try {
+      await ref.read(listasRepositoryProvider).excluirLista(idLista);
+    } catch (_) {
+      if (context.mounted) mostrarSnackBar(context, context.l10n.erroGenerico);
+      return;
+    }
     if (context.mounted) context.go('/listas');
   }
 
@@ -322,12 +332,9 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
         final inicio = inicioDaLista();
         final itens =
             ref.watch(itensDaListaProvider(listaId)).value ?? const <Item>[];
-        // Mercado da última ida desta lista (RF-35, F52): o `idasProvider` já
-        // chega ordenado por `finalizadaEm` desc, então o 1º match é o recente.
-        final mercado = _mercadoDaUltimaIda(
-          ref.watch(idasProvider).value ?? const <Ida>[],
-          listaId,
-        );
+        // Mercado da última ida desta lista (RF-35, F52): consulta escopada de
+        // uma linha (sem varrer o histórico inteiro).
+        final mercado = ref.watch(mercadoUltimaIdaProvider(listaId)).value;
         return PopScopeVoltarInicio(
           inicio: inicio,
           child: Scaffold(
@@ -489,15 +496,6 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
       },
     );
   }
-}
-
-/// Mercado da ida mais recente de [listaId], ou `null` se não houver ida ou se
-/// a mais recente não tiver mercado (RF-35, F52).
-String? _mercadoDaUltimaIda(List<Ida> idas, String listaId) {
-  for (final ida in idas) {
-    if (ida.listaId == listaId) return ida.mercado;
-  }
-  return null;
 }
 
 /// Campo de busca por nome na lista (RF-17). Dono do próprio
