@@ -43,6 +43,9 @@ void main() {
       analisarListaLocal('2 quilos de feijão').itens.single.unidade,
       Unidade.kg,
     );
+    final kilos = analisarListaLocal('2 kilos de feijão').itens.single;
+    expect(kilos.unidade, Unidade.kg);
+    expect(kilos.nome, 'Feijão');
     expect(
       analisarListaLocal('500 gramas queijo').itens.single.unidade,
       Unidade.g,

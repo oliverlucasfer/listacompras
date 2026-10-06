@@ -10,6 +10,8 @@ const Map<String, Unidade> _unidades = {
   'kg': Unidade.kg,
   'quilo': Unidade.kg,
   'quilos': Unidade.kg,
+  'kilo': Unidade.kg,
+  'kilos': Unidade.kg,
   'quilograma': Unidade.kg,
   'quilogramas': Unidade.kg,
   'g': Unidade.g,

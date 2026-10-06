@@ -1,8 +1,16 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/ultima_lista_service.dart';
 import '../data/widget_service_home_widget.dart';
 import '../domain/widget_service.dart';
+
+/// O widget de tela inicial (RF-38) é **Android-only**; em Web/Desktop o
+/// `WidgetAtualizador` não é montado e o plugin `home_widget` não é acionado.
+bool plataformaComWidget() {
+  if (kIsWeb) return false;
+  return defaultTargetPlatform == TargetPlatform.android;
+}
 
 final widgetServiceProvider = Provider<WidgetService>(
   (ref) => WidgetServiceHomeWidget(),

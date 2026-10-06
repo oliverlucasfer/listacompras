@@ -271,42 +271,54 @@ class ListasRepository {
     required double quantidade,
     required Unidade unidade,
     required CategoriaItem categoria,
-  }) async {
-    final itens =
-        await (_db.select(_db.itemLocal)
-              ..where((i) => i.listaId.equals(listaId) & i.deletadoEm.isNull())
-              ..orderBy([
-                (i) => OrderingTerm.asc(i.ordem),
-                (i) => OrderingTerm.asc(i.id),
-              ]))
-            .get();
-    final alvo = normalizarTexto(nome);
-    ItemLocalData? existente;
-    for (final i in itens) {
-      if (normalizarTexto(i.nome) == alvo) {
-        existente = i;
-        break;
+  }) {
+    // RF-10: a leitura dos itens ativos e a escrita devem ser atômicas; sem a
+    // transação, duas chamadas concorrentes poderiam não achar o nome e inserir,
+    // violando `uq_item_ativo`. `editarItem`/`adicionarItem` abrem transações
+    // aninhadas (savepoints) do Drift.
+    return _db.transaction<ResultadoDedup>(() async {
+      final itens =
+          await (_db.select(_db.itemLocal)
+                ..where(
+                  (i) => i.listaId.equals(listaId) & i.deletadoEm.isNull(),
+                )
+                ..orderBy([
+                  (i) => OrderingTerm.asc(i.ordem),
+                  (i) => OrderingTerm.asc(i.id),
+                ]))
+              .get();
+      final alvo = normalizarTexto(nome);
+      ItemLocalData? existente;
+      for (final i in itens) {
+        if (normalizarTexto(i.nome) == alvo) {
+          existente = i;
+          break;
+        }
       }
-    }
-    if (existente != null) {
-      if (existente.unidade == unidade.valor) {
+      if (existente != null) {
+        if (existente.unidade == unidade.valor) {
+          await editarItem(
+            existente.id,
+            quantidade: existente.quantidade + quantidade,
+          );
+          return ResultadoDedup.somado;
+        }
         await editarItem(
           existente.id,
-          quantidade: existente.quantidade + quantidade,
+          quantidade: quantidade,
+          unidade: unidade,
         );
-        return ResultadoDedup.somado;
+        return ResultadoDedup.substituido;
       }
-      await editarItem(existente.id, quantidade: quantidade, unidade: unidade);
-      return ResultadoDedup.substituido;
-    }
-    await adicionarItem(
-      listaId: listaId,
-      nome: nome,
-      quantidade: quantidade,
-      unidade: unidade,
-      categoria: categoria,
-    );
-    return ResultadoDedup.adicionado;
+      await adicionarItem(
+        listaId: listaId,
+        nome: nome,
+        quantidade: quantidade,
+        unidade: unidade,
+        categoria: categoria,
+      );
+      return ResultadoDedup.adicionado;
+    });
   }
 
   /// Adiciona um lote de itens (RF-23), um a um pela dedup, em **uma** leitura

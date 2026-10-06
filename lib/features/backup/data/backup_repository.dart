@@ -40,6 +40,7 @@ class BackupRepository {
       final historico = await _db.select(_db.historicoPrecoLocal).get();
       final idas = await _db.select(_db.idaCompra).get();
       final itensIda = await _db.select(_db.itemIda).get();
+      final orcamentoCategoria = await _db.select(_db.orcamentoCategoria).get();
 
       final arquivo = BackupArquivo(
         exportadoEm: DateTime.now().toUtc(),
@@ -114,6 +115,16 @@ class BackupRepository {
                 'unidade': i.unidade,
                 'categoria': i.categoria,
                 'preco_centavos': i.precoCentavos,
+              },
+            )
+            .toList(),
+        // Orçamento por categoria (RF-36): limites locais; backup sobrescreve o
+        // alvo (a tabela não tem `updated_at`), como as idas por `id`.
+        orcamentoCategoria: orcamentoCategoria
+            .map(
+              (o) => <String, Object?>{
+                'categoria': o.categoria,
+                'limite_centavos': o.limiteCentavos,
               },
             )
             .toList(),
@@ -251,6 +262,19 @@ class BackupRepository {
                   unidade: Value(i['unidade'] as String),
                   categoria: Value(i['categoria'] as String),
                   precoCentavos: Value(i['preco_centavos'] as int?),
+                ),
+              );
+        }
+
+        // Limites de orçamento por categoria (RF-36): sem FK; sobrescreve pelo
+        // backup (merge não-LWW, como as idas).
+        for (final o in arquivo.orcamentoCategoria) {
+          await _db
+              .into(_db.orcamentoCategoria)
+              .insertOnConflictUpdate(
+                OrcamentoCategoriaCompanion.insert(
+                  categoria: o['categoria'] as String,
+                  limiteCentavos: Value(o['limite_centavos'] as int?),
                 ),
               );
         }

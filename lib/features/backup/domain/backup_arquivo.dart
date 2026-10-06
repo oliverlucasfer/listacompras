@@ -7,6 +7,7 @@ class BackupArquivo {
     required this.historicoPrecos,
     this.idas = const [],
     this.itensIda = const [],
+    this.orcamentoCategoria = const [],
   });
 
   static const versao = 2;
@@ -26,6 +27,10 @@ class BackupArquivo {
   /// Itens (snapshot) das idas; restaurados **depois** das idas (FK).
   final List<Map<String, Object?>> itensIda;
 
+  /// Limites de orçamento por categoria (RF-36). Campo **opcional**: backups
+  /// v1/v2 não o trazem e são lidos como lista vazia (retrocompatível).
+  final List<Map<String, Object?>> orcamentoCategoria;
+
   Map<String, Object?> toJson() => {
     'versao': versao,
     'exportadoEm': exportadoEm.toUtc().toIso8601String(),
@@ -34,6 +39,7 @@ class BackupArquivo {
     'historicoPrecos': historicoPrecos,
     'idas': idas,
     'itensIda': itensIda,
+    'orcamentoCategoria': orcamentoCategoria,
   };
 
   factory BackupArquivo.fromJson(Map<String, dynamic> json) => BackupArquivo(
@@ -43,6 +49,7 @@ class BackupArquivo {
     historicoPrecos: _mapas(json['historicoPrecos']),
     idas: _mapas(json['idas'] ?? const []),
     itensIda: _mapas(json['itensIda'] ?? const []),
+    orcamentoCategoria: _mapas(json['orcamentoCategoria'] ?? const []),
   );
 
   /// Converte a coleção de forma **eager** (não preguiçosa): um elemento que

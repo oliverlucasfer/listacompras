@@ -124,7 +124,13 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
     final repo = ref.read(listasRepositoryProvider);
     switch (acao) {
       case 'desmarcar':
-        repo.desmarcarTodos(idLista);
+        try {
+          await repo.desmarcarTodos(idLista);
+        } catch (_) {
+          if (context.mounted) {
+            mostrarSnackBar(context, context.l10n.erroGenerico);
+          }
+        }
       case 'limpar':
         _confirmarLimparConcluidos(context, ref, idLista);
       case 'finalizar':
@@ -256,7 +262,12 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
       mensagem: context.l10n.excluirListaMensagem(nItens, 'false'),
     );
     if (!confirmou) return;
-    await ref.read(listasRepositoryProvider).excluirLista(idLista);
+    try {
+      await ref.read(listasRepositoryProvider).excluirLista(idLista);
+    } catch (_) {
+      if (context.mounted) mostrarSnackBar(context, context.l10n.erroGenerico);
+      return;
+    }
     if (context.mounted) context.go('/listas');
   }
 
