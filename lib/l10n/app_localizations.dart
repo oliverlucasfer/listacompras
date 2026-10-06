@@ -1767,6 +1767,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Não reconheci um preço na etiqueta.'**
   String get etiquetaNaoReconhecida;
+
+  /// No description provided for @etiquetaEscolherItem.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha o item'**
+  String get etiquetaEscolherItem;
 }
 
 class _AppLocalizationsDelegate

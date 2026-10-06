@@ -11,9 +11,14 @@ import '../../../core/widgets/app_botao.dart';
 import '../../../core/widgets/app_esqueleto.dart';
 import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
+import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../domain/item.dart';
 import '../../../core/utils/formatacao.dart';
+import '../../etiqueta/domain/etiqueta.dart';
+import '../../etiqueta/ui/sheet_etiqueta.dart';
+import '../../ocr/providers/ocr_providers.dart';
+import '../../ocr/ui/captura_foto.dart';
 import '../providers/listas_providers.dart';
 import 'aviso_orcamento.dart';
 import 'total_carrinho.dart';
@@ -104,6 +109,30 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
     }
   }
 
+  /// Lê a etiqueta (RF-40): com preço reconhecido, abre o preview; senão avisa.
+  Future<void> _lerEtiqueta() async {
+    final resultado = await capturarTextoDeFoto(context, ref);
+    if (!mounted) return;
+    switch (resultado) {
+      case CapturaTexto(:final texto):
+        final etiqueta = analisarEtiqueta(texto);
+        if (etiqueta == null) {
+          mostrarSnackBar(context, context.l10n.etiquetaNaoReconhecida);
+          return;
+        }
+        await AppSheet.mostrar<void>(
+          context,
+          child: SheetEtiqueta(listaId: widget.listaId, etiqueta: etiqueta),
+        );
+      case CapturaVazia():
+        mostrarSnackBar(context, context.l10n.etiquetaNenhumTexto);
+      case CapturaFalha():
+        mostrarSnackBar(context, context.l10n.ocrFalha);
+      case CapturaCancelada():
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final listaId = widget.listaId;
@@ -154,6 +183,14 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
             appBar: AppBar(
               leading: botaoVoltarInicio(context, inicio),
               title: Text(lista.titulo),
+              actions: [
+                if (plataformaComOcr())
+                  IconButton(
+                    tooltip: context.l10n.etiquetaLer,
+                    icon: const Icon(Icons.photo_camera_outlined),
+                    onPressed: _lerEtiqueta,
+                  ),
+              ],
             ),
             body: Column(
               children: [

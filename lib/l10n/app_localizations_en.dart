@@ -999,4 +999,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get etiquetaNaoReconhecida =>
       'I couldn\'t recognize a price on the label.';
+
+  @override
+  String get etiquetaEscolherItem => 'Choose the item';
 }

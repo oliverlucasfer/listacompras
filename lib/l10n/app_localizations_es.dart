@@ -1004,4 +1004,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get etiquetaNaoReconhecida => 'No reconocí un precio en la etiqueta.';
+
+  @override
+  String get etiquetaEscolherItem => 'Elige el artículo';
 }
