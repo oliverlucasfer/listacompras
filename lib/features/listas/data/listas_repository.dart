@@ -271,6 +271,7 @@ class ListasRepository {
     required double quantidade,
     required Unidade unidade,
     required CategoriaItem categoria,
+    int? precoCentavos,
   }) async {
     final itens =
         await (_db.select(_db.itemLocal)
@@ -293,10 +294,16 @@ class ListasRepository {
         await editarItem(
           existente.id,
           quantidade: existente.quantidade + quantidade,
+          precoCentavos: precoCentavos,
         );
         return ResultadoDedup.somado;
       }
-      await editarItem(existente.id, quantidade: quantidade, unidade: unidade);
+      await editarItem(
+        existente.id,
+        quantidade: quantidade,
+        unidade: unidade,
+        precoCentavos: precoCentavos,
+      );
       return ResultadoDedup.substituido;
     }
     await adicionarItem(
@@ -305,6 +312,7 @@ class ListasRepository {
       quantidade: quantidade,
       unidade: unidade,
       categoria: categoria,
+      precoCentavos: precoCentavos,
     );
     return ResultadoDedup.adicionado;
   }
