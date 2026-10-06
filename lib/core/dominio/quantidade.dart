@@ -9,6 +9,12 @@ final Map<double, String> _glifos = {
   2 / 3: '⅔',
 };
 
+/// Teto de numerador/denominador aceito em frações: garante o mesmo `null` na
+/// VM e na web (em dart2js `int.tryParse` de valores fora de 64 bits devolve um
+/// inteiro double-backed em vez de `null`). Alinhado ao teto de quantidade do
+/// domínio (`<= 1000000`).
+const _tetoFracao = 1000000;
+
 /// Interpreta uma quantidade: decimal pt-BR (`2`, `1,5`, `1.5`), fração
 /// simples (`1/2`), glifo (`½`) ou mista colada (`1½`). Processa **um token**
 /// (o misto espaçado, `1 1/2`, é combinado pelo parser). `null` se não for
@@ -35,7 +41,11 @@ double? parseQuantidade(String texto) {
   if (fracao != null) {
     final numerador = int.tryParse(fracao.group(1)!);
     final denominador = int.tryParse(fracao.group(2)!);
-    if (numerador == null || denominador == null || denominador == 0) {
+    if (numerador == null ||
+        denominador == null ||
+        denominador == 0 ||
+        numerador > _tetoFracao ||
+        denominador > _tetoFracao) {
       return null;
     }
     return numerador / denominador;
@@ -48,7 +58,7 @@ double? parseQuantidade(String texto) {
 
 /// Formata para exibição: inteiro → `2`; parte fracionária que casa um glifo
 /// comum (½ ¼ ¾ ⅓ ⅔, com tolerância) → misto (`1½`, `1¼`, `2⅓`); senão
-/// arredonda para ≤ 3 casas e corta zeros (`1.2`, `0.143`).
+/// arredonda para ≤ 3 casas e corta zeros (`1,2`, `0,143` — separador pt-BR).
 String formatarQuantidade(double q) {
   if (!q.isFinite) return q.toString();
   if (q == q.roundToDouble()) return q.toInt().toString();
@@ -62,5 +72,5 @@ String formatarQuantidade(double q) {
   var texto = q.toStringAsFixed(3);
   texto = texto.replaceFirst(RegExp(r'0+$'), '');
   texto = texto.replaceFirst(RegExp(r'\.$'), '');
-  return texto;
+  return texto.replaceAll('.', ',');
 }
