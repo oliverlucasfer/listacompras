@@ -25,14 +25,19 @@ final _aposPor = RegExp(
   caseSensitive: false,
 );
 
-// Contexto de preço por kg / por 100 g / por unidade (não é o preço do item).
+// Contexto de preço por kg / por 100 g / por unidade (não é o preço do item),
+// reconhecido apenas no texto imediatamente APÓS o número — por token, não por
+// linha: em "R$ 39,90 R$ 79,80/kg" só o segundo valor é "por kg".
 final _contextoKg = RegExp(
-  r'(r\s*\$\s*/?\s*kg|/\s*kg|por\s*kg|por\s*100\s*g|por\s*unidade)',
+  r'^\s*(?:/\s*kg|por\s*kg|por\s*100\s*g|por\s*unidade)',
   caseSensitive: false,
 );
 
 // Marcador de moeda imediatamente antes do número (permite espaços).
 final _moedaAntes = RegExp(r'r\$\s*$', caseSensitive: false);
+
+// Marcador de moeda no fim do texto do nome (sobra do corte antes do preço).
+final _moedaNoFim = RegExp(r'\s*r\$\s*$', caseSensitive: false);
 
 final _letras = RegExp(r'[A-Za-zÀ-ÿ]');
 final _simbolos = RegExp(r'[\dR$.,/\-]');
@@ -57,10 +62,10 @@ EtiquetaLida? analisarEtiqueta(String texto) {
   String? nome;
 
   for (final linha in linhas) {
-    final ehKg = _contextoKg.hasMatch(linha);
     for (final m in _numero.allMatches(linha)) {
       final centavos = _centavosSeMonetario(linha, m.start, m.group(0)!);
       if (centavos == null) continue;
+      final ehKg = _contextoKg.hasMatch(linha.substring(m.end));
       (ehKg ? porKg : naoKg).add(centavos);
     }
     for (final m in _aposPor.allMatches(linha)) {
@@ -120,9 +125,19 @@ int? _maior(List<int> valores) {
 }
 
 /// Nome provável: primeira linha com ≥ 3 letras que não seja preço/promo/kg.
+/// Numa linha que mistura nome e preço (ex.: "Queijo R$ 39,90"), o nome é o
+/// texto antes do primeiro valor monetário.
 String? _nomeDaLinha(String linha) {
-  if (linha.toLowerCase().contains(r'r$')) return null;
-  if (_porPalavra.hasMatch(linha) || _kgPalavra.hasMatch(linha)) return null;
-  final letras = _letras.allMatches(linha.replaceAll(_simbolos, '')).length;
-  return letras >= 3 ? linha : null;
+  var candidato = linha;
+  for (final m in _numero.allMatches(linha)) {
+    if (_centavosSeMonetario(linha, m.start, m.group(0)!) == null) continue;
+    candidato = linha.substring(0, m.start);
+    break;
+  }
+  candidato = candidato.replaceAll(_moedaNoFim, '').trim();
+  if (_porPalavra.hasMatch(candidato) || _kgPalavra.hasMatch(candidato)) {
+    return null;
+  }
+  final letras = _letras.allMatches(candidato.replaceAll(_simbolos, '')).length;
+  return letras >= 3 ? candidato : null;
 }

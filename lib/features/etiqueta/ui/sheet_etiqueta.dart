@@ -124,8 +124,14 @@ class _SheetEtiquetaState extends ConsumerState<SheetEtiqueta> {
 
   @override
   Widget build(BuildContext context) {
-    final itens =
+    final todos =
         ref.watch(itensDaListaProvider(widget.listaId)).value ?? const <Item>[];
+    // Spec §4.3: pendentes primeiro (ordem estável dentro de cada grupo).
+    final itens = <Item>[
+      ...todos.where((i) => !i.concluido),
+      ...todos.where((i) => i.concluido),
+    ];
+    final podeAplicar = _origem == _Origem.novo || _itemId != null;
     return SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -235,7 +241,7 @@ class _SheetEtiquetaState extends ConsumerState<SheetEtiqueta> {
                     : context.l10n.salvar,
                 expandido: false,
                 carregando: _salvando,
-                onPressed: _salvar,
+                onPressed: podeAplicar ? _salvar : null,
               ),
             ],
           ),

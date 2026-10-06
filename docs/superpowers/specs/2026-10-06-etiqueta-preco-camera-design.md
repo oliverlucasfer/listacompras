@@ -2,10 +2,10 @@
 
 > **Status:** aprovado em 06/10/2026 (decisões registradas na Seção 9)
 > **Fase:** 59 · **Requisito:** RF-40 (ler a etiqueta de prateleira com OCR on-device e preencher/criar item com preço)
-> **Docs donos:** [05](../05-app-flutter.md) (app/UX), [10](../10-wireframes-telas.md) (layout),
-> [12](../12-prd.md) (requisitos), [09](../09-runbook-operacoes.md) (dependências/permissões),
-> [15](../15-design-system.md) (componentes), [13](../13-premodelo-tecnico.md) (resumo),
-> [14](../14-tarefas.md) (tarefas), [16](../16-roadmap-pos-mvp.md) (frente)
+> **Docs donos:** [05](../../05-app-flutter.md) (app/UX), [10](../../10-wireframes-telas.md) (layout),
+> [12](../../12-prd.md) (requisitos), [09](../../09-runbook-operacoes.md) (dependências/permissões),
+> [15](../../15-design-system.md) (componentes), [13](../../13-premodelo-tecnico.md) (resumo),
+> [14](../../14-tarefas.md) (tarefas), [16](../../16-roadmap-pos-mvp.md) (frente)
 
 ---
 
@@ -131,9 +131,14 @@ pré-preenchidos pela leitura:
 
 ### 5.1. Extração (parser)
 
-- **Valores** aceitos por `parsePrecoParaCentavos`: `5,49`, `5.49`, `5`, `R$ 1.234,56`, `1.234`.
-- **Marcação por kg/unidade:** número em contexto `kg`, `/kg`, `por kg`, `R$/kg`, `por 100 g`,
-  `por unidade` vai para `precoPorKgCentavos` (não é o preço do item).
+- **Valor monetário:** um token só conta como **preço** se for precedido de `R$` ou tiver
+  **separador decimal** (`5,49`, `5.49`, `R$ 1.234,56`, `1.234`); um **inteiro solto**
+  (`200`, `50`) é quantidade/modelo/peso (ex.: `200g`, `5kg`), não preço.
+- **Marcação por kg/unidade (por token):** um número só é "por kg" se o texto **imediatamente
+  após** ele casar com o marcador — `<número>/kg` (com ou sem espaços), `por kg`, `por 100 g`
+  ou `por unidade`. O contexto é decidido **por token**, não por linha: em
+  `R$ 39,90 R$ 79,80/kg` só o segundo valor vai para `precoPorKgCentavos` (o primeiro é o
+  preço do item).
 - **Escolha do preço do item** (determinística):
   1. valor após **"por"** (promo "de **R$ 9,99** por **R$ 6,99**") → o segundo;
   2. senão, o **maior** valor **não-kg** da etiqueta (o preço cheio costuma ser o mais destacado);
@@ -205,5 +210,5 @@ pré-preenchidos pela leitura:
 7. Fase **59**, requisito **RF-40**.
 
 ## 10. Documentos relacionados
-- [04 Importação de lista](../04-importacao-lista.md) · [05 App Flutter](../05-app-flutter.md) · [10 Wireframes](../10-wireframes-telas.md)
-- [09 Runbook](../09-runbook-operacoes.md) · [12 PRD](../12-prd.md) · [14 Tarefas](../14-tarefas.md) · [16 Roadmap](../16-roadmap-pos-mvp.md)
+- [04 Importação de lista](../../04-importacao-lista.md) · [05 App Flutter](../../05-app-flutter.md) · [10 Wireframes](../../10-wireframes-telas.md)
+- [09 Runbook](../../09-runbook-operacoes.md) · [12 PRD](../../12-prd.md) · [14 Tarefas](../../14-tarefas.md) · [16 Roadmap](../../16-roadmap-pos-mvp.md)

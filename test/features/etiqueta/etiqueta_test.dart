@@ -21,6 +21,19 @@ void main() {
     expect(e.precoPorKgCentavos, 1290);
   });
 
+  test('deve_dividir_preco_e_por_kg_na_mesma_linha_por_token', () {
+    final e = analisarEtiqueta('Queijo R\$ 39,90 R\$ 79,80/kg');
+    expect(e!.nome, 'Queijo');
+    expect(e.precoCentavos, 3990);
+    expect(e.precoPorKgCentavos, 7980);
+  });
+
+  test('deve_reconhecer_contexto_por_kg_apos_o_numero', () {
+    final e = analisarEtiqueta('R\$ 12,90 por kg');
+    expect(e!.precoCentavos, 1290);
+    expect(e.precoPorKgCentavos, 1290);
+  });
+
   test('deve_ignorar_valor_por_kg_quando_ha_preco_cheio', () {
     final e = analisarEtiqueta('Queijo\nR\$ 39,90\nR\$ 79,80/kg');
     expect(e!.precoCentavos, 3990);
