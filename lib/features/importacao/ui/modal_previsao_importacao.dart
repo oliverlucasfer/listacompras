@@ -17,7 +17,7 @@ import '../../../core/dominio/unidade.dart';
 import '../../listas/providers/listas_providers.dart';
 
 /// Abre o modal de pré-visualização (doc 05 §6.4, wireframe 10 §4.2, RF-16)
-/// e grava os itens confirmados via repositório local (fila de INSERTs),
+/// e grava os itens confirmados via repositório local,
 /// pela dedup canônica (RF-10): nomes iguais na lista ativa são mesclados.
 /// Cancelar não grava nada.
 Future<void> confirmarItensImportados(
@@ -31,7 +31,7 @@ Future<void> confirmarItensImportados(
     builder: (_) => ModalPrevisaoImportacao(resposta: resposta),
   );
   if (selecionados == null || selecionados.isEmpty || !context.mounted) return;
-  final repo = ref.read(listasRepositoryProvider);
+  final repo = ref.read(itensRepositoryProvider);
   var gravados = 0;
   try {
     for (final item in selecionados) {

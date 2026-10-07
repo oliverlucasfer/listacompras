@@ -39,8 +39,8 @@ void main() {
     final listas = ListasRepository(db);
     final historico = HistoricoComprasRepository(db);
     final l = await listas.criarLista(titulo: 'Semana', donoId: 'local');
-    final i = await listas.adicionarItem(listaId: l.id, nome: 'Arroz');
-    await listas.editarItem(i.id, concluido: true);
+    final i = await listas.itens.adicionarItem(listaId: l.id, nome: 'Arroz');
+    await listas.itens.editarItem(i.id, concluido: true);
     await historico.finalizar(l.id);
 
     await tester.pumpWidget(
@@ -63,7 +63,7 @@ void main() {
     final listas = ListasRepository(db);
     final historico = HistoricoComprasRepository(db);
     final l = await listas.criarLista(titulo: 'Semana', donoId: 'local');
-    final i = await listas.adicionarItem(
+    final i = await listas.itens.adicionarItem(
       listaId: l.id,
       nome: 'Arroz',
       quantidade: 1,
@@ -83,7 +83,7 @@ void main() {
       reason: 'total e ticket zerados antes de qualquer ida',
     );
 
-    await listas.editarItem(i.id, concluido: true);
+    await listas.itens.editarItem(i.id, concluido: true);
     await historico.finalizar(l.id);
     await tester.pumpAndSettle();
 

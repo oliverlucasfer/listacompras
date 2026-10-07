@@ -31,12 +31,12 @@ void main() {
   /// tela da lista para checar o chip do topo.
   Future<void> listaFinalizada(WidgetTester tester, {String? mercado}) async {
     final lista = await listas.criarLista(titulo: 'Compras', donoId: 'local');
-    final item = await listas.adicionarItem(
+    final item = await listas.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       precoCentavos: 549,
     );
-    await listas.editarItem(item.id, concluido: true);
+    await listas.itens.editarItem(item.id, concluido: true);
     await HistoricoComprasRepository(db).finalizar(lista.id, mercado: mercado);
     await tester.pumpWidget(
       ProviderScope(
@@ -72,12 +72,12 @@ void main() {
   ) async {
     Future<void> idaEm(String mercado, int preco) async {
       final l = await listas.criarLista(titulo: 'Antiga', donoId: 'local');
-      final i = await listas.adicionarItem(
+      final i = await listas.itens.adicionarItem(
         listaId: l.id,
         nome: 'Arroz',
         precoCentavos: preco,
       );
-      await listas.editarItem(i.id, concluido: true);
+      await listas.itens.editarItem(i.id, concluido: true);
       await HistoricoComprasRepository(db).finalizar(l.id, mercado: mercado);
     }
 
@@ -85,7 +85,7 @@ void main() {
     await idaEm('Mercado B', 500);
 
     final lista = await listas.criarLista(titulo: 'Compras', donoId: 'local');
-    await listas.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await listas.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],

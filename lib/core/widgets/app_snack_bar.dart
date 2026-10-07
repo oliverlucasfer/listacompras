@@ -12,6 +12,41 @@ void mostrarSnackBar(
   ScaffoldMessengerState? messenger,
 }) {
   final alvo = messenger ?? ScaffoldMessenger.of(context);
+  _exibir(
+    alvo,
+    mensagem,
+    rotuloAcao: rotuloAcao,
+    onAcao: onAcao,
+    duracao: duracao,
+  );
+}
+
+/// Variante sem `BuildContext` para callbacks cujo contexto já foi desmontado
+/// (ex.: "Desfazer" de um item removido): usa um `ScaffoldMessengerState`
+/// capturado antes da lacuna assíncrona.
+void mostrarSnackBarComMessenger(
+  ScaffoldMessengerState messenger,
+  String mensagem, {
+  String? rotuloAcao,
+  VoidCallback? onAcao,
+  Duration? duracao,
+}) {
+  _exibir(
+    messenger,
+    mensagem,
+    rotuloAcao: rotuloAcao,
+    onAcao: onAcao,
+    duracao: duracao,
+  );
+}
+
+void _exibir(
+  ScaffoldMessengerState alvo,
+  String mensagem, {
+  String? rotuloAcao,
+  VoidCallback? onAcao,
+  Duration? duracao,
+}) {
   final efetiva =
       duracao ??
       (rotuloAcao == null

@@ -20,13 +20,13 @@ void main() {
   Future<void> ida(String mercado, List<(String, int, Unidade)> itens) async {
     final l = await listas.criarLista(titulo: 'X', donoId: 'local');
     for (final (nome, preco, un) in itens) {
-      final i = await listas.adicionarItem(
+      final i = await listas.itens.adicionarItem(
         listaId: l.id,
         nome: nome,
         unidade: un,
         precoCentavos: preco,
       );
-      await listas.editarItem(i.id, concluido: true);
+      await listas.itens.editarItem(i.id, concluido: true);
     }
     await historico.finalizar(l.id, mercado: mercado);
   }

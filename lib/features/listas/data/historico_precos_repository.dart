@@ -2,8 +2,9 @@ import '../../../core/texto/normalizar.dart';
 import '../../../drift/database.dart';
 import '../domain/historico_preco.dart';
 import '../../../core/dominio/unidade.dart';
+import 'mappers.dart';
 
-/// Histórico local de preços (RF-29). Local-only: não enfileira mutação.
+/// Histórico local de preços (RF-29).
 class HistoricoPrecosRepository {
   HistoricoPrecosRepository(this._db);
 
@@ -32,6 +33,6 @@ class HistoricoPrecosRepository {
         await (_db.select(_db.historicoPrecoLocal)
               ..where((h) => h.nomeNormalizado.equals(normalizarTexto(nome))))
             .getSingleOrNull();
-    return row == null ? null : HistoricoPreco.fromLocal(row);
+    return row?.toDomain();
   }
 }

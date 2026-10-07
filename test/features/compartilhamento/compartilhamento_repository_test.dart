@@ -22,15 +22,18 @@ void main() {
 
   test('deve_exportar_titulo_e_todos_os_itens_quando_exporta', () async {
     final l = await listas.criarLista(titulo: 'Semana', donoId: 'local');
-    await listas.adicionarItem(
+    await listas.itens.adicionarItem(
       listaId: l.id,
       nome: 'Arroz',
       quantidade: 2,
       unidade: Unidade.kg,
       categoria: CategoriaItem.mercearia,
     );
-    final comprado = await listas.adicionarItem(listaId: l.id, nome: 'Leite');
-    await listas.editarItem(comprado.id, concluido: true);
+    final comprado = await listas.itens.adicionarItem(
+      listaId: l.id,
+      nome: 'Leite',
+    );
+    await listas.itens.editarItem(comprado.id, concluido: true);
 
     final compartilhada = await repo.exportarLista(l.id);
     expect(compartilhada.titulo, 'Semana');

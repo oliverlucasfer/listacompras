@@ -32,7 +32,7 @@ import '../../historico/ui/modal_finalizar_compra.dart';
 import '../../importacao/ui/modal_importar.dart';
 import '../../importacao/ui/modal_previsao_importacao.dart';
 import '../../tour/tour_controller.dart';
-import '../../tour/tour_keys.dart';
+import '../../../core/navigation/tour_keys.dart';
 import '../../tour/ui/tour_loader.dart';
 import '../../voz/domain/reconhecimento_voz.dart';
 import '../../voz/providers/reconhecimento_voz_provider.dart';
@@ -128,7 +128,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
     switch (acao) {
       case 'desmarcar':
         try {
-          await repo.desmarcarTodos(idLista);
+          await ref.read(itensRepositoryProvider).desmarcarTodos(idLista);
         } catch (_) {
           if (context.mounted) {
             mostrarSnackBar(context, context.l10n.erroGenerico);
@@ -158,8 +158,8 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
   }
 
   /// Abre o diálogo de orçamento da lista (RF-28, F36-T03): campo em R$ com
-  /// erro inline, Salvar e Remover orçamento. Escrita offline-first (Drift +
-  /// fila via repositório); o leitor não vê a ação no menu.
+  /// erro inline, Salvar e Remover orçamento. Escrita offline-first via
+  /// repositório (Drift); o leitor não vê a ação no menu.
   Future<void> _abrirDialogoOrcamento(
     BuildContext context,
     WidgetRef ref,
@@ -197,7 +197,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
     }
     try {
       await ref
-          .read(listasRepositoryProvider)
+          .read(itensRepositoryProvider)
           .adicionarItensDedup(idLista, selecionados);
     } catch (_) {
       if (context.mounted) mostrarSnackBar(context, context.l10n.erroGenerico);
@@ -223,7 +223,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
       confirmar: context.l10n.limpar,
     );
     if (!confirmou) return;
-    final repo = ref.read(listasRepositoryProvider);
+    final repo = ref.read(itensRepositoryProvider);
     final List<Item> removidos;
     try {
       removidos = await repo.limparConcluidos(idLista);
@@ -262,7 +262,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
     final confirmou = await AppDialog.confirmarDestrutivo(
       context,
       titulo: context.l10n.excluirListaTitulo(titulo),
-      mensagem: context.l10n.excluirListaMensagem(nItens, 'false'),
+      mensagem: context.l10n.excluirListaMensagem(nItens),
     );
     if (!confirmou) return;
     try {

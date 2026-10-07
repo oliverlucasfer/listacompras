@@ -1,14 +1,9 @@
 part of 'tela_lista_screen.dart';
 
 class _SheetEditarItem extends ConsumerStatefulWidget {
-  const _SheetEditarItem({
-    required this.item,
-    required this.listaId,
-    this.onRemover,
-  });
+  const _SheetEditarItem({required this.item, this.onRemover});
 
   final Item item;
-  final String listaId;
 
   /// Ação de remover (com Desfazer) oferecida dentro do editor (F12-T06);
   /// nula em contextos sem remoção.
@@ -46,9 +41,8 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
     super.dispose();
   }
 
-  String _precoInicial(int? centavos) => centavos == null
-      ? ''
-      : (centavos / 100).toStringAsFixed(2).replaceAll('.', ',');
+  String _precoInicial(int? centavos) =>
+      centavos == null ? '' : centavosParaTexto(centavos);
 
   double? _quantidadeLida() {
     final valor = parseQuantidade(_quantidade.text);
@@ -212,7 +206,7 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
     }
     try {
       await ref
-          .read(listasRepositoryProvider)
+          .read(itensRepositoryProvider)
           .editarItem(
             widget.item.id,
             nome: nome,

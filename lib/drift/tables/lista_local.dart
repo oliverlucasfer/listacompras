@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 
-/// Espelha `listas` do Postgres (doc 01 §4.1).
+/// Tabela local de listas (doc 05 §6.2; doc 13 §3).
 /// IDs gerados no cliente (UUID v4, ADR-006).
 class ListaLocal extends Table {
   TextColumn get id => text()();

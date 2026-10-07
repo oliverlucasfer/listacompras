@@ -40,7 +40,7 @@ void main() {
       titulo: 'Compras da Semana',
       donoId: 'local',
     );
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       categoria: CategoriaItem.mercearia,

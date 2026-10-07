@@ -7,6 +7,4 @@ abstract final class AppMotion {
   static const Duration longa = Duration(milliseconds: 400);
 
   static const Curve padrao = Curves.easeInOutCubicEmphasized;
-  static const Curve entrada = Curves.easeOutCubic;
-  static const Curve saida = Curves.easeInCubic;
 }

@@ -1,0 +1,8 @@
+# Normaliza finais de linha no índice (evita diffs espúrios de CRLF no Windows).
+* text=auto
+
+*.dart text eol=lf
+*.arb text eol=lf
+*.md text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf

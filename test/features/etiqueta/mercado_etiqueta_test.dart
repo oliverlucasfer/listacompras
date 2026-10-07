@@ -97,7 +97,7 @@ void main() {
     addTearDown(db.close);
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
-    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await repo.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
 
     await tester.pumpWidget(
       ProviderScope(
@@ -185,7 +185,7 @@ void main() {
     addTearDown(db.close);
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
-    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await repo.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
 
     await tester.pumpWidget(
       ProviderScope(
@@ -218,12 +218,15 @@ void main() {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
     // Concluído criado antes (menor ordem): sem a ordenação viria primeiro.
-    final concluido = await repo.adicionarItem(
+    final concluido = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Leite',
     );
-    final pendente = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
-    await repo.editarItem(concluido.id, concluido: true);
+    final pendente = await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+    );
+    await repo.itens.editarItem(concluido.id, concluido: true);
 
     await tester.pumpWidget(
       ProviderScope(

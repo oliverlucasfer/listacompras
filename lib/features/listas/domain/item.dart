@@ -1,9 +1,8 @@
-import '../../../drift/database.dart';
 import '../../../core/dominio/categoria.dart';
 import '../../../core/dominio/unidade.dart';
 
 /// Modelo de domínio de item (doc 05 §2); `unidade` restrita ao enum
-/// fechado (doc 01 §3.1) e `categoria` ao enum fechado (doc 01 §3.2,
+/// fechado (doc 13 §3) e `categoria` ao enum fechado (doc 13 §3,
 /// ADR-011).
 class Item {
   const Item({
@@ -18,7 +17,6 @@ class Item {
     required this.criadoEm,
     required this.atualizadoEm,
     this.precoCentavos,
-    this.deletadoEm,
   });
 
   final String id;
@@ -32,20 +30,4 @@ class Item {
   final DateTime criadoEm;
   final DateTime atualizadoEm;
   final int? precoCentavos;
-  final DateTime? deletadoEm;
-
-  factory Item.fromLocal(ItemLocalData d) => Item(
-    id: d.id,
-    listaId: d.listaId,
-    nome: d.nome,
-    quantidade: d.quantidade,
-    unidade: Unidade.fromValor(d.unidade),
-    categoria: CategoriaItem.fromValor(d.categoria),
-    concluido: d.concluido,
-    ordem: d.ordem,
-    criadoEm: d.createdAt,
-    atualizadoEm: d.updatedAt,
-    precoCentavos: d.precoCentavos,
-    deletadoEm: d.deletadoEm,
-  );
 }

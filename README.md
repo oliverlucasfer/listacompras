@@ -84,7 +84,8 @@ lib/
               # parser local de importação, l10n, navegação, utilidades
   drift/      # banco local: tabelas, conexões (nativa/web por import condicional), migrações
   features/   # listas, histórico, compartilhamento, backup, importação,
-              # configurações, onboarding, tour, voz e vitrine do design system
+              # configurações, onboarding, tour, voz, OCR, etiqueta,
+              # notificações, widget e vitrine do design system
   main.dart · app.dart · router.dart
 test/         # testes: repositórios/Drift, parser local e fluxos críticos
 docs/         # documentação (um doc dono por tema; índice em planejamento_lista_compras.md)

@@ -59,7 +59,7 @@ void main() {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(titulo: 'Grande', donoId: 'local');
     for (var i = 0; i < 60; i++) {
-      await repo.adicionarItem(listaId: lista.id, nome: 'Item numero $i');
+      await repo.itens.adicionarItem(listaId: lista.id, nome: 'Item numero $i');
     }
 
     await _bombearEAbrir(tester, db, lista.id);

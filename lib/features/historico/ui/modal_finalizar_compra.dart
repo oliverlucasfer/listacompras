@@ -62,7 +62,7 @@ Future<void> abrirFinalizarCompra(
   );
   if (limpar == true) {
     try {
-      await ref.read(listasRepositoryProvider).limparConcluidos(listaId);
+      await ref.read(itensRepositoryProvider).limparConcluidos(listaId);
     } catch (_) {
       if (context.mounted) {
         mostrarSnackBar(context, context.l10n.erroGenerico);

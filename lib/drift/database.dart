@@ -10,7 +10,7 @@ import 'tables/orcamento_categoria.dart';
 
 part 'database.g.dart';
 
-/// Fonte de verdade local (doc 03 §1). Espelha o schema Postgres (doc 01).
+/// Fonte de verdade local (doc 13 §2).
 /// Testes injetam um executor (ex.: NativeDatabase.memory()).
 @DriftDatabase(
   tables: [
@@ -28,8 +28,8 @@ class AppDatabase extends _$AppDatabase {
   @override
   int get schemaVersion => 16;
 
-  /// Paridade com o índice único parcial `uq_item_ativo` do Postgres
-  /// (`0001_init.sql:57-59`): parcial não é expressável no `@TableIndex`.
+  /// Índice único parcial `uq_item_ativo` (parcial não é expressável no
+  /// `@TableIndex`).
   static const _criarIndiceItemAtivo =
       'CREATE UNIQUE INDEX IF NOT EXISTS uq_item_ativo '
       'ON item_local (lista_id, lower(nome)) WHERE deletado_em IS NULL';
@@ -129,21 +129,21 @@ class AppDatabase extends _$AppDatabase {
         );
       }
       if (de < 3) {
-        // v2 → v3: coluna categoria (doc 01 §3.2, ADR-011, F6-T02) —
+        // v2 → v3: coluna categoria (doc 13 §3, ADR-011, F6-T02) —
         // aditiva; itens existentes passam a 'outros' (default).
         await m.addColumn(itemLocal, itemLocal.categoria);
       }
       if (de < 4) {
-        // v3 → v4: coluna preco_centavos (doc 01 §4.3, RF-21, F25) —
+        // v3 → v4: coluna preco_centavos (RF-21, F25) —
         // aditiva e nullable; itens existentes ficam sem preço (null).
         await m.addColumn(itemLocal, itemLocal.precoCentavos);
       }
       if (de < 5) {
-        // v4 → v5: coluna arquivada_em (doc 01 §4.1, RF-22, F26).
+        // v4 → v5: coluna arquivada_em (RF-22, F26).
         await m.addColumn(listaLocal, listaLocal.arquivadaEm);
       }
       if (de < 6) {
-        // v5 → v6: coluna orcamento_centavos (doc 01 §4.1, RF-28, F36).
+        // v5 → v6: coluna orcamento_centavos (RF-28, F36).
         await m.addColumn(listaLocal, listaLocal.orcamentoCentavos);
       }
       if (de < 7) {
@@ -152,7 +152,7 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(historicoPrecoLocal);
       }
       if (de < 8) {
-        // v7 → v8: barreiras locais espelhadas do Postgres (F39) —
+        // v7 → v8: barreiras locais de integridade (F39) —
         // dedup antes de recriar as tabelas com CHECK e de criar o índice.
         await _dedupItensAtivos();
         await m.alterTable(TableMigration(itemLocal));
@@ -160,14 +160,14 @@ class AppDatabase extends _$AppDatabase {
         await customStatement(_criarIndiceItemAtivo);
       }
       if (de < 9) {
-        // v8 → v9: teto de `quantidade` espelhado do Postgres (F43-T08) —
+        // v8 → v9: teto de `quantidade` (F43-T08) —
         // `alterTable` recria a tabela; o índice manual é refeito em seguida.
         await m.alterTable(TableMigration(itemLocal));
         await customStatement(_criarIndiceItemAtivo);
       }
       if (de < 10) {
-        // v9 → v10: unidade `pt` no CHECK local, espelhando o enum do Postgres
-        // (doc 01 §3.1, F45-T01) — `alterTable` recria a tabela.
+        // v9 → v10: unidade `pt` no CHECK local, espelhando o enum
+        // (doc 13 §3, F45-T01) — `alterTable` recria a tabela.
         await m.alterTable(TableMigration(itemLocal));
         await customStatement(_criarIndiceItemAtivo);
       }
@@ -206,7 +206,7 @@ class AppDatabase extends _$AppDatabase {
       }
     },
     beforeOpen: (details) async {
-      // SQLite não impõe FK por padrão; o Postgres (doc 01) sim — espelhar.
+      // SQLite não impõe FK por padrão — habilitar explicitamente.
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );

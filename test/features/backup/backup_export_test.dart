@@ -14,7 +14,7 @@ void main() {
     addTearDown(db.close);
     final listas = ListasRepository(db);
     final lista = await listas.criarLista(titulo: 'Mercado', donoId: 'local');
-    await listas.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await listas.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
 
     final json = await BackupRepository(db).exportarJson();
     final mapa = jsonDecode(json) as Map<String, dynamic>;
@@ -50,7 +50,7 @@ void main() {
       addTearDown(db.close);
       final listas = ListasRepository(db);
       final lista = await listas.criarLista(titulo: 'Mercado', donoId: 'local');
-      await listas.adicionarItem(listaId: lista.id, nome: 'Arroz');
+      await listas.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
       await listas.excluirLista(lista.id);
 
       final json = await BackupRepository(db).exportarJson();

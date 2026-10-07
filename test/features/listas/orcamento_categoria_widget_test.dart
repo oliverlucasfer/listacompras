@@ -118,13 +118,13 @@ void main() {
       titulo: 'Compras',
       donoId: 'local',
     );
-    final item = await listasRepo.adicionarItem(
+    final item = await listasRepo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       categoria: CategoriaItem.mercearia,
       precoCentavos: 12000,
     );
-    await listasRepo.editarItem(item.id, concluido: true);
+    await listasRepo.itens.editarItem(item.id, concluido: true);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(db)],

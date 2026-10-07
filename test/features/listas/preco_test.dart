@@ -41,7 +41,7 @@ void main() {
   });
 
   test('deve_aceitar_teto_quando_preco_no_limite', () {
-    // Teto do CHECK do Postgres (01 §4.3): R$ 999.999,99 = 99999999 centavos.
+    // Teto de `preco_centavos` (RF-21): R$ 999.999,99 = 99999999 centavos.
     expect(parsePrecoParaCentavos('999999,99'), 99999999);
   });
 
@@ -64,6 +64,12 @@ void main() {
 
   test('deve_formatar_negativo_quando_centavos_negativos', () {
     expect(formatarReais(-549), r'-R$ 5,49');
+  });
+
+  test('deve_formatar_centavos_para_campo_quando_sem_moeda', () {
+    expect(centavosParaTexto(549), '5,49');
+    expect(centavosParaTexto(500), '5,00');
+    expect(centavosParaTexto(0), '0,00');
   });
 
   test('deve_retornar_null_quando_preco_vazio', () {

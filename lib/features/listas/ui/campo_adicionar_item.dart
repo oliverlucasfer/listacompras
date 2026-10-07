@@ -99,43 +99,51 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
       setState(() => _erro = context.l10n.naoEntendiItem);
       return;
     }
-    await _adicionarItemDedup(
+    final ok = await _adicionarItemDedup(
       nome: extra.nome,
       quantidade: extra.quantidade,
       unidade: extra.unidade,
     );
+    if (!mounted || !ok) return;
     _controller.clear();
-    if (mounted) widget.onItemAdicionado?.call();
+    widget.onItemAdicionado?.call();
   }
 
   /// Núcleo de escrita compartilhado por `_adicionar` (entrada rápida) e
   /// `_adicionarSugerido` (chip, RF-19): delega a dedup ao repositório (RF-10).
   /// A sugestão de categoria continua aqui, na cadeia local (F6-T03).
-  Future<void> _adicionarItemDedup({
+  /// Devolve `false` quando a escrita falha (o campo não é limpo).
+  Future<bool> _adicionarItemDedup({
     required String nome,
     required double quantidade,
     required Unidade unidade,
   }) async {
-    final categoria = await ref
-        .read(sugestaoCategoriasProvider)
-        .sugerirCategoria(nome);
-    final resultado = await ref
-        .read(listasRepositoryProvider)
-        .adicionarItemDedup(
-          listaId: widget.listaId,
-          nome: nome,
-          quantidade: quantidade,
-          unidade: unidade,
-          categoria: categoria,
-        );
-    if (!mounted) return;
-    switch (resultado) {
-      case ResultadoDedup.somado:
-        mostrarSnackBar(context, '$nome ${context.l10n.itemDuplicadoSomado}');
-      case ResultadoDedup.substituido:
-        mostrarSnackBar(context, '$nome: ${context.l10n.itemAtualizado}');
-      case ResultadoDedup.adicionado:
-        break;
+    try {
+      final categoria = await ref
+          .read(sugestaoCategoriasProvider)
+          .sugerirCategoria(nome);
+      final resultado = await ref
+          .read(itensRepositoryProvider)
+          .adicionarItemDedup(
+            listaId: widget.listaId,
+            nome: nome,
+            quantidade: quantidade,
+            unidade: unidade,
+            categoria: categoria,
+          );
+      if (!mounted) return false;
+      switch (resultado) {
+        case ResultadoDedup.somado:
+          mostrarSnackBar(context, '$nome ${context.l10n.itemDuplicadoSomado}');
+        case ResultadoDedup.substituido:
+          mostrarSnackBar(context, '$nome: ${context.l10n.itemAtualizado}');
+        case ResultadoDedup.adicionado:
+          break;
+      }
+      return true;
+    } catch (_) {
+      if (mounted) mostrarSnackBar(context, context.l10n.erroGenerico);
+      return false;
     }
   }
 
@@ -143,12 +151,15 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
   /// a mesma deduplicação da entrada rápida (evita duplicar um nome já
   /// concluído na lista aberta, que também vira sugestão).
   Future<void> _adicionarSugerido(String nome) async {
-    await _adicionarItemDedup(nome: nome, quantidade: 1, unidade: Unidade.un);
+    final ok = await _adicionarItemDedup(
+      nome: nome,
+      quantidade: 1,
+      unidade: Unidade.un,
+    );
+    if (!mounted || !ok) return;
     _controller.clear();
-    if (mounted) {
-      setState(() {});
-      widget.onItemAdicionado?.call();
-    }
+    setState(() {});
+    widget.onItemAdicionado?.call();
   }
 
   @override

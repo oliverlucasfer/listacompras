@@ -34,7 +34,7 @@ void main() {
       titulo: 'Compras da Semana',
       donoId: 'local',
     );
-    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await repo.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
     if (orcamentoCentavos != null) {
       await repo.definirOrcamento(lista.id, centavos: orcamentoCentavos);
     }

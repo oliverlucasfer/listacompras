@@ -92,9 +92,12 @@ void main() {
       titulo: 'Compras da Semana',
       donoId: idLocal,
     );
-    final arroz = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
-    await repo.adicionarItem(listaId: lista.id, nome: 'Feijão');
-    await repo.editarItem(arroz.id, concluido: true);
+    final arroz = await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+    );
+    await repo.itens.adicionarItem(listaId: lista.id, nome: 'Feijão');
+    await repo.itens.editarItem(arroz.id, concluido: true);
 
     await abrirTela(tester);
     expect(find.text('Compras da Semana'), findsOneWidget);
@@ -350,7 +353,7 @@ void main() {
   ) async {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(titulo: 'Compras', donoId: idLocal);
-    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await repo.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
     await abrirTela(tester);
 
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -365,8 +368,11 @@ void main() {
   ) async {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(titulo: 'Compras', donoId: idLocal);
-    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
-    await repo.editarItem(item.id, concluido: true);
+    final item = await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+    );
+    await repo.itens.editarItem(item.id, concluido: true);
     await abrirTela(tester);
 
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -379,7 +385,7 @@ void main() {
   testWidgets('deve_criar_e_navegar_quando_confirma_duplicar', (tester) async {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(titulo: 'Compras', donoId: idLocal);
-    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await repo.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
     await abrirTela(tester);
 
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -411,7 +417,7 @@ void main() {
   testWidgets('nao_deve_criar_quando_cancela_duplicar', (tester) async {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(titulo: 'Compras', donoId: idLocal);
-    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await repo.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
     await abrirTela(tester);
 
     await tester.tap(find.byIcon(Icons.more_vert));

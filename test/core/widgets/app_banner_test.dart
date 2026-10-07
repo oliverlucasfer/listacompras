@@ -10,12 +10,12 @@ Widget _app(Widget child) => MaterialApp(
 );
 
 void main() {
-  testWidgets('deve_exibir_mensagem_e_icone_quando_offline', (tester) async {
+  testWidgets('deve_exibir_mensagem_e_icone_quando_aviso', (tester) async {
     await tester.pumpWidget(
-      _app(const AppBanner(tipo: AppBannerTipo.offline, mensagem: 'Sem rede')),
+      _app(const AppBanner(tipo: AppBannerTipo.aviso, mensagem: 'Atenção')),
     );
-    expect(find.text('Sem rede'), findsOneWidget);
-    expect(find.byIcon(Icons.cloud_off), findsOneWidget);
+    expect(find.text('Atenção'), findsOneWidget);
+    expect(find.byIcon(Icons.warning_amber_outlined), findsOneWidget);
   });
 
   testWidgets('deve_usar_onContainer_quando_erro', (tester) async {

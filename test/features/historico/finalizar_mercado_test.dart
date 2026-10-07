@@ -27,15 +27,18 @@ void main() {
         titulo: 'Antiga',
         donoId: 'local',
       );
-      final i = await listas.adicionarItem(listaId: anterior.id, nome: 'Leite');
-      await listas.editarItem(i.id, concluido: true);
+      final i = await listas.itens.adicionarItem(
+        listaId: anterior.id,
+        nome: 'Leite',
+      );
+      await listas.itens.editarItem(i.id, concluido: true);
       await HistoricoComprasRepository(
         db,
       ).finalizar(anterior.id, mercado: mercadoAnterior);
     }
     final l = await listas.criarLista(titulo: 'Semana', donoId: 'local');
-    final item = await listas.adicionarItem(listaId: l.id, nome: 'Arroz');
-    await listas.editarItem(item.id, concluido: true);
+    final item = await listas.itens.adicionarItem(listaId: l.id, nome: 'Arroz');
+    await listas.itens.editarItem(item.id, concluido: true);
 
     await tester.pumpWidget(
       ProviderScope(

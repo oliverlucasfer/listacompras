@@ -38,9 +38,7 @@ class _SheetEtiquetaState extends ConsumerState<SheetEtiqueta> {
   late final _nome = TextEditingController(text: widget.etiqueta.nome ?? '');
   late final _quantidade = TextEditingController(text: '1');
   late final _preco = TextEditingController(
-    text: (widget.etiqueta.precoCentavos / 100)
-        .toStringAsFixed(2)
-        .replaceAll('.', ','),
+    text: centavosParaTexto(widget.etiqueta.precoCentavos),
   );
   late Unidade _unidade =
       widget.etiqueta.precoPorKgCentavos == widget.etiqueta.precoCentavos
@@ -98,7 +96,7 @@ class _SheetEtiquetaState extends ConsumerState<SheetEtiqueta> {
     if (_origem == _Origem.existente && _itemId == null) return;
 
     setState(() => _salvando = true);
-    final repo = ref.read(listasRepositoryProvider);
+    final repo = ref.read(itensRepositoryProvider);
     try {
       if (_origem == _Origem.novo) {
         await repo.adicionarItemDedup(

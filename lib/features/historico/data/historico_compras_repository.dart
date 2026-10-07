@@ -8,6 +8,7 @@ import '../../../drift/database.dart';
 import '../domain/estatisticas.dart';
 import '../domain/ida.dart';
 import '../domain/mercado.dart';
+import 'mappers.dart';
 
 class HistoricoComprasRepository {
   HistoricoComprasRepository(this._db, {Uuid? uuid})
@@ -92,7 +93,7 @@ class HistoricoComprasRepository {
             (t) => OrderingTerm.asc(t.id),
           ]))
           .watch()
-          .map((rows) => rows.map(Ida.fromLocal).toList());
+          .map((rows) => rows.map((r) => r.toDomain()).toList());
 
   /// Mercado da ida mais recente de [listaId] (RF-35), ou `null` se não houver
   /// ida ou a mais recente não tiver mercado. Consulta **uma linha** — não
@@ -116,7 +117,7 @@ class HistoricoComprasRepository {
     final row = await (_db.select(
       _db.idaCompra,
     )..where((t) => t.id.equals(id))).getSingleOrNull();
-    return row == null ? null : Ida.fromLocal(row);
+    return row?.toDomain();
   }
 
   Future<List<ItemDaIda>> itensDaIda(String idaId) async {
@@ -128,7 +129,7 @@ class HistoricoComprasRepository {
                 (t) => OrderingTerm.asc(t.id),
               ]))
             .get();
-    return rows.map(ItemDaIda.fromLocal).toList();
+    return rows.map((r) => r.toDomain()).toList();
   }
 
   Future<ResumoHistorico> resumo() async {

@@ -32,12 +32,12 @@ void main() {
   }) async {
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
     for (var i = 0; i < precos.length; i++) {
-      final item = await repo.adicionarItem(
+      final item = await repo.itens.adicionarItem(
         listaId: lista.id,
         nome: 'Item $i',
         precoCentavos: precos[i],
       );
-      if (marcar) await repo.editarItem(item.id, concluido: true);
+      if (marcar) await repo.itens.editarItem(item.id, concluido: true);
     }
     if (orcamentoCentavos != null) {
       await repo.definirOrcamento(lista.id, centavos: orcamentoCentavos);

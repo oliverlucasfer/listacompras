@@ -11,6 +11,10 @@ String formatarReais(int centavos) {
   return negativo ? '-$texto' : texto;
 }
 
+/// Formata centavos para campo de edição, sem símbolo de moeda: 549 -> '5,49'.
+String centavosParaTexto(int centavos) =>
+    (centavos / 100).toStringAsFixed(2).replaceAll('.', ',');
+
 String _milhares(int n) {
   final s = n.toString();
   final buffer = StringBuffer();
@@ -48,8 +52,8 @@ int? parsePrecoParaCentavos(String? texto) {
   }
   if (valor < 0) throw ArgumentError('preço negativo: $texto');
   final centavos = (valor * 100).round();
-  // Teto do CHECK de `preco_centavos` no Postgres (doc 01 §4.3, RF-21):
-  // R$ 999.999,99. Acima disso o flush falharia com check_violation.
+  // Teto de `preco_centavos` (RF-21): R$ 999.999,99 — igual ao CHECK
+  // das tabelas locais. Acima disso a escrita falharia com check_violation.
   if (centavos > 99999999) throw ArgumentError('preço acima do teto: $texto');
   return centavos;
 }

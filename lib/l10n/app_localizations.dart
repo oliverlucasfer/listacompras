@@ -337,8 +337,8 @@ abstract class AppLocalizations {
   /// No description provided for @excluirListaMensagem.
   ///
   /// In pt, this message translates to:
-  /// **'{n, plural, =0{A lista será excluída{temMembros, select, true{ para todos os participantes} other{}}.} =1{O item será removido{temMembros, select, true{ para todos os participantes} other{}}.} other{Os {n} itens serão removidos{temMembros, select, true{ para todos os participantes} other{}}.}}'**
-  String excluirListaMensagem(int n, String temMembros);
+  /// **'{n, plural, =0{A lista será excluída.} =1{O item será removido.} other{Os {n} itens serão removidos.}}'**
+  String excluirListaMensagem(int n);
 
   /// No description provided for @atualizada.
   ///

@@ -20,7 +20,7 @@ void main() {
 
   test('deve_gravar_snapshot_dos_concluidos_quando_finaliza', () async {
     final l = await listas.criarLista(titulo: 'Semana', donoId: 'local');
-    final comprado = await listas.adicionarItem(
+    final comprado = await listas.itens.adicionarItem(
       listaId: l.id,
       nome: 'Arroz',
       quantidade: 2,
@@ -28,8 +28,8 @@ void main() {
       categoria: CategoriaItem.mercearia,
       precoCentavos: 549,
     );
-    await listas.editarItem(comprado.id, concluido: true);
-    await listas.adicionarItem(listaId: l.id, nome: 'Pendente');
+    await listas.itens.editarItem(comprado.id, concluido: true);
+    await listas.itens.adicionarItem(listaId: l.id, nome: 'Pendente');
 
     final ida = await historico.finalizar(l.id);
 
@@ -44,15 +44,18 @@ void main() {
 
   test('deve_somar_somente_itens_com_preco_quando_calcula_total', () async {
     final l = await listas.criarLista(titulo: 'X', donoId: 'local');
-    final a = await listas.adicionarItem(
+    final a = await listas.itens.adicionarItem(
       listaId: l.id,
       nome: 'Arroz',
       quantidade: 2,
       precoCentavos: 500,
     );
-    final b = await listas.adicionarItem(listaId: l.id, nome: 'Sem preço');
-    await listas.editarItem(a.id, concluido: true);
-    await listas.editarItem(b.id, concluido: true);
+    final b = await listas.itens.adicionarItem(
+      listaId: l.id,
+      nome: 'Sem preço',
+    );
+    await listas.itens.editarItem(a.id, concluido: true);
+    await listas.itens.editarItem(b.id, concluido: true);
 
     final ida = await historico.finalizar(l.id);
     expect(ida.itensCount, 2);
@@ -61,15 +64,15 @@ void main() {
 
   test('deve_falhar_quando_nao_ha_concluidos', () async {
     final l = await listas.criarLista(titulo: 'X', donoId: 'local');
-    await listas.adicionarItem(listaId: l.id, nome: 'Pendente');
+    await listas.itens.adicionarItem(listaId: l.id, nome: 'Pendente');
     await expectLater(historico.finalizar(l.id), throwsStateError);
     expect(await db.select(db.idaCompra).get(), isEmpty);
   });
 
   test('deve_listar_idas_mais_recentes_primeiro', () async {
     final l = await listas.criarLista(titulo: 'X', donoId: 'local');
-    final a = await listas.adicionarItem(listaId: l.id, nome: 'A');
-    await listas.editarItem(a.id, concluido: true);
+    final a = await listas.itens.adicionarItem(listaId: l.id, nome: 'A');
+    await listas.itens.editarItem(a.id, concluido: true);
     await historico.finalizar(l.id);
     await Future<void>.delayed(const Duration(milliseconds: 5));
     await historico.finalizar(l.id);
@@ -80,13 +83,13 @@ void main() {
 
   test('deve_calcular_resumo_quando_ha_idas', () async {
     final l = await listas.criarLista(titulo: 'X', donoId: 'local');
-    final a = await listas.adicionarItem(
+    final a = await listas.itens.adicionarItem(
       listaId: l.id,
       nome: 'A',
       quantidade: 1,
       precoCentavos: 300,
     );
-    await listas.editarItem(a.id, concluido: true);
+    await listas.itens.editarItem(a.id, concluido: true);
     await historico.finalizar(l.id);
     await historico.finalizar(l.id); // mesma ida, 2 registros
     final r = await historico.resumo();

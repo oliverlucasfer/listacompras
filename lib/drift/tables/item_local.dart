@@ -2,10 +2,9 @@ import 'package:drift/drift.dart';
 
 import 'lista_local.dart';
 
-/// Espelha `itens_lista` do Postgres (doc 01 §4.3).
+/// Tabela local de itens (doc 05 §6.2; doc 13 §3).
 /// `unidade` e `categoria` restritas aos enums fechados, `quantidade > 0` e
-/// teto de `quantidade` — barreiras espelhadas do Postgres (`0001_init.sql`,
-/// `0006`, `0017`, `0025`), F39/F43-T08.
+/// teto de `quantidade` (F39/F43-T08).
 class ItemLocal extends Table {
   TextColumn get id => text()();
   DateTimeColumn get createdAt => dateTime()();

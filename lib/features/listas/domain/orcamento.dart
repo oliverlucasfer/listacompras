@@ -25,11 +25,13 @@ bool cruzouLimite({
   return antes <= orcamento && depois > orcamento;
 }
 
-/// Subtotal de um item marcado com preço (0 se sem preço).
-int subtotalMarcado(Item item) {
-  final preco = item.precoCentavos;
-  return preco == null ? 0 : (item.quantidade * preco).round();
+/// Subtotal de um item para um preço dado (0 se sem preço).
+int subtotalComPreco(Item item, int? precoCentavos) {
+  return precoCentavos == null ? 0 : (item.quantidade * precoCentavos).round();
 }
+
+/// Subtotal de um item marcado com preço (0 se sem preço).
+int subtotalMarcado(Item item) => subtotalComPreco(item, item.precoCentavos);
 
 /// Categorias cujo subtotal marcado excede o limite definido (RF-36, F53-T04).
 /// Categorias sem limite em [limites] são ignoradas; categoria com limite e

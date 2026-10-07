@@ -13,14 +13,14 @@ void main() {
     final listas = ListasRepository(origem);
     final historico = HistoricoComprasRepository(origem);
     final l = await listas.criarLista(titulo: 'Semana', donoId: 'local');
-    final item = await listas.adicionarItem(
+    final item = await listas.itens.adicionarItem(
       listaId: l.id,
       nome: 'Arroz',
       quantidade: 2,
       unidade: Unidade.kg,
       precoCentavos: 500,
     );
-    await listas.editarItem(item.id, concluido: true);
+    await listas.itens.editarItem(item.id, concluido: true);
     await historico.finalizar(l.id);
     final json = await BackupRepository(origem).exportarJson();
 
@@ -45,12 +45,12 @@ void main() {
     final listas = ListasRepository(origem);
     final historico = HistoricoComprasRepository(origem);
     final l = await listas.criarLista(titulo: 'Semana', donoId: 'local');
-    final item = await listas.adicionarItem(
+    final item = await listas.itens.adicionarItem(
       listaId: l.id,
       nome: 'Arroz',
       precoCentavos: 500,
     );
-    await listas.editarItem(item.id, concluido: true);
+    await listas.itens.editarItem(item.id, concluido: true);
     await historico.finalizar(l.id, mercado: 'Mercado A');
     final json = await BackupRepository(origem).exportarJson();
 

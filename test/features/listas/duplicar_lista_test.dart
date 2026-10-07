@@ -31,12 +31,12 @@ void main() {
 
   test('deve_copiar_somente_pendentes_quando_duplica', () async {
     final origem = await repo.criarLista(titulo: 'Semana', donoId: 'user-a');
-    await repo.adicionarItem(listaId: origem.id, nome: 'Arroz');
-    final comprado = await repo.adicionarItem(
+    await repo.itens.adicionarItem(listaId: origem.id, nome: 'Arroz');
+    final comprado = await repo.itens.adicionarItem(
       listaId: origem.id,
       nome: 'Leite',
     );
-    await repo.editarItem(comprado.id, concluido: true);
+    await repo.itens.editarItem(comprado.id, concluido: true);
 
     final nova = await repo.duplicarLista(
       origemId: origem.id,
@@ -53,7 +53,7 @@ void main() {
     'deve_preservar_nome_quantidade_unidade_categoria_quando_duplica',
     () async {
       final origem = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-      await repo.adicionarItem(
+      await repo.itens.adicionarItem(
         listaId: origem.id,
         nome: 'Queijo',
         quantidade: 0.5,
@@ -77,7 +77,7 @@ void main() {
 
   test('deve_copiar_preco_quando_duplicar_lista', () async {
     final origem = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: origem.id,
       nome: 'Arroz',
       precoCentavos: 549,
@@ -95,13 +95,23 @@ void main() {
 
   test('deve_preservar_a_ordem_dos_itens_quando_duplica', () async {
     final origem = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final arroz = await repo.adicionarItem(listaId: origem.id, nome: 'Arroz');
-    final feijao = await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
-    final macarrao = await repo.adicionarItem(
+    final arroz = await repo.itens.adicionarItem(
+      listaId: origem.id,
+      nome: 'Arroz',
+    );
+    final feijao = await repo.itens.adicionarItem(
+      listaId: origem.id,
+      nome: 'Feijão',
+    );
+    final macarrao = await repo.itens.adicionarItem(
       listaId: origem.id,
       nome: 'Macarrão',
     );
-    await repo.reordenarItens(origem.id, [macarrao.id, arroz.id, feijao.id]);
+    await repo.itens.reordenarItens(origem.id, [
+      macarrao.id,
+      arroz.id,
+      feijao.id,
+    ]);
 
     final nova = await repo.duplicarLista(
       origemId: origem.id,
@@ -118,7 +128,7 @@ void main() {
 
   test('deve_deixar_a_lista_original_intacta_quando_duplica', () async {
     final origem = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    await repo.adicionarItem(listaId: origem.id, nome: 'Arroz');
+    await repo.itens.adicionarItem(listaId: origem.id, nome: 'Arroz');
 
     await repo.duplicarLista(
       origemId: origem.id,
@@ -136,7 +146,7 @@ void main() {
       titulo: 'Do parceiro',
       donoId: 'user-b',
     );
-    await repo.adicionarItem(listaId: origem.id, nome: 'Arroz');
+    await repo.itens.adicionarItem(listaId: origem.id, nome: 'Arroz');
 
     final nova = await repo.duplicarLista(
       origemId: origem.id,
@@ -153,8 +163,11 @@ void main() {
 
   test('deve_falhar_quando_nao_ha_pendentes', () async {
     final origem = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final item = await repo.adicionarItem(listaId: origem.id, nome: 'Arroz');
-    await repo.editarItem(item.id, concluido: true);
+    final item = await repo.itens.adicionarItem(
+      listaId: origem.id,
+      nome: 'Arroz',
+    );
+    await repo.itens.editarItem(item.id, concluido: true);
 
     expect(
       () => repo.duplicarLista(

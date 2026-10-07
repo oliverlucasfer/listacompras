@@ -15,9 +15,11 @@ import 'package:lista_compras/core/widgets/app_dropdown.dart';
 import 'package:lista_compras/core/widgets/app_esqueleto.dart';
 import 'package:lista_compras/core/widgets/app_estado_erro.dart';
 import 'package:lista_compras/drift/database.dart';
+import 'package:lista_compras/features/listas/data/itens_repository.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/domain/item.dart';
 import 'package:lista_compras/features/listas/domain/preco.dart';
+import 'package:lista_compras/features/listas/domain/resultado_dedup.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
 import 'package:lista_compras/features/listas/ui/tela_lista_screen.dart';
@@ -29,7 +31,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../voz/fake_reconhecimento_voz.dart';
 
-class _RepoReordenarFalha extends ListasRepository {
+class _RepoReordenarFalha extends ItensRepository {
   _RepoReordenarFalha(super.db);
 
   @override
@@ -69,23 +71,23 @@ void main() {
       titulo: 'Compras da Semana',
       donoId: 'local',
     );
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       categoria: CategoriaItem.mercearia,
     );
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Leite',
       categoria: CategoriaItem.laticinios,
     );
     if (comConcluido) {
-      final detergente = await repo.adicionarItem(
+      final detergente = await repo.itens.adicionarItem(
         listaId: lista.id,
         nome: 'Detergente',
         categoria: CategoriaItem.limpeza,
       );
-      await repo.editarItem(detergente.id, concluido: true);
+      await repo.itens.editarItem(detergente.id, concluido: true);
     }
     await montarTela(tester, lista.id);
     return lista.id;
@@ -106,7 +108,7 @@ void main() {
     final repo = ListasRepository(db);
     for (var i = 0; i < vezes; i++) {
       final outra = await repo.criarLista(titulo: 'Outra', donoId: 'local');
-      await repo.adicionarItem(
+      await repo.itens.adicionarItem(
         listaId: outra.id,
         nome: nome,
         quantidade: 1,
@@ -126,7 +128,7 @@ void main() {
     final id =
         listaId ??
         (await repo.criarLista(titulo: 'Compras', donoId: 'local')).id;
-    await repo.adicionarItem(listaId: id, nome: 'Arroz');
+    await repo.itens.adicionarItem(listaId: id, nome: 'Arroz');
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -196,22 +198,22 @@ void main() {
   ) async {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Leite',
       categoria: CategoriaItem.laticinios,
     );
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Banana',
       categoria: CategoriaItem.hortifruti,
     );
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       categoria: CategoriaItem.mercearia,
     );
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Café',
       categoria: CategoriaItem.mercearia,
@@ -241,17 +243,17 @@ void main() {
     });
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       categoria: CategoriaItem.mercearia,
     );
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Banana',
       categoria: CategoriaItem.hortifruti,
     );
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Suco',
       categoria: CategoriaItem.bebidas,
@@ -316,6 +318,42 @@ void main() {
 
     await fechar(tester);
   });
+
+  testWidgets(
+    'deve_mostrar_erro_e_manter_texto_quando_falha_ao_adicionar_item',
+    (tester) async {
+      final repo = ListasRepository(db);
+      final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
+      await repo.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appDatabaseProvider.overrideWithValue(db),
+            itensRepositoryProvider.overrideWithValue(_RepoAdicionarFalha(db)),
+          ],
+          child: appTeste(TelaListaScreen(listaId: lista.id)),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Adicionar item'),
+        'Café',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Não foi possível concluir. Tente novamente.'),
+        findsOneWidget,
+      );
+      // A falha não limpa o campo, permitindo nova tentativa.
+      expect(find.text('Café'), findsOneWidget);
+
+      await fechar(tester);
+    },
+  );
 
   testWidgets('deve_aplicar_sugestao_local_quando_adicionar_rapido_f6t04', (
     tester,
@@ -519,6 +557,37 @@ void main() {
 
     expect(find.text('Arroz'), findsOneWidget);
     expect(find.text('Mercearia (1)'), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_erro_quando_desfazer_a_restauracao_falha', (
+    tester,
+  ) async {
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
+    await repo.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          itensRepositoryProvider.overrideWithValue(_RepoRestaurarFalha(db)),
+        ],
+        child: appTeste(TelaListaScreen(listaId: lista.id)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.drag(find.text('Arroz'), const Offset(-500, 0));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Desfazer'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Não foi possível concluir. Tente novamente.'),
+      findsOneWidget,
+    );
 
     await fechar(tester);
   });
@@ -738,7 +807,7 @@ void main() {
     final itens = (await (db.select(
       db.itemLocal,
     )).get()).where((i) => !i.concluido).toList();
-    await repo.editarItem(itens.first.id, concluido: true);
+    await repo.itens.editarItem(itens.first.id, concluido: true);
     await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -809,23 +878,23 @@ void main() {
       titulo: 'Compras da Semana',
       donoId: 'local',
     );
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       categoria: CategoriaItem.mercearia,
     );
-    final detergente = await repo.adicionarItem(
+    final detergente = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Detergente',
       categoria: CategoriaItem.limpeza,
     );
-    await repo.editarItem(detergente.id, concluido: true);
+    await repo.itens.editarItem(detergente.id, concluido: true);
 
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
-          listasRepositoryProvider.overrideWithValue(_RepoLimparFalha(db)),
+          itensRepositoryProvider.overrideWithValue(_RepoLimparFalha(db)),
         ],
         child: appTeste(TelaListaScreen(listaId: lista.id)),
       ),
@@ -855,7 +924,7 @@ void main() {
       titulo: 'Compras da Semana',
       donoId: 'local',
     );
-    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await repo.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
 
     final router = GoRouter(
       initialLocation: '/lista/${lista.id}',
@@ -940,17 +1009,17 @@ void main() {
   ) async {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       categoria: CategoriaItem.mercearia,
     ); // mercearia
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Feijão',
       categoria: CategoriaItem.mercearia,
     ); // mercearia
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Leite',
       categoria: CategoriaItem.laticinios,
@@ -985,12 +1054,12 @@ void main() {
   testWidgets('deve_mostrar_erro_quando_reordenar_falha', (tester) async {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       categoria: CategoriaItem.mercearia,
     );
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Feijão',
       categoria: CategoriaItem.mercearia,
@@ -999,7 +1068,7 @@ void main() {
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
-          listasRepositoryProvider.overrideWithValue(_RepoReordenarFalha(db)),
+          itensRepositoryProvider.overrideWithValue(_RepoReordenarFalha(db)),
         ],
         child: appTeste(TelaListaScreen(listaId: lista.id)),
       ),
@@ -1551,12 +1620,12 @@ void main() {
   }) async {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
-    final item = await repo.adicionarItem(
+    final item = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       precoCentavos: 549,
     );
-    if (marcado) await repo.editarItem(item.id, concluido: true);
+    if (marcado) await repo.itens.editarItem(item.id, concluido: true);
     if (orcamentoCentavos != null) {
       await repo.definirOrcamento(lista.id, centavos: orcamentoCentavos);
     }
@@ -1583,18 +1652,22 @@ void main() {
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
     // Marcado COM preço (R$ 5,49) + marcado SEM preço (R$ 999,00 no nome):
     // o total soma só o primeiro e conta o segundo como "1 sem preço".
-    final comPreco = await repo.adicionarItem(
+    final comPreco = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       precoCentavos: 549,
     );
-    final semPreco = await repo.adicionarItem(
+    final semPreco = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Item caro',
       precoCentavos: 99900,
     );
-    await repo.editarItem(comPreco.id, concluido: true);
-    await repo.editarItem(semPreco.id, concluido: true, limparPreco: true);
+    await repo.itens.editarItem(comPreco.id, concluido: true);
+    await repo.itens.editarItem(
+      semPreco.id,
+      concluido: true,
+      limparPreco: true,
+    );
     await montarTela(tester, lista.id);
 
     expect(
@@ -1681,8 +1754,12 @@ void main() {
     final repo = ListasRepository(db);
     final atual = await repo.criarLista(titulo: 'Atual', donoId: 'local');
     final origem = await repo.criarLista(titulo: 'Outra', donoId: 'local');
-    await repo.adicionarItem(listaId: origem.id, nome: 'Arroz', quantidade: 2);
-    await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
+    await repo.itens.adicionarItem(
+      listaId: origem.id,
+      nome: 'Arroz',
+      quantidade: 2,
+    );
+    await repo.itens.adicionarItem(listaId: origem.id, nome: 'Feijão');
     await abrirListaComItem(tester, listaId: atual.id);
 
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -1718,8 +1795,12 @@ void main() {
     final repo = ListasRepository(db);
     final atual = await repo.criarLista(titulo: 'Atual', donoId: 'local');
     final origem = await repo.criarLista(titulo: 'Outra', donoId: 'local');
-    await repo.adicionarItem(listaId: origem.id, nome: 'Arroz', quantidade: 2);
-    await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
+    await repo.itens.adicionarItem(
+      listaId: origem.id,
+      nome: 'Arroz',
+      quantidade: 2,
+    );
+    await repo.itens.adicionarItem(listaId: origem.id, nome: 'Feijão');
     await abrirListaComItem(tester, listaId: atual.id);
 
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -1751,7 +1832,7 @@ void main() {
     final repo = ListasRepository(db);
     final atual = await repo.criarLista(titulo: 'Atual', donoId: 'local');
     final origem = await repo.criarLista(titulo: 'Outra', donoId: 'local');
-    await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
+    await repo.itens.adicionarItem(listaId: origem.id, nome: 'Feijão');
     await abrirListaComItem(tester, listaId: atual.id);
 
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -1779,7 +1860,7 @@ void main() {
     final repo = ListasRepository(db);
     final atual = await repo.criarLista(titulo: 'Atual', donoId: 'local');
     final origem = await repo.criarLista(titulo: 'Outra', donoId: 'local');
-    await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
+    await repo.itens.adicionarItem(listaId: origem.id, nome: 'Feijão');
     await abrirListaComItem(tester, listaId: atual.id);
 
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -1806,8 +1887,12 @@ void main() {
     final repo = ListasRepository(db);
     final atual = await repo.criarLista(titulo: 'Atual', donoId: 'local');
     final origem = await repo.criarLista(titulo: 'Outra', donoId: 'local');
-    await repo.adicionarItem(listaId: origem.id, nome: 'Arroz', quantidade: 2);
-    await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
+    await repo.itens.adicionarItem(
+      listaId: origem.id,
+      nome: 'Arroz',
+      quantidade: 2,
+    );
+    await repo.itens.adicionarItem(listaId: origem.id, nome: 'Feijão');
     await abrirListaComItem(tester, listaId: atual.id);
 
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -1853,12 +1938,12 @@ void main() {
     final repo = ListasRepository(db);
     final atual = await repo.criarLista(titulo: 'Atual', donoId: 'local');
     final origem = await repo.criarLista(titulo: 'Outra', donoId: 'local');
-    await repo.adicionarItem(listaId: origem.id, nome: 'Feijão');
-    final detergente = await repo.adicionarItem(
+    await repo.itens.adicionarItem(listaId: origem.id, nome: 'Feijão');
+    final detergente = await repo.itens.adicionarItem(
       listaId: origem.id,
       nome: 'Detergente',
     );
-    await repo.editarItem(detergente.id, concluido: true);
+    await repo.itens.editarItem(detergente.id, concluido: true);
     await abrirListaComItem(tester, listaId: atual.id);
 
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -1888,9 +1973,9 @@ void main() {
     final repo = ListasRepository(db);
     final atual = await repo.criarLista(titulo: 'Atual', donoId: 'local');
     final primeira = await repo.criarLista(titulo: 'Primeira', donoId: 'local');
-    await repo.adicionarItem(listaId: primeira.id, nome: 'Feijão');
+    await repo.itens.adicionarItem(listaId: primeira.id, nome: 'Feijão');
     final segunda = await repo.criarLista(titulo: 'Segunda', donoId: 'local');
-    await repo.adicionarItem(listaId: segunda.id, nome: 'Leite');
+    await repo.itens.adicionarItem(listaId: segunda.id, nome: 'Leite');
     await abrirListaComItem(tester, listaId: atual.id);
 
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -2069,10 +2154,32 @@ void main() {
   });
 }
 
-class _RepoLimparFalha extends ListasRepository {
+class _RepoLimparFalha extends ItensRepository {
   _RepoLimparFalha(super.db);
 
   @override
   Future<List<Item>> limparConcluidos(String listaId) async =>
+      throw Exception('falha simulada');
+}
+
+class _RepoAdicionarFalha extends ItensRepository {
+  _RepoAdicionarFalha(super.db);
+
+  @override
+  Future<ResultadoDedup> adicionarItemDedup({
+    required String listaId,
+    required String nome,
+    required double quantidade,
+    required Unidade unidade,
+    required CategoriaItem categoria,
+    int? precoCentavos,
+  }) async => throw Exception('falha simulada');
+}
+
+class _RepoRestaurarFalha extends ItensRepository {
+  _RepoRestaurarFalha(super.db);
+
+  @override
+  Future<void> restaurarItem(String id) async =>
       throw Exception('falha simulada');
 }

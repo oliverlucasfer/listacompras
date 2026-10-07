@@ -141,27 +141,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String excluirListaMensagem(int n, String temMembros) {
-    String _temp0 = intl.Intl.selectLogic(temMembros, {
-      'true': ' for all participants',
-      'other': '',
-    });
-    String _temp1 = intl.Intl.selectLogic(temMembros, {
-      'true': ' for all participants',
-      'other': '',
-    });
-    String _temp2 = intl.Intl.selectLogic(temMembros, {
-      'true': ' for all participants',
-      'other': '',
-    });
-    String _temp3 = intl.Intl.pluralLogic(
+  String excluirListaMensagem(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: 'The $n items will be removed$_temp0.',
-      one: 'The item will be removed$_temp1.',
-      zero: 'The list will be deleted$_temp2.',
+      other: 'The $n items will be removed.',
+      one: 'The item will be removed.',
+      zero: 'The list will be deleted.',
     );
-    return '$_temp3';
+    return '$_temp0';
   }
 
   @override

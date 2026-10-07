@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// Destino de "voltar" quando não há pilha (deep link/aceite de convite):
+/// Destino de "voltar" quando não há pilha (deep link):
 /// o app é local, então o início é sempre a tela de listas.
 String inicioDaLista() => '/listas';
 

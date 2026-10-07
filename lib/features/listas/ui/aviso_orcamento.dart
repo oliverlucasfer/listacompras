@@ -58,9 +58,7 @@ Future<void> talvezAvisarCruzamentoPreco(
   if (orcamento == null) return;
   final antes = totalCarrinho(itens);
   final subtotalAntigo = subtotalMarcado(item);
-  final novoSubtotal = novoPreco == null
-      ? 0
-      : (item.quantidade * novoPreco).round();
+  final novoSubtotal = subtotalComPreco(item, novoPreco);
   final depois = antes - subtotalAntigo + novoSubtotal;
   await _talvezAvisar(
     context,

@@ -35,7 +35,7 @@ void main() {
   }) async {
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
     for (var i = 0; i < precos.length; i++) {
-      await repo.adicionarItem(
+      await repo.itens.adicionarItem(
         listaId: lista.id,
         nome: 'Item ${i + 1}',
         precoCentavos: precos[i],

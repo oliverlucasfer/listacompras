@@ -1,5 +1,5 @@
 import '../ocr/providers/ocr_providers.dart';
-import 'tour_keys.dart';
+import '../../core/navigation/tour_keys.dart';
 import 'tour_step.dart';
 
 /// Resolve o texto conforme a plataforma: onde há OCR (Android/iOS) cita a

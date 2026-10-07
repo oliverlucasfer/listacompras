@@ -17,7 +17,7 @@ import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../core/widgets/app_snack_bar.dart';
-import '../../tour/tour_keys.dart';
+import '../../../core/navigation/tour_keys.dart';
 import '../domain/lista_com_contagem.dart';
 import '../providers/listas_providers.dart';
 import 'sheet_titulo_lista.dart';
@@ -391,7 +391,7 @@ class _CardListaState extends ConsumerState<_CardLista> {
     final confirmou = await AppDialog.confirmarDestrutivo(
       context,
       titulo: context.l10n.excluirListaTitulo(contagem.lista.titulo),
-      mensagem: context.l10n.excluirListaMensagem(contagem.totalItens, 'false'),
+      mensagem: context.l10n.excluirListaMensagem(contagem.totalItens),
     );
     if (confirmou) {
       try {

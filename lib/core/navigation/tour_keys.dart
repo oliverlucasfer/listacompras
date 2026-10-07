@@ -1,7 +1,9 @@
 import 'package:flutter/widgets.dart';
 
-/// Chaves dos alvos do tour (doc 05 / spec F46). As telas anexam estas chaves
-/// aos widgets reais; o overlay lê a posição via `currentContext`.
+/// Chaves dos alvos do tour (doc 05 / spec F46) e de âncoras de teste do
+/// shell. As telas anexam estas chaves aos widgets reais; o overlay lê a
+/// posição via `currentContext`. Vivem em `core` porque são um contrato
+/// compartilhado entre `core/navigation`, várias features e o tour.
 abstract final class TourKeys {
   static final novaLista = GlobalKey();
   static final nomeLista = GlobalKey();
