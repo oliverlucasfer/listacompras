@@ -903,7 +903,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tourImportarCorpo =>
-      'Escribe, pega una nota o fotografía la lista; la app organiza los artículos por ti.';
+      'Escribe o pega una nota; la app organiza los artículos por ti.';
+
+  @override
+  String get tourImportarCorpoComOcr =>
+      'Escribe, pega una nota o fotografía la lista — el texto se lee en el dispositivo (la foto no se guarda); la app organiza los artículos por ti.';
 
   @override
   String get tourBuscaTitulo => 'Búsqueda y filtros';
@@ -927,11 +931,19 @@ class AppLocalizationsEs extends AppLocalizations {
       'Toca el artículo para editar; marca el círculo; arrastra para quitar.';
 
   @override
+  String get tourMarcarCorpoComOcr =>
+      'Toca el artículo para editar — la cámara del campo de precio lee la etiqueta de la estantería; marca el círculo; arrastra para quitar.';
+
+  @override
   String get tourMercadoTitulo => 'Modo compra';
 
   @override
   String get tourMercadoCorpo =>
       'En el mercado, marca las compras y registra el precio pagado. La app guarda el precio por mercado.';
+
+  @override
+  String get tourMercadoCorpoComOcr =>
+      'En el mercado, marca las compras y registra el precio pagado — o toca la cámara para leer la etiqueta de la estantería. La app guarda el precio por mercado.';
 
   @override
   String get tourHistoricoTitulo => 'Historial de compras';

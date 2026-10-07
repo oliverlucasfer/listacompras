@@ -897,7 +897,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tourImportarCorpo =>
-      'Type, paste a note or photograph the list; the app organizes the items for you.';
+      'Type or paste a note; the app organizes the items for you.';
+
+  @override
+  String get tourImportarCorpoComOcr =>
+      'Type, paste a note or photograph the list — the text is read on your device (the photo isn\'t stored); the app organizes the items for you.';
 
   @override
   String get tourBuscaTitulo => 'Search and filters';
@@ -921,11 +925,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap the item to edit; check the circle; drag to remove.';
 
   @override
+  String get tourMarcarCorpoComOcr =>
+      'Tap the item to edit — the camera on the price field reads the shelf label; check the circle; drag to remove.';
+
+  @override
   String get tourMercadoTitulo => 'Shopping mode';
 
   @override
   String get tourMercadoCorpo =>
       'At the store, check items off and record the price paid. The app keeps the price per store.';
+
+  @override
+  String get tourMercadoCorpoComOcr =>
+      'At the store, check items off and record the price paid — or tap the camera to read the shelf label. The app keeps the price per store.';
 
   @override
   String get tourHistoricoTitulo => 'Purchase history';

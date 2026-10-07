@@ -126,3 +126,13 @@
 - [10 Wireframes](../10-wireframes-telas.md) — layout das telas (inclui Histórico)
 - [12 PRD](../12-prd.md) — RF-27
 - [14 Tarefas](../14-tarefas.md) — Fase 57
+
+## 11. Extensão (07/10/2026) — câmera nos passos (RF-37/RF-40, F61)
+
+A RF-40 (F59, preço por etiqueta) chegou **depois** desta spec, e os passos de importar/marcar/mercado ficaram com texto único — que citava "fotografe" **até em Web/Desktop**, onde a câmera não existe. A extensão **F61** torna esses textos **condicionais à câmera**:
+
+- **Mecanismo:** `tour_roteiro.dart` resolve o `corpo` por `plataformaComOcr()` via o helper `_texto(semOcr, comOcr)` — sem mudar o motor, o `TourOverlay` nem o contrato de `TourStep` (a estrutura de 2 campos texto `titulo`/`corpo` permanece).
+- **Passos afetados:** `recursos.importar`, `recursos.marcar` e `recursos.mercado` — variantes `tourImportarCorpoComOcr`/`tourMarcarCorpoComOcr`/`tourMercadoCorpoComOcr` (com câmera) e `tourImportarCorpo`/`tourMarcarCorpo`/`tourMercadoCorpo` (sem câmera).
+- **Conteúdo (com câmera):** o passo de importar cita a foto (RF-37, "a foto não fica guardada"); o de marcar/editar cita a câmera no campo de preço; o de mercado cita a câmera da etiqueta (RF-40). Sem câmera, o texto omite a foto/etiqueta.
+- **Testes:** `tour_roteiro_test.dart` cobre os dois ramos por `debugDefaultTargetPlatformOverride`; paridade de chaves ARB pt/en/es mantida.
+- **Tarefa:** F61 (14), com docs donas 05/10/12/14.

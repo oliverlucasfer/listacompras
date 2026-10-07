@@ -1325,6 +1325,19 @@ Relatório: [relatorio-revisao-geral-3.md](relatorio-revisao-geral-3.md) · Requ
 
 Nota: *(correções P0 aplicadas na branch `fix/revisao-geral-p0`; P1/P2 registrados como tarefas. 100% offline; sem dependência nova.)*
 
+## Fase 61 — Tutorial: câmera nos passos de foto e etiqueta (RF-27/RF-40)
+
+Extensão do tour (F57) para citar a câmera só onde há OCR; recurso do RF-40 (F59). · Docs donos: 05, 10, 12, 14.
+
+- [x] **F61-T01** — Passos do tour com texto condicional à câmera
+  Dep: F59-T06 · Docs: [05 §6.11](05-app-flutter.md), [10 §3](10-wireframes-telas.md), [12](12-prd.md)
+  CP: `tour_roteiro.dart` resolve o `corpo` dos passos **importar/marcar/mercado** por `plataformaComOcr()` (helper `_texto`); chaves `tourImportarCorpoComOcr`/`tourMarcarCorpoComOcr`/`tourMercadoCorpoComOcr` nos ARB pt/en/es (base sem câmera em Web/Desktop); testes de roteiro cobrem os dois ramos; `flutter analyze`/`flutter test` verdes.
+- [x] **F61-T02** — Docs donas e fechamento
+  Dep: F61-T01 · Docs: 05, 10, 12, 14
+  CP: §6.11 (texto condicional), §3 (etapa 2) e RF-27 sincronizados; Fase 61 na tabela de progresso (349/346); `dart format .`, `flutter analyze` e `flutter test` verdes; sem tocar código.
+
+Nota: *(bounded: só conteúdo do tour (texto + i18n), sem motor/passo novo nem navegação. A câmera só aparece onde `plataformaComOcr()` é verdadeiro (Android/iOS); a imagem não é armazenada.)*
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -1387,7 +1400,8 @@ Nota: *(correções P0 aplicadas na branch `fix/revisao-geral-p0`; P1/P2 registr
 | F58 Otimizações da revisão | 25 | 25 |
 | F59 Preço por etiqueta (OCR) | 6 | 6 |
 | F60 Revisão geral — correções | 8 | 7 |
-| **Total** | **347** | **344** |
+| F61 Tutorial: câmera na foto/etiqueta | 2 | 2 |
+| **Total** | **349** | **346** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
