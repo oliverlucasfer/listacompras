@@ -5,7 +5,7 @@ import '../dominio/unidade.dart';
 const int maxCaracteresImportLocal = 10000;
 
 /// Item importado (local ou IA): quantidade > 0, unidade e categoria nos
-/// enums fechados ([01 §3](docs/01-banco-de-dados.md), ADR-005/ADR-011).
+/// enums fechados (doc 13 §3, ADR-005/ADR-011).
 class ItemExtraido {
   const ItemExtraido({
     required this.nome,

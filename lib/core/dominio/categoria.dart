@@ -1,5 +1,4 @@
-/// Enum fechado de categorias (doc 01 §3.2, ADR-011) — lista idêntica ao
-/// Postgres (`categoria_item`).
+/// Enum fechado de categorias (doc 13 §3, ADR-011).
 /// A ordem dos valores define a ordem dos grupos na UI (doc 05 §6.3).
 enum CategoriaItem {
   hortifruti('hortifruti'),

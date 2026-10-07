@@ -108,13 +108,6 @@ class DesignSystemScreen extends StatelessWidget {
                   AppBanner(tipo: AppBannerTipo.aviso, mensagem: 'Aviso'),
                   SizedBox(height: AppSpacing.sm),
                   AppBanner(tipo: AppBannerTipo.erro, mensagem: 'Erro'),
-                  SizedBox(height: AppSpacing.sm),
-                  AppBanner(tipo: AppBannerTipo.offline, mensagem: 'Offline'),
-                  SizedBox(height: AppSpacing.sm),
-                  AppBanner(
-                    tipo: AppBannerTipo.leitura,
-                    mensagem: 'Somente leitura',
-                  ),
                 ],
               ),
             ),
@@ -123,7 +116,7 @@ class DesignSystemScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppChip(rotulo: 'Dono', icone: Icons.person_outline),
+                  AppChip(rotulo: 'Categoria', icone: Icons.label_outline),
                   SizedBox(height: AppSpacing.lg),
                   AppEstadoVazio(
                     titulo: 'Nenhuma lista',

@@ -82,29 +82,22 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('deve_anunciar_banner_como_live_region_quando_offline', (
+  testWidgets('deve_anunciar_banner_como_live_region_quando_aviso', (
     tester,
   ) async {
     final handle = tester.ensureSemantics();
     await tester.pumpWidget(
       _app(
         const AppBanner(
-          tipo: AppBannerTipo.offline,
-          mensagem: 'Sem conexão — alterações serão sincronizadas depois',
+          tipo: AppBannerTipo.aviso,
+          mensagem: 'Atenção: item duplicado',
         ),
       ),
     );
 
     expect(
-      tester.getSemantics(
-        find.bySemanticsLabel(
-          'Sem conexão — alterações serão sincronizadas depois',
-        ),
-      ),
-      matchesSemantics(
-        label: 'Sem conexão — alterações serão sincronizadas depois',
-        isLiveRegion: true,
-      ),
+      tester.getSemantics(find.bySemanticsLabel('Atenção: item duplicado')),
+      matchesSemantics(label: 'Atenção: item duplicado', isLiveRegion: true),
     );
 
     handle.dispose();

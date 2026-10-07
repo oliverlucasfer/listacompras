@@ -5,7 +5,7 @@ import '../theme/tokens/app_radius.dart';
 import '../theme/tokens/app_spacing.dart';
 
 /// Banners transversais (doc 15 §3) com contraste correto (`on*Container`).
-enum AppBannerTipo { info, aviso, erro, offline, leitura }
+enum AppBannerTipo { info, aviso, erro }
 
 class AppBanner extends StatelessWidget {
   const AppBanner({
@@ -22,9 +22,7 @@ class AppBanner extends StatelessWidget {
   /// Banners que representam mudança de estado do sistema são anunciados pelo
   /// leitor de tela; `info`/`leitura` são estáticos e ficam fora (doc 15 §4).
   bool get _anuncia =>
-      tipo == AppBannerTipo.erro ||
-      tipo == AppBannerTipo.aviso ||
-      tipo == AppBannerTipo.offline;
+      tipo == AppBannerTipo.erro || tipo == AppBannerTipo.aviso;
 
   @override
   Widget build(BuildContext context) {
@@ -48,16 +46,6 @@ class AppBanner extends StatelessWidget {
         scheme.errorContainer,
         scheme.onErrorContainer,
         Icons.error_outline,
-      ),
-      AppBannerTipo.offline => (
-        semanticas.warningContainer,
-        semanticas.onWarningContainer,
-        Icons.cloud_off,
-      ),
-      AppBannerTipo.leitura => (
-        scheme.secondaryContainer,
-        scheme.onSecondaryContainer,
-        Icons.visibility_outlined,
       ),
     };
 
