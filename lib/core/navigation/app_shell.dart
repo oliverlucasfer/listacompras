@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/tour/tour_keys.dart';
 import '../l10n/l10n.dart';
+import 'tour_keys.dart';
 
 /// Casca de navegação (doc 05 §4, F10): `NavigationBar` inferior em telas
 /// estreitas e `NavigationRail` em telas largas (Web/desktop). Preserva o

@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/plataforma.dart';
 import '../../listas/providers/listas_providers.dart';
 import '../data/compartilhamento_repository.dart';
 import '../data/leitor_qr_plugin.dart';
@@ -11,10 +11,6 @@ final compartilhamentoRepositoryProvider = Provider<CompartilhamentoRepository>(
 );
 
 /// Câmera só onde o scanner é suportado: Android/iOS (spec §7).
-bool plataformaComCamera() {
-  if (kIsWeb) return false;
-  return defaultTargetPlatform == TargetPlatform.android ||
-      defaultTargetPlatform == TargetPlatform.iOS;
-}
+bool plataformaComCamera() => dispositivoMovel();
 
 final leitorQrProvider = Provider<LeitorQr>((ref) => LeitorQrPlugin());

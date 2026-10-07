@@ -2,16 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/idioma/idioma_provider.dart';
+import '../../../core/plataforma.dart';
 import '../data/reconhecimento_voz_plugin.dart';
 import '../domain/reconhecimento_voz.dart';
 
 /// O microfone só aparece onde o reconhecimento on-device é suportado:
 /// Android/iOS (Web/Desktop ocultam — doc 05).
-bool plataformaComVoz() {
-  if (kIsWeb) return false;
-  return defaultTargetPlatform == TargetPlatform.android ||
-      defaultTargetPlatform == TargetPlatform.iOS;
-}
+bool plataformaComVoz() => dispositivoMovel();
 
 /// Locale do reconhecedor por idioma do app (RF-39). `sistema` usa o idioma do
 /// aparelho quando conhecido; senão pt-BR (template/fallback do app).

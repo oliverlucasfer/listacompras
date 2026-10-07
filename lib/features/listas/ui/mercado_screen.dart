@@ -46,7 +46,7 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
     try {
       await _talvezAvisar(item, marcando: true);
       await ref
-          .read(listasRepositoryProvider)
+          .read(itensRepositoryProvider)
           .editarItem(item.id, concluido: true);
     } catch (_) {
       if (!mounted) return;
@@ -63,7 +63,7 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
     try {
       await _talvezAvisar(item, marcando: false);
       await ref
-          .read(listasRepositoryProvider)
+          .read(itensRepositoryProvider)
           .editarItem(item.id, concluido: false);
     } catch (_) {
       if (!mounted) return;

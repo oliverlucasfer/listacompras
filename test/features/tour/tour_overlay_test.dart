@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/theme/app_theme.dart';
 import 'package:lista_compras/features/tour/tour_controller.dart';
-import 'package:lista_compras/features/tour/tour_keys.dart';
+import 'package:lista_compras/core/navigation/tour_keys.dart';
 import 'package:lista_compras/features/tour/ui/tour_overlay.dart';
 import 'package:lista_compras/l10n/app_localizations_pt.dart';
 import 'package:shared_preferences/shared_preferences.dart';

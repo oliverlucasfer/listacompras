@@ -42,7 +42,7 @@ void main() {
       String? mercado,
     ) async {
       final l = await listas.criarLista(titulo: titulo, donoId: 'local');
-      final i = await listas.adicionarItem(
+      final i = await listas.itens.adicionarItem(
         listaId: l.id,
         nome: nome,
         quantidade: 1,
@@ -50,7 +50,7 @@ void main() {
         categoria: CategoriaItem.mercearia,
         precoCentavos: centavos,
       );
-      await listas.editarItem(i.id, concluido: true);
+      await listas.itens.editarItem(i.id, concluido: true);
       await historico.finalizar(l.id, mercado: mercado);
     }
 

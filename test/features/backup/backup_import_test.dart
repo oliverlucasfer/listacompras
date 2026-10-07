@@ -15,7 +15,7 @@ void main() {
       titulo: 'Mercado',
       donoId: 'local',
     );
-    await repoOrigem.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await repoOrigem.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
     final json = await BackupRepository(origem).exportarJson();
 
     final destino = AppDatabase(NativeDatabase.memory());
@@ -124,7 +124,10 @@ void main() {
     addTearDown(db.close);
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(titulo: 'Local', donoId: 'local');
-    final item = await repo.adicionarItem(listaId: lista.id, nome: 'LocalItem');
+    final item = await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'LocalItem',
+    );
 
     String jsonCom(String titulo, String nomeItem, String updatedAt) =>
         '{"versao":1,"exportadoEm":"2026-01-01T00:00:00Z",'
@@ -177,7 +180,7 @@ void main() {
         titulo: 'Mercado',
         donoId: 'local',
       );
-      await repoOrigem.adicionarItem(listaId: lista.id, nome: 'Arroz');
+      await repoOrigem.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
       await repoOrigem.excluirLista(lista.id);
       final json = await BackupRepository(origem).exportarJson();
 

@@ -23,7 +23,7 @@ void main() {
   ) async {
     final l = await listas.criarLista(titulo: 'X', donoId: 'local');
     for (final (nome, qtd, un, cat, preco) in itens) {
-      final i = await listas.adicionarItem(
+      final i = await listas.itens.adicionarItem(
         listaId: l.id,
         nome: nome,
         quantidade: qtd,
@@ -31,7 +31,7 @@ void main() {
         categoria: cat,
         precoCentavos: preco,
       );
-      await listas.editarItem(i.id, concluido: true);
+      await listas.itens.editarItem(i.id, concluido: true);
     }
     await historico.finalizar(l.id);
   }
@@ -142,26 +142,26 @@ void main() {
     () async {
       for (final m in ['Zona', 'Aurora']) {
         final l = await listas.criarLista(titulo: m, donoId: 'local');
-        final i = await listas.adicionarItem(
+        final i = await listas.itens.adicionarItem(
           listaId: l.id,
           nome: 'X',
           quantidade: 1,
           precoCentavos: 500,
         );
-        await listas.editarItem(i.id, concluido: true);
+        await listas.itens.editarItem(i.id, concluido: true);
         await historico.finalizar(l.id, mercado: m);
       }
       final semMercado = await listas.criarLista(
         titulo: 'Sem',
         donoId: 'local',
       );
-      final i = await listas.adicionarItem(
+      final i = await listas.itens.adicionarItem(
         listaId: semMercado.id,
         nome: 'Y',
         quantidade: 1,
         precoCentavos: 500,
       );
-      await listas.editarItem(i.id, concluido: true);
+      await listas.itens.editarItem(i.id, concluido: true);
       await historico.finalizar(semMercado.id);
 
       final mercados = await historico.gastoPorMercado();

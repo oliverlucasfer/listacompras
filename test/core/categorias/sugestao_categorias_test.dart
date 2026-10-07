@@ -40,7 +40,7 @@ void main() {
     // Dicionário diria laticinios; o usuário classificou "Leite" como pet
     // (ração de gato "leite"?). A memória do usuário vence (spec §4).
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Leite',
       categoria: CategoriaItem.pet,
@@ -81,7 +81,7 @@ void main() {
 
   test('deve_ignorar_memoria_quando_lista_excluida', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Leite',
       categoria: CategoriaItem.pet,
@@ -93,7 +93,7 @@ void main() {
 
   test('deve_lembrar_mesmo_com_variacao_de_acento_quando_memoria', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'café',
       categoria: CategoriaItem.mercearia,
@@ -123,7 +123,7 @@ void main() {
   test('deve_usar_indice_nome_lower_quando_prefilter', () async {
     final lista = await repo.criarLista(titulo: 'L', donoId: 'local');
     for (var i = 0; i < 60; i++) {
-      await repo.adicionarItem(listaId: lista.id, nome: 'item $i');
+      await repo.itens.adicionarItem(listaId: lista.id, nome: 'item $i');
     }
     await db.customStatement('ANALYZE');
 

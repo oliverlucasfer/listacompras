@@ -5,13 +5,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/core/dominio/unidade.dart';
 import 'package:lista_compras/drift/database.dart';
+import 'package:lista_compras/features/listas/data/itens_repository.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
 import 'package:lista_compras/features/listas/providers/listas_providers.dart';
 import 'package:lista_compras/features/listas/ui/mercado_screen.dart';
 
 import '../../support/app_teste.dart';
 
-class _RepoEditarFalha extends ListasRepository {
+class _RepoEditarFalha extends ItensRepository {
   _RepoEditarFalha(super.db);
 
   @override
@@ -50,7 +51,7 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
           if (escritaFalha)
-            listasRepositoryProvider.overrideWithValue(_RepoEditarFalha(db)),
+            itensRepositoryProvider.overrideWithValue(_RepoEditarFalha(db)),
         ],
         child: appTeste(MercadoScreen(listaId: listaId)),
       ),
@@ -65,13 +66,17 @@ void main() {
 
   testWidgets('deve_mostrar_somente_pendentes_quando_abre', (tester) async {
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
-    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz', quantidade: 1);
-    final feijao = await repo.adicionarItem(
+    await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      quantidade: 1,
+    );
+    final feijao = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Feijao',
       quantidade: 1,
     );
-    await repo.editarItem(feijao.id, concluido: true);
+    await repo.itens.editarItem(feijao.id, concluido: true);
 
     await abrir(tester, lista.id);
 
@@ -90,7 +95,11 @@ void main() {
     tester,
   ) async {
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
-    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz', quantidade: 1);
+    await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      quantidade: 1,
+    );
     await abrir(tester, lista.id);
     await tester.tap(find.text('Arroz'));
     await tester.pumpAndSettle();
@@ -102,12 +111,12 @@ void main() {
 
   testWidgets('deve_mostrar_vazio_quando_tudo_comprado', (tester) async {
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
-    final item = await repo.adicionarItem(
+    final item = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       quantidade: 1,
     );
-    await repo.editarItem(item.id, concluido: true);
+    await repo.itens.editarItem(item.id, concluido: true);
     await abrir(tester, lista.id);
     expect(find.text('Tudo comprado!'), findsOneWidget);
     await fechar(tester);
@@ -117,7 +126,11 @@ void main() {
     tester.platformDispatcher.textScaleFactorTestValue = 2.0;
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
-    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz', quantidade: 1);
+    await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      quantidade: 1,
+    );
     await abrir(tester, lista.id);
     expect(tester.takeException(), isNull);
     await fechar(tester);
@@ -128,14 +141,14 @@ void main() {
   ) async {
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
     for (var i = 0; i < 10; i++) {
-      final item = await repo.adicionarItem(
+      final item = await repo.itens.adicionarItem(
         listaId: lista.id,
         nome: 'Item $i',
         quantidade: 1,
       );
-      await repo.editarItem(item.id, concluido: true);
+      await repo.itens.editarItem(item.id, concluido: true);
     }
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Pendente',
       quantidade: 1,
@@ -155,7 +168,11 @@ void main() {
     tester,
   ) async {
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
-    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz', quantidade: 1);
+    await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      quantidade: 1,
+    );
     await abrir(tester, lista.id);
 
     await tester.tap(find.text('Arroz'));
@@ -175,7 +192,11 @@ void main() {
 
   testWidgets('deve_mostrar_erro_quando_marcar_falha', (tester) async {
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
-    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz', quantidade: 1);
+    await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      quantidade: 1,
+    );
     await abrir(tester, lista.id, escritaFalha: true);
 
     await tester.tap(find.text('Arroz'));
@@ -194,12 +215,12 @@ void main() {
 
   testWidgets('deve_mostrar_erro_quando_desmarcar_falha', (tester) async {
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
-    final item = await repo.adicionarItem(
+    final item = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       quantidade: 1,
     );
-    await repo.editarItem(item.id, concluido: true);
+    await repo.itens.editarItem(item.id, concluido: true);
     await abrir(tester, lista.id, escritaFalha: true);
 
     await tester.tap(find.text('Marcados (1)'));
@@ -220,13 +241,13 @@ void main() {
 
   testWidgets('deve_mostrar_total_quando_ha_marcado_com_preco', (tester) async {
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
-    final item = await repo.adicionarItem(
+    final item = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       quantidade: 1,
       precoCentavos: 549,
     );
-    await repo.editarItem(item.id, concluido: true);
+    await repo.itens.editarItem(item.id, concluido: true);
 
     await abrir(tester, lista.id);
 
@@ -236,13 +257,13 @@ void main() {
 
   testWidgets('deve_mostrar_orcamento_quando_definido', (tester) async {
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
-    final item = await repo.adicionarItem(
+    final item = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       quantidade: 1,
       precoCentavos: 549,
     );
-    await repo.editarItem(item.id, concluido: true);
+    await repo.itens.editarItem(item.id, concluido: true);
     await repo.definirOrcamento(lista.id, centavos: 1000);
 
     await abrir(tester, lista.id);
@@ -264,12 +285,12 @@ void main() {
     addTearDown(tester.view.reset);
 
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
-    final item = await repo.adicionarItem(
+    final item = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       quantidade: 1,
     );
-    await repo.editarItem(item.id, concluido: true);
+    await repo.itens.editarItem(item.id, concluido: true);
 
     await abrir(tester, lista.id);
 
@@ -291,12 +312,12 @@ void main() {
     tester.platformDispatcher.textScaleFactorTestValue = 2.0;
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
-    final item = await repo.adicionarItem(
+    final item = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       quantidade: 1,
     );
-    await repo.editarItem(item.id, concluido: true);
+    await repo.itens.editarItem(item.id, concluido: true);
 
     await abrir(tester, lista.id);
 

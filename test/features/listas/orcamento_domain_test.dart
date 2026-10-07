@@ -55,4 +55,10 @@ void main() {
     expect(subtotalMarcado(_item(qtd: 2, preco: 500)), 1000);
     expect(subtotalMarcado(_item(qtd: 2, preco: null)), 0);
   });
+
+  test('deve_calcular_subtotal_quando_preco_informado_explicitamente', () {
+    expect(subtotalComPreco(_item(qtd: 2), 500), 1000);
+    expect(subtotalComPreco(_item(qtd: 3), 0), 0);
+    expect(subtotalComPreco(_item(qtd: 2, preco: 500), null), 0);
+  });
 }

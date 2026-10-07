@@ -1,6 +1,5 @@
 import '../../../core/dominio/categoria.dart';
 import '../../../core/dominio/unidade.dart';
-import '../../../drift/database.dart';
 
 class Ida {
   const Ida({
@@ -19,16 +18,6 @@ class Ida {
   final int totalCentavos;
   final int itensCount;
   final String? mercado;
-
-  factory Ida.fromLocal(IdaCompraData d) => Ida(
-    id: d.id,
-    listaId: d.listaId,
-    titulo: d.titulo,
-    finalizadaEm: d.finalizadaEm,
-    totalCentavos: d.totalCentavos,
-    itensCount: d.itensCount,
-    mercado: d.mercado,
-  );
 }
 
 class ItemDaIda {
@@ -48,16 +37,6 @@ class ItemDaIda {
   final Unidade unidade;
   final CategoriaItem categoria;
   final int? precoCentavos;
-
-  factory ItemDaIda.fromLocal(ItemIdaData d) => ItemDaIda(
-    id: d.id,
-    idaId: d.idaId,
-    nome: d.nome,
-    quantidade: d.quantidade,
-    unidade: Unidade.fromValor(d.unidade),
-    categoria: CategoriaItem.fromValor(d.categoria),
-    precoCentavos: d.precoCentavos,
-  );
 }
 
 class ResumoHistorico {

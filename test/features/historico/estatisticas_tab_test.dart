@@ -42,7 +42,7 @@ void main() {
     final listas = ListasRepository(db);
     final historico = HistoricoComprasRepository(db);
     final l = await listas.criarLista(titulo: 'Semana', donoId: 'local');
-    final i = await listas.adicionarItem(
+    final i = await listas.itens.adicionarItem(
       listaId: l.id,
       nome: 'Arroz',
       quantidade: 2,
@@ -50,7 +50,7 @@ void main() {
       categoria: CategoriaItem.mercearia,
       precoCentavos: 500,
     );
-    await listas.editarItem(i.id, concluido: true);
+    await listas.itens.editarItem(i.id, concluido: true);
     await historico.finalizar(l.id);
 
     await tester.pumpWidget(
@@ -108,7 +108,7 @@ void main() {
         int centavos,
       ) async {
         final l = await listas.criarLista(titulo: titulo, donoId: 'local');
-        final i = await listas.adicionarItem(
+        final i = await listas.itens.adicionarItem(
           listaId: l.id,
           nome: nome,
           quantidade: 1,
@@ -116,7 +116,7 @@ void main() {
           categoria: CategoriaItem.mercearia,
           precoCentavos: centavos,
         );
-        await listas.editarItem(i.id, concluido: true);
+        await listas.itens.editarItem(i.id, concluido: true);
         await historico.finalizar(l.id);
       }
 
@@ -167,7 +167,7 @@ void main() {
 
     Future<void> finalizarIda(String titulo, int centavos) async {
       final l = await listas.criarLista(titulo: titulo, donoId: 'local');
-      final i = await listas.adicionarItem(
+      final i = await listas.itens.adicionarItem(
         listaId: l.id,
         nome: 'Arroz',
         quantidade: 1,
@@ -175,7 +175,7 @@ void main() {
         categoria: CategoriaItem.mercearia,
         precoCentavos: centavos,
       );
-      await listas.editarItem(i.id, concluido: true);
+      await listas.itens.editarItem(i.id, concluido: true);
       await historico.finalizar(l.id);
     }
 

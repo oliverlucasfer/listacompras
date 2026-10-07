@@ -66,11 +66,10 @@
       "titulo": { "type": "String" }
     }
   },
-  "excluirListaMensagem": "{n, plural, =0{The list will be deleted{temMembros, select, true{ for all participants} other{}}.} =1{The item will be removed{temMembros, select, true{ for all participants} other{}}.} other{The {n} items will be removed{temMembros, select, true{ for all participants} other{}}.}}",
+  "excluirListaMensagem": "{n, plural, =0{The list will be deleted.} =1{The item will be removed.} other{The {n} items will be removed.}}",
   "@excluirListaMensagem": {
     "placeholders": {
-      "n": { "type": "int" },
-      "temMembros": { "type": "String" }
+      "n": { "type": "int" }
     }
   },
   "atualizada": "updated",

@@ -99,7 +99,7 @@ class _LinhaItem extends ConsumerWidget {
     );
     try {
       await ref
-          .read(listasRepositoryProvider)
+          .read(itensRepositoryProvider)
           .editarItem(item.id, concluido: marcando);
     } catch (_) {
       if (context.mounted) mostrarSnackBar(context, context.l10n.erroGenerico);
@@ -109,7 +109,7 @@ class _LinhaItem extends ConsumerWidget {
   /// Remove o item e oferece Desfazer (usado pelo swipe e pelo diálogo).
   /// Devolve `false` se a escrita falhar (o swipe não confirma a remoção).
   Future<bool> _removerComUndo(BuildContext context, WidgetRef ref) async {
-    final repo = ref.read(listasRepositoryProvider);
+    final repo = ref.read(itensRepositoryProvider);
     try {
       await repo.removerItem(item.id);
     } catch (_) {
@@ -117,11 +117,23 @@ class _LinhaItem extends ConsumerWidget {
       return false;
     }
     if (!context.mounted) return true;
+    // O contexto da linha é desmontado quando o stream remove o item; captura
+    // o messenger e a mensagem de erro antes, para o Desfazer conseguir
+    // reportar uma falha de restauração sem tocar num contexto morto.
+    final messenger = ScaffoldMessenger.of(context);
+    final erro = context.l10n.erroGenerico;
     mostrarSnackBar(
       context,
       context.l10n.itemRemovido,
       rotuloAcao: context.l10n.desfazer,
-      onAcao: () => repo.restaurarItem(item.id),
+      messenger: messenger,
+      onAcao: () async {
+        try {
+          await repo.restaurarItem(item.id);
+        } catch (_) {
+          mostrarSnackBarComMessenger(messenger, erro);
+        }
+      },
     );
     return true;
   }
@@ -131,7 +143,6 @@ class _LinhaItem extends ConsumerWidget {
       context,
       child: _SheetEditarItem(
         item: item,
-        listaId: listaId,
         onRemover: () => _removerComUndo(context, ref),
       ),
     );

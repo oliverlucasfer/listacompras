@@ -18,8 +18,8 @@ void main() {
 
   Future<String> listaComConcluido() async {
     final l = await listas.criarLista(titulo: 'X', donoId: 'local');
-    final i = await listas.adicionarItem(listaId: l.id, nome: 'Arroz');
-    await listas.editarItem(i.id, concluido: true);
+    final i = await listas.itens.adicionarItem(listaId: l.id, nome: 'Arroz');
+    await listas.itens.editarItem(i.id, concluido: true);
     return l.id;
   }
 

@@ -30,12 +30,12 @@ void main() {
     required int orcamentoCentavos,
   }) async {
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
-    final item = await repo.adicionarItem(
+    final item = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Item',
       precoCentavos: precoCentavos,
     );
-    await repo.editarItem(item.id, concluido: true);
+    await repo.itens.editarItem(item.id, concluido: true);
     await repo.definirOrcamento(lista.id, centavos: orcamentoCentavos);
     await tester.pumpWidget(
       ProviderScope(

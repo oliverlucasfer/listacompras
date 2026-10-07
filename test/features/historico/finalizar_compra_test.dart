@@ -19,8 +19,8 @@ void main() {
     addTearDown(db.close);
     final listas = ListasRepository(db);
     final l = await listas.criarLista(titulo: 'Semana', donoId: 'local');
-    final item = await listas.adicionarItem(listaId: l.id, nome: 'Arroz');
-    await listas.editarItem(item.id, concluido: true);
+    final item = await listas.itens.adicionarItem(listaId: l.id, nome: 'Arroz');
+    await listas.itens.editarItem(item.id, concluido: true);
 
     await tester.pumpWidget(
       ProviderScope(
@@ -103,27 +103,27 @@ void main() {
     final historico = HistoricoComprasRepository(db);
 
     final l = await listas.criarLista(titulo: 'Semana', donoId: 'local');
-    final a = await listas.adicionarItem(
+    final a = await listas.itens.adicionarItem(
       listaId: l.id,
       nome: 'Arroz',
       quantidade: 2,
       precoCentavos: 500,
     );
-    final b = await listas.adicionarItem(
+    final b = await listas.itens.adicionarItem(
       listaId: l.id,
       nome: 'Feijão',
       quantidade: 1,
       precoCentavos: 800,
     );
-    final c = await listas.adicionarItem(
+    final c = await listas.itens.adicionarItem(
       listaId: l.id,
       nome: 'Café',
       quantidade: 3,
       precoCentavos: 200,
     );
-    await listas.editarItem(a.id, concluido: true);
-    await listas.editarItem(b.id, concluido: true);
-    await listas.editarItem(c.id, concluido: true);
+    await listas.itens.editarItem(a.id, concluido: true);
+    await listas.itens.editarItem(b.id, concluido: true);
+    await listas.itens.editarItem(c.id, concluido: true);
 
     final ida = await historico.finalizar(l.id);
 

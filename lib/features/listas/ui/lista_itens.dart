@@ -28,7 +28,7 @@ class _ListaItens extends ConsumerWidget {
       ..removeAt(oldIndex)
       ..insert(newIndex, grupo[oldIndex]);
     try {
-      await ref.read(listasRepositoryProvider).reordenarItens(listaId, [
+      await ref.read(itensRepositoryProvider).reordenarItens(listaId, [
         for (final i in ordenados) i.id,
       ]);
     } catch (_) {
@@ -40,7 +40,7 @@ class _ListaItens extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final itensAsync = ref.watch(itensDaListaProvider(listaId));
     // Grupos na ordem pessoal das categorias (RF-24), com fallback para o
-    // enum (doc 01 §3.2) enquanto a preferência carrega.
+    // enum (doc 13 §3) enquanto a preferência carrega.
     final ordemCategorias =
         ref.watch(ordemCategoriasProvider).value ?? CategoriaItem.values;
     return itensAsync.when(

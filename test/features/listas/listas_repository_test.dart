@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/features/listas/data/listas_repository.dart';
+import 'package:lista_compras/features/listas/data/mappers.dart';
 import 'package:lista_compras/core/dominio/categoria.dart';
 import 'package:lista_compras/features/listas/domain/item.dart';
 import 'package:lista_compras/features/listas/domain/resultado_dedup.dart';
@@ -75,11 +76,17 @@ void main() {
 
   test('deve_contar_itens_ativos_e_concluidos_quando_watch_contagem', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final arroz = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
-    await repo.adicionarItem(listaId: lista.id, nome: 'Feijão');
-    await repo.editarItem(arroz.id, concluido: true);
-    final leite = await repo.adicionarItem(listaId: lista.id, nome: 'Leite');
-    await repo.removerItem(leite.id);
+    final arroz = await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+    );
+    await repo.itens.adicionarItem(listaId: lista.id, nome: 'Feijão');
+    await repo.itens.editarItem(arroz.id, concluido: true);
+    final leite = await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Leite',
+    );
+    await repo.itens.removerItem(leite.id);
 
     final contagens = await repo.watchListasComContagem().first.timeout(
       const Duration(seconds: 2),
@@ -104,9 +111,12 @@ void main() {
   test('deve_adicionar_ordem_sequencial_quando_adicionar_tres_itens', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
 
-    final i1 = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
-    final i2 = await repo.adicionarItem(listaId: lista.id, nome: 'Feijão');
-    final i3 = await repo.adicionarItem(
+    final i1 = await repo.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    final i2 = await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Feijão',
+    );
+    final i3 = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Leite',
       quantidade: 2,
@@ -124,7 +134,11 @@ void main() {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
 
     expect(
-      () => repo.adicionarItem(listaId: lista.id, nome: 'Arroz', quantidade: 0),
+      () => repo.itens.adicionarItem(
+        listaId: lista.id,
+        nome: 'Arroz',
+        quantidade: 0,
+      ),
       throwsArgumentError,
     );
     expect(await db.select(db.itemLocal).get(), isEmpty);
@@ -139,7 +153,7 @@ void main() {
   test('deve_gravar_unidade_pt_quando_adicionar_item', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
 
-    final item = await repo.adicionarItem(
+    final item = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Sorvete',
       quantidade: 2,
@@ -155,9 +169,12 @@ void main() {
 
   test('deve_editar_campos_quando_editar_item', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    final item = await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+    );
 
-    await repo.editarItem(
+    await repo.itens.editarItem(
       item.id,
       nome: 'Arroz integral',
       quantidade: 5,
@@ -174,9 +191,12 @@ void main() {
 
   test('deve_marcar_concluido_quando_alternar_item', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Café');
+    final item = await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Café',
+    );
 
-    await repo.editarItem(item.id, concluido: true);
+    await repo.itens.editarItem(item.id, concluido: true);
 
     final local = await (db.select(
       db.itemLocal,
@@ -188,16 +208,19 @@ void main() {
     'deve_soft_delete_item_e_remover_do_stream_quando_remover_item',
     () async {
       final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-      final item = await repo.adicionarItem(listaId: lista.id, nome: 'Café');
+      final item = await repo.itens.adicionarItem(
+        listaId: lista.id,
+        nome: 'Café',
+      );
 
-      await repo.removerItem(item.id);
+      await repo.itens.removerItem(item.id);
 
       final local = await (db.select(
         db.itemLocal,
       )..where((i) => i.id.equals(item.id))).getSingle();
       expect(local.deletadoEm, isNotNull);
 
-      final ativos = await repo
+      final ativos = await repo.itens
           .watchItensDaLista(lista.id)
           .first
           .timeout(const Duration(seconds: 2));
@@ -207,17 +230,20 @@ void main() {
 
   test('deve_restaurar_item_quando_undo', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Café');
-    await repo.removerItem(item.id);
+    final item = await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Café',
+    );
+    await repo.itens.removerItem(item.id);
 
-    await repo.restaurarItem(item.id);
+    await repo.itens.restaurarItem(item.id);
 
     final local = await (db.select(
       db.itemLocal,
     )..where((i) => i.id.equals(item.id))).getSingle();
     expect(local.deletadoEm, isNull);
 
-    final ativos = await repo
+    final ativos = await repo.itens
         .watchItensDaLista(lista.id)
         .first
         .timeout(const Duration(seconds: 2));
@@ -228,13 +254,19 @@ void main() {
     'deve_desmarcar_todos_os_concluidos_quando_reaproveitar_lista',
     () async {
       final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-      final i1 = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
-      await repo.adicionarItem(listaId: lista.id, nome: 'Feijão');
-      final i3 = await repo.adicionarItem(listaId: lista.id, nome: 'Leite');
-      await repo.editarItem(i1.id, concluido: true);
-      await repo.editarItem(i3.id, concluido: true);
+      final i1 = await repo.itens.adicionarItem(
+        listaId: lista.id,
+        nome: 'Arroz',
+      );
+      await repo.itens.adicionarItem(listaId: lista.id, nome: 'Feijão');
+      final i3 = await repo.itens.adicionarItem(
+        listaId: lista.id,
+        nome: 'Leite',
+      );
+      await repo.itens.editarItem(i1.id, concluido: true);
+      await repo.itens.editarItem(i3.id, concluido: true);
 
-      await repo.desmarcarTodos(lista.id);
+      await repo.itens.desmarcarTodos(lista.id);
 
       final itens = await (db.select(
         db.itemLocal,
@@ -246,13 +278,16 @@ void main() {
 
   test('deve_soft_delete_dos_concluidos_quando_limpar_concluidos', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final i1 = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
-    final i2 = await repo.adicionarItem(listaId: lista.id, nome: 'Feijão');
-    final i3 = await repo.adicionarItem(listaId: lista.id, nome: 'Leite');
-    await repo.editarItem(i2.id, concluido: true);
-    await repo.editarItem(i3.id, concluido: true);
+    final i1 = await repo.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    final i2 = await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Feijão',
+    );
+    final i3 = await repo.itens.adicionarItem(listaId: lista.id, nome: 'Leite');
+    await repo.itens.editarItem(i2.id, concluido: true);
+    await repo.itens.editarItem(i3.id, concluido: true);
 
-    await repo.limparConcluidos(lista.id);
+    await repo.itens.limparConcluidos(lista.id);
 
     final ativos = await (db.select(
       db.itemLocal,
@@ -262,13 +297,16 @@ void main() {
 
   test('deve_devolver_itens_removidos_quando_limpar_concluidos', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final i1 = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
-    final i2 = await repo.adicionarItem(listaId: lista.id, nome: 'Feijão');
-    final i3 = await repo.adicionarItem(listaId: lista.id, nome: 'Leite');
-    await repo.editarItem(i1.id, concluido: true);
-    await repo.editarItem(i3.id, concluido: true);
+    final i1 = await repo.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    final i2 = await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Feijão',
+    );
+    final i3 = await repo.itens.adicionarItem(listaId: lista.id, nome: 'Leite');
+    await repo.itens.editarItem(i1.id, concluido: true);
+    await repo.itens.editarItem(i3.id, concluido: true);
 
-    final removidos = await repo.limparConcluidos(lista.id);
+    final removidos = await repo.itens.limparConcluidos(lista.id);
 
     expect(removidos.map((i) => i.id).toSet(), {i1.id, i3.id});
     expect(removidos.map((i) => i.ordem).toSet(), {i1.ordem, i3.ordem});
@@ -279,15 +317,18 @@ void main() {
 
   test('deve_restaurar_id_e_ordem_quando_undo_do_limpar', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final i1 = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
-    final i2 = await repo.adicionarItem(listaId: lista.id, nome: 'Feijão');
-    final i3 = await repo.adicionarItem(listaId: lista.id, nome: 'Leite');
-    await repo.editarItem(i1.id, concluido: true);
-    await repo.editarItem(i3.id, concluido: true);
+    final i1 = await repo.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    final i2 = await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Feijão',
+    );
+    final i3 = await repo.itens.adicionarItem(listaId: lista.id, nome: 'Leite');
+    await repo.itens.editarItem(i1.id, concluido: true);
+    await repo.itens.editarItem(i3.id, concluido: true);
 
-    final removidos = await repo.limparConcluidos(lista.id);
+    final removidos = await repo.itens.limparConcluidos(lista.id);
     for (final item in removidos) {
-      await repo.restaurarItem(item.id);
+      await repo.itens.restaurarItem(item.id);
     }
 
     final ativos = await (db.select(
@@ -299,12 +340,21 @@ void main() {
 
   test('deve_reordenar_apenas_mudancas_quando_drag', () async {
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'user-a');
-    final arroz = await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
-    final leite = await repo.adicionarItem(listaId: lista.id, nome: 'Leite');
-    final cafe = await repo.adicionarItem(listaId: lista.id, nome: 'Café');
+    final arroz = await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+    );
+    final leite = await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Leite',
+    );
+    final cafe = await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Café',
+    );
 
     // Nova ordem: Leite (0), Arroz (1), Café (2) — Café não muda.
-    await repo.reordenarItens(lista.id, [leite.id, arroz.id, cafe.id]);
+    await repo.itens.reordenarItens(lista.id, [leite.id, arroz.id, cafe.id]);
 
     final itens = await (db.select(
       db.itemLocal,
@@ -316,7 +366,7 @@ void main() {
   test('deve_gravar_categoria_informada_quando_adicionar_item_f6t02', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
 
-    final item = await repo.adicionarItem(
+    final item = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Queijo prato',
       categoria: CategoriaItem.frios,
@@ -334,7 +384,10 @@ void main() {
     () async {
       final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
 
-      final item = await repo.adicionarItem(listaId: lista.id, nome: 'Coisa');
+      final item = await repo.itens.adicionarItem(
+        listaId: lista.id,
+        nome: 'Coisa',
+      );
 
       expect(item.categoria, CategoriaItem.outros);
     },
@@ -342,7 +395,7 @@ void main() {
 
   test('deve_gravar_preco_quando_adicionar_item_com_preco', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final item = await repo.adicionarItem(
+    final item = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       precoCentavos: 549,
@@ -356,7 +409,7 @@ void main() {
 
   test('deve_gravar_preco_zero_quando_adicionar_item_com_preco_zero', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final item = await repo.adicionarItem(
+    final item = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       precoCentavos: 0,
@@ -370,13 +423,13 @@ void main() {
 
   test('deve_preservar_preco_quando_editar_outro_campo', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final item = await repo.adicionarItem(
+    final item = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       precoCentavos: 549,
     );
 
-    await repo.editarItem(item.id, nome: 'Arroz Tio João');
+    await repo.itens.editarItem(item.id, nome: 'Arroz Tio João');
 
     final local = await (db.select(
       db.itemLocal,
@@ -386,13 +439,13 @@ void main() {
 
   test('deve_limpar_preco_quando_editar_com_limparPreco', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final item = await repo.adicionarItem(
+    final item = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       precoCentavos: 549,
     );
 
-    await repo.editarItem(item.id, limparPreco: true);
+    await repo.itens.editarItem(item.id, limparPreco: true);
 
     final local = await (db.select(
       db.itemLocal,
@@ -402,13 +455,13 @@ void main() {
 
   test('deve_preferir_preco_quando_presente_e_limparPreco_ambos', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final item = await repo.adicionarItem(
+    final item = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       precoCentavos: 549,
     );
 
-    await repo.editarItem(item.id, precoCentavos: 0, limparPreco: true);
+    await repo.itens.editarItem(item.id, precoCentavos: 0, limparPreco: true);
 
     final local = await (db.select(
       db.itemLocal,
@@ -527,7 +580,7 @@ void main() {
 
   test('nao_deve_arquivar_lista_nova_quando_duplicar', () async {
     final origem = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    await repo.adicionarItem(listaId: origem.id, nome: 'Arroz');
+    await repo.itens.adicionarItem(listaId: origem.id, nome: 'Arroz');
     await repo.definirArquivada(origem.id, arquivada: true);
 
     final nova = await repo.duplicarLista(
@@ -558,7 +611,7 @@ void main() {
 
   test('deve_adicionar_quando_nome_nao_existe', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final r = await repo.adicionarItemDedup(
+    final r = await repo.itens.adicionarItemDedup(
       listaId: lista.id,
       nome: 'Arroz',
       quantidade: 2,
@@ -575,13 +628,13 @@ void main() {
 
   test('deve_somar_quando_mesmo_nome_e_unidade', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       quantidade: 2,
       unidade: Unidade.kg,
     );
-    final r = await repo.adicionarItemDedup(
+    final r = await repo.itens.adicionarItemDedup(
       listaId: lista.id,
       nome: 'ARROZ',
       quantidade: 1,
@@ -598,13 +651,13 @@ void main() {
 
   test('deve_substituir_quando_mesmo_nome_e_unidade_diferente', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       quantidade: 2,
       unidade: Unidade.kg,
     );
-    final r = await repo.adicionarItemDedup(
+    final r = await repo.itens.adicionarItemDedup(
       listaId: lista.id,
       nome: 'Arroz',
       quantidade: 5,
@@ -622,7 +675,7 @@ void main() {
   test('deve_ignorar_preco_e_concluido_quando_adicionar_lote', () async {
     final origem = await repo.criarLista(titulo: 'Origem', donoId: 'user-a');
     final destino = await repo.criarLista(titulo: 'Destino', donoId: 'user-a');
-    final item = await repo.adicionarItem(
+    final item = await repo.itens.adicionarItem(
       listaId: origem.id,
       nome: 'Queijo',
       quantidade: 0.5,
@@ -630,12 +683,12 @@ void main() {
       categoria: CategoriaItem.frios,
       precoCentavos: 4990,
     );
-    await repo.editarItem(item.id, concluido: true);
+    await repo.itens.editarItem(item.id, concluido: true);
 
     final fonte = await (db.select(
       db.itemLocal,
     )..where((i) => i.id.equals(item.id))).getSingle();
-    await repo.adicionarItensDedup(destino.id, [Item.fromLocal(fonte)]);
+    await repo.itens.adicionarItensDedup(destino.id, [fonte.toDomain()]);
 
     final novo = await (db.select(
       db.itemLocal,
@@ -656,8 +709,8 @@ void main() {
         titulo: 'Destino',
         donoId: 'user-a',
       );
-      await repo.adicionarItem(listaId: destino.id, nome: 'Café');
-      final itemOrigem = await repo.adicionarItem(
+      await repo.itens.adicionarItem(listaId: destino.id, nome: 'Café');
+      final itemOrigem = await repo.itens.adicionarItem(
         listaId: origem.id,
         nome: 'CAFE',
         quantidade: 2,
@@ -666,7 +719,7 @@ void main() {
       final fonte = await (db.select(
         db.itemLocal,
       )..where((i) => i.id.equals(itemOrigem.id))).getSingle();
-      await repo.adicionarItensDedup(destino.id, [Item.fromLocal(fonte)]);
+      await repo.itens.adicionarItensDedup(destino.id, [fonte.toDomain()]);
 
       final itens = await (db.select(
         db.itemLocal,
@@ -678,14 +731,14 @@ void main() {
 
   test('deve_registrar_historico_quando_concluir_item_com_preco', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final item = await repo.adicionarItem(
+    final item = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Café',
       unidade: Unidade.pacote,
       precoCentavos: 1850,
     );
 
-    await repo.editarItem(item.id, concluido: true);
+    await repo.itens.editarItem(item.id, concluido: true);
 
     final rows = await db.select(db.historicoPrecoLocal).get();
     expect(rows, hasLength(1));
@@ -696,23 +749,26 @@ void main() {
 
   test('deve_nao_registrar_historico_quando_concluir_item_sem_preco', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final item = await repo.adicionarItem(listaId: lista.id, nome: 'Café');
+    final item = await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Café',
+    );
 
-    await repo.editarItem(item.id, concluido: true);
+    await repo.itens.editarItem(item.id, concluido: true);
 
     expect(await db.select(db.historicoPrecoLocal).get(), isEmpty);
   });
 
   test('deve_manter_historico_quando_desmarcar_item_concluido', () async {
     final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-    final item = await repo.adicionarItem(
+    final item = await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Café',
       precoCentavos: 1850,
     );
 
-    await repo.editarItem(item.id, concluido: true);
-    await repo.editarItem(item.id, concluido: false);
+    await repo.itens.editarItem(item.id, concluido: true);
+    await repo.itens.editarItem(item.id, concluido: false);
 
     final rows = await db.select(db.historicoPrecoLocal).get();
     expect(rows, hasLength(1));
@@ -723,20 +779,20 @@ void main() {
     'deve_manter_registradoEm_quando_editar_item_ja_concluido_sem_mudar_preco',
     () async {
       final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-      final item = await repo.adicionarItem(
+      final item = await repo.itens.adicionarItem(
         listaId: lista.id,
         nome: 'Café',
         precoCentavos: 1850,
       );
 
-      await repo.editarItem(item.id, concluido: true);
+      await repo.itens.editarItem(item.id, concluido: true);
       final registrado =
           (await db.select(db.historicoPrecoLocal).get()).single.registradoEm;
 
       await Future<void>.delayed(const Duration(milliseconds: 5));
       // Edição não relacionada (quantidade) num item já concluído com preço
       // não deve re-registrar o histórico (RF-29, F37).
-      await repo.editarItem(item.id, quantidade: 3);
+      await repo.itens.editarItem(item.id, quantidade: 3);
 
       final rows = await db.select(db.historicoPrecoLocal).get();
       expect(rows, hasLength(1));
@@ -748,15 +804,15 @@ void main() {
     'deve_atualizar_historico_quando_preco_muda_com_item_concluido',
     () async {
       final lista = await repo.criarLista(titulo: 'X', donoId: 'user-a');
-      final item = await repo.adicionarItem(
+      final item = await repo.itens.adicionarItem(
         listaId: lista.id,
         nome: 'Café',
         precoCentavos: 1850,
       );
 
-      await repo.editarItem(item.id, concluido: true);
+      await repo.itens.editarItem(item.id, concluido: true);
       // Corrigir o preço de um item já concluído atualiza o histórico.
-      await repo.editarItem(item.id, precoCentavos: 2000);
+      await repo.itens.editarItem(item.id, precoCentavos: 2000);
 
       final rows = await db.select(db.historicoPrecoLocal).get();
       expect(rows, hasLength(1));
@@ -768,8 +824,8 @@ void main() {
     'deve_ignorar_sem_erro_quando_remove_ou_restaura_id_inexistente',
     () async {
       // Operação idempotente: id inexistente afeta 0 linhas e não lança.
-      await repo.removerItem('id-inexistente');
-      await repo.restaurarItem('id-inexistente');
+      await repo.itens.removerItem('id-inexistente');
+      await repo.itens.restaurarItem('id-inexistente');
 
       expect(await db.select(db.itemLocal).get(), isEmpty);
     },
@@ -799,14 +855,18 @@ void main() {
     'deve_somar_quando_unidade_igual_e_inserir_quando_novo_no_lote',
     () async {
       final lista = await repo.criarLista(titulo: 'Lote', donoId: 'user-a');
-      await repo.adicionarItem(listaId: lista.id, nome: 'Arroz', quantidade: 2);
+      await repo.itens.adicionarItem(
+        listaId: lista.id,
+        nome: 'Arroz',
+        quantidade: 2,
+      );
 
-      await repo.adicionarItensDedup(lista.id, [
+      await repo.itens.adicionarItensDedup(lista.id, [
         itemLote('arroz'),
         itemLote('Feijão', quantidade: 3, unidade: Unidade.kg),
       ]);
 
-      final itens = await repo.watchItensDaLista(lista.id).first;
+      final itens = await repo.itens.watchItensDaLista(lista.id).first;
       expect(itens.length, 2);
       final arroz = itens.firstWhere((i) => i.nome.toLowerCase() == 'arroz');
       expect(arroz.quantidade, 3);
@@ -818,13 +878,17 @@ void main() {
 
   test('deve_substituir_quando_unidade_diferente_no_lote', () async {
     final lista = await repo.criarLista(titulo: 'Lote2', donoId: 'user-a');
-    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz', quantidade: 2);
+    await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      quantidade: 2,
+    );
 
-    await repo.adicionarItensDedup(lista.id, [
+    await repo.itens.adicionarItensDedup(lista.id, [
       itemLote('arroz', quantidade: 1, unidade: Unidade.kg),
     ]);
 
-    final itens = await repo.watchItensDaLista(lista.id).first;
+    final itens = await repo.itens.watchItensDaLista(lista.id).first;
     final arroz = itens.single;
     expect(arroz.quantidade, 1);
     expect(arroz.unidade, Unidade.kg);
@@ -834,9 +898,9 @@ void main() {
     'deve_copiar_pendentes_com_ordem_sequencial_quando_duplicar_lista',
     () async {
       final origem = await repo.criarLista(titulo: 'Origem', donoId: 'user-a');
-      await repo.adicionarItem(listaId: origem.id, nome: 'A');
-      await repo.adicionarItem(listaId: origem.id, nome: 'B');
-      await repo.adicionarItem(
+      await repo.itens.adicionarItem(listaId: origem.id, nome: 'A');
+      await repo.itens.adicionarItem(listaId: origem.id, nome: 'B');
+      await repo.itens.adicionarItem(
         listaId: origem.id,
         nome: 'C',
         precoCentavos: 500,
@@ -848,7 +912,7 @@ void main() {
         donoId: 'user-a',
       );
 
-      final itens = await repo.watchItensDaLista(nova.id).first;
+      final itens = await repo.itens.watchItensDaLista(nova.id).first;
       expect(itens.map((i) => i.nome), ['A', 'B', 'C']);
       expect(itens.map((i) => i.ordem), [0, 1, 2]);
       expect(itens.last.precoCentavos, 500);
@@ -857,64 +921,64 @@ void main() {
 
   test('deve_desmarcar_todos_quando_havia_concluidos', () async {
     final lista = await repo.criarLista(titulo: 'Massa', donoId: 'user-a');
-    final a = await repo.adicionarItem(listaId: lista.id, nome: 'A');
-    final b = await repo.adicionarItem(listaId: lista.id, nome: 'B');
-    await repo.editarItem(a.id, concluido: true);
-    await repo.editarItem(b.id, concluido: true);
+    final a = await repo.itens.adicionarItem(listaId: lista.id, nome: 'A');
+    final b = await repo.itens.adicionarItem(listaId: lista.id, nome: 'B');
+    await repo.itens.editarItem(a.id, concluido: true);
+    await repo.itens.editarItem(b.id, concluido: true);
 
-    await repo.desmarcarTodos(lista.id);
+    await repo.itens.desmarcarTodos(lista.id);
 
-    final itens = await repo.watchItensDaLista(lista.id).first;
+    final itens = await repo.itens.watchItensDaLista(lista.id).first;
     expect(itens.every((i) => !i.concluido), isTrue);
   });
 
   test('deve_retornar_itens_removidos_quando_limpar_concluidos', () async {
     final lista = await repo.criarLista(titulo: 'Limpar', donoId: 'user-a');
-    final a = await repo.adicionarItem(listaId: lista.id, nome: 'A');
-    await repo.adicionarItem(listaId: lista.id, nome: 'B');
-    await repo.editarItem(a.id, concluido: true);
+    final a = await repo.itens.adicionarItem(listaId: lista.id, nome: 'A');
+    await repo.itens.adicionarItem(listaId: lista.id, nome: 'B');
+    await repo.itens.editarItem(a.id, concluido: true);
 
-    final removidos = await repo.limparConcluidos(lista.id);
+    final removidos = await repo.itens.limparConcluidos(lista.id);
 
     expect(removidos.map((i) => i.id), [a.id]);
-    final itens = await repo.watchItensDaLista(lista.id).first;
+    final itens = await repo.itens.watchItensDaLista(lista.id).first;
     expect(itens.map((i) => i.nome), ['B']);
   });
 
   test('deve_gravar_nova_ordem_quando_reordenar', () async {
     final lista = await repo.criarLista(titulo: 'Ordem', donoId: 'user-a');
-    final a = await repo.adicionarItem(listaId: lista.id, nome: 'A');
-    final b = await repo.adicionarItem(listaId: lista.id, nome: 'B');
-    final c = await repo.adicionarItem(listaId: lista.id, nome: 'C');
+    final a = await repo.itens.adicionarItem(listaId: lista.id, nome: 'A');
+    final b = await repo.itens.adicionarItem(listaId: lista.id, nome: 'B');
+    final c = await repo.itens.adicionarItem(listaId: lista.id, nome: 'C');
 
-    await repo.reordenarItens(lista.id, [c.id, a.id, b.id]);
+    await repo.itens.reordenarItens(lista.id, [c.id, a.id, b.id]);
 
-    final itens = await repo.watchItensDaLista(lista.id).first;
+    final itens = await repo.itens.watchItensDaLista(lista.id).first;
     expect(itens.map((i) => i.nome), ['C', 'A', 'B']);
     expect(itens.map((i) => i.ordem), [0, 1, 2]);
   });
 
   test('deve_retornar_vazio_quando_limpar_concluidos_sem_concluidos', () async {
     final lista = await repo.criarLista(titulo: 'Vazia', donoId: 'user-a');
-    await repo.adicionarItem(listaId: lista.id, nome: 'A');
-    expect(await repo.limparConcluidos(lista.id), isEmpty);
+    await repo.itens.adicionarItem(listaId: lista.id, nome: 'A');
+    expect(await repo.itens.limparConcluidos(lista.id), isEmpty);
   });
 
   test('deve_ignorar_ids_desconhecidos_quando_reordenar_parcial', () async {
     final lista = await repo.criarLista(titulo: 'Parcial', donoId: 'user-a');
-    final a = await repo.adicionarItem(listaId: lista.id, nome: 'A');
-    final b = await repo.adicionarItem(listaId: lista.id, nome: 'B');
+    final a = await repo.itens.adicionarItem(listaId: lista.id, nome: 'A');
+    final b = await repo.itens.adicionarItem(listaId: lista.id, nome: 'B');
 
-    await repo.reordenarItens(lista.id, [b.id, 'id-inexistente', a.id]);
+    await repo.itens.reordenarItens(lista.id, [b.id, 'id-inexistente', a.id]);
 
-    final itens = await repo.watchItensDaLista(lista.id).first;
+    final itens = await repo.itens.watchItensDaLista(lista.id).first;
     expect(itens.firstWhere((i) => i.nome == 'B').ordem, 0);
     expect(itens.firstWhere((i) => i.nome == 'A').ordem, 2);
   });
 
   test('deve_aplicar_preco_quando_dedup_com_preco', () async {
     final lista = await repo.criarLista(titulo: 'L', donoId: 'local');
-    await repo.adicionarItemDedup(
+    await repo.itens.adicionarItemDedup(
       listaId: lista.id,
       nome: 'Arroz',
       quantidade: 1,
@@ -928,12 +992,12 @@ void main() {
 
   test('deve_atualizar_preco_quando_dedup_em_item_existente', () async {
     final lista = await repo.criarLista(titulo: 'L', donoId: 'local');
-    await repo.adicionarItem(
+    await repo.itens.adicionarItem(
       listaId: lista.id,
       nome: 'Arroz',
       precoCentavos: 100,
     );
-    await repo.adicionarItemDedup(
+    await repo.itens.adicionarItemDedup(
       listaId: lista.id,
       nome: 'Arroz',
       quantidade: 1,

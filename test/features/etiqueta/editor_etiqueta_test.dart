@@ -47,7 +47,7 @@ Future<void> _abrirEditor(
 }) async {
   final repo = ListasRepository(db);
   final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
-  await repo.adicionarItem(listaId: lista.id, nome: nomeItem);
+  await repo.itens.adicionarItem(listaId: lista.id, nome: nomeItem);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [

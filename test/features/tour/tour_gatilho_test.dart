@@ -12,7 +12,7 @@ import 'package:lista_compras/features/listas/ui/minhas_listas_screen.dart';
 import 'package:lista_compras/features/listas/ui/tela_lista_screen.dart';
 import 'package:lista_compras/features/onboarding/providers/onboarding_provider.dart';
 import 'package:lista_compras/features/tour/tour_controller.dart';
-import 'package:lista_compras/features/tour/tour_keys.dart';
+import 'package:lista_compras/core/navigation/tour_keys.dart';
 import 'package:lista_compras/features/tour/ui/tour_overlay.dart';
 import 'package:lista_compras/l10n/app_localizations.dart';
 import 'package:lista_compras/router.dart';
@@ -151,7 +151,7 @@ void main() {
   testWidgets('deve_iniciar_tour_etapa2_quando_lista_tem_item', (tester) async {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
-    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await repo.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
     final c = container(prefs: {'onboarding_visto': true});
 
     await tester.pumpWidget(_app(c, TelaListaScreen(listaId: lista.id)));
@@ -164,7 +164,7 @@ void main() {
   testWidgets('nao_deve_iniciar_tour_etapa2_quando_flag_vista', (tester) async {
     final repo = ListasRepository(db);
     final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
-    await repo.adicionarItem(listaId: lista.id, nome: 'Arroz');
+    await repo.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
     final c = container(
       prefs: {'onboarding_visto': true, 'tour_etapa2_visto': true},
     );

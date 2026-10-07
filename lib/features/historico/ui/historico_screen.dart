@@ -10,7 +10,7 @@ import '../../../core/widgets/app_estado_erro.dart';
 import '../../../core/widgets/app_estado_vazio.dart';
 import '../../listas/domain/preco.dart';
 import '../../tour/tour_controller.dart';
-import '../../tour/tour_keys.dart';
+import '../../../core/navigation/tour_keys.dart';
 import '../../tour/ui/tour_loader.dart';
 import '../domain/ida.dart';
 import '../providers/historico_providers.dart';
