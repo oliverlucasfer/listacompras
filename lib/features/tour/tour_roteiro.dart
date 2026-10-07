@@ -1,5 +1,11 @@
+import '../ocr/providers/ocr_providers.dart';
 import 'tour_keys.dart';
 import 'tour_step.dart';
+
+/// Resolve o texto conforme a plataforma: onde há OCR (Android/iOS) cita a
+/// câmera; Web/Desktop usam a variante sem câmera (RF-37/RF-40, F61).
+TourTexto _texto(TourTexto semOcr, TourTexto comOcr) =>
+    (l) => plataformaComOcr() ? comOcr(l) : semOcr(l);
 
 /// Roteiro da etapa 1 (primeiro contato, na home de listas): criar lista,
 /// busca/filtros, aba Histórico e configurações. Os recursos da tela da lista
@@ -60,19 +66,19 @@ List<TourStep> get passosEtapa2 => <TourStep>[
     id: 'recursos.importar',
     alvo: TourKeys.botaoImportar,
     titulo: (l) => l.tourImportarTitulo,
-    corpo: (l) => l.tourImportarCorpo,
+    corpo: _texto((l) => l.tourImportarCorpo, (l) => l.tourImportarCorpoComOcr),
   ),
   TourStep(
     id: 'recursos.marcar',
     alvo: TourKeys.itemLista,
     titulo: (l) => l.tourMarcarTitulo,
-    corpo: (l) => l.tourMarcarCorpo,
+    corpo: _texto((l) => l.tourMarcarCorpo, (l) => l.tourMarcarCorpoComOcr),
   ),
   TourStep(
     id: 'recursos.mercado',
     alvo: TourKeys.botaoMercado,
     titulo: (l) => l.tourMercadoTitulo,
-    corpo: (l) => l.tourMercadoCorpo,
+    corpo: _texto((l) => l.tourMercadoCorpo, (l) => l.tourMercadoCorpoComOcr),
   ),
   TourStep(
     id: 'recursos.menu',

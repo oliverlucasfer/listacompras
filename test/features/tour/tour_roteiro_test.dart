@@ -1,7 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lista_compras/features/tour/tour_roteiro.dart';
+import 'package:lista_compras/features/tour/tour_step.dart';
+import 'package:lista_compras/l10n/app_localizations_pt.dart';
+
+TourStep _passo(String id) =>
+    passosEtapa2.firstWhere((TourStep p) => p.id == id);
 
 void main() {
+  tearDown(() => debugDefaultTargetPlatformOverride = null);
+
   test('deve_ter_quatro_passos_na_etapa1_na_ordem_da_home', () {
     expect(passosEtapa1.map((p) => p.id).toList(), <String>[
       'lista.criar',
@@ -28,5 +36,29 @@ void main() {
       'historico.resumo',
       'historico.estatisticas',
     ]);
+  });
+
+  test('deve_citar_camera_nos_passos_quando_plataforma_tem_ocr', () {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final l = AppLocalizationsPt();
+
+    expect(_passo('recursos.importar').corpo(l), contains('fotografe'));
+    expect(_passo('recursos.mercado').corpo(l), contains('câmera'));
+    expect(_passo('recursos.marcar').corpo(l), contains('câmera'));
+  });
+
+  test('deve_omitir_camera_nos_passos_quando_plataforma_sem_ocr', () {
+    debugDefaultTargetPlatformOverride = TargetPlatform.linux;
+    final l = AppLocalizationsPt();
+
+    for (final id in const [
+      'recursos.importar',
+      'recursos.mercado',
+      'recursos.marcar',
+    ]) {
+      final corpo = _passo(id).corpo(l);
+      expect(corpo, isNot(contains('câmera')), reason: id);
+      expect(corpo, isNot(contains('fotografe')), reason: id);
+    }
   });
 }

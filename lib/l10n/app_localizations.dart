@@ -1585,8 +1585,14 @@ abstract class AppLocalizations {
   /// No description provided for @tourImportarCorpo.
   ///
   /// In pt, this message translates to:
-  /// **'Digite, cole uma anotação ou fotografe a lista; o app organiza os itens para você.'**
+  /// **'Digite ou cole uma anotação; o app organiza os itens para você.'**
   String get tourImportarCorpo;
+
+  /// No description provided for @tourImportarCorpoComOcr.
+  ///
+  /// In pt, this message translates to:
+  /// **'Digite, cole uma anotação ou fotografe a lista — o texto é lido no aparelho (a foto não fica guardada); o app organiza os itens para você.'**
+  String get tourImportarCorpoComOcr;
 
   /// No description provided for @tourBuscaTitulo.
   ///
@@ -1624,6 +1630,12 @@ abstract class AppLocalizations {
   /// **'Toque no item para editar; marque no círculo; arraste para remover.'**
   String get tourMarcarCorpo;
 
+  /// No description provided for @tourMarcarCorpoComOcr.
+  ///
+  /// In pt, this message translates to:
+  /// **'Toque no item para editar — a câmera no campo de preço lê a etiqueta da prateleira; marque no círculo; arraste para remover.'**
+  String get tourMarcarCorpoComOcr;
+
   /// No description provided for @tourMercadoTitulo.
   ///
   /// In pt, this message translates to:
@@ -1635,6 +1647,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'No mercado, marque as compras e registre o preço pago. O app guarda o preço por mercado.'**
   String get tourMercadoCorpo;
+
+  /// No description provided for @tourMercadoCorpoComOcr.
+  ///
+  /// In pt, this message translates to:
+  /// **'No mercado, marque as compras e registre o preço pago — ou toque na câmera para ler a etiqueta da prateleira. O app guarda o preço por mercado.'**
+  String get tourMercadoCorpoComOcr;
 
   /// No description provided for @tourHistoricoTitulo.
   ///
