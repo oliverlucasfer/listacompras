@@ -27,6 +27,10 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
   String? _erroQuantidade;
   String? _erroPreco;
 
+  /// Texto bruto da última leitura de etiqueta (diagnóstico, RF-40); nulo até
+  /// uma leitura acontecer.
+  String? _textoLido;
+
   /// Nome usado na consulta "por mercado", atualizado com **debounce** — evita
   /// uma consulta ao banco a cada tecla digitada no nome.
   late String _nomeConsulta = normalizarTexto(widget.item.nome);
@@ -146,21 +150,22 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
     switch (resultado) {
       case CapturaTexto(:final texto):
         final etiqueta = analisarEtiqueta(texto);
-        if (etiqueta == null) {
-          mostrarSnackBar(context, context.l10n.etiquetaNaoReconhecida);
-          return;
-        }
         setState(() {
-          _preco.text = _precoInicial(etiqueta.precoCentavos);
-          if (_nome.text.trim().isEmpty &&
-              (etiqueta.nome?.isNotEmpty ?? false)) {
-            _nome.text = etiqueta.nome!;
+          // Sempre expõe o texto lido; sem preço reconhecido, mantém os campos
+          // intactos e deixa o usuário corrigir (sem aviso bloqueante).
+          _textoLido = texto;
+          if (etiqueta != null) {
+            _preco.text = _precoInicial(etiqueta.precoCentavos);
+            if (_nome.text.trim().isEmpty &&
+                (etiqueta.nome?.isNotEmpty ?? false)) {
+              _nome.text = etiqueta.nome!;
+            }
+            if (etiqueta.precoPorKgCentavos != null &&
+                etiqueta.precoPorKgCentavos == etiqueta.precoCentavos) {
+              _unidade = Unidade.kg;
+            }
+            _erroPreco = null;
           }
-          if (etiqueta.precoPorKgCentavos != null &&
-              etiqueta.precoPorKgCentavos == etiqueta.precoCentavos) {
-            _unidade = Unidade.kg;
-          }
-          _erroPreco = null;
         });
       case CapturaVazia():
         mostrarSnackBar(context, context.l10n.etiquetaNenhumTexto);
@@ -362,6 +367,7 @@ class _SheetEditarItemState extends ConsumerState<_SheetEditarItem> {
           ),
           if (hist != null) _linhaHistoricoPreco(hist),
           if (precos.isNotEmpty) _linhaPorMercado(precos),
+          if (_textoLido != null) TextoLidoOcr(texto: _textoLido!),
           const SizedBox(height: AppSpacing.lg),
           // Rodapé sempre sem estouro (RNF-06): o `OverflowBar` externo põe
           // Remover à esquerda e o grupo à direita quando cabem, e só empilha

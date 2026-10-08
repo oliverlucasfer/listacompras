@@ -221,7 +221,7 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 
 **Preço por mercado (RF-35/F52):** abaixo da "Última compra", a linha "Por mercado" lista o **último preço de cada mercado** para o item **na mesma unidade** atual (do mais barato ao mais caro), com o mais barato em destaque ("mais barato"); fica **oculta** quando não há histórico com mercado. Os preços são **derivados das idas** — não há tabela de preços.
 
-**Preço por etiqueta no editor (RF-40/F59):** em Android/iOS, o campo **"Preço (R$)"** do sheet do item ganha um **ícone de câmera** (`photo_camera_outlined`, tooltip "Ler etiqueta da prateleira"); toque lê a etiqueta por OCR on-device e **preenche o preço** (o nome só quando vazio; a unidade vira `kg` apenas no fallback por kg). O editor **é o preview editável** — nada é gravado até **Salvar**. Web/Desktop não mostram o ícone.
+**Preço por etiqueta no editor (RF-40/F59):** em Android/iOS, o campo **"Preço (R$)"** do sheet do item ganha um **ícone de câmera** (`photo_camera_outlined`, tooltip "Ler etiqueta da prateleira"); toque lê a etiqueta por OCR on-device e **preenche o preço** (o nome só quando vazio; a unidade vira `kg` apenas no fallback por kg). O editor **é o preview editável** — nada é gravado até **Salvar**. Após a leitura aparece o bloco recolhível **"Texto lido (OCR)"** (`TextoLidoOcr`, copiável); **sem preço reconhecido**, os campos ficam intactos e o texto é exibido para conferência. Web/Desktop não mostram o ícone.
 
 ### 3.2. Diálogo "Excluir lista"
 ```
@@ -258,7 +258,7 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 ```
 Com 0 pendentes, a área principal dá lugar ao vazio "Tudo comprado" com CTA para voltar à lista. A seta de voltar retorna à tela da lista (push); sem pilha, vai para `/listas`. A faixa "Marcados" fica dentro de `SafeArea(top: false)`, sem encostar à área segura inferior (G-37).
 
-**Preço por etiqueta no mercado (RF-40/F59 — [05 §6.19](05-app-flutter.md)):** em Android/iOS a AppBar ganha o **ícone de câmera** (`photo_camera_outlined`, tooltip "Ler etiqueta da prateleira"); toque → OCR on-device → `analisarEtiqueta`. Sem texto → aviso "Nenhum texto reconhecido na foto."; sem preço → "Não reconheci um preço na etiqueta."; cancelar → sem efeito. Com preço, abre o **bottom sheet "Etiqueta lida"** (preview editável):
+**Preço por etiqueta no mercado (RF-40/F59 — [05 §6.19](05-app-flutter.md)):** em Android/iOS a AppBar ganha o **ícone de câmera** (`photo_camera_outlined`, tooltip "Ler etiqueta da prateleira"); toque → OCR on-device → `analisarEtiqueta`. Sem texto → aviso "Nenhum texto reconhecido na foto."; cancelar → sem efeito. **Com ou sem preço**, abre o **bottom sheet "Etiqueta lida"** (preview editável) — sem preço reconhecido o campo vem vazio para correção:
 ```
 ┌─────────────────────────────────┐
 │  ▁▁▁▁ (arraste para baixo)      │ ← bottom sheet padrão
@@ -271,10 +271,11 @@ Com 0 pendentes, a área principal dá lugar ao vazio "Tudo comprado" com CTA pa
 │  [ Categoria ▾                  │    (hint "Escolha o item")
 │  Preço (R$)                     │
 │  [ 6,99______________________ ] │ ← validado como no editor;
-│  (Cancelar)         (Salvar)    │    "Salvar" vira "Aplicar" no
-└─────────────────────────────────┘    item existente (RF-40/F59)
+│  ▸ Texto lido (OCR)             │    "Salvar" vira "Aplicar" no
+│  (Cancelar)         (Salvar)    │    item existente (RF-40/F59)
+└─────────────────────────────────┘
 ```
-Web/Desktop não mostram o ícone (sem OCR).
+O bloco **"Texto lido (OCR)"** (`TextoLidoOcr`) é recolhível e copiável (diagnóstico). No **"Novo item"**, salvar **sem preço** cria o item sem preço; no **"Item existente"**, o preço é **obrigatório** para "Aplicar". Web/Desktop não mostram o ícone (sem OCR).
 
 ### 3.4. Chips de itens frequentes na lista (F22/RF-19)
 Acima do campo de adicionar, uma faixa horizontal rolável de `ActionChip` (alvo ≥48dp, com `Semantics` de ação "Adicionar <nome>") mostra até 8 sugestões quando o campo está vazio; tocar adiciona o item. O ranking vem do histórico local do Drift (peso 2 para a lista aberta, exclui pendentes, limiar ≥2) — nenhum dado de rede.

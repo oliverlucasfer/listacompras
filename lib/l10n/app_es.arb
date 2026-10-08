@@ -459,11 +459,11 @@
 
   "etiquetaLer": "Leer etiqueta",
   "etiquetaTitulo": "Etiqueta leída",
+  "etiquetaTextoLido": "Texto leído (OCR)",
   "etiquetaNovoItem": "Nuevo artículo",
   "etiquetaItemExistente": "Artículo existente",
   "etiquetaAplicar": "Aplicar",
   "etiquetaAplicada": "Precio aplicado.",
   "etiquetaNenhumTexto": "No se reconoció texto en la foto.",
-  "etiquetaNaoReconhecida": "No reconocí un precio en la etiqueta.",
   "etiquetaEscolherItem": "Elige el artículo"
 }

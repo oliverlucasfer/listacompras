@@ -459,11 +459,11 @@
 
   "etiquetaLer": "Scan shelf label",
   "etiquetaTitulo": "Label read",
+  "etiquetaTextoLido": "Text read (OCR)",
   "etiquetaNovoItem": "New item",
   "etiquetaItemExistente": "Existing item",
   "etiquetaAplicar": "Apply",
   "etiquetaAplicada": "Price applied.",
   "etiquetaNenhumTexto": "No text recognized in the photo.",
-  "etiquetaNaoReconhecida": "I couldn't recognize a price on the label.",
   "etiquetaEscolherItem": "Choose the item"
 }

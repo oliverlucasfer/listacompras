@@ -62,45 +62,65 @@ EtiquetaLida? analisarEtiqueta(String texto) {
       if (l.trim().isNotEmpty) l.trim(),
   ];
 
-  final naoKg = <int>[];
-  final porKg = <int>[];
-  final promocional = <int>[];
+  final naoKg = <_Candidato>[];
+  final porKg = <_Candidato>[];
+  final promocional = <_Candidato>[];
   String? nome;
 
-  for (final linha in linhas) {
+  for (var i = 0; i < linhas.length; i++) {
+    final linha = linhas[i];
     for (final m in _numero.allMatches(linha)) {
-      final centavos = _centavosSeMonetario(linha, m.start, m.group(0)!);
+      final bruto = m.group(0)!;
+      final centavos = _centavosSeMonetario(linha, m.start, bruto);
       if (centavos == null) continue;
+      // O marcador "/kg" pode cair na **linha seguinte**: a etiqueta quebra
+      // "R$ 55,63" e "/kg" em linhas separadas.
       final depois = linha.substring(m.end);
+      final contexto = depois.trim().isEmpty && i + 1 < linhas.length
+          ? ' ${linhas[i + 1]}'
+          : depois;
       // Peso/volume colado (ex.: "1,5kg") não é preço nem preço por unidade.
+      // Só vale na **mesma linha**: um "5kg" solto na linha de baixo é o peso
+      // do produto, não o sufixo do valor acima.
       if (_pesoApos.hasMatch(depois)) continue;
-      final ehKg = _contextoKg.hasMatch(depois);
-      (ehKg ? porKg : naoKg).add(centavos);
+      final cand = _Candidato(centavos, _pesoDoValor(linha, m.start, bruto));
+      (_contextoKg.hasMatch(contexto) ? porKg : naoKg).add(cand);
     }
     for (final m in _aposPor.allMatches(linha)) {
       final inicio = m.start + m.group(0)!.indexOf(m.group(1)!);
-      final centavos = _centavosSeMonetario(linha, inicio, m.group(1)!);
-      if (centavos != null) promocional.add(centavos);
+      final bruto = m.group(1)!;
+      final centavos = _centavosSeMonetario(linha, inicio, bruto);
+      if (centavos != null) {
+        promocional.add(
+          _Candidato(centavos, _pesoDoValor(linha, inicio, bruto)),
+        );
+      }
     }
     nome ??= _nomeDaLinha(linha);
   }
 
-  if (promocional.isNotEmpty) {
+  // Só os candidatos mais fortes de cada grupo contam como preço. Assim um
+  // código de produto lido como `111.26` (só ponto) não vence um `R$ 2,79`.
+  final naoKgCentavos = _maisFortes(naoKg);
+  final porKgCentavos = _maisFortes(porKg);
+  final promocionalCentavos = _maisFortes(promocional);
+
+  if (promocionalCentavos.isNotEmpty) {
     return EtiquetaLida(
       nome: nome,
-      precoCentavos: promocional.last,
-      precoPorKgCentavos: _maior(porKg),
+      precoCentavos: promocionalCentavos.last,
+      precoPorKgCentavos: _maior(porKgCentavos),
     );
   }
-  if (naoKg.isNotEmpty) {
+  if (naoKgCentavos.isNotEmpty) {
     return EtiquetaLida(
       nome: nome,
-      precoCentavos: _maior(naoKg)!,
-      precoPorKgCentavos: _maior(porKg),
+      precoCentavos: _maior(naoKgCentavos)!,
+      precoPorKgCentavos: _maior(porKgCentavos),
     );
   }
-  if (porKg.isNotEmpty) {
-    final preco = _maior(porKg)!;
+  if (porKgCentavos.isNotEmpty) {
+    final preco = _maior(porKgCentavos)!;
     return EtiquetaLida(
       nome: nome,
       precoCentavos: preco,
@@ -108,6 +128,13 @@ EtiquetaLida? analisarEtiqueta(String texto) {
     );
   }
   return null;
+}
+
+/// Um valor monetário candidato e sua "força" como preço (ver [_pesoDoValor]).
+class _Candidato {
+  const _Candidato(this.centavos, this.peso);
+  final int centavos;
+  final int peso;
 }
 
 int? _centavos(String bruto) {
@@ -126,6 +153,25 @@ int? _centavosSeMonetario(String linha, int inicio, String bruto) {
   final temMoeda = _moedaAntes.hasMatch(linha.substring(0, inicio));
   if (!temSeparador && !temMoeda) return null;
   return _centavos(bruto);
+}
+
+/// Força do valor como preço do item: `3` = precedido de `R$`; `2` = decimal
+/// com vírgula (padrão pt-BR); `1` = decimal só com ponto — ambíguo, pode ser
+/// um código de produto (ex.: `111.26`). Candidatos mais fortes têm prioridade.
+int _pesoDoValor(String linha, int inicio, String bruto) {
+  if (_moedaAntes.hasMatch(linha.substring(0, inicio))) return 3;
+  if (bruto.contains(',')) return 2;
+  return 1;
+}
+
+/// Mantém apenas os candidatos de maior força, preservando a ordem original.
+List<int> _maisFortes(List<_Candidato> candidatos) {
+  if (candidatos.isEmpty) return const [];
+  final maxPeso = candidatos.map((c) => c.peso).reduce((a, b) => a > b ? a : b);
+  return [
+    for (final c in candidatos)
+      if (c.peso == maxPeso) c.centavos,
+  ];
 }
 
 int? _maior(List<int> valores) {

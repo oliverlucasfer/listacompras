@@ -459,11 +459,11 @@
 
   "etiquetaLer": "Ler etiqueta da prateleira",
   "etiquetaTitulo": "Etiqueta lida",
+  "etiquetaTextoLido": "Texto lido (OCR)",
   "etiquetaNovoItem": "Novo item",
   "etiquetaItemExistente": "Item existente",
   "etiquetaAplicar": "Aplicar",
   "etiquetaAplicada": "Preço aplicado.",
   "etiquetaNenhumTexto": "Nenhum texto reconhecido na foto.",
-  "etiquetaNaoReconhecida": "Não reconheci um preço na etiqueta.",
   "etiquetaEscolherItem": "Escolha o item"
 }
