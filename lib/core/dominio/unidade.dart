@@ -9,7 +9,25 @@ enum Unidade {
   pacote('pacote'),
   pct('pct'),
   pt('pt'),
-  dz('dz');
+  dz('dz'),
+  bandeja('bdj'),
+  saco('sc'),
+  fardo('fd'),
+  garrafa('grf'),
+  cento('ct'),
+  cacho('cc'),
+  mao('mh'),
+  pe('pe'),
+  cabeca('cb'),
+  maco('mc'),
+  ramo('rm'),
+  lata('lt'),
+  vidro('vd'),
+  sache('sch'),
+  rolo('rl'),
+  barra('br'),
+  bisnaga('bsg'),
+  galao('gl');
 
   const Unidade(this.valor);
 

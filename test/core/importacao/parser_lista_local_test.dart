@@ -96,6 +96,192 @@ void main() {
     );
   });
 
+  test('deve_reconhecer_bandeja_saco_fardo_garrafa_quando_sigla', () {
+    expect(
+      analisarListaLocal('1 bdj de morango').itens.single.unidade,
+      Unidade.bandeja,
+    );
+    expect(
+      analisarListaLocal('2 sc de arroz').itens.single.unidade,
+      Unidade.saco,
+    );
+    expect(
+      analisarListaLocal('1 fd de refrigerante').itens.single.unidade,
+      Unidade.fardo,
+    );
+    expect(
+      analisarListaLocal('1 grf de vinho').itens.single.unidade,
+      Unidade.garrafa,
+    );
+  });
+
+  test(
+    'deve_reconhecer_bandeja_saco_fardo_garrafa_quando_palavra_e_plural',
+    () {
+      expect(
+        analisarListaLocal('1 bandeja de morango').itens.single.unidade,
+        Unidade.bandeja,
+      );
+      expect(
+        analisarListaLocal('2 bandejas de morango').itens.single.unidade,
+        Unidade.bandeja,
+      );
+      expect(
+        analisarListaLocal('1 saco de batata').itens.single.unidade,
+        Unidade.saco,
+      );
+      expect(
+        analisarListaLocal('3 sacos de laranja').itens.single.unidade,
+        Unidade.saco,
+      );
+      expect(
+        analisarListaLocal('1 fardo de cerveja').itens.single.unidade,
+        Unidade.fardo,
+      );
+      expect(
+        analisarListaLocal('2 fardos de água').itens.single.unidade,
+        Unidade.fardo,
+      );
+      expect(
+        analisarListaLocal('1 garrafa de azeite').itens.single.unidade,
+        Unidade.garrafa,
+      );
+      expect(
+        analisarListaLocal('2 garrafas de suco').itens.single.unidade,
+        Unidade.garrafa,
+      );
+    },
+  );
+
+  test('deve_reconhecer_unidades_de_porcao_e_embalagem_quando_sigla', () {
+    expect(
+      analisarListaLocal('1 ct de ovos').itens.single.unidade,
+      Unidade.cento,
+    );
+    expect(
+      analisarListaLocal('1 cc de banana').itens.single.unidade,
+      Unidade.cacho,
+    );
+    expect(
+      analisarListaLocal('1 mh de banana').itens.single.unidade,
+      Unidade.mao,
+    );
+    expect(
+      analisarListaLocal('1 pe de alface').itens.single.unidade,
+      Unidade.pe,
+    );
+    expect(
+      analisarListaLocal('1 cb de repolho').itens.single.unidade,
+      Unidade.cabeca,
+    );
+    expect(
+      analisarListaLocal('1 mc de cheiro-verde').itens.single.unidade,
+      Unidade.maco,
+    );
+    expect(
+      analisarListaLocal('1 rm de salsa').itens.single.unidade,
+      Unidade.ramo,
+    );
+    expect(
+      analisarListaLocal('1 lt de atum').itens.single.unidade,
+      Unidade.lata,
+    );
+    expect(
+      analisarListaLocal('1 vd de geleia').itens.single.unidade,
+      Unidade.vidro,
+    );
+    expect(
+      analisarListaLocal('1 sch de tempero').itens.single.unidade,
+      Unidade.sache,
+    );
+    expect(
+      analisarListaLocal('1 rl de papel').itens.single.unidade,
+      Unidade.rolo,
+    );
+    expect(
+      analisarListaLocal('1 br de chocolate').itens.single.unidade,
+      Unidade.barra,
+    );
+    expect(
+      analisarListaLocal('1 bsg de maionese').itens.single.unidade,
+      Unidade.bisnaga,
+    );
+    expect(
+      analisarListaLocal('1 gl de água').itens.single.unidade,
+      Unidade.galao,
+    );
+  });
+
+  test(
+    'deve_reconhecer_unidades_de_porcao_e_embalagem_quando_palavra_e_plural',
+    () {
+      expect(
+        analisarListaLocal('1 cento de ovos').itens.single.unidade,
+        Unidade.cento,
+      );
+      expect(
+        analisarListaLocal('2 cachos de uva').itens.single.unidade,
+        Unidade.cacho,
+      );
+      expect(
+        analisarListaLocal('1 mão de banana').itens.single.unidade,
+        Unidade.mao,
+      );
+      expect(
+        analisarListaLocal('2 mãos de banana').itens.single.unidade,
+        Unidade.mao,
+      );
+      expect(
+        analisarListaLocal('1 pé de alface').itens.single.unidade,
+        Unidade.pe,
+      );
+      expect(
+        analisarListaLocal('2 pés de alface').itens.single.unidade,
+        Unidade.pe,
+      );
+      expect(
+        analisarListaLocal('1 cabeça de repolho').itens.single.unidade,
+        Unidade.cabeca,
+      );
+      expect(
+        analisarListaLocal('1 maço de rúcula').itens.single.unidade,
+        Unidade.maco,
+      );
+      expect(
+        analisarListaLocal('2 ramos de hortelã').itens.single.unidade,
+        Unidade.ramo,
+      );
+      expect(
+        analisarListaLocal('2 latas de atum').itens.single.unidade,
+        Unidade.lata,
+      );
+      expect(
+        analisarListaLocal('1 vidro de conserva').itens.single.unidade,
+        Unidade.vidro,
+      );
+      expect(
+        analisarListaLocal('2 sachês de molho').itens.single.unidade,
+        Unidade.sache,
+      );
+      expect(
+        analisarListaLocal('1 rolo de papel').itens.single.unidade,
+        Unidade.rolo,
+      );
+      expect(
+        analisarListaLocal('2 barras de sabão').itens.single.unidade,
+        Unidade.barra,
+      );
+      expect(
+        analisarListaLocal('1 bisnaga de creme dental').itens.single.unidade,
+        Unidade.bisnaga,
+      );
+      expect(
+        analisarListaLocal('2 galões de água').itens.single.unidade,
+        Unidade.galao,
+      );
+    },
+  );
+
   test('deve_tolerar_acento_e_caixa', () {
     expect(
       analisarListaLocal('1 DÚZIA DE BANANAS').itens.single.unidade,
