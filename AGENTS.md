@@ -16,7 +16,7 @@ Projeto: app de lista de compras local e offline-first **"Minhas Listas"** (Flut
 - **Doc dono é autoridade:** importação em `04`, app/UX em `05`, design system em `15`, entregas/LGPD em `06`, qualidade em `07`, operação em `09`, layout em `10`, usabilidade em `11`, requisitos em `12`. Mudança de comportamento exige atualizar o doc dono **no mesmo PR**. `13` é resumo — nunca sobrepõe o dono.
 - **Nenhuma chave/segredo** em código, commit ou log.
 - **Offline-first local:** o Drift é a fonte da verdade; não há rede nem sincronização. Escrita vai sempre ao Drift e IDs UUID v4 são gerados no cliente.
-- **Enum de unidades fechado:** `un, kg, g, l, ml, caixa, pacote, pct, pt, dz` — mantenha idêntico em `lib/core/dominio/unidade.dart` e no parser local (`04`).
+- **Enum de unidades fechado:** `un, kg, g, l, ml, caixa, pacote, pct, pt, dz, bdj, sc, fd, grf, ct, cc, mh, pe, cb, mc, rm, lt, vd, sch, rl, br, bsg, gl` — mantenha idêntico em `lib/core/dominio/unidade.dart` e no parser local (`04`).
 - **CI verde obrigatório** antes de considerar qualquer tarefa concluída ([07](docs/07-qualidade-ci.md)).
 - **Bump de versão:** ao mudar `version:` no `pubspec.yaml`, atualize **`web/version.json`** (`version` e `build_number` iguais) **e rode `flutter test`** — o guard `test/core/config/version_json_test.dart` exige paridade e o CI quebra sem isso.
 

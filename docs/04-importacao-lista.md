@@ -47,7 +47,7 @@ Fluxo de UX completo (modal, pré-visualização, confirmação) está em [05 §
 
 ## 4. Enums
 
-- **Unidades** (fonte única `lib/core/dominio/unidade.dart`): `un, kg, g, l, ml, caixa, pacote, pct, pt, dz` — o parser local reconhece `pt`, `pote` e `potes` como `Unidade.pt` (F45-T01), e `quilo`/`quilos`/`kilo`/`kilos` como `Unidade.kg`.
+- **Unidades** (fonte única `lib/core/dominio/unidade.dart`): `un, kg, g, l, ml, caixa, pacote, pct, pt, dz, bdj, sc, fd, grf, ct, cc, mh, pe, cb, mc, rm, lt, vd, sch, rl, br, bsg, gl` — o parser local reconhece `pt`, `pote` e `potes` como `Unidade.pt` (F45-T01); `quilo`/`quilos`/`kilo`/`kilos` como `Unidade.kg`; `bdj`/`bandeja`/`bandejas`, `sc`/`saco`/`sacos`, `fd`/`fardo`/`fardos`, `grf`/`garrafa`/`garrafas` (F62-T01); e `ct`/`cento(s)`, `cc`/`cacho(s)`, `mh`/`mao(s)` (mão/mãos), `pe`/`pes` (pé/pés), `cb`/`cabeca(s)` (cabeça), `mc`/`maco(s)` (maço), `rm`/`ramo(s)`, `lt`/`lata(s)`, `vd`/`vidro(s)`, `sch`/`sache(s)` (sachê), `rl`/`rolo(s)`, `br`/`barra(s)`, `bsg`/`bisnaga(s)`, `gl`/`galao`/`galoes` (galão/galões) (F63-T01).
 - **Categorias** (fonte única `lib/core/dominio/categoria.dart`): `hortifruti, mercearia, frios, laticinios, congelados, padaria, bebidas, pet, limpeza, higiene, outros`.
 
 As frações (RF-25) **não alteram** os enums: a quantidade continua `numeric` e a unidade segue esta mesma lista.

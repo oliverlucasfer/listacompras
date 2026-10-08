@@ -1338,6 +1338,26 @@ Extensão do tour (F57) para citar a câmera só onde há OCR; recurso do RF-40 
 
 Nota: *(bounded: só conteúdo do tour (texto + i18n), sem motor/passo novo nem navegação. A câmera só aparece onde `plataformaComOcr()` é verdadeiro (Android/iOS); a imagem não é armazenada.)*
 
+## Fase 62 — Unidades adicionais `bdj`, `sc`, `fd`, `grf` (RF-03)
+
+Requisito: RF-03 (CRUD de itens com unidade do enum). · Docs donos: [04](04-importacao-lista.md), [13](13-premodelo-tecnico.md), [14](14-tarefas.md). · Sem spec/plano (mudança bounded).
+
+- [x] **F62-T01** — Unidades `bdj` (bandeja), `sc` (saco), `fd` (fardo), `grf` (garrafa)
+  Docs: [04](04-importacao-lista.md) §4 · [13](13-premodelo-tecnico.md). Requisito: RF-03.
+  CP: `Unidade.bandeja/saco/fardo/garrafa` no Dart; parser reconhece sigla, nome e plural (`bdj`/`bandeja`/`bandejas`, `sc`/`saco`/`sacos`, `fd`/`fardo`/`fardos`, `grf`/`garrafa`/`garrafas`); dropdown exibe as 4 na ordem do enum; unit tests do enum e do parser verdes; `dart format .`, `flutter analyze` e `flutter test` verdes.
+
+Nota: *(aditivo; as 4 unidades entram no fim do enum, após `dz`; sem migration Drift — a coluna `unidade` é `text`; app Lite-only, sem Postgres/RLS.)*
+
+## Fase 63 — Unidades de porção e embalagem (RF-03)
+
+Requisito: RF-03 (CRUD de itens com unidade do enum). · Docs donos: [04](04-importacao-lista.md), [13](13-premodelo-tecnico.md), [14](14-tarefas.md). · Sem spec/plano (mudança bounded).
+
+- [x] **F63-T01** — Unidades `ct`, `cc`, `mh`, `pe`, `cb`, `mc`, `rm`, `lt`, `vd`, `sch`, `rl`, `br`, `bsg`, `gl`
+  Docs: [04](04-importacao-lista.md) §4 · [13](13-premodelo-tecnico.md). Requisito: RF-03.
+  CP: `Unidade.cento/cacho/mao/pe/cabeca/maco/ramo/lata/vidro/sache/rolo/barra/bisnaga/galao` no Dart; parser reconhece sigla, nome e plural (acentos normalizados: `mão→mao`, `pé→pe`, `cabeça→cabeca`, `maço→maco`, `sachê→sache`, `galão→galao`); dropdown exibe as 14 na ordem do enum; unit tests do enum e do parser verdes; `dart format .`, `flutter analyze` e `flutter test` verdes.
+
+Nota: *(aditivo; entram no fim do enum, após `garrafa`; sem migration Drift — a coluna `unidade` é `text`; app Lite-only, sem Postgres/RLS.)*
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -1401,7 +1421,9 @@ Nota: *(bounded: só conteúdo do tour (texto + i18n), sem motor/passo novo nem 
 | F59 Preço por etiqueta (OCR) | 6 | 6 |
 | F60 Revisão geral — correções | 8 | 7 |
 | F61 Tutorial: câmera na foto/etiqueta | 2 | 2 |
-| **Total** | **349** | **346** |
+| F62 Unidades adicionais | 1 | 1 |
+| F63 Unidades de porção e embalagem | 1 | 1 |
+| **Total** | **351** | **348** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas

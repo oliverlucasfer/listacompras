@@ -42,7 +42,7 @@ App local (Drift): ListaLocal 1───N ItemLocal
 
 > **Preço por etiqueta (RF-40, F59):** não cria entidade/tabela — o parser `analisarEtiqueta` é **puro** (sem Drift, sem rede) e a gravação reusa `itens_lista` (`adicionarItemDedup`/`editarItem`). Detalhe em [05 §6.19](05-app-flutter.md).
 
-**Enum de unidades (fechado):** `un, kg, g, l, ml, caixa, pacote, pct, pt, dz` — fonte única `lib/core/dominio/unidade.dart` (usada pelo app e pelo parser local).
+**Enum de unidades (fechado):** `un, kg, g, l, ml, caixa, pacote, pct, pt, dz, bdj, sc, fd, grf, ct, cc, mh, pe, cb, mc, rm, lt, vd, sch, rl, br, bsg, gl` — fonte única `lib/core/dominio/unidade.dart` (usada pelo app e pelo parser local).
 
 **Enum de categorias (fechado, ADR-011):** `hortifruti, mercearia, frios, laticinios, congelados, padaria, bebidas, pet, limpeza, higiene, outros` — fonte única `lib/core/dominio/categoria.dart`; a ordem do enum define a ordem dos grupos na UI. Sugestão **local em camadas** (memória por nome → dicionário estático → `outros`).
 
