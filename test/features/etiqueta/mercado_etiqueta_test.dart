@@ -129,7 +129,7 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
-  testWidgets('deve_avisar_quando_sem_preco_na_etiqueta', (tester) async {
+  testWidgets('deve_abrir_preview_com_texto_quando_sem_preco', (tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
@@ -138,7 +138,119 @@ void main() {
     await _pumpMercado(tester, db, repo, texto: 'Oferta da semana');
     await _lerEtiqueta(tester);
 
-    expect(find.text('Não reconheci um preço na etiqueta.'), findsOneWidget);
+    // Sem preço reconhecido, abre o preview (preço vazio) com o texto lido.
+    expect(find.text('Etiqueta lida'), findsOneWidget);
+    expect(find.text('Texto lido (OCR)'), findsOneWidget);
+    expect(await db.select(db.itemLocal).get(), isEmpty);
+    await fechar(tester);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('deve_criar_item_sem_preco_quando_sem_preco_na_etiqueta', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = ListasRepository(db);
+
+    await _pumpMercado(tester, db, repo, texto: 'Oferta da semana');
+    await _lerEtiqueta(tester);
+
+    // Sem preço reconhecido: preenche o nome e salva assim mesmo (preço nulo).
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Nome do item'),
+      'Arroz',
+    );
+    await tester.tap(find.text('Salvar'));
+    await tester.pumpAndSettle();
+
+    final item = (await db.select(db.itemLocal).get()).single;
+    expect(item.nome, 'Arroz');
+    expect(item.precoCentavos, isNull);
+    await fechar(tester);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('deve_bloquear_novo_item_quando_preco_invalido', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = ListasRepository(db);
+
+    await _pumpMercado(tester, db, repo, texto: 'Arroz\nR\$ 5,49');
+    await _lerEtiqueta(tester);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Preço (R\$)'),
+      'abc',
+    );
+    await tester.tap(find.text('Salvar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Preço inválido.'), findsOneWidget);
+    expect(await db.select(db.itemLocal).get(), isEmpty);
+    await fechar(tester);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('deve_desabilitar_aplicar_quando_existente_sem_preco', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = ListasRepository(db);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
+    await repo.itens.adicionarItem(listaId: lista.id, nome: 'Arroz');
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          ocrTextoProvider.overrideWithValue(_OcrFake('Oferta da semana')),
+          fonteImagemProvider.overrideWithValue(_FonteFake()),
+        ],
+        child: appTeste(MercadoScreen(listaId: lista.id)),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await _lerEtiqueta(tester);
+    await tester.tap(find.text('Item existente'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButtonFormField<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Arroz').last);
+    await tester.pumpAndSettle();
+
+    // Sem preço, não há o que aplicar num item existente.
+    final aplicar = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Aplicar'),
+    );
+    expect(aplicar.onPressed, isNull);
+    await fechar(tester);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('deve_mostrar_texto_lido_recolhivel_quando_le_etiqueta', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+    final repo = ListasRepository(db);
+
+    await _pumpMercado(tester, db, repo, texto: 'Arroz\nR\$ 5,49');
+    await _lerEtiqueta(tester);
+
+    // Recolhido por padrão: o texto só é montado ao expandir.
+    expect(find.byType(SelectableText), findsNothing);
+    await tester.tap(find.text('Texto lido (OCR)'));
+    await tester.pumpAndSettle();
+
+    final texto = tester.widget<SelectableText>(find.byType(SelectableText));
+    expect(texto.data, 'Arroz\nR\$ 5,49');
     await fechar(tester);
     debugDefaultTargetPlatformOverride = null;
   });

@@ -115,14 +115,15 @@ class _MercadoScreenState extends ConsumerState<MercadoScreen> {
     if (!mounted) return;
     switch (resultado) {
       case CapturaTexto(:final texto):
-        final etiqueta = analisarEtiqueta(texto);
-        if (etiqueta == null) {
-          mostrarSnackBar(context, context.l10n.etiquetaNaoReconhecida);
-          return;
-        }
+        // Sem preço reconhecido, ainda abre o preview (preço vazio) para mostrar
+        // o texto lido e permitir corrigir; cancelar não grava.
         await AppSheet.mostrar<void>(
           context,
-          child: SheetEtiqueta(listaId: widget.listaId, etiqueta: etiqueta),
+          child: SheetEtiqueta(
+            listaId: widget.listaId,
+            textoBruto: texto,
+            etiqueta: analisarEtiqueta(texto),
+          ),
         );
       case CapturaVazia():
         mostrarSnackBar(context, context.l10n.etiquetaNenhumTexto);

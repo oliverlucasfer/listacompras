@@ -24,6 +24,7 @@ import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/app_snack_bar.dart';
 import '../../compartilhamento/ui/sheet_compartilhar.dart';
 import '../../etiqueta/domain/etiqueta.dart';
+import '../../etiqueta/ui/texto_lido_ocr.dart';
 import '../../ocr/providers/ocr_providers.dart';
 import '../../ocr/ui/captura_foto.dart';
 import '../../historico/domain/mercado.dart';

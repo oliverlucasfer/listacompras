@@ -15,33 +15,42 @@ import '../../listas/domain/item.dart';
 import '../../listas/domain/preco.dart';
 import '../../listas/providers/listas_providers.dart';
 import '../domain/etiqueta.dart';
+import 'texto_lido_ocr.dart';
 
 enum _Origem { novo, existente }
 
 /// Preview editável da etiqueta lida (RF-40): cria um item novo com preço ou
 /// aplica o preço a um item existente da lista. 100% local.
+///
+/// [etiqueta] é opcional: quando o OCR não reconhece preço, o preview ainda
+/// abre (preço vazio) para mostrar o [textoBruto] lido e permitir corrigir.
 class SheetEtiqueta extends ConsumerStatefulWidget {
   const SheetEtiqueta({
     super.key,
     required this.listaId,
-    required this.etiqueta,
+    required this.textoBruto,
+    this.etiqueta,
   });
 
   final String listaId;
-  final EtiquetaLida etiqueta;
+  final String textoBruto;
+  final EtiquetaLida? etiqueta;
 
   @override
   ConsumerState<SheetEtiqueta> createState() => _SheetEtiquetaState();
 }
 
 class _SheetEtiquetaState extends ConsumerState<SheetEtiqueta> {
-  late final _nome = TextEditingController(text: widget.etiqueta.nome ?? '');
+  late final _nome = TextEditingController(text: widget.etiqueta?.nome ?? '');
   late final _quantidade = TextEditingController(text: '1');
   late final _preco = TextEditingController(
-    text: centavosParaTexto(widget.etiqueta.precoCentavos),
+    text: widget.etiqueta == null
+        ? ''
+        : centavosParaTexto(widget.etiqueta!.precoCentavos),
   );
   late Unidade _unidade =
-      widget.etiqueta.precoPorKgCentavos == widget.etiqueta.precoCentavos
+      widget.etiqueta?.precoPorKgCentavos != null &&
+          widget.etiqueta!.precoPorKgCentavos == widget.etiqueta!.precoCentavos
       ? Unidade.kg
       : Unidade.un;
   CategoriaItem _categoria = CategoriaItem.outros;
@@ -58,7 +67,7 @@ class _SheetEtiquetaState extends ConsumerState<SheetEtiqueta> {
   }
 
   Future<void> _sugerirCategoria() async {
-    final nome = widget.etiqueta.nome;
+    final nome = widget.etiqueta?.nome;
     if (nome == null || nome.trim().isEmpty) return;
     final c = await ref.read(sugestaoCategoriasProvider).sugerirCategoria(nome);
     if (mounted) setState(() => _categoria = c);
@@ -72,26 +81,34 @@ class _SheetEtiquetaState extends ConsumerState<SheetEtiqueta> {
     super.dispose();
   }
 
-  int? _precoValido() {
+  /// Validação do campo de preço: `valor` nulo com `invalido` falso = campo
+  /// **vazio** (permitido no "Novo item"); `invalido` verdadeiro = texto não
+  /// numérico (erro inline).
+  ({int? valor, bool invalido}) _precoLido() {
     try {
-      return parsePrecoParaCentavos(_preco.text);
+      return (valor: parsePrecoParaCentavos(_preco.text), invalido: false);
     } on ArgumentError {
-      return null;
+      return (valor: null, invalido: true);
     }
   }
 
   Future<void> _salvar() async {
     if (_salvando) return;
-    final preco = _precoValido();
+    final precoLido = _precoLido();
+    final preco = precoLido.valor;
     final nome = _nome.text.trim();
     final quantidade = parseQuantidade(_quantidade.text) ?? 0;
+    // "Item existente" precisa de um preço para aplicar; "Novo item" aceita
+    // preço vazio e cria o item sem preço (RF-40).
+    final exigePreco = _origem == _Origem.existente;
     setState(() {
       _erroNome = (_origem == _Origem.novo && nome.isEmpty)
           ? context.l10n.erroNomeVazio
           : null;
-      _erroPreco = preco == null ? context.l10n.erroPrecoInvalido : null;
+      _erroPreco = precoLido.invalido ? context.l10n.erroPrecoInvalido : null;
     });
-    if (preco == null) return;
+    if (precoLido.invalido) return;
+    if (exigePreco && preco == null) return;
     if (_origem == _Origem.novo && nome.isEmpty) return;
     if (_origem == _Origem.existente && _itemId == null) return;
 
@@ -129,7 +146,11 @@ class _SheetEtiquetaState extends ConsumerState<SheetEtiqueta> {
       ...todos.where((i) => !i.concluido),
       ...todos.where((i) => i.concluido),
     ];
-    final podeAplicar = _origem == _Origem.novo || _itemId != null;
+    // "Novo item" salva mesmo sem preço; "Item existente" só habilita "Aplicar"
+    // quando há um item escolhido e um preço digitado.
+    final podeAplicar =
+        _origem == _Origem.novo ||
+        (_itemId != null && _preco.text.trim().isNotEmpty);
     return SingleChildScrollView(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -224,6 +245,7 @@ class _SheetEtiquetaState extends ConsumerState<SheetEtiqueta> {
             teclado: const TextInputType.numberWithOptions(decimal: true),
             onChanged: (_) => setState(() => _erroPreco = null),
           ),
+          TextoLidoOcr(texto: widget.textoBruto),
           const SizedBox(height: AppSpacing.lg),
           OverflowBar(
             alignment: MainAxisAlignment.end,

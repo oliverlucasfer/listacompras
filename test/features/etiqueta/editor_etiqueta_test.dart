@@ -145,6 +145,55 @@ void main() {
     debugDefaultTargetPlatformOverride = null;
   });
 
+  testWidgets('deve_mostrar_texto_lido_quando_le_etiqueta_no_editor', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    await _abrirEditor(
+      tester,
+      db,
+      nomeItem: 'Arroz',
+      ocr: _OcrFake('Arroz\nR\$ 5,49'),
+    );
+    await _lerEtiqueta(tester);
+
+    expect(find.text('Texto lido (OCR)'), findsOneWidget);
+    expect(find.byType(SelectableText), findsNothing);
+    await tester.tap(find.text('Texto lido (OCR)'));
+    await tester.pumpAndSettle();
+
+    final texto = tester.widget<SelectableText>(find.byType(SelectableText));
+    expect(texto.data, 'Arroz\nR\$ 5,49');
+    await _fechar(tester);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
+  testWidgets('deve_manter_campos_e_mostrar_texto_quando_sem_preco_no_editor', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    final db = AppDatabase(NativeDatabase.memory());
+    addTearDown(db.close);
+
+    await _abrirEditor(
+      tester,
+      db,
+      nomeItem: 'Arroz',
+      ocr: _OcrFake('Oferta da semana'),
+    );
+    await _lerEtiqueta(tester);
+
+    // Sem preço: nada de aviso; os campos ficam intactos e o texto aparece.
+    expect(find.text('Não reconheci um preço na etiqueta.'), findsNothing);
+    expect(find.text('Texto lido (OCR)'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Arroz'), findsOneWidget);
+    await _fechar(tester);
+    debugDefaultTargetPlatformOverride = null;
+  });
+
   testWidgets('deve_avisar_e_manter_campos_quando_ocr_sem_texto', (
     tester,
   ) async {

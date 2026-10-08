@@ -1750,6 +1750,12 @@ abstract class AppLocalizations {
   /// **'Etiqueta lida'**
   String get etiquetaTitulo;
 
+  /// No description provided for @etiquetaTextoLido.
+  ///
+  /// In pt, this message translates to:
+  /// **'Texto lido (OCR)'**
+  String get etiquetaTextoLido;
+
   /// No description provided for @etiquetaNovoItem.
   ///
   /// In pt, this message translates to:
@@ -1779,12 +1785,6 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Nenhum texto reconhecido na foto.'**
   String get etiquetaNenhumTexto;
-
-  /// No description provided for @etiquetaNaoReconhecida.
-  ///
-  /// In pt, this message translates to:
-  /// **'Não reconheci um preço na etiqueta.'**
-  String get etiquetaNaoReconhecida;
 
   /// No description provided for @etiquetaEscolherItem.
   ///

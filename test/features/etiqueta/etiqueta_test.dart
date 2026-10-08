@@ -92,4 +92,25 @@ void main() {
     expect(e!.precoCentavos, 890);
     expect(e.precoPorKgCentavos, isNull);
   });
+
+  test('deve_preferir_preco_com_moeda_quando_codigo_tem_ponto', () {
+    // Regressão: o código `111.26` (só ponto) era lido como preço e, por ser o
+    // maior, vencia o preço real `R$ 2,79` (aparecia 111,26).
+    final e = analisarEtiqueta('Ref.: 111.26\nR\$ 2,79');
+    expect(e!.precoCentavos, 279);
+    expect(e.precoPorKgCentavos, isNull);
+  });
+
+  test('deve_preferir_virgula_sobre_ponto_quando_sem_moeda', () {
+    // Sem `R$`, a vírgula (padrão pt-BR) é mais forte que um ponto ambíguo.
+    final e = analisarEtiqueta('111.26\n2,79');
+    expect(e!.precoCentavos, 279);
+  });
+
+  test('deve_reconhecer_por_kg_na_linha_seguinte', () {
+    // O `/kg` pode cair na linha de baixo, separado do valor.
+    final e = analisarEtiqueta('R\$ 2,79\nR\$ 55,63\n/kg');
+    expect(e!.precoCentavos, 279);
+    expect(e.precoPorKgCentavos, 5563);
+  });
 }

@@ -94,15 +94,14 @@ Future<ResultadoCaptura> capturarTextoDeFoto(BuildContext context, WidgetRef ref
    `plataformaComOcr()`.
 2. Toque → `capturarTextoDeFoto` → `analisarEtiqueta(texto)`:
    - **sem texto** → aviso (`etiquetaNenhumTexto`);
-   - **texto sem preço** (`null`) → aviso (`etiquetaNaoReconhecida`);
    - **falha** → aviso (`ocrFalha`, reusado).
-3. **Preço encontrado** → abre o **bottom sheet "Etiqueta lida"** (preview editável, §4.3).
+3. Abre o **bottom sheet "Etiqueta lida"** (preview editável, §4.3) **com ou sem preço** — sem preço reconhecido o campo vem **vazio** e o texto lido fica disponível (extensão de 08/10/2026, §11).
 
 ### 4.2. Editor do item (`sheet_editar_item.dart`, RF-21/F25)
 
 1. **Ícone de câmera** junto ao campo **"Preço (R$)"**, visível **apenas** quando `plataformaComOcr()`.
 2. Toque → `capturarTextoDeFoto` → `analisarEtiqueta`:
-   - erro/vazio/sem preço → aviso amigável (campos intactos);
+   - erro/vazio → aviso amigável (campos intactos); **sem preço** → campos intactos e texto lido exibido (extensão §11);
    - preço encontrado → preenche `_preco` (formatado pt-BR); se `_nome` estiver **vazio**, preenche
      com o nome reconhecido; se o preço vier **do fallback por kg**, ajusta a unidade para `kg`.
 3. **Não há tela nova**: o próprio editor **é o preview editável**; o usuário revisa e confirma em
@@ -134,10 +133,16 @@ pré-preenchidos pela leitura:
 - **Valor monetário:** um token só conta como **preço** se for precedido de `R$` ou tiver
   **separador decimal** (`5,49`, `5.49`, `R$ 1.234,56`, `1.234`); um **inteiro solto**
   (`200`, `50`) é quantidade/modelo/peso (ex.: `200g`, `5kg`), não preço.
+- **Força do valor:** entre os valores reconhecidos há prioridade — precedido de `R$`
+  (forte) > decimal com **vírgula** (padrão pt-BR) > decimal **só com ponto** (fraco,
+  ambíguo com código de produto, ex.: `111.26`). Só os candidatos mais fortes competem
+  como preço, de modo que um código `111.26` **não** vence o `R$ 2,79` (regressão do
+  `1.8.2+23`; [05 §6.19](../../05-app-flutter.md)).
 - **Marcação por kg/unidade (por token):** um número só é "por kg" se o texto **imediatamente
   após** ele casar com o marcador — `<número>/kg` (com ou sem espaços), `por kg`, `por 100 g`
-  ou `por unidade`. O contexto é decidido **por token**, não por linha: em
-  `R$ 39,90 R$ 79,80/kg` só o segundo valor vai para `precoPorKgCentavos` (o primeiro é o
+  ou `por unidade`; o marcador pode estar na **linha seguinte** ao valor (a etiqueta quebra
+  `R$ 55,63` e `/kg` em linhas separadas). O contexto é decidido **por token**, não por linha:
+  em `R$ 39,90 R$ 79,80/kg` só o segundo valor vai para `precoPorKgCentavos` (o primeiro é o
   preço do item).
 - **Escolha do preço do item** (determinística):
   1. valor após **"por"** (promo "de **R$ 9,99** por **R$ 6,99**") → o segundo;
@@ -145,7 +150,7 @@ pré-preenchidos pela leitura:
   3. se **não houver** valor não-kg, usa o valor **por kg** como **fallback** (`precoCentavos`) e
      sinaliza unidade sugerida `kg`.
 - **Nome:** primeira linha com ≥ 3 letras que **não** seja só preço/`R$`/`kg`/`por`; senão `null`.
-- Sem nenhum valor monetário → `null` (a UI mostra `etiquetaNaoReconhecida`).
+- Sem nenhum valor monetário → `null`; a UI **abre o preview com o preço vazio** e o texto lido (extensão §11), em vez de avisar.
 
 ### 5.2. Comportamento geral
 
@@ -212,3 +217,23 @@ pré-preenchidos pela leitura:
 ## 10. Documentos relacionados
 - [04 Importação de lista](../../04-importacao-lista.md) · [05 App Flutter](../../05-app-flutter.md) · [10 Wireframes](../../10-wireframes-telas.md)
 - [09 Runbook](../../09-runbook-operacoes.md) · [12 PRD](../../12-prd.md) · [14 Tarefas](../../14-tarefas.md) · [16 Roadmap](../../16-roadmap-pos-mvp.md)
+
+## 11. Extensão (08/10/2026) — texto lido (OCR) e preview sem preço
+
+**Motivação:** um preço lido errado (ex.: um código `111.26` escolhido no lugar de `R$ 2,79`) era
+difícil de diagnosticar sem ver o texto que o OCR reconheceu — a imagem não é armazenada.
+
+**Mudanças:**
+- **`TextoLidoOcr`** (`lib/features/etiqueta/ui/texto_lido_ocr.dart`): bloco `ExpansionTile`
+  **recolhido por padrão** com o texto bruto do OCR em `SelectableText` (copiável). Aparece no sheet
+  "Etiqueta lida" e no editor do item **após uma leitura**; não grava nem persiste nada.
+- **Preview sempre:** sem preço reconhecido (`analisarEtiqueta` → `null`), o modo mercado abre o
+  `SheetEtiqueta` com o **preço vazio** e o texto lido (em vez do aviso `etiquetaNaoReconhecida`,
+  removido do ARB) e o editor mantém os campos intactos exibindo o texto. No sheet, **"Novo item"
+  pode ser salvo sem preço** (grava `precoCentavos: null`); **"Item existente" exige preço válido**
+  para "Aplicar"; texto não numérico continua bloqueando com erro inline.
+- **Força do valor** no parser (correção de `1.8.2+23`, §5.1) e reconhecimento de `/kg` na linha
+  seguinte.
+
+**Governança:** [05 §6.19](../../05-app-flutter.md), [10 §3.1/§3.3](../../10-wireframes-telas.md) e
+[15 §3](../../15-design-system.md) atualizados.

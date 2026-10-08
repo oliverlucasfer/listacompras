@@ -988,6 +988,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get etiquetaTitulo => 'Etiqueta leída';
 
   @override
+  String get etiquetaTextoLido => 'Texto leído (OCR)';
+
+  @override
   String get etiquetaNovoItem => 'Nuevo artículo';
 
   @override
@@ -1001,9 +1004,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get etiquetaNenhumTexto => 'No se reconoció texto en la foto.';
-
-  @override
-  String get etiquetaNaoReconhecida => 'No reconocí un precio en la etiqueta.';
 
   @override
   String get etiquetaEscolherItem => 'Elige el artículo';
