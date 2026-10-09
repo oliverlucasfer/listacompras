@@ -81,6 +81,7 @@
   "itemRemovido": "Artículo eliminado",
   "itemDuplicadoSomado": "ya está en la lista. Cantidad aumentada.",
   "itemAtualizado": "Artículo actualizado.",
+  "itemAdicionado": "Artículo añadido.",
   "naoEntendiItem": "No entendí el artículo",
   "removerItem": "Quitar",
   "editarItem": "Editar artículo",
@@ -210,6 +211,9 @@
   },
 
   "desmarcarTodos": "Desmarcar todos",
+  "desmarcarTodosMensagem": "Los artículos marcados volverán a pendiente.",
+  "desmarcarTodosConfirmar": "Desmarcar",
+  "itensDesmarcados": "Artículos desmarcados.",
   "limparConcluidos": "Limpiar completados",
   "limpar": "Limpiar",
   "limparConcluidosMensagem": "Los artículos completados se quitarán de la lista.",

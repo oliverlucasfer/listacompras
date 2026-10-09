@@ -128,13 +128,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
     final repo = ref.read(listasRepositoryProvider);
     switch (acao) {
       case 'desmarcar':
-        try {
-          await ref.read(itensRepositoryProvider).desmarcarTodos(idLista);
-        } catch (_) {
-          if (context.mounted) {
-            mostrarSnackBar(context, context.l10n.erroGenerico);
-          }
-        }
+        await _desmarcarTodos(context, ref, idLista);
       case 'limpar':
         _confirmarLimparConcluidos(context, ref, idLista);
       case 'finalizar':
@@ -275,6 +269,53 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
     if (context.mounted) context.go('/listas');
   }
 
+  /// Confirma e desmarca todos os itens concluídos, oferecendo Desfazer
+  /// (re-marca os mesmos ids) — RF-04, F64-T02.
+  Future<void> _desmarcarTodos(
+    BuildContext context,
+    WidgetRef ref,
+    String idLista,
+  ) async {
+    final concluidos =
+        (ref.read(itensDaListaProvider(idLista)).value ?? const <Item>[])
+            .where((i) => i.concluido)
+            .toList();
+    if (concluidos.isEmpty) return;
+    final confirmou = await AppDialog.confirmarDestrutivo(
+      context,
+      titulo: context.l10n.desmarcarTodos,
+      mensagem: context.l10n.desmarcarTodosMensagem,
+      confirmar: context.l10n.desmarcarTodosConfirmar,
+    );
+    if (!confirmou) return;
+    final repo = ref.read(itensRepositoryProvider);
+    try {
+      await repo.desmarcarTodos(idLista);
+    } catch (_) {
+      if (context.mounted) mostrarSnackBar(context, context.l10n.erroGenerico);
+      return;
+    }
+    if (!context.mounted) return;
+    mostrarSnackBar(
+      context,
+      context.l10n.itensDesmarcados,
+      rotuloAcao: context.l10n.desfazer,
+      onAcao: () {
+        unawaited(() async {
+          try {
+            for (final item in concluidos) {
+              await repo.editarItem(item.id, concluido: true);
+            }
+          } catch (_) {
+            if (context.mounted) {
+              mostrarSnackBar(context, context.l10n.erroGenerico);
+            }
+          }
+        }());
+      },
+    );
+  }
+
   /// Importação de lista (doc 05 §6.4, RF-16): entrada → pré-visualização
   /// → gravação local dos itens confirmados.
   Future<void> _importarLista(
@@ -368,6 +409,7 @@ class _TelaListaScreenState extends ConsumerState<TelaListaScreen> {
                   itemBuilder: (context) => [
                     PopupMenuItem(
                       value: 'desmarcar',
+                      enabled: itens.any((i) => i.concluido),
                       child: Text(context.l10n.desmarcarTodos),
                     ),
                     PopupMenuItem(

@@ -178,6 +178,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get itemAtualizado => 'Item updated.';
 
   @override
+  String get itemAdicionado => 'Item added.';
+
+  @override
   String get naoEntendiItem => 'I did not understand the item';
 
   @override
@@ -392,6 +395,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get desmarcarTodos => 'Uncheck all';
+
+  @override
+  String get desmarcarTodosMensagem => 'Marked items will be unmarked.';
+
+  @override
+  String get desmarcarTodosConfirmar => 'Unmark';
+
+  @override
+  String get itensDesmarcados => 'Items unmarked.';
 
   @override
   String get limparConcluidos => 'Clear completed';

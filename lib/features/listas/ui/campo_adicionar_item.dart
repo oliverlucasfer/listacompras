@@ -138,7 +138,7 @@ class _CampoAdicionarState extends ConsumerState<_CampoAdicionar> {
         case ResultadoDedup.substituido:
           mostrarSnackBar(context, '$nome: ${context.l10n.itemAtualizado}');
         case ResultadoDedup.adicionado:
-          break;
+          mostrarSnackBar(context, context.l10n.itemAdicionado);
       }
       return true;
     } catch (_) {

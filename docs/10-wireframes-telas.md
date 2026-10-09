@@ -129,8 +129,9 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 ### 3.1. Uso normal (agrupamento por categoria, RF-15)
 ```
 ┌─────────────────────────────────┐
-│  ← Compras da Semana      [⋮]   │ ← [⋮]: desmarcar todos, limpar
-│                                 │    concluídos, finalizar compra,
+│  ← Compras da Semana      [⋮]   │ ← [⋮]: desmarcar todos (confirma +
+│                                 │    undo; desabilitado sem concluídos),
+│                                 │    limpar concluídos, finalizar compra,
 ├─────────────────────────────────┤    renomear, adicionar de outra
 │  🏬 Mercado A                    │ ← chip do mercado da última ida
 │  [Café] [Pão] [Leite] ...       │    lista, orçamento, compartilhar,
@@ -142,6 +143,8 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 │  [____________ un▾   (＋) ]     │    só com o campo vazio; toque adiciona
 │                                 │    reconhece "1kg de banana" e a
 │                                 │    unidade vem do seletor (F12-T06)
+│                                 │    → item novo confirma com
+│                                 │    SnackBar curto ("Item adicionado.")
 │                                 │
 │  HORTIFRÚTI (1)                 │ ← ordem dos grupos = ordem do enum
 │  ☐ Banana           1 dz    ≡   │    contagem de pendentes

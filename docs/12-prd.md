@@ -23,7 +23,7 @@ Formato: **ID** — requisito · *dono* (implementação) · fase · aceite.
 | :--- | :--- | :--- | :--- | :--- |
 | RF-02 | Criar, renomear e excluir listas (delete lógico + confirmação) | 05 §6.2 | F3 | [06 §1](06-mvp-entregas.md) |
 | RF-03 | CRUD de itens com quantidade, unidade (enum em `lib/core/dominio/unidade.dart`) e checkbox | 05 §6.3 | F3 | [06 §1](06-mvp-entregas.md) |
-| RF-04 | Item concluído move para seção dobrável; ações em massa (desmarcar todos, limpar concluídos) | 05 §6.3 | F3 | [06 §1](06-mvp-entregas.md) |
+| RF-04 | Item concluído move para seção dobrável; ações em massa (desmarcar todos com confirmação/undo; limpar concluídos) | 05 §6.3 | F3 | [06 §1](06-mvp-entregas.md) |
 | RF-05 | Reordenar itens via drag-and-drop (coluna `ordem`) | 05 §6.3 | F3 | [05 §8](05-app-flutter.md) |
 | RF-15 | Agrupamento da lista por categoria (enum fechado em `lib/core/dominio/categoria.dart`) com sugestão local em camadas (memória por nome → dicionário estático → `outros`) | 05 §6.3 | F6 | [05 §8](05-app-flutter.md) |
 | RF-16 | Importação de lista por texto livre (parser local determinístico, offline) com pré-visualização editável | 05 §6.4 + 10 §4 | F11 | [05 §8](05-app-flutter.md) |

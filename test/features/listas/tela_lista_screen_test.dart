@@ -294,6 +294,21 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_confirmar_quando_adiciona_item_novo', (tester) async {
+    await listaComItens(tester);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Adicionar item'),
+      'Café',
+    );
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Item adicionado.'), findsOneWidget);
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_mostrar_erro_quando_parser_descarta_texto', (tester) async {
     await listaComItens(tester);
 
@@ -801,23 +816,116 @@ void main() {
     await fechar(tester);
   });
 
-  testWidgets('deve_desmarcar_todos_quando_menu', (tester) async {
+  testWidgets('deve_desmarcar_todos_quando_confirmar_dialogo', (tester) async {
+    await listaComItens(tester, comConcluido: true);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Desmarcar todos'));
+    await tester.pumpAndSettle();
+    expect(find.text('Os itens marcados voltarão a pendente.'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Desmarcar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Mercearia (1)'), findsOneWidget);
+    expect(find.text('Laticínios (1)'), findsOneWidget);
+    expect(find.text('Limpeza (1)'), findsOneWidget);
+    expect(find.byType(ExpansionTile), findsNothing);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_restaurar_marcados_quando_desfazer_desmarcar_todos', (
+    tester,
+  ) async {
+    await listaComItens(tester, comConcluido: true);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Desmarcar todos'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Desmarcar'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ExpansionTile), findsNothing);
+    expect(find.text('Itens desmarcados.'), findsOneWidget);
+
+    await tester.tap(find.text('Desfazer'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Itens concluídos (1)'), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('nao_deve_desmarcar_quando_cancela_desmarcar_todos', (
+    tester,
+  ) async {
+    await listaComItens(tester, comConcluido: true);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Desmarcar todos'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Cancelar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Itens concluídos (1)'), findsOneWidget);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_desabilitar_desmarcar_todos_quando_sem_concluidos', (
+    tester,
+  ) async {
     await listaComItens(tester);
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    final item = tester.widget<PopupMenuItem<String>>(
+      find.ancestor(
+        of: find.text('Desmarcar todos'),
+        matching: find.byType(PopupMenuItem<String>),
+      ),
+    );
+    expect(item.enabled, isFalse);
+
+    await fechar(tester);
+  });
+
+  testWidgets('deve_mostrar_erro_quando_desmarcar_todos_falha', (tester) async {
     final repo = ListasRepository(db);
-    final itens = (await (db.select(
-      db.itemLocal,
-    )).get()).where((i) => !i.concluido).toList();
-    await repo.itens.editarItem(itens.first.id, concluido: true);
+    final lista = await repo.criarLista(titulo: 'Compras', donoId: 'local');
+    final arroz = await repo.itens.adicionarItem(
+      listaId: lista.id,
+      nome: 'Arroz',
+      categoria: CategoriaItem.mercearia,
+    );
+    await repo.itens.editarItem(arroz.id, concluido: true);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          itensRepositoryProvider.overrideWithValue(_RepoDesmarcarFalha(db)),
+        ],
+        child: appTeste(TelaListaScreen(listaId: lista.id)),
+      ),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Desmarcar todos'));
     await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Desmarcar'));
+    await tester.pumpAndSettle();
 
-    expect(find.text('Mercearia (1)'), findsOneWidget);
-    expect(find.text('Laticínios (1)'), findsOneWidget);
-    expect(find.byType(ExpansionTile), findsNothing);
+    expect(
+      find.text('Não foi possível concluir. Tente novamente.'),
+      findsOneWidget,
+    );
 
     await fechar(tester);
   });
@@ -2181,5 +2289,13 @@ class _RepoRestaurarFalha extends ItensRepository {
 
   @override
   Future<void> restaurarItem(String id) async =>
+      throw Exception('falha simulada');
+}
+
+class _RepoDesmarcarFalha extends ItensRepository {
+  _RepoDesmarcarFalha(super.db);
+
+  @override
+  Future<void> desmarcarTodos(String listaId) async =>
       throw Exception('falha simulada');
 }

@@ -178,6 +178,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get itemAtualizado => 'Artículo actualizado.';
 
   @override
+  String get itemAdicionado => 'Artículo añadido.';
+
+  @override
   String get naoEntendiItem => 'No entendí el artículo';
 
   @override
@@ -394,6 +397,16 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get desmarcarTodos => 'Desmarcar todos';
+
+  @override
+  String get desmarcarTodosMensagem =>
+      'Los artículos marcados volverán a pendiente.';
+
+  @override
+  String get desmarcarTodosConfirmar => 'Desmarcar';
+
+  @override
+  String get itensDesmarcados => 'Artículos desmarcados.';
 
   @override
   String get limparConcluidos => 'Limpiar completados';
