@@ -81,6 +81,7 @@
   "itemRemovido": "Item removido",
   "itemDuplicadoSomado": "já está na lista. Quantidade aumentada.",
   "itemAtualizado": "Item atualizado.",
+  "itemAdicionado": "Item adicionado.",
   "naoEntendiItem": "Não entendi o item",
   "removerItem": "Remover",
   "editarItem": "Editar item",

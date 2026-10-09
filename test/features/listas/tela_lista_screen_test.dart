@@ -294,6 +294,21 @@ void main() {
     await fechar(tester);
   });
 
+  testWidgets('deve_confirmar_quando_adiciona_item_novo', (tester) async {
+    await listaComItens(tester);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Adicionar item'),
+      'Café',
+    );
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Item adicionado.'), findsOneWidget);
+
+    await fechar(tester);
+  });
+
   testWidgets('deve_mostrar_erro_quando_parser_descarta_texto', (tester) async {
     await listaComItens(tester);
 

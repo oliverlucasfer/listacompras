@@ -388,6 +388,12 @@ abstract class AppLocalizations {
   /// **'Item atualizado.'**
   String get itemAtualizado;
 
+  /// No description provided for @itemAdicionado.
+  ///
+  /// In pt, this message translates to:
+  /// **'Item adicionado.'**
+  String get itemAdicionado;
+
   /// No description provided for @naoEntendiItem.
   ///
   /// In pt, this message translates to:

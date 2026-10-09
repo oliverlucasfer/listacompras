@@ -142,6 +142,8 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 │  [____________ un▾   (＋) ]     │    só com o campo vazio; toque adiciona
 │                                 │    reconhece "1kg de banana" e a
 │                                 │    unidade vem do seletor (F12-T06)
+│                                 │    → item novo confirma com
+│                                 │    SnackBar curto ("Item adicionado.")
 │                                 │
 │  HORTIFRÚTI (1)                 │ ← ordem dos grupos = ordem do enum
 │  ☐ Banana           1 dz    ≡   │    contagem de pendentes

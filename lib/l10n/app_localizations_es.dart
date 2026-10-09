@@ -178,6 +178,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get itemAtualizado => 'Artículo actualizado.';
 
   @override
+  String get itemAdicionado => 'Artículo añadido.';
+
+  @override
   String get naoEntendiItem => 'No entendí el artículo';
 
   @override
