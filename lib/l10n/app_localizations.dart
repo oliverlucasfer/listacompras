@@ -742,6 +742,24 @@ abstract class AppLocalizations {
   /// **'Desmarcar todos'**
   String get desmarcarTodos;
 
+  /// No description provided for @desmarcarTodosMensagem.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os itens marcados voltarão a pendente.'**
+  String get desmarcarTodosMensagem;
+
+  /// No description provided for @desmarcarTodosConfirmar.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desmarcar'**
+  String get desmarcarTodosConfirmar;
+
+  /// No description provided for @itensDesmarcados.
+  ///
+  /// In pt, this message translates to:
+  /// **'Itens desmarcados.'**
+  String get itensDesmarcados;
+
   /// No description provided for @limparConcluidos.
   ///
   /// In pt, this message translates to:

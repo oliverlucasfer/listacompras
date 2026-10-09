@@ -211,6 +211,9 @@
   },
 
   "desmarcarTodos": "Desmarcar todos",
+  "desmarcarTodosMensagem": "Os itens marcados voltarão a pendente.",
+  "desmarcarTodosConfirmar": "Desmarcar",
+  "itensDesmarcados": "Itens desmarcados.",
   "limparConcluidos": "Limpar concluídos",
   "limpar": "Limpar",
   "limparConcluidosMensagem": "Os itens concluídos serão removidos da lista.",

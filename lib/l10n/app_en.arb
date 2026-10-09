@@ -211,6 +211,9 @@
   },
 
   "desmarcarTodos": "Uncheck all",
+  "desmarcarTodosMensagem": "Marked items will be unmarked.",
+  "desmarcarTodosConfirmar": "Unmark",
+  "itensDesmarcados": "Items unmarked.",
   "limparConcluidos": "Clear completed",
   "limpar": "Clear",
   "limparConcluidosMensagem": "Completed items will be removed from the list.",

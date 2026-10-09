@@ -397,6 +397,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get desmarcarTodos => 'Uncheck all';
 
   @override
+  String get desmarcarTodosMensagem => 'Marked items will be unmarked.';
+
+  @override
+  String get desmarcarTodosConfirmar => 'Unmark';
+
+  @override
+  String get itensDesmarcados => 'Items unmarked.';
+
+  @override
   String get limparConcluidos => 'Clear completed';
 
   @override

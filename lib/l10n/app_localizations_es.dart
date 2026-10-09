@@ -399,6 +399,16 @@ class AppLocalizationsEs extends AppLocalizations {
   String get desmarcarTodos => 'Desmarcar todos';
 
   @override
+  String get desmarcarTodosMensagem =>
+      'Los artículos marcados volverán a pendiente.';
+
+  @override
+  String get desmarcarTodosConfirmar => 'Desmarcar';
+
+  @override
+  String get itensDesmarcados => 'Artículos desmarcados.';
+
+  @override
   String get limparConcluidos => 'Limpiar completados';
 
   @override

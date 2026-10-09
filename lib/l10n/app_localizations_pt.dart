@@ -397,6 +397,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get desmarcarTodos => 'Desmarcar todos';
 
   @override
+  String get desmarcarTodosMensagem => 'Os itens marcados voltarão a pendente.';
+
+  @override
+  String get desmarcarTodosConfirmar => 'Desmarcar';
+
+  @override
+  String get itensDesmarcados => 'Itens desmarcados.';
+
+  @override
   String get limparConcluidos => 'Limpar concluídos';
 
   @override
