@@ -131,7 +131,7 @@ Tour (RF-27/F46): o campo de nome é o spot `TourKeys.nomeLista` do 1º passo da
 ┌─────────────────────────────────┐
 │  ← Compras da Semana      [⋮]   │ ← [⋮]: desmarcar todos (confirma +
 │                                 │    undo; desabilitado sem concluídos),
-│                                 │    concluídos, finalizar compra,
+│                                 │    limpar concluídos, finalizar compra,
 ├─────────────────────────────────┤    renomear, adicionar de outra
 │  🏬 Mercado A                    │ ← chip do mercado da última ida
 │  [Café] [Pão] [Leite] ...       │    lista, orçamento, compartilhar,
