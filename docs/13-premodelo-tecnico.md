@@ -60,6 +60,11 @@ Configurações → **Exportar backup** (`.json` fiel ao banco) → **Importar b
 ### F7 — Preço por etiqueta (OCR, RF-40)
 Câmera (modo mercado §6.5 / editor §6.3) → helper `capturarTextoDeFoto` (`lib/features/ocr/ui/captura_foto.dart`, reusa `OcrTexto`/`FonteImagem`) → `analisarEtiqueta` (`lib/features/etiqueta/domain/etiqueta.dart`: preço cheio; valor por kg só como *fallback*) → **preview editável** (`SheetEtiqueta` no mercado; o próprio editor no item) → grava local (`adicionarItemDedup(..., precoCentavos:)` ou `editarItem(..., precoCentavos:)`). Offline; a imagem **não é armazenada**. [05 §6.19](05-app-flutter.md)
 
+### F8 - Lista: feedback e ações em massa
+Ao adicionar item **novo** pela entrada rápida, um SnackBar curto confirma (`itemAdicionado`);
+"Desmarcar todos" (menu ⋮) pede **confirmação** quando há concluídos e oferece **Desfazer**
+(re-marca os mesmos ids). Detalhe em [05 §6.3](05-app-flutter.md).
+
 ## 5. Contratos rápidos
 
 **Importação local (resumo — [04 §2](04-importacao-lista.md)):**

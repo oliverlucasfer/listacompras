@@ -23,6 +23,7 @@
 | A12 | **Importar por foto (OCR)** | **RF-37** | F54 | [spec](superpowers/specs/2026-09-30-importar-foto-ocr-design.md) | concluído (F54-T01…T03) |
 | A13 | **Widget Android / quick-add** | **RF-38** | F55 | [spec](superpowers/specs/2026-09-30-widget-android-design.md) | concluído (F55-T01…T05) |
 | A14 | **Preço por etiqueta (OCR da prateleira)** | **RF-40** | F59 | [spec](superpowers/specs/2026-10-06-etiqueta-preco-camera-design.md) | concluído (F59-T01…T06) |
+| A15 | **Revisão UX heurística (feedback + desmarcar todos)** | **RF-03/RF-04** | F64 | [spec](superpowers/specs/2026-10-09-revisao-ux-heuristica-design.md) | concluído (F64-T01…T03) |
 
 ## Onda A — Uso diário e retenção
 

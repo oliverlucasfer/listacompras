@@ -1358,6 +1358,20 @@ Requisito: RF-03 (CRUD de itens com unidade do enum). · Docs donos: [04](04-imp
 
 Nota: *(aditivo; entram no fim do enum, após `garrafa`; sem migration Drift — a coluna `unidade` é `text`; app Lite-only, sem Postgres/RLS.)*
 
+## Fase 64 — Revisão UX heurística: feedback e "Desmarcar todos" (RF-03, RF-04)
+
+Spec: [superpowers/specs/2026-10-09-revisao-ux-heuristica-design.md](superpowers/specs/2026-10-09-revisao-ux-heuristica-design.md) · Plano: [superpowers/plans/2026-10-09-revisao-ux-heuristica.md](superpowers/plans/2026-10-09-revisao-ux-heuristica.md) · Requisito: RF-03 (feedback do add) e RF-04 (ações em massa) — dois atritos da avaliação heurística. · Docs donos: 05, 10, 12, 13, 14, 16.
+
+- [x] **F64-T01** — Feedback ao adicionar item novo
+  Docs: [05 §6.3](05-app-flutter.md), [10 §3.1](10-wireframes-telas.md). Requisito: RF-03.
+  CP: item novo pela entrada rápida/chips confirma com SnackBar curto (`itemAdicionado`); duplicado mantém os avisos de soma/atualização; ARB pt/en/es; testes de widget verdes.
+- [x] **F64-T02** — "Desmarcar todos" com confirmação e undo
+  Dep: F64-T01 · Docs: [05 §6.3](05-app-flutter.md), [10 §3.1](10-wireframes-telas.md), [12](12-prd.md) (RF-04). Requisito: RF-04.
+  CP: item de menu desabilitado sem concluídos; com concluídos, `AppDialog.confirmarDestrutivo` + SnackBar com `Desfazer` (re-marca os ids); cancelar não altera; erro exibido em falha; testes de widget verdes.
+- [x] **F64-T03** — Governança, bump e fechamento
+  Dep: F64-T02 · Docs: 13, 14, 16.
+  CP: docs donas sincronizadas; bump `1.8.4+25` com paridade em `web/version.json`; `dart format .`, `flutter analyze` e `flutter test` verdes.
+
 ## Progresso por fase (atualize ao concluir)
 
 | Fase | Tarefas | Concluídas |
@@ -1423,7 +1437,8 @@ Nota: *(aditivo; entram no fim do enum, após `garrafa`; sem migration Drift —
 | F61 Tutorial: câmera na foto/etiqueta | 2 | 2 |
 | F62 Unidades adicionais | 1 | 1 |
 | F63 Unidades de porção e embalagem | 1 | 1 |
-| **Total** | **351** | **348** |
+| F64 Revisão UX heurística | 3 | 3 |
+| **Total** | **354** | **351** |
 
 ## Documentos relacionados
 - [12 PRD](12-prd.md) — RF/RNF referenciados pelas tarefas
