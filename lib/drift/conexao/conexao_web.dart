@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart';
 import 'package:drift/wasm.dart';
 
@@ -10,6 +12,24 @@ QueryExecutor abrirBancoLocal() {
       sqlite3Uri: Uri.parse('sqlite3.wasm'),
       driftWorkerUri: Uri.parse('drift_worker.js'),
     );
-    return result.resolvedExecutor;
+    final executor = result.resolvedExecutor;
+    if (const bool.fromEnvironment('DEMO')) {
+      _agendarFlushPeriodico(executor);
+    }
+    return executor;
+  });
+}
+
+/// O VFS IndexedDB do sqlite3 grava de forma assíncrona e, sem COOP/COEP não
+/// há OPFS; escritas dentro de transações só chegam ao IndexedDB quando outra
+/// escrita fora de transação acontece. Um `SELECT 1` periódico força o flush
+/// no build de demo, evitando perder dados ao recarregar a página.
+void _agendarFlushPeriodico(QueryExecutor executor) {
+  Timer.periodic(const Duration(seconds: 1), (_) async {
+    try {
+      await executor.runCustom('SELECT 1');
+    } catch (_) {
+      // Banco já fechado durante o encerramento da página.
+    }
   });
 }
