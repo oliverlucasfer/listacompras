@@ -104,9 +104,10 @@ O app roda em **Android, iOS, Web e Desktop (Windows/Linux/macOS)** a partir do 
 * **Banco local — fábrica `abrirBancoLocal()`:** `lib/drift/database.dart` não importa `dart:io`; a conexão vem de `lib/drift/conexao/conexao.dart`, que exporta condicionalmente:
   * `conexao_nativa.dart` (nativo/desktop): `NativeDatabase` em arquivo no diretório de documentos (`lista_compras.sqlite`).
   * `conexao_web.dart` (navegador): `WasmDatabase.open` com `sqlite3.wasm` + `drift_worker.js`; persistência em **OPFS** quando disponível, **IndexedDB** como fallback. `LazyDatabase` mantém a inicialização fora do caminho de build da UI.
+  * **Build de demo (ADR-016):** com `--dart-define=DEMO=true`, a estratégia de URL vira hash e um `SELECT 1` por segundo força o flush do VFS IndexedDB (sem COOP/COEP não há OPFS e escritas em transação não eram persistidas). O build local/produto não ativa nada disso.
   * Offline-first: toda escrita vai apenas ao Drift; a UI nunca bloqueia.
 * **Assets WASM no build web:** `web/sqlite3.wasm` e `web/drift_worker.js` são versionados no repositório (release `drift-2.34.4`) e precisam ser servidos junto do `build/web` — regeneração em [07 §3](07-qualidade-ci.md).
-* **URL strategy:** `usarPathUrlStrategy()` (import condicional em `core/web/`) usa path limpo no web; no nativo/desktop é no-op.
+* **URL strategy:** `usarPathUrlStrategy()` (import condicional em `core/web/`) usa path limpo no web; no build de demo usa hash; no nativo/desktop é no-op.
 * **Voz (RF-26, F30):** permissões de plataforma do microfone — Android `RECORD_AUDIO` (`android/app/src/main/AndroidManifest.xml`) e iOS `NSMicrophoneUsageDescription`/`NSSpeechRecognitionUsageDescription` (`ios/Runner/Info.plist`). O botão de ditar só aparece em **Android/iOS**; Web/Desktop ocultam (§6.3).
 
 ### 2.3. App único (F48)

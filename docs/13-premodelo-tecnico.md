@@ -86,7 +86,7 @@ EtiquetaLida { nome?, precoCentavos, precoPorKgCentavos? }
 
 | ADR | Decisão |
 | :--- | :--- |
-| 001 | MVP = Android/iOS/Web; **Desktop suportado (F18)**; **Web de uso local (ADR-013)** |
+| 001 | MVP = Android/iOS/Web; **Desktop suportado (F18)**; **Web de uso local + demo pública (ADR-016)** |
 | 002 | Riverpod |
 | 003 | Drift/SQLite local |
 | 005 | Enum fechado de unidades |
@@ -94,8 +94,9 @@ EtiquetaLida { nome?, precoCentavos, precoPorKgCentavos? }
 | 010 | GitHub Actions desde a F1 |
 | 011 | Categoria do item: enum fechado (11 valores) + sugestão local em camadas (memória → dicionário → outros) |
 | 012 | Suporte a Web (Drift/WASM) e Desktop (F18); banco por fábrica com import condicional |
-| 013 | Web: **uso local** (publicação suspensa em 18/09/2026) |
+| 013 | Web: **uso local**; demo pública de vitrine desde o ADR-016 (22/10/2026) |
 | **015** | **App único local "Minhas Listas" (F48): sem Supabase/conta/sync/colaboração/push** |
+| 016 | Demo web público no GitHub Pages como vitrine: hash + flush de demo + CSP no artefato; Web segue fora da distribuição |
 | ~~004~~ | ~~LWW de sync~~ — superada (não há sync) |
 | ~~007~~ | ~~Free tier Supabase~~ — superada (não há backend) |
 | ~~008~~ | ~~Exclusão de conta~~ — superada (não há conta) |

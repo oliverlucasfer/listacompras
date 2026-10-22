@@ -140,6 +140,14 @@ O **widget de tela inicial** (RF-38) mostra a última lista + nº de pendentes e
 
 ---
 
+### 2.16. Demo web público (ADR-016)
+
+- **URLs:** demo em `https://oliverlucasfer.github.io/listacompras/`; política de privacidade em `https://oliverlucasfer.github.io/listacompras/privacidade.html`.
+- **Deploy:** push em `main` que toque `site/`, `lib/`, `assets/`, `web/`, `pubspec.yaml`, `pubspec.lock` ou o próprio workflow, além de execução manual (`workflow_dispatch`).
+- **Build:** Flutter 3.44.5 + `flutter build web --release --base-href /listacompras/ --dart-define=DEMO=true --no-web-resources-cdn`; o workflow monta `_deploy` com `site/` + `build/web/` e injeta a CSP em `<meta>` no `index.html`.
+- **Diagnóstico:** rode `gh run list --workflow=pages.yml`, confira o job `publicar`, valide 200 na demo e na privacidade e abra a demo. Após navegar, a URL deve conter `#/`; crie uma lista e um item, aguarde alguns segundos, recarregue e confirme que os dados continuam. O console não pode ter violação de CSP.
+- **Persistência:** sem COOP/COEP no Pages, o Drift usa IndexedDB e o build de demo força o flush do VFS (ADR-016). O build local e o produto não mudam.
+
 ## 3. Incidentes comuns
 
 ### 3.1. "Meus itens desapareceram"

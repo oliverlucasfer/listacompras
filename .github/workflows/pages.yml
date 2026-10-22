@@ -2,7 +2,14 @@ name: pages
 on:
   push:
     branches: [main]
-    paths: ['site/**']
+    paths:
+      - 'site/**'
+      - 'lib/**'
+      - 'assets/**'
+      - 'web/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - '.github/workflows/pages.yml'
   workflow_dispatch:
 permissions:
   contents: read
@@ -10,7 +17,7 @@ permissions:
   id-token: write
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   publicar:
     runs-on: ubuntu-latest
@@ -19,11 +26,44 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.5
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - run: flutter build web --release --base-href /listacompras/ --dart-define=DEMO=true --no-web-resources-cdn
+      - name: Montar diretório de deploy
+        run: |
+          mkdir -p _deploy
+          cp -R site/. _deploy/
+          cp -R build/web/. _deploy/
+      - name: Injetar CSP no HTML publicado
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          csp = (
+              "default-src 'self'; "
+              "script-src 'self' 'wasm-unsafe-eval'; "
+              "style-src 'self' 'unsafe-inline'; "
+              "img-src 'self' data: blob:; "
+              "font-src 'self' data: https://fonts.gstatic.com; "
+              "connect-src 'self' https://fonts.gstatic.com; "
+              "worker-src 'self' blob:; "
+              "object-src 'none'; base-uri 'self'; form-action 'self'"
+          )
+          caminho = Path("_deploy/index.html")
+          html = caminho.read_text(encoding="utf-8")
+          assert "</head>" in html, "index.html sem </head>"
+          meta = f'    <meta http-equiv="Content-Security-Policy" content="{csp}">\n'
+          caminho.write_text(html.replace("</head>", meta + "</head>", 1), encoding="utf-8")
+          PY
       - uses: actions/configure-pages@v5
         with:
           enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: _deploy
       - id: deploy
         uses: actions/deploy-pages@v4
