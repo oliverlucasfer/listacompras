@@ -85,7 +85,7 @@ Uma fase só está "pronta" quando:
     style-src 'self' 'unsafe-inline';
     img-src 'self' data: blob:;
     font-src 'self' data: https://fonts.gstatic.com;
-    connect-src 'self' https://www.gstatic.com;
+    connect-src 'self' https://www.gstatic.com https://fonts.gstatic.com;
     worker-src 'self' blob:;
     object-src 'none';
     base-uri 'self';
@@ -107,6 +107,8 @@ Uma fase só está "pronta" quando:
   - `worker-src 'self' blob:` cobre o `drift_worker.js` (`sqlite3.wasm`/`drift_worker.js` vêm do próprio `build/web`).
   - `font-src` inclui `https://fonts.gstatic.com` para a fonte de fallback que o Flutter baixa.
   - Com COEP `require-corp`, recursos cross-origin exigem CORP; os assets locais do `build/web` são same-origin e o gstatic serve o CanvasKit com CORP.
+  - `connect-src` inclui `https://fonts.gstatic.com` porque o Flutter busca a fonte de fallback via `fetch` (não só `font-src`).
+  - **Demo público (ADR-016):** o workflow `.github/workflows/pages.yml` compila com `--dart-define=DEMO=true` (rotas com hash) e injeta a CSP acima em `<meta>` no `index.html` do artefato. O Pages não aplica COOP/COEP, então o Drift usa o fallback IndexedDB e o build de demo força o flush do VFS com um `SELECT 1` por segundo; o build local permanece sem CSP, com rotas por caminho e sem flush.
 
 ---
 
@@ -114,7 +116,8 @@ Uma fase só está "pronta" quando:
 
 | Canal | Requisito | Observação |
 | :--- | :--- | :--- |
-| Web — **uso local** | Build `flutter build web` servido localmente | **Sem publicação** (ADR-013): rode com `flutter run -d chrome` ou sirva `build/web` |
+| Web — **demo público** | Build `flutter build web --release --base-href /listacompras/ --dart-define=DEMO=true` no GitHub Pages | Vitrine de portfólio (ADR-016), sem suporte a conta, OPFS ou cabeçalhos COOP/COEP; persistência em IndexedDB com flush de demo |
+| Web — **uso local** | Build `flutter build web` servido localmente | Rode com `flutter run -d chrome` ou sirva `build/web` |
 | Desktop — Windows/Linux/macOS | Builds `flutter build windows`/`linux`/`macos` | Suportado desde a Fase 18 (ADR-012); builds Windows/Linux validados no CI ([07 §3](07-qualidade-ci.md)) |
 | Android — teste interno | APK/AAB na Play Console (closed testing) | Política de privacidade + Declaração de Dados preenchidas |
 | Android — produção | Publicação pública | Depende de validação do MVP; gate F5-T06 |

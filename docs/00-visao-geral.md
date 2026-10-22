@@ -10,7 +10,7 @@ Este documento concentra a visão do produto, a stack tecnológica, os pré-requ
 
 Aplicação multiplataforma **local** para criação, organização e execução de compras de supermercado. Combina gerenciamento manual com importação de listas enviadas em texto livre e backup JSON, **100% no aparelho** — sem conta, sem nuvem e sem sincronização.
 
-> **Escopo:** **Android, iOS, Web e Desktop (Windows/Linux/macOS)**. O Web é o **Lite** (uso local, ADR-013). O Desktop entra a partir da Fase 18 (ADR-012). A Fase 48 consolidou o produto em **um único app** ("Minhas Listas", RF-31), removendo o app colaborativo e o Supabase.
+> **Escopo:** **Android, iOS, Web e Desktop (Windows/Linux/macOS)**. O Web é o **Lite** (uso local; demo pública de vitrine desde o ADR-016). O Desktop entra a partir da Fase 18 (ADR-012). A Fase 48 consolidou o produto em **um único app** ("Minhas Listas", RF-31), removendo o app colaborativo e o Supabase.
 
 ### Funcionalidades-chave (resumo)
 | Funcionalidade | Descrição resumida | Documento de referência |
@@ -103,6 +103,7 @@ Aplicação multiplataforma **local** para criação, organização e execução
 | ADR-013 | 17/09/2026 *(revisado em 18/09/2026)* | **Publicação do Web cancelada por decisão do dono: o Web fica para uso local.** Rodar local: `flutter run -d chrome` (dev) ou `flutter build web` + servir `build/web`. | ~~Publicar em URL pública~~ — cancelado | Publicar o Web exigia manutenção de um site público sem uso previsto |
 | ~~ADR-014~~ | 23/09/2026 | ~~Notificações push via FCM~~ | — | **Superada** (F48): push removido |
 | **ADR-015** | 29/09/2026 | **App único local "Minhas Listas" (Lite).** O produto final é o Lite: um único app, 100% no aparelho, sem conta, nuvem, colaboração, sync ou push. Remove-se o Supabase (backend + cliente), Firebase, Sentry e a costura de modos (`AppModo`/`AppCapacidades`); a sessão passa a `idLocal = 'local'` e o backup é fixo local. | Manter os dois apps (colaborativo + Lite) | O dono decidiu que o produto final é o Lite (RF-31); o app colaborativo era peso morto (deps, backend, docs, duas suítes). |
+| ADR-016 | 22/10/2026 | **Demo web público como vitrine.** O build Web passa a ser publicado no GitHub Pages em `https://oliverlucasfer.github.io/listacompras/` como demonstração de portfólio, com roteamento por hash (`--dart-define=DEMO=true`), flush periódico do VFS IndexedDB e CSP injetada no artefato. O Web continua fora dos canais de distribuição do produto. | Não publicar (ADR-013) | O app ainda não está nas lojas e a demo permite experimentar o produto; a hospedagem é gratuita e o Pages já era usado pela política de privacidade. |
 
 ---
 
