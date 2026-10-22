@@ -147,6 +147,10 @@ O **widget de tela inicial** (RF-38) mostra a última lista + nº de pendentes e
 - **Build:** Flutter 3.44.5 + `flutter build web --release --base-href /listacompras/ --dart-define=DEMO=true --no-web-resources-cdn`; o workflow monta `_deploy` com `site/` + `build/web/` e injeta a CSP em `<meta>` no `index.html`.
 - **Diagnóstico:** rode `gh run list --workflow=pages.yml`, confira o job `publicar`, valide 200 na demo e na privacidade e abra a demo. Após navegar, a URL deve conter `#/`; crie uma lista e um item, aguarde alguns segundos, recarregue e confirme que os dados continuam. O console não pode ter violação de CSP.
 - **Persistência:** sem COOP/COEP no Pages, o Drift usa IndexedDB e o build de demo força o flush do VFS (ADR-016). O build local e o produto não mudam.
+- **Pendências conhecidas (revisão de 22/10/2026):**
+  - CSP duplicada entre `.github/workflows/pages.yml` e [06 §3.4.1](06-mvp-entregas.md): mudar as duas ou extrair para um arquivo único lido pelo workflow (risco médio; já divergiu uma vez).
+  - `ci.yml` compila o web sem `DEMO`; adicionar um build com `--dart-define=DEMO=true` para pegar quebras da variante publicada antes do merge (risco médio).
+  - Flush do IndexedDB só pelo timer de 1s; avaliar flush em `pagehide`/`visibilitychange` para reduzir a janela de perda de escrita (risco baixo; demo).
 
 ## 3. Incidentes comuns
 
